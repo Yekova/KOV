@@ -9,20 +9,20 @@ export function WorkSpotlight() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
         <GlassCard className="md:col-span-2 min-h-[360px] flex items-end p-8">
           <p className="text-kov-steel font-mono text-xs uppercase tracking-widest">
-            Placeholder visual — case study pending
+            Visuel à venir — étude de cas en préparation
           </p>
         </GlassCard>
 
         <div className="flex flex-col justify-center">
-          <p className="text-kov-red font-mono text-xs mb-2">Project / 01</p>
+          <p className="text-kov-red font-mono text-xs mb-2">Projet / 01</p>
           <h3 className="font-display text-kov-bone uppercase text-3xl mb-3">Kanti</h3>
-          <p className="text-kov-steel text-xs uppercase tracking-widest mb-6">Wealth Management</p>
+          <p className="text-kov-steel text-xs uppercase tracking-widest mb-6">Gestion de patrimoine</p>
           <div className="flex flex-wrap gap-2 mb-8">
-            <TagPill>Strategy</TagPill>
+            <TagPill>Stratégie</TagPill>
             <TagPill>Design</TagPill>
-            <TagPill>Development</TagPill>
+            <TagPill>Développement</TagPill>
           </div>
-          <span className="text-kov-steel text-xs uppercase tracking-widest">View case study → (soon)</span>
+          <span className="text-kov-steel text-xs uppercase tracking-widest">Voir l&apos;étude de cas → (bientôt)</span>
         </div>
       </div>
     </section>

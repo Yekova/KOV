@@ -43,7 +43,7 @@ export function ContactForm() {
     return (
       <GlassCard className="max-w-xl p-8 md:p-12">
         <p className="text-kov-bone text-lg">
-          Message received<span className="text-kov-red">.</span> We&apos;ll get back to you shortly.
+          Message reçu<span className="text-kov-red">.</span> On revient vers vous rapidement.
         </p>
       </GlassCard>
     );
@@ -54,7 +54,7 @@ export function ContactForm() {
       <form onSubmit={handleSubmit} className="space-y-8">
         <div>
           <label htmlFor="name" className="text-xs uppercase tracking-widest text-kov-steel">
-            Name
+            Nom
           </label>
           <input id="name" name="name" type="text" required className={FIELD_CLASS} />
         </div>
@@ -68,24 +68,24 @@ export function ContactForm() {
 
         <div>
           <label htmlFor="phone" className="text-xs uppercase tracking-widest text-kov-steel">
-            Phone (optional)
+            Téléphone (facultatif)
           </label>
           <input id="phone" name="phone" type="tel" className={FIELD_CLASS} />
         </div>
 
         <div>
           <label htmlFor="message" className="text-xs uppercase tracking-widest text-kov-steel">
-            Project
+            Projet
           </label>
           <textarea id="message" name="message" required rows={4} className={FIELD_CLASS} />
         </div>
 
         {status === "error" && (
-          <p className="text-kov-red text-sm">Something went wrong. Try again in a moment.</p>
+          <p className="text-kov-red text-sm">Une erreur est survenue. Réessayez dans un instant.</p>
         )}
 
         <Button type="submit" variant="primary" disabled={status === "submitting"}>
-          {status === "submitting" ? "Sending…" : "Send →"}
+          {status === "submitting" ? "Envoi…" : "Envoyer →"}
         </Button>
       </form>
     </GlassCard>

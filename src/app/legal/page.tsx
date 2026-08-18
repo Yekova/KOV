@@ -3,44 +3,44 @@ import { LegalDoc } from "@/components/legal/LegalDoc";
 import { Todo } from "@/components/legal/Todo";
 
 export const metadata: Metadata = {
-  title: "Legal Notice — KOV",
-  description: "Legal notice for the KOV website.",
+  title: "Mentions légales — KOV",
+  description: "Mentions légales du site KOV.",
 };
 
 export default function LegalNoticePage() {
   return (
-    <LegalDoc title="Legal Notice" updated="August 2026">
+    <LegalDoc title="Mentions légales" updated="Août 2026">
       <section>
-        <h2>Site publisher</h2>
+        <h2>Éditeur du site</h2>
         <p>
-          This website (kov-agency.site) is published by KOV, <Todo>legal form — e.g. auto-entrepreneur, SASU, EI</Todo>,
-          registered under SIRET <Todo>SIRET number</Todo>, with its registered office at{" "}
-          <Todo>registered address</Todo>, Bordeaux, France.
+          Ce site (kov-agency.site) est édité par KOV, <Todo>forme juridique — ex. auto-entrepreneur, SASU, EI</Todo>,
+          immatriculée sous le SIRET <Todo>numéro de SIRET</Todo>, dont le siège social est situé{" "}
+          <Todo>adresse du siège social</Todo>, Bordeaux, France.
         </p>
         <p>
-          Publication director: <Todo>full name of the person legally responsible for the site</Todo>.
+          Directeur de la publication : <Todo>nom complet de la personne légalement responsable du site</Todo>.
         </p>
-        <p>Contact: via the form at kov-agency.site/contact.</p>
+        <p>Contact : via le formulaire à l&apos;adresse kov-agency.site/contact.</p>
       </section>
 
       <section>
-        <h2>Hosting</h2>
-        <p>This site is hosted by Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, USA.</p>
+        <h2>Hébergement</h2>
+        <p>Ce site est hébergé par Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, États-Unis.</p>
       </section>
 
       <section>
-        <h2>Intellectual property</h2>
+        <h2>Propriété intellectuelle</h2>
         <p>
-          The KOV name, logo, and all content on this site (text, visuals, code) are the property of KOV unless
-          otherwise stated. Reproduction without prior written consent is prohibited.
+          Le nom KOV, son logo et l&apos;ensemble du contenu de ce site (textes, visuels, code) sont la propriété de
+          KOV sauf mention contraire. Toute reproduction sans autorisation écrite préalable est interdite.
         </p>
       </section>
 
       <section>
-        <h2>Liability</h2>
+        <h2>Responsabilité</h2>
         <p>
-          KOV makes every effort to ensure the accuracy of the information published on this site but cannot
-          guarantee it is complete or up to date at all times.
+          KOV s&apos;efforce d&apos;assurer l&apos;exactitude des informations publiées sur ce site mais ne peut
+          garantir qu&apos;elles soient complètes ou à jour en permanence.
         </p>
       </section>
     </LegalDoc>

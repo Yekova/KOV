@@ -3,54 +3,57 @@ import { LegalDoc } from "@/components/legal/LegalDoc";
 import { Todo } from "@/components/legal/Todo";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — KOV",
-  description: "How KOV collects and processes personal data.",
+  title: "Confidentialité — KOV",
+  description: "Comment KOV collecte et traite les données personnelles.",
 };
 
 export default function PrivacyPolicyPage() {
   return (
-    <LegalDoc title="Privacy Policy" updated="August 2026">
+    <LegalDoc title="Politique de confidentialité" updated="Août 2026">
       <section>
-        <h2>What we collect</h2>
+        <h2>Ce qu&apos;on collecte</h2>
         <p>
-          The only personal data KOV collects is what you submit through the contact form: name, email address,
-          phone number (optional), and your message. We do not use cookies or analytics tracking on this site
-          beyond what is strictly necessary for it to function.
+          Les seules données personnelles que KOV collecte sont celles que vous soumettez via le formulaire de
+          contact : nom, adresse email, numéro de téléphone (facultatif) et votre message. On n&apos;utilise ni
+          cookies ni traceurs analytiques sur ce site, au-delà de ce qui est strictement nécessaire à son
+          fonctionnement.
         </p>
       </section>
 
       <section>
-        <h2>Why we collect it</h2>
-        <p>Solely to respond to the project inquiry you initiated. We do not sell or share this data with third parties for marketing purposes.</p>
+        <h2>Pourquoi on les collecte</h2>
+        <p>Uniquement pour répondre à la demande de projet que vous avez initiée. On ne vend ni ne partage ces données avec des tiers à des fins commerciales.</p>
       </section>
 
       <section>
-        <h2>Legal basis</h2>
-        <p>Processing is based on your consent, given by voluntarily submitting the form.</p>
+        <h2>Base légale</h2>
+        <p>Le traitement repose sur votre consentement, donné en soumettant volontairement le formulaire.</p>
       </section>
 
       <section>
-        <h2>Where it&apos;s stored</h2>
+        <h2>Où c&apos;est stocké</h2>
         <p>
-          Submissions are stored in a Supabase database hosted in the EU (Ireland). The site itself is hosted by
-          Vercel Inc. (USA). No data is used to train any AI model.
+          Les soumissions sont stockées dans une base de données Supabase hébergée dans l&apos;UE (Irlande). Le site
+          lui-même est hébergé par Vercel Inc. (États-Unis). Aucune donnée n&apos;est utilisée pour entraîner un
+          modèle d&apos;IA.
         </p>
       </section>
 
       <section>
-        <h2>Retention</h2>
+        <h2>Conservation</h2>
         <p>
-          We keep contact form submissions for <Todo>retention period — e.g. 3 years from last contact</Todo>, after
-          which they are deleted.
+          On conserve les soumissions du formulaire de contact pendant{" "}
+          <Todo>durée de conservation — ex. 3 ans à compter du dernier contact</Todo>, après quoi elles sont
+          supprimées.
         </p>
       </section>
 
       <section>
-        <h2>Your rights</h2>
+        <h2>Vos droits</h2>
         <p>
-          Under GDPR, you have the right to access, correct, delete, or export your data, and to withdraw consent
-          at any time. To exercise these rights, contact us at <Todo>contact email address</Todo> or via the
-          contact form.
+          En vertu du RGPD, vous avez le droit d&apos;accéder à vos données, de les rectifier, de les supprimer ou de
+          les exporter, et de retirer votre consentement à tout moment. Pour exercer ces droits, contactez-nous à{" "}
+          <Todo>adresse email de contact</Todo> ou via le formulaire de contact.
         </p>
       </section>
     </LegalDoc>

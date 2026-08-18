@@ -3,14 +3,14 @@ import { Button } from "@/components/ui/Button";
 
 export const metadata: Metadata = {
   title: "Studio — KOV",
-  description: "KOV is a studio built around one idea: transform ideas into digital experiences people remember.",
+  description: "KOV est un studio construit autour d'une idée : transformer des idées en expériences numériques dont on se souvient.",
 };
 
 const PRINCIPLES = [
-  { word: "Brutal", body: "We say what a project needs, not what's comfortable to hear." },
-  { word: "Precise", body: "Every decision — a pixel, a line of copy, a line of code — has a reason." },
-  { word: "Immersive", body: "We design experiences, not pages. The difference is what people remember." },
-  { word: "Intentional", body: "Nothing ships because it's trendy. It ships because it earns its place." },
+  { word: "Brutal", body: "On dit ce dont un projet a besoin, pas ce qui est confortable à entendre." },
+  { word: "Précis", body: "Chaque décision — un pixel, une ligne de texte, une ligne de code — a une raison d'être." },
+  { word: "Immersif", body: "On conçoit des expériences, pas des pages. La différence, c'est ce dont on se souvient." },
+  { word: "Intentionnel", body: "Rien n'est livré parce que c'est tendance. Ça l'est parce que ça mérite sa place." },
 ];
 
 const PHILOSOPHY_WORDS = ["Clarté", "Intention", "Impact"];
@@ -24,26 +24,26 @@ export default function StudioPage() {
         className="font-display text-kov-bone uppercase max-w-4xl"
         style={{ fontSize: "var(--display-lg)", lineHeight: "var(--line-height-display)" }}
       >
-        KOV transforms ideas
+        KOV transforme les idées
         <br />
-        into digital experiences<span className="text-kov-red">.</span>
+        en expériences numériques<span className="text-kov-red">.</span>
       </h1>
 
-      <p className="mt-6 text-xs uppercase tracking-widest text-kov-steel">Design / Development / Motion — Bordeaux, France</p>
+      <p className="mt-6 text-xs uppercase tracking-widest text-kov-steel">Design / Développement / Motion — Bordeaux, France</p>
 
       <p className="mt-10 max-w-xl text-kov-concrete text-sm leading-relaxed">
-        We&apos;re a studio that builds websites and platforms for people who don&apos;t want to
-        look like everyone else. No templates, no stock photography, no generic agency-speak.
-        Every project starts from what makes it different — not from what&apos;s easy to ship.
+        On est un studio qui construit des sites et des plateformes pour ceux qui ne veulent pas
+        ressembler à tout le monde. Pas de templates, pas de banques d&apos;images, pas de discours d&apos;agence générique.
+        Chaque projet part de ce qui le rend différent — pas de ce qui est facile à livrer.
       </p>
 
       <section className="mt-32">
-        <p className="text-xs uppercase tracking-widest text-kov-steel mb-4">Philosophy</p>
+        <p className="text-xs uppercase tracking-widest text-kov-steel mb-4">Philosophie</p>
         <h2
           className="font-display text-kov-bone uppercase max-w-3xl"
           style={{ fontSize: "var(--heading-lg)", lineHeight: "var(--line-height-display)" }}
         >
-          Good design doesn&apos;t need to shout<span className="text-kov-red">.</span>
+          Le bon design n&apos;a pas besoin de crier<span className="text-kov-red">.</span>
         </h2>
         <div className="mt-10 flex flex-wrap gap-x-10 gap-y-2">
           {PHILOSOPHY_WORDS.map((word) => (
@@ -71,20 +71,20 @@ export default function StudioPage() {
           className="font-display text-kov-bone uppercase max-w-2xl"
           style={{ fontSize: "var(--heading-lg)", lineHeight: "var(--line-height-display)" }}
         >
-          Small by design<span className="text-kov-red">.</span>
+          Petit par choix<span className="text-kov-red">.</span>
         </h2>
         <p className="mt-6 max-w-md text-kov-concrete text-sm leading-relaxed">
-          Less layers.
+          Moins de niveaux hiérarchiques.
           <br />
-          More involvement.
+          Plus d&apos;implication.
           <br />
-          Better work.
+          Un meilleur travail.
         </p>
       </section>
 
       <div className="mt-32">
         <Button href="/contact" variant="primary">
-          Start a project →
+          Démarrer un projet →
         </Button>
       </div>
     </main>

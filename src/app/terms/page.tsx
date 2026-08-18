@@ -2,37 +2,37 @@ import type { Metadata } from "next";
 import { LegalDoc } from "@/components/legal/LegalDoc";
 
 export const metadata: Metadata = {
-  title: "Terms of Use — KOV",
-  description: "Terms of use for the KOV website.",
+  title: "Conditions d'utilisation — KOV",
+  description: "Conditions d'utilisation du site KOV.",
 };
 
 export default function TermsPage() {
   return (
-    <LegalDoc title="Terms of Use" updated="August 2026">
+    <LegalDoc title="Conditions d'utilisation" updated="Août 2026">
       <section>
-        <h2>Scope</h2>
+        <h2>Champ d&apos;application</h2>
         <p>
-          These terms govern use of the kov-agency.site website only. They do not constitute a service contract —
-          project engagements with KOV are governed by a separate written agreement.
+          Ces conditions régissent uniquement l&apos;utilisation du site kov-agency.site. Elles ne constituent pas un
+          contrat de prestation — les engagements de projet avec KOV sont régis par un accord écrit distinct.
         </p>
       </section>
 
       <section>
-        <h2>Acceptable use</h2>
+        <h2>Utilisation autorisée</h2>
         <p>
-          You agree not to use this site in a way that damages, disables, or impairs it, or interferes with
-          another party&apos;s use of it.
+          Vous vous engagez à ne pas utiliser ce site d&apos;une manière qui l&apos;endommage, le désactive ou le
+          perturbe, ni qui nuise à son utilisation par d&apos;autres personnes.
         </p>
       </section>
 
       <section>
-        <h2>Intellectual property</h2>
-        <p>Content on this site is protected by copyright. See the Legal Notice for details.</p>
+        <h2>Propriété intellectuelle</h2>
+        <p>Le contenu de ce site est protégé par le droit d&apos;auteur. Voir les mentions légales pour plus de détails.</p>
       </section>
 
       <section>
-        <h2>Governing law</h2>
-        <p>These terms are governed by French law. Disputes fall under the jurisdiction of the courts of Bordeaux, France.</p>
+        <h2>Droit applicable</h2>
+        <p>Ces conditions sont régies par le droit français. Les litiges relèvent de la compétence des tribunaux de Bordeaux, France.</p>
       </section>
     </LegalDoc>
   );

@@ -5,21 +5,21 @@ import Link from "next/link";
 import { searchIndex } from "@/data/searchIndex";
 import { GlassCard } from "@/components/ui/GlassCard";
 
-const CATEGORIES = ["All", "Expertise", "Studio", "Work", "Contact"] as const;
+const CATEGORIES = ["Tout", "Expertise", "Studio", "Projets", "Contact"] as const;
 
-const SUGGESTIONS = ["What services do you offer?", "Show me your work", "How do you work?"];
+const SUGGESTIONS = ["Quels services proposez-vous ?", "Montrez-moi vos projets", "Comment travaillez-vous ?"];
 
 const QUICK_LINKS = [
-  { title: "Start a project", href: "/contact" },
-  { title: "View expertise", href: "/expertise" },
-  { title: "About the studio", href: "/studio" },
-  { title: "View work", href: "/#work" },
+  { title: "Démarrer un projet", href: "/contact" },
+  { title: "Voir l'expertise", href: "/expertise" },
+  { title: "À propos du studio", href: "/studio" },
+  { title: "Voir les projets", href: "/#work" },
 ];
 
 export function GlobalSearch() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState<(typeof CATEGORIES)[number]>("All");
+  const [category, setCategory] = useState<(typeof CATEGORIES)[number]>("Tout");
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -39,7 +39,7 @@ export function GlobalSearch() {
       inputRef.current?.focus();
     } else {
       setQuery("");
-      setCategory("All");
+      setCategory("Tout");
     }
   }, [open]);
 
@@ -47,7 +47,7 @@ export function GlobalSearch() {
     const q = query.trim().toLowerCase();
     if (!q) return [];
     return searchIndex.filter((item) => {
-      if (category !== "All" && item.category !== category) return false;
+      if (category !== "Tout" && item.category !== category) return false;
       return (
         item.title.toLowerCase().includes(q) ||
         item.description.toLowerCase().includes(q) ||
@@ -61,7 +61,7 @@ export function GlobalSearch() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        aria-label="Search"
+        aria-label="Rechercher"
         className="w-10 h-10 flex items-center justify-center text-kov-bone hover:text-kov-red transition-colors"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -88,13 +88,13 @@ export function GlobalSearch() {
                 ref={inputRef}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search anything…"
+                placeholder="Rechercher…"
                 className="flex-1 bg-transparent text-kov-bone placeholder:text-kov-steel focus:outline-none"
               />
               <span className="text-kov-steel text-[10px] uppercase tracking-widest border px-1.5 py-0.5" style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}>
                 Esc
               </span>
-              <button type="button" onClick={() => setOpen(false)} aria-label="Close search" className="text-kov-steel hover:text-kov-red transition-colors">
+              <button type="button" onClick={() => setOpen(false)} aria-label="Fermer la recherche" className="text-kov-steel hover:text-kov-red transition-colors">
                 ✕
               </button>
             </div>
@@ -141,11 +141,11 @@ export function GlobalSearch() {
                     ))}
                   </ul>
                 ) : (
-                  <p className="text-kov-steel text-sm p-3">No results — try a different search.</p>
+                  <p className="text-kov-steel text-sm p-3">Aucun résultat — essayez une autre recherche.</p>
                 )
               ) : (
                 <>
-                  <p className="text-kov-steel text-xs uppercase tracking-widest mb-3">Suggested searches</p>
+                  <p className="text-kov-steel text-xs uppercase tracking-widest mb-3">Recherches suggérées</p>
                   <ul className="space-y-1 mb-6">
                     {SUGGESTIONS.map((s) => (
                       <li key={s}>
@@ -165,7 +165,7 @@ export function GlobalSearch() {
                     ))}
                   </ul>
 
-                  <p className="text-kov-steel text-xs uppercase tracking-widest mb-3">Quick links</p>
+                  <p className="text-kov-steel text-xs uppercase tracking-widest mb-3">Raccourcis</p>
                   <div className="grid grid-cols-2 gap-2">
                     {QUICK_LINKS.map((link) => (
                       <Link

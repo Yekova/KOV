@@ -4,59 +4,59 @@ import { TagPill } from "@/components/ui/Chip";
 
 export const metadata: Metadata = {
   title: "Expertise — KOV",
-  description: "Strategy, design, development, motion, systems, and integration, built as one system.",
+  description: "Stratégie, design, développement, motion, systèmes et intégration, construits comme un seul système.",
 };
 
 const PILLARS = [
   {
     number: "01",
-    title: "Strategy",
-    body: "Positioning, structure, and user journeys — decided before anything gets designed.",
+    title: "Stratégie",
+    body: "Positionnement, structure et parcours utilisateurs — décidés avant même de commencer à designer quoi que ce soit.",
   },
   {
     number: "02",
     title: "Design",
-    body: "Interfaces engineered like architecture. Structure first, style earned — never applied on top to hide a weak layout.",
+    body: "Des interfaces pensées comme de l'architecture. La structure d'abord, le style ensuite — jamais l'inverse pour masquer une mauvaise structure.",
   },
   {
     number: "03",
-    title: "Development",
-    body: "Production-grade code from day one. Fast, precise, and built to survive contact with real users and real traffic.",
+    title: "Développement",
+    body: "Du code de production dès le premier jour. Rapide, précis, conçu pour tenir face aux vrais utilisateurs et au vrai trafic.",
   },
   {
     number: "04",
     title: "Motion",
-    body: "Movement that explains, never performs. Every transition exists to communicate something — or it doesn't exist.",
+    body: "Un mouvement qui explique, jamais qui joue un rôle. Chaque transition existe pour communiquer quelque chose — ou n'existe pas.",
   },
   {
     number: "05",
-    title: "Systems",
-    body: "Digital architecture built to scale — not a one-off site that breaks the moment the business grows.",
+    title: "Systèmes",
+    body: "Une architecture numérique conçue pour évoluer — pas un site figé qui casse dès que l'activité grandit.",
   },
   {
     number: "06",
-    title: "Integration",
-    body: "Tools, data, and automations, connected — so the site is the front of something that actually runs.",
+    title: "Intégration",
+    body: "Outils, données et automatisations, connectés — pour que le site soit la façade de quelque chose qui tourne vraiment.",
   },
 ];
 
 const PROCESS = [
-  { number: "01", title: "Discover", body: "What actually matters here, not a generic brief." },
-  { number: "02", title: "Structure", body: "Information architecture and priorities, locked." },
-  { number: "03", title: "Design", body: "Direction decided before a single pixel ships." },
-  { number: "04", title: "Develop", body: "Built in the open, iterated in real code." },
-  { number: "05", title: "Motion", body: "Interaction layered in — never bolted on after." },
-  { number: "06", title: "Launch", body: "Shipped, measured, left in a state anyone could maintain." },
-  { number: "07", title: "Evolve", body: "A site is never finished — it's maintained on purpose." },
+  { number: "01", title: "Découvrir", body: "Ce qui compte vraiment ici, pas un brief générique." },
+  { number: "02", title: "Structurer", body: "Architecture de l'information et priorités, verrouillées." },
+  { number: "03", title: "Design", body: "La direction décidée avant qu'un seul pixel ne soit livré." },
+  { number: "04", title: "Développer", body: "Construit en transparence, itéré en code réel." },
+  { number: "05", title: "Motion", body: "L'interaction intégrée dès le départ — jamais ajoutée après coup." },
+  { number: "06", title: "Lancer", body: "Livré, mesuré, laissé dans un état que n'importe qui peut maintenir." },
+  { number: "07", title: "Évoluer", body: "Un site n'est jamais terminé — il est maintenu intentionnellement." },
 ];
 
 const WHAT_WE_BUILD = [
-  "Corporate websites",
-  "Immersive websites",
-  "Web applications",
+  "Sites corporate",
+  "Sites immersifs",
+  "Applications web",
   "Dashboards",
-  "Client portals",
-  "Digital systems",
+  "Espaces clients",
+  "Systèmes numériques",
 ];
 
 export default function ExpertisePage() {
@@ -68,9 +68,9 @@ export default function ExpertisePage() {
         className="font-display text-kov-bone uppercase max-w-4xl"
         style={{ fontSize: "var(--display-lg)", lineHeight: "var(--line-height-display)" }}
       >
-        We don&apos;t decorate<span className="text-kov-red">.</span>
+        On ne décore pas<span className="text-kov-red">.</span>
         <br />
-        We build systems that hold<span className="text-kov-red">.</span>
+        On construit des systèmes qui tiennent<span className="text-kov-red">.</span>
       </h1>
 
       <div className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-12 border-t" style={{ borderColor: "var(--kov-border)" }}>
@@ -84,12 +84,12 @@ export default function ExpertisePage() {
       </div>
 
       <section className="mt-40">
-        <p className="text-xs uppercase tracking-widest text-kov-steel mb-4">Process</p>
+        <p className="text-xs uppercase tracking-widest text-kov-steel mb-4">Processus</p>
         <h2
           className="font-display text-kov-bone uppercase mb-16"
           style={{ fontSize: "var(--heading-lg)", lineHeight: "var(--line-height-display)" }}
         >
-          Seven steps<span className="text-kov-red">.</span> No black box.
+          Sept étapes<span className="text-kov-red">.</span> Pas de boîte noire.
         </h2>
 
         <ol className="border-t" style={{ borderColor: "var(--kov-border)" }}>
@@ -110,7 +110,7 @@ export default function ExpertisePage() {
       </section>
 
       <section className="mt-40">
-        <p className="text-xs uppercase tracking-widest text-kov-steel mb-6">What we build</p>
+        <p className="text-xs uppercase tracking-widest text-kov-steel mb-6">Ce qu&apos;on construit</p>
         <div className="flex flex-wrap gap-3 max-w-3xl">
           {WHAT_WE_BUILD.map((item) => (
             <TagPill key={item}>{item}</TagPill>
@@ -120,7 +120,7 @@ export default function ExpertisePage() {
 
       <div className="mt-32">
         <Button href="/contact" variant="primary">
-          Start a project →
+          Démarrer un projet →
         </Button>
       </div>
     </main>

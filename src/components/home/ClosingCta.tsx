@@ -8,13 +8,13 @@ export function ClosingCta() {
           className="font-display text-kov-bone uppercase max-w-2xl"
           style={{ fontSize: "var(--heading-lg)", lineHeight: "var(--line-height-display)" }}
         >
-          Have a project?
+          Un projet en tête ?
           <br />
-          <span className="text-kov-red">Let&apos;s build it.</span>
+          <span className="text-kov-red">On le construit.</span>
         </h2>
 
         <Button href="/contact" variant="primary" className="mt-10">
-          Start a project →
+          Démarrer un projet →
         </Button>
       </div>
     </section>

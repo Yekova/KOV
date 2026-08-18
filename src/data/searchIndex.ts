@@ -5,7 +5,7 @@
 
 export interface SearchItem {
   title: string;
-  category: "Expertise" | "Studio" | "Work" | "Contact";
+  category: "Expertise" | "Studio" | "Projets" | "Contact";
   href: string;
   description: string;
   keywords?: string[];
@@ -13,81 +13,81 @@ export interface SearchItem {
 
 export const searchIndex: SearchItem[] = [
   {
-    title: "Strategy",
+    title: "Stratégie",
     category: "Expertise",
     href: "/expertise",
-    description: "Positioning, structure, and user journeys — decided before anything gets designed.",
+    description: "Positionnement, structure et parcours utilisateurs — décidés avant de designer quoi que ce soit.",
   },
   {
     title: "Design",
     category: "Expertise",
     href: "/expertise",
-    description: "Interfaces engineered like architecture. Structure first, style earned.",
+    description: "Des interfaces pensées comme de l'architecture. La structure d'abord, le style ensuite.",
   },
   {
-    title: "Development",
+    title: "Développement",
     category: "Expertise",
     href: "/expertise",
-    description: "Production-grade code from day one, built to survive real traffic.",
+    description: "Du code de production dès le premier jour, conçu pour tenir face au vrai trafic.",
   },
   {
     title: "Motion",
     category: "Expertise",
     href: "/expertise",
-    description: "Movement that explains, never performs.",
+    description: "Un mouvement qui explique, jamais qui joue un rôle.",
   },
   {
-    title: "Systems",
+    title: "Systèmes",
     category: "Expertise",
     href: "/expertise",
-    description: "Digital architecture built to scale.",
+    description: "Une architecture numérique conçue pour évoluer.",
   },
   {
-    title: "Integration",
+    title: "Intégration",
     category: "Expertise",
     href: "/expertise",
-    description: "Tools, data, and automations, connected.",
-    keywords: ["crm", "automation", "api"],
+    description: "Outils, données et automatisations, connectés.",
+    keywords: ["crm", "automatisation", "api"],
   },
   {
-    title: "Our process",
+    title: "Notre processus",
     category: "Expertise",
     href: "/expertise",
-    description: "Seven steps: Discover, Structure, Design, Develop, Motion, Launch, Evolve.",
-    keywords: ["how do you work", "process", "methodology"],
+    description: "Sept étapes : Découvrir, Structurer, Design, Développer, Motion, Lancer, Évoluer.",
+    keywords: ["comment travaillez-vous", "processus", "méthodologie"],
   },
   {
-    title: "What we build",
+    title: "Ce qu'on construit",
     category: "Expertise",
     href: "/expertise",
-    description: "Corporate websites, immersive websites, web applications, dashboards, client portals, digital systems.",
-    keywords: ["services", "what services do you offer", "crm", "web app"],
+    description: "Sites corporate, sites immersifs, applications web, dashboards, espaces clients, systèmes numériques.",
+    keywords: ["services", "quels services proposez-vous", "crm", "application web"],
   },
   {
-    title: "Kanti — Wealth Management",
-    category: "Work",
+    title: "Kanti — Gestion de patrimoine",
+    category: "Projets",
     href: "/#work",
-    description: "Strategy, design, and development for a wealth management digital experience.",
-    keywords: ["case study", "project", "portfolio", "show me your work"],
+    description: "Stratégie, design et développement pour une expérience numérique de gestion de patrimoine.",
+    keywords: ["étude de cas", "projet", "portfolio", "montrez-moi vos projets"],
   },
   {
-    title: "Philosophy",
+    title: "Philosophie",
     category: "Studio",
     href: "/studio",
-    description: "Good design doesn't need to shout. Clarté, intention, impact.",
+    description: "Le bon design n'a pas besoin de crier. Clarté, intention, impact.",
   },
   {
-    title: "Small by design",
+    title: "Petit par choix",
     category: "Studio",
     href: "/studio",
-    description: "Less layers, more involvement, better work — who KOV is.",
-    keywords: ["about", "team", "who we are"],
+    description: "Moins de niveaux hiérarchiques, plus d'implication, un meilleur travail — qui est KOV.",
+    keywords: ["à propos", "équipe", "qui êtes-vous"],
   },
   {
-    title: "Start a project",
+    title: "Démarrer un projet",
     category: "Contact",
     href: "/contact",
-    description: "Tell us what you're building.",
-    keywords: ["get in touch", "hire", "quote", "contact"],
+    description: "Dites-nous ce que vous construisez.",
+    keywords: ["nous contacter", "devis", "contact"],
   },
 ];

@@ -9,7 +9,7 @@ export function Todo({ children }: { children: ReactNode }) {
       className="inline-block px-2 py-0.5 text-kov-red text-xs uppercase tracking-widest border"
       style={{ borderColor: "var(--kov-red)", borderRadius: "var(--radius-sm)" }}
     >
-      TODO: {children}
+      À COMPLÉTER : {children}
     </span>
   );
 }

@@ -1,22 +1,22 @@
 const STEPS = [
-  { number: "01", title: "Discover" },
-  { number: "02", title: "Structure" },
+  { number: "01", title: "Découvrir" },
+  { number: "02", title: "Structurer" },
   { number: "03", title: "Design" },
-  { number: "04", title: "Develop" },
+  { number: "04", title: "Développer" },
   { number: "05", title: "Motion" },
-  { number: "06", title: "Launch" },
-  { number: "07", title: "Evolve" },
+  { number: "06", title: "Lancer" },
+  { number: "07", title: "Évoluer" },
 ];
 
 export function ProcessTimeline() {
   return (
     <section className="px-6 py-32 max-w-[1600px] mx-auto">
-      <p className="text-xs uppercase tracking-widest text-kov-steel mb-4">Process</p>
+      <p className="text-xs uppercase tracking-widest text-kov-steel mb-4">Processus</p>
       <h2
         className="font-display text-kov-bone uppercase max-w-3xl mb-20"
         style={{ fontSize: "var(--heading-lg)", lineHeight: "var(--line-height-display)" }}
       >
-        Seven steps<span className="text-kov-red">.</span> No black box<span className="text-kov-red">.</span>
+        Sept étapes<span className="text-kov-red">.</span> Pas de boîte noire<span className="text-kov-red">.</span>
       </h2>
 
       <ol className="relative flex flex-col md:flex-row md:items-start justify-between gap-10 md:gap-4">

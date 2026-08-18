@@ -1,16 +1,16 @@
 import Link from "next/link";
 
 const NAV_LINKS = [
-  { href: "/#work", label: "Work" },
+  { href: "/#work", label: "Projets" },
   { href: "/expertise", label: "Expertise" },
   { href: "/studio", label: "Studio" },
   { href: "/contact", label: "Contact" },
 ];
 
 const LEGAL_LINKS = [
-  { href: "/legal", label: "Legal notice" },
-  { href: "/privacy", label: "Privacy policy" },
-  { href: "/terms", label: "Terms of use" },
+  { href: "/legal", label: "Mentions légales" },
+  { href: "/privacy", label: "Confidentialité" },
+  { href: "/terms", label: "Conditions d'utilisation" },
 ];
 
 export function Footer() {
@@ -20,7 +20,7 @@ export function Footer() {
         <div className="col-span-2 md:col-span-1">
           <p className="font-display text-kov-bone text-lg mb-3">KOV</p>
           <p className="text-kov-steel text-xs uppercase tracking-widest leading-relaxed">
-            Design / Development / Motion
+            Design / Développement / Motion
             <br />
             Bordeaux, France
           </p>
@@ -40,7 +40,7 @@ export function Footer() {
         </div>
 
         <div>
-          <p className="text-kov-steel text-xs uppercase tracking-widest mb-4">Legal</p>
+          <p className="text-kov-steel text-xs uppercase tracking-widest mb-4">Légal</p>
           <ul className="space-y-3">
             {LEGAL_LINKS.map((link) => (
               <li key={link.href}>
@@ -55,7 +55,7 @@ export function Footer() {
         <div>
           <p className="text-kov-steel text-xs uppercase tracking-widest mb-4">Contact</p>
           <Link href="/contact" className="text-kov-bone text-sm hover:text-kov-red transition-colors">
-            Start a project →
+            Démarrer un projet →
           </Link>
         </div>
       </div>
@@ -64,7 +64,7 @@ export function Footer() {
         className="mt-20 pt-6 border-t text-[11px] uppercase tracking-widest text-kov-steel"
         style={{ borderColor: "var(--kov-border)" }}
       >
-        © {new Date().getFullYear()} KOV. All rights reserved.
+        © {new Date().getFullYear()} KOV. Tous droits réservés.
       </div>
     </footer>
   );
