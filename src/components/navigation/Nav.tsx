@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useImmersiveScrollProgress } from "@/hooks/useImmersiveScrollProgress";
 import { useSceneProgress } from "@/hooks/useSceneProgress";
 import { Button } from "@/components/ui/Button";
+import { GlobalSearch } from "@/components/search/GlobalSearch";
 
 const LINKS = [
   { href: "/#work", label: "Work" },
@@ -63,6 +64,7 @@ export function Nav() {
           ))}
         </div>
         <span className="hidden lg:inline text-kov-steel">{indicator}</span>
+        <GlobalSearch />
         <Button href="/contact" variant="pill">
           Contact us
         </Button>
