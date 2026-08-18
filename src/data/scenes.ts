@@ -1,8 +1,14 @@
 // KOV scene/scroll map — see /docs/KOV-IMMERSIVE-SCENES.md
 // Central source of truth for scroll boundaries: never hardcode scene timings inside components.
 //
-// Boundaries below are placeholders (evenly divided) pending real keyframe content —
-// tune scrollStart/scrollEnd once each scene's frames/sequences exist.
+// IMPORTANT: these fractions must match the actual stacked height of each scene's
+// section in the DOM. Right now every scene renders as a plain `min-h-screen`
+// section, so the 8 scenes are evenly split (1/8 each). The moment a scene's real
+// content makes it taller/shorter than 100vh, this file goes stale and the
+// SceneBackdrop label will desync from what's on screen (caught by screenshot-testing
+// the placeholder build — see project notes). At that point, replace this static
+// array with a hook that measures each section's actual offsetTop/offsetHeight at
+// runtime instead of hand-tuning fractions here.
 
 export interface Scene {
   id: string;
@@ -10,13 +16,19 @@ export interface Scene {
   scrollEnd: number;
 }
 
-export const scenes: Scene[] = [
-  { id: "hero", scrollStart: 0, scrollEnd: 0.14 },
-  { id: "enter-screen", scrollStart: 0.14, scrollEnd: 0.25 },
-  { id: "expertise", scrollStart: 0.25, scrollEnd: 0.4 },
-  { id: "design", scrollStart: 0.4, scrollEnd: 0.52 },
-  { id: "development", scrollStart: 0.52, scrollEnd: 0.64 },
-  { id: "work", scrollStart: 0.64, scrollEnd: 0.8 },
-  { id: "process", scrollStart: 0.8, scrollEnd: 0.9 },
-  { id: "contact", scrollStart: 0.9, scrollEnd: 1 },
-];
+const SCENE_IDS = [
+  "hero",
+  "enter-screen",
+  "expertise",
+  "design",
+  "development",
+  "work",
+  "process",
+  "contact",
+] as const;
+
+export const scenes: Scene[] = SCENE_IDS.map((id, i) => ({
+  id,
+  scrollStart: i / SCENE_IDS.length,
+  scrollEnd: (i + 1) / SCENE_IDS.length,
+}));
