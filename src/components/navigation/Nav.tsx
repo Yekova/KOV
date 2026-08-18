@@ -1,18 +1,32 @@
 "use client";
 
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useScrollProgress } from "@/hooks/useScrollProgress";
 import { useSceneProgress } from "@/hooks/useSceneProgress";
 
 const LINKS = [
-  { href: "#work", label: "Work" },
-  { href: "#expertise", label: "Expertise" },
-  { href: "#studio", label: "Studio" },
-  { href: "#contact", label: "Contact" },
+  { href: "/#work", label: "Work" },
+  { href: "/expertise", label: "Expertise" },
+  { href: "/studio", label: "Studio" },
+  { href: "/contact", label: "Contact" },
 ];
 
+const PAGE_LABELS: Record<string, string> = {
+  "/expertise": "EXPERTISE",
+  "/studio": "STUDIO",
+  "/contact": "CONTACT",
+};
+
 export function Nav() {
+  const pathname = usePathname();
   const progress = useScrollProgress();
   const { scene, index } = useSceneProgress(progress);
+
+  const isHome = pathname === "/";
+  const indicator = isHome
+    ? `${String(index + 1).padStart(2, "0")} / ${scene.id.toUpperCase()}`
+    : PAGE_LABELS[pathname] ?? "";
 
   return (
     <nav
@@ -23,19 +37,19 @@ export function Nav() {
         borderColor: "var(--glass-border)",
       }}
     >
-      <span className="font-display text-sm">KOV</span>
+      <Link href="/" className="font-display text-sm">
+        KOV
+      </Link>
 
       <div className="hidden md:flex gap-8">
         {LINKS.map((link) => (
-          <a key={link.href} href={link.href} className="hover:text-kov-red transition-colors">
+          <Link key={link.href} href={link.href} className="hover:text-kov-red transition-colors">
             {link.label}
-          </a>
+          </Link>
         ))}
       </div>
 
-      <span className="text-kov-steel">
-        {String(index + 1).padStart(2, "0")} / {scene.id.toUpperCase()}
-      </span>
+      <span className="text-kov-steel">{indicator}</span>
     </nav>
   );
 }

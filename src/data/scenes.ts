@@ -16,16 +16,10 @@ export interface Scene {
   scrollEnd: number;
 }
 
-const SCENE_IDS = [
-  "hero",
-  "enter-screen",
-  "expertise",
-  "design",
-  "development",
-  "work",
-  "process",
-  "contact",
-] as const;
+// Home keeps only the immersive scroll narrative (Hero -> Enter -> Work).
+// Expertise, Studio, and Contact are real pages (/expertise, /studio, /contact),
+// not scroll scenes — see the routes under src/app/.
+const SCENE_IDS = ["hero", "enter-screen", "work"] as const;
 
 export const scenes: Scene[] = SCENE_IDS.map((id, i) => ({
   id,
