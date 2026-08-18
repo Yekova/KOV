@@ -3,7 +3,7 @@ import { ContactForm } from "@/components/contact/ContactForm";
 
 export const metadata: Metadata = {
   title: "Contact — KOV",
-  description: "Got a project? Tell us what you're building.",
+  description: "Have a project? Let's build it.",
 };
 
 export default function ContactPage() {
@@ -15,9 +15,9 @@ export default function ContactPage() {
         className="font-display text-kov-bone uppercase max-w-3xl mb-16"
         style={{ fontSize: "var(--display-lg)", lineHeight: "var(--line-height-display)" }}
       >
-        Tell us what
+        Have a project?
         <br />
-        you&apos;re building<span className="text-kov-red">.</span>
+        <span className="text-kov-red">Let&apos;s build it.</span>
       </h1>
 
       <ContactForm />
