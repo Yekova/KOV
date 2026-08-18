@@ -4,12 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useImmersiveScrollProgress } from "@/hooks/useImmersiveScrollProgress";
 import { useSceneProgress } from "@/hooks/useSceneProgress";
+import { Button } from "@/components/ui/Button";
 
 const LINKS = [
   { href: "/#work", label: "Work" },
   { href: "/expertise", label: "Expertise" },
   { href: "/studio", label: "Studio" },
-  { href: "/contact", label: "Contact" },
 ];
 
 const PAGE_LABELS: Record<string, string> = {
@@ -42,12 +42,15 @@ export function Nav() {
         KOV
       </Link>
 
-      <div className="hidden md:flex gap-8">
+      <div className="hidden md:flex items-center gap-8">
         {LINKS.map((link) => (
           <Link key={link.href} href={link.href} className="hover:text-kov-red transition-colors">
             {link.label}
           </Link>
         ))}
+        <Button href="/contact" variant="pill">
+          Contact us
+        </Button>
       </div>
 
       <span className="text-kov-steel">{indicator}</span>

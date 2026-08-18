@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Button } from "@/components/ui/Button";
 
 const ITEMS = [
   { number: "01", title: "Design", body: "Interfaces engineered like architecture." },
@@ -27,13 +27,9 @@ export function ExpertiseTeaser() {
         ))}
       </div>
 
-      <Link
-        href="/expertise"
-        className="mt-16 inline-block text-xs uppercase tracking-widest text-kov-bone border px-6 py-4 hover:text-kov-red hover:border-kov-red transition-colors"
-        style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
-      >
+      <Button href="/expertise" variant="secondary" className="mt-16">
         View expertise →
-      </Link>
+      </Button>
     </section>
   );
 }

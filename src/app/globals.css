@@ -14,12 +14,13 @@
   --color-kov-muted: var(--kov-muted);
   --color-kov-border: var(--kov-border);
 
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-space-grotesk);
   --font-mono: var(--font-geist-mono);
-  --font-display: var(--font-archivo-narrow);
+  --font-display: var(--font-space-grotesk);
 
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);
+  --radius-pill: var(--radius-pill);
 }
 
 /* KOV is a fixed dark identity, not a light/dark adaptive theme — see /docs/KOV-BRAND.md */

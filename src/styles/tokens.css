@@ -1,15 +1,15 @@
 /* KOV design tokens — see /docs/KOV-BRAND.md and /docs/KOV-MOTION.md */
 
 :root {
-  /* Colors */
-  --kov-black: #080808;
-  --kov-carbon: #111111;
-  --kov-graphite: #1b1b1b;
+  /* Colors — aligned to the "Liquid Glass" design token sheet (2026-08-18) */
+  --kov-black: #0a0a0a;
+  --kov-carbon: #111315;
+  --kov-graphite: #181d20;
 
-  --kov-red: #d92525;
-  --kov-red-signal: #f03732;
+  --kov-red: #e31e24;
+  --kov-red-signal: #ff4d4d;
 
-  --kov-bone: #f1efea;
+  --kov-bone: #e7e7e5;
   --kov-white: #ffffff;
 
   --kov-concrete: #c6c4bf;
@@ -17,7 +17,7 @@
   --kov-muted: #484846;
 
   --kov-border: #272727;
-  --kov-grid-line: rgba(241, 239, 234, 0.12);
+  --kov-grid-line: rgba(231, 231, 229, 0.12);
 
   /* Typography scale */
   --display-xl: clamp(72px, 9vw, 160px);
@@ -28,6 +28,7 @@
   /* Radius */
   --radius-sm: 4px;
   --radius-md: 8px;
+  --radius-pill: 999px;
 
   /* Liquid Glass */
   --glass-soft: rgba(18, 18, 18, 0.42);

@@ -18,14 +18,14 @@ Le site ne doit jamais donner l'impression d'être "un beau site d'agence". Il d
 
 ```css
 :root {
-  --kov-black: #080808;
-  --kov-carbon: #111111;
-  --kov-graphite: #1B1B1B;
+  --kov-black: #0A0A0A;
+  --kov-carbon: #111315;
+  --kov-graphite: #181D20;
 
-  --kov-red: #D92525;
-  --kov-red-signal: #F03732;
+  --kov-red: #E31E24;
+  --kov-red-signal: #FF4D4D;
 
-  --kov-bone: #F1EFEA;
+  --kov-bone: #E7E7E5;
   --kov-white: #FFFFFF;
 
   --kov-concrete: #C6C4BF;
@@ -35,6 +35,8 @@ Le site ne doit jamais donner l'impression d'être "un beau site d'agence". Il d
   --kov-border: #272727;
 }
 ```
+
+*(Aligné sur la fiche de tokens "Liquid Glass" du 2026-08-18 — légèrement ajusté depuis les valeurs d'origine.)*
 
 Répartition : **75% noir / 17% blanc-gris / 8% rouge**.
 
@@ -46,9 +48,9 @@ Le noir est l'espace principal de KOV — il représente silence / architecture 
 
 Éviter un simple fond `#000`. Utiliser plusieurs profondeurs pour éviter l'impression de site plat :
 
-- `#080808` — espace
-- `#111111` — surface
-- `#1B1B1B` — profondeur
+- `#0A0A0A` — espace
+- `#111315` — surface
+- `#181D20` — profondeur
 - `#272727` — séparation
 
 ## Logo
@@ -75,11 +77,7 @@ Couleurs autorisées : blanc sur noir, rouge sur noir, noir sur blanc cassé.
 
 ## Typographie
 
-Deux familles maximum.
-
-**Display** (gros titres) : condensée / massive / architecturale / verticale — `Archivo Narrow`.
-
-**UI / Body** (neutre) : `Geist`.
+Une seule famille : **Space Grotesk** (Light/Regular/Medium/Bold), pour le display comme pour l'UI/body — remplace l'ancien duo Archivo Narrow + Geist (2026-08-18). Geist Mono reste utilisé ponctuellement pour les petits repères techniques (numéros d'étapes, indicateur de scène).
 
 ### Hiérarchie
 

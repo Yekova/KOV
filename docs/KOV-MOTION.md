@@ -37,9 +37,18 @@ Une section doit souvent devenir la suivante physiquement (ex : wireframe → in
 ```css
 --radius-sm: 4px;
 --radius-md: 8px;
+--radius-pill: 999px;
 ```
 
-Éviter absolument les radius 20px+ partout. Boutons rectangulaires ou légèrement arrondis, jamais de grosses pills omniprésentes.
+Boutons/cartes rectangulaires ou légèrement arrondis (`sm`/`md`) par défaut. `--radius-pill` est réservé à deux usages précis introduits par le système de composants "Liquid Glass" (2026-08-18) : le CTA `Contact us` de la nav, et les tag pills (`TagPill`) — pas un style de fond général.
+
+## Composants (2026-08-18)
+
+Système de composants réutilisables dans `src/components/ui/` :
+- **`Button`** — variantes `primary` (rouge plein, CTA principal de page), `secondary` (bordure, existant), `ghost` (texte seul), `pill` (nav/CTA compact)
+- **`GlassCard`** — carte en verre liquide (cf ci-dessous), pour les cartes projet et le panneau de formulaire
+- **`TagPill`** — petit tag bordé arrondi (discipline, catégorie)
+- **`GlassSphere`** — sphère décorative flottante (motif visuel ponctuel, `aria-hidden`, jamais porteuse de contenu)
 
 ## Liquid Glass
 
@@ -56,9 +65,9 @@ backdrop-filter: blur(16px);
 border: 1px solid rgba(255, 255, 255, .12);
 ```
 
-**Usage** : navbar, informations projet, modal, filtre, label, CTA secondaire.
+**Usage** : navbar, cartes projet (`GlassCard`), panneau de formulaire, modal, filtre, label, CTA secondaire, sphères décoratives (`GlassSphere`).
 
-**Ne pas** appliquer le glass à toutes les sections — c'est une couche fonctionnelle ponctuelle, pas un style de fond systématique.
+**Ne pas** appliquer le glass à toutes les sections — c'est une couche fonctionnelle ponctuelle sur des composants précis, pas un style de fond systématique pour les blocs de texte courants.
 
 ## Z-index
 

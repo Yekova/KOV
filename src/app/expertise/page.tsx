@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Button } from "@/components/ui/Button";
+import { TagPill } from "@/components/ui/Chip";
 
 export const metadata: Metadata = {
   title: "Expertise — KOV",
@@ -109,25 +110,18 @@ export default function ExpertisePage() {
       </section>
 
       <section className="mt-40">
-        <p className="text-xs uppercase tracking-widest text-kov-steel mb-4">What we build</p>
-        <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-5 max-w-3xl">
+        <p className="text-xs uppercase tracking-widest text-kov-steel mb-6">What we build</p>
+        <div className="flex flex-wrap gap-3 max-w-3xl">
           {WHAT_WE_BUILD.map((item) => (
-            <li key={item} className="flex items-center gap-3">
-              <span className="w-1.5 h-1.5 rounded-full bg-kov-red shrink-0" />
-              <span className="font-display text-kov-bone uppercase text-lg">{item}</span>
-            </li>
+            <TagPill key={item}>{item}</TagPill>
           ))}
-        </ul>
+        </div>
       </section>
 
       <div className="mt-32">
-        <Link
-          href="/contact"
-          className="inline-block text-xs uppercase tracking-widest text-kov-bone border px-6 py-4 hover:text-kov-red hover:border-kov-red transition-colors"
-          style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
-        >
+        <Button href="/contact" variant="primary">
           Start a project →
-        </Link>
+        </Button>
       </div>
     </main>
   );

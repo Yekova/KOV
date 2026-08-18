@@ -1,3 +1,6 @@
+import { GlassCard } from "@/components/ui/GlassCard";
+import { TagPill } from "@/components/ui/Chip";
+
 // Placeholder gallery — real project imagery pending. Sizes are intentionally
 // varied per docs/KOV-IMMERSIVE-SCENES.md ("never a uniform 3x2 card grid").
 const PROJECTS = [
@@ -20,15 +23,11 @@ export function WorkGallery() {
 
       <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-6">
         {PROJECTS.map((project) => (
-          <div
-            key={project.id}
-            className={`border flex flex-col justify-end p-6 min-h-[240px] ${project.span}`}
-            style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-md)" }}
-          >
-            <p className="text-kov-steel font-mono text-xs mb-2">{project.id} — placeholder visual</p>
-            <p className="font-display text-kov-bone uppercase text-lg">{project.name}</p>
-            <p className="text-kov-steel text-xs uppercase tracking-widest">{project.tag}</p>
-          </div>
+          <GlassCard key={project.id} className={`flex flex-col justify-end p-6 min-h-[240px] ${project.span}`}>
+            <p className="text-kov-steel font-mono text-xs mb-3">{project.id} — placeholder visual</p>
+            <p className="font-display text-kov-bone uppercase text-lg mb-2">{project.name}</p>
+            <TagPill>{project.tag}</TagPill>
+          </GlassCard>
         ))}
       </div>
     </section>

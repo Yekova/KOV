@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Button } from "@/components/ui/Button";
 
 const LINKS = [
   { href: "/#work", label: "Work" },
@@ -20,13 +21,9 @@ export function HomeFooter() {
           <span className="text-kov-red">Let&apos;s build it.</span>
         </h2>
 
-        <Link
-          href="/contact"
-          className="mt-10 inline-block text-xs uppercase tracking-widest text-kov-bone border px-6 py-4 hover:text-kov-red hover:border-kov-red transition-colors"
-          style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
-        >
+        <Button href="/contact" variant="primary" className="mt-10">
           Start a project →
-        </Link>
+        </Button>
       </div>
 
       <div

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ContactForm } from "@/components/contact/ContactForm";
+import { GlassSphere } from "@/components/ui/GlassSphere";
 
 export const metadata: Metadata = {
   title: "Contact — KOV",
@@ -8,7 +9,8 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <main className="min-h-screen px-6 pt-40 pb-32 max-w-[1600px] mx-auto">
+    <main className="min-h-screen px-6 pt-40 pb-32 max-w-[1600px] mx-auto relative overflow-hidden">
+      <GlassSphere size={200} className="absolute top-24 right-10 hidden md:block" />
       <p className="text-xs uppercase tracking-widest text-kov-steel mb-4">Contact</p>
 
       <h1

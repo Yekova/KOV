@@ -1,20 +1,15 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Archivo_Narrow } from "next/font/google";
+import { Space_Grotesk, Geist_Mono } from "next/font/google";
 import { Nav } from "@/components/navigation/Nav";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
   subsets: ["latin"],
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const archivoNarrow = Archivo_Narrow({
-  variable: "--font-archivo-narrow",
   subsets: ["latin"],
 });
 
@@ -25,10 +20,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${archivoNarrow.variable} h-full antialiased`}
-    >
+    <html lang="en" className={`${spaceGrotesk.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         <Nav />
         {children}

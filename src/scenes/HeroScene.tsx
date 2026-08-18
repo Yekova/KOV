@@ -1,9 +1,13 @@
+import { GlassSphere } from "@/components/ui/GlassSphere";
+
 export function HeroScene() {
   return (
     <section
       id="hero"
-      className="min-h-screen flex flex-col justify-between px-6 py-24 md:py-32 max-w-[1600px] mx-auto"
+      className="min-h-screen flex flex-col justify-between px-6 py-24 md:py-32 max-w-[1600px] mx-auto relative overflow-hidden"
     >
+      <GlassSphere size={280} className="absolute top-1/3 right-10 hidden md:block" />
+      <GlassSphere size={90} className="absolute bottom-40 right-1/3 hidden lg:block" />
       <p className="font-display text-kov-bone text-lg tracking-widest">KOV</p>
 
       <h1

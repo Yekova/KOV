@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { Button } from "@/components/ui/Button";
+import { GlassCard } from "@/components/ui/GlassCard";
 
 type Status = "idle" | "submitting" | "success" | "error";
 
@@ -39,54 +41,53 @@ export function ContactForm() {
 
   if (status === "success") {
     return (
-      <p className="text-kov-bone text-lg max-w-md">
-        Message received<span className="text-kov-red">.</span> We&apos;ll get back to you shortly.
-      </p>
+      <GlassCard className="max-w-xl p-8 md:p-12">
+        <p className="text-kov-bone text-lg">
+          Message received<span className="text-kov-red">.</span> We&apos;ll get back to you shortly.
+        </p>
+      </GlassCard>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-xl space-y-8">
-      <div>
-        <label htmlFor="name" className="text-xs uppercase tracking-widest text-kov-steel">
-          Name
-        </label>
-        <input id="name" name="name" type="text" required className={FIELD_CLASS} />
-      </div>
+    <GlassCard className="max-w-xl p-8 md:p-12">
+      <form onSubmit={handleSubmit} className="space-y-8">
+        <div>
+          <label htmlFor="name" className="text-xs uppercase tracking-widest text-kov-steel">
+            Name
+          </label>
+          <input id="name" name="name" type="text" required className={FIELD_CLASS} />
+        </div>
 
-      <div>
-        <label htmlFor="email" className="text-xs uppercase tracking-widest text-kov-steel">
-          Email
-        </label>
-        <input id="email" name="email" type="email" required className={FIELD_CLASS} />
-      </div>
+        <div>
+          <label htmlFor="email" className="text-xs uppercase tracking-widest text-kov-steel">
+            Email
+          </label>
+          <input id="email" name="email" type="email" required className={FIELD_CLASS} />
+        </div>
 
-      <div>
-        <label htmlFor="phone" className="text-xs uppercase tracking-widest text-kov-steel">
-          Phone (optional)
-        </label>
-        <input id="phone" name="phone" type="tel" className={FIELD_CLASS} />
-      </div>
+        <div>
+          <label htmlFor="phone" className="text-xs uppercase tracking-widest text-kov-steel">
+            Phone (optional)
+          </label>
+          <input id="phone" name="phone" type="tel" className={FIELD_CLASS} />
+        </div>
 
-      <div>
-        <label htmlFor="message" className="text-xs uppercase tracking-widest text-kov-steel">
-          Project
-        </label>
-        <textarea id="message" name="message" required rows={4} className={FIELD_CLASS} />
-      </div>
+        <div>
+          <label htmlFor="message" className="text-xs uppercase tracking-widest text-kov-steel">
+            Project
+          </label>
+          <textarea id="message" name="message" required rows={4} className={FIELD_CLASS} />
+        </div>
 
-      {status === "error" && (
-        <p className="text-kov-red text-sm">Something went wrong. Try again in a moment.</p>
-      )}
+        {status === "error" && (
+          <p className="text-kov-red text-sm">Something went wrong. Try again in a moment.</p>
+        )}
 
-      <button
-        type="submit"
-        disabled={status === "submitting"}
-        className="inline-block text-xs uppercase tracking-widest text-kov-bone border px-6 py-4 hover:text-kov-red hover:border-kov-red transition-colors disabled:opacity-50"
-        style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
-      >
-        {status === "submitting" ? "Sending…" : "Send →"}
-      </button>
-    </form>
+        <Button type="submit" variant="primary" disabled={status === "submitting"}>
+          {status === "submitting" ? "Sending…" : "Send →"}
+        </Button>
+      </form>
+    </GlassCard>
   );
 }
