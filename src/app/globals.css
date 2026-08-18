@@ -29,3 +29,36 @@ body {
   color: var(--kov-bone);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
+
+::selection {
+  background: var(--kov-red);
+  color: var(--kov-white);
+}
+
+/* Custom cursor — class added by CustomCursor.tsx only on fine-pointer,
+   motion-ok devices, so there's no hydration mismatch (server always
+   renders without it) and no risk of hiding the cursor on touch. */
+.kov-custom-cursor,
+.kov-custom-cursor * {
+  cursor: none;
+}
+
+.kov-cursor-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-pill);
+  background: var(--kov-red);
+  transition: width 0.2s ease, height 0.2s ease, background-color 0.2s ease;
+  will-change: transform;
+}
+
+.kov-custom-cursor .kov-cursor-dot {
+  display: block;
+}
+
+.kov-cursor-dot.kov-cursor-hover {
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: 1px solid var(--kov-red);
+}

@@ -7,19 +7,19 @@ export function HeroScene() {
       <p className="font-display text-kov-bone text-lg tracking-widest">KOV</p>
 
       <h1
-        className="font-display text-kov-bone uppercase"
+        className="font-display text-kov-bone uppercase max-w-[68%]"
         style={{ fontSize: "var(--display-xl)", lineHeight: "var(--line-height-display)" }}
       >
-        WE BUILD
+        ON CONSTRUIT
         <br />
-        WHAT PEOPLE
+        CE QU&apos;ON
         <br />
-        REMEMBER<span className="text-kov-red">.</span>
+        RETIENT<span className="text-kov-red">.</span>
       </h1>
 
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 text-xs uppercase tracking-widest text-kov-steel">
-        <p>Design / Development / Motion</p>
-        <p className="animate-pulse">Scroll to enter</p>
+        <p>Design / Développement / Motion</p>
+        <p className="animate-pulse">Scrollez pour entrer</p>
       </div>
     </section>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useImmersiveScrollProgress } from "@/hooks/useImmersiveScrollProgress";
 import { useSceneProgress } from "@/hooks/useSceneProgress";
@@ -8,7 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { GlobalSearch } from "@/components/search/GlobalSearch";
 
 const LINKS = [
-  { href: "/#work", label: "Work" },
+  { href: "/#work", label: "Projets" },
   { href: "/expertise", label: "Expertise" },
   { href: "/studio", label: "Studio" },
 ];
@@ -44,12 +45,17 @@ export function Nav() {
       className="fixed top-4 inset-x-4 md:top-6 md:inset-x-8 flex items-center justify-between gap-4"
       style={{ zIndex: "var(--z-nav)" }}
     >
-      <Link
-        href="/"
-        className="font-display text-sm text-kov-bone px-6 py-3 border"
-        style={GLASS_PILL_STYLE}
-      >
-        KOV
+      <Link href="/" className="flex items-center px-5 py-3 border" style={GLASS_PILL_STYLE}>
+        <span className="relative w-16 h-4 overflow-hidden block">
+          <Image
+            src="/kov/brand/kov-wordmark-bone-on-black.png"
+            alt="KOV"
+            fill
+            className="object-cover"
+            style={{ objectPosition: "50% 48%", transform: "scale(1.65)" }}
+            priority
+          />
+        </span>
       </Link>
 
       <nav
@@ -66,7 +72,7 @@ export function Nav() {
         <span className="hidden lg:inline text-kov-steel">{indicator}</span>
         <GlobalSearch />
         <Button href="/contact" variant="pill">
-          Contact us
+          Contact
         </Button>
       </nav>
     </div>
