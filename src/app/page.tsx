@@ -6,7 +6,7 @@ import { WorkGallery } from "@/components/home/WorkGallery";
 import { PhilosophyStatement } from "@/components/home/PhilosophyStatement";
 import { ProcessTimeline } from "@/components/home/ProcessTimeline";
 import { WorkSpotlight } from "@/components/home/WorkSpotlight";
-import { HomeFooter } from "@/components/home/HomeFooter";
+import { ClosingCta } from "@/components/home/ClosingCta";
 import { scenes } from "@/data/scenes";
 
 const SCENE_LABELS: Record<string, string> = {
@@ -35,7 +35,7 @@ export default function Home() {
         <PhilosophyStatement />
         <ProcessTimeline />
         <WorkSpotlight />
-        <HomeFooter />
+        <ClosingCta />
       </main>
     </>
   );

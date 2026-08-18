@@ -30,12 +30,18 @@
   --radius-md: 8px;
   --radius-pill: 999px;
 
-  /* Liquid Glass */
-  --glass-soft: rgba(18, 18, 18, 0.42);
-  --glass-medium: rgba(18, 18, 18, 0.58);
-  --glass-strong: rgba(18, 18, 18, 0.72);
-  --glass-border: rgba(255, 255, 255, 0.12);
-  --glass-blur: 16px;
+  /* Liquid Glass — a light, translucent tint + blur/saturate + a bright rim
+     highlight is what actually reads as "glass" on a near-black background.
+     A flat dark rgba() alone (the old recipe) just looks like a darker box. */
+  --glass-tint-top: rgba(255, 255, 255, 0.09);
+  --glass-tint-bottom: rgba(255, 255, 255, 0.02);
+  --glass-border: rgba(255, 255, 255, 0.16);
+  --glass-highlight: rgba(255, 255, 255, 0.16);
+  --glass-shadow: rgba(0, 0, 0, 0.45);
+  --glass-blur: 20px;
+  --glass-bg: linear-gradient(160deg, var(--glass-tint-top), var(--glass-tint-bottom));
+  --glass-shadow-full: inset 0 1px 0 var(--glass-highlight), inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+    0 8px 30px var(--glass-shadow);
 
   /* Z-index scale — see /docs/KOV-MOTION.md, never improvise a z-index outside this scale */
   --z-canvas: 0;

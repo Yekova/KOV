@@ -25,13 +25,27 @@ export function useImmersiveScrollProgress() {
     }
 
     measure();
+    // Re-measure shortly after mount too: web font swaps and late layout
+    // shifts elsewhere on the page change document height without resizing
+    // #work itself, so a resize observer scoped to #work alone can miss them
+    // and leave two independent callers of this hook (Nav, SceneBackdrop)
+    // disagreeing about where the immersive zone ends.
+    const settleTimer = setTimeout(measure, 500);
+
     window.addEventListener("resize", measure);
     const el = document.getElementById("work");
-    const observer = new ResizeObserver(measure);
-    if (el) observer.observe(el);
+    const resizeObserver = new ResizeObserver(measure);
+    if (el) resizeObserver.observe(el);
+    // Catches height changes anywhere on the page (fonts, images, new
+    // sections), not just #work's own size.
+    const bodyObserver = new ResizeObserver(measure);
+    bodyObserver.observe(document.body);
+
     return () => {
+      clearTimeout(settleTimer);
       window.removeEventListener("resize", measure);
-      observer.disconnect();
+      resizeObserver.disconnect();
+      bodyObserver.disconnect();
     };
   }, []);
 

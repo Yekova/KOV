@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Button } from "@/components/ui/Button";
-import { GlassSphere } from "@/components/ui/GlassSphere";
 
 export const metadata: Metadata = {
   title: "Studio — KOV",
@@ -18,8 +17,7 @@ const PHILOSOPHY_WORDS = ["Clarté", "Intention", "Impact"];
 
 export default function StudioPage() {
   return (
-    <main className="min-h-screen px-6 pt-40 pb-32 max-w-[1600px] mx-auto relative overflow-hidden">
-      <GlassSphere size={220} className="absolute -top-10 right-6 hidden md:block" />
+    <main className="min-h-screen px-6 pt-40 pb-32 max-w-[1600px] mx-auto">
       <p className="text-xs uppercase tracking-widest text-kov-steel mb-4">Studio</p>
 
       <h1
