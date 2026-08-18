@@ -1,0 +1,48 @@
+/* KOV design tokens — see /docs/KOV-BRAND.md and /docs/KOV-MOTION.md */
+
+:root {
+  /* Colors */
+  --kov-black: #080808;
+  --kov-carbon: #111111;
+  --kov-graphite: #1b1b1b;
+
+  --kov-red: #d92525;
+  --kov-red-signal: #f03732;
+
+  --kov-bone: #f1efea;
+  --kov-white: #ffffff;
+
+  --kov-concrete: #c6c4bf;
+  --kov-steel: #777774;
+  --kov-muted: #484846;
+
+  --kov-border: #272727;
+  --kov-grid-line: rgba(241, 239, 234, 0.12);
+
+  /* Typography scale */
+  --display-xl: clamp(72px, 9vw, 160px);
+  --display-lg: clamp(56px, 7vw, 120px);
+  --heading-lg: clamp(38px, 5vw, 72px);
+  --line-height-display: 0.85;
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+
+  /* Liquid Glass */
+  --glass-soft: rgba(18, 18, 18, 0.42);
+  --glass-medium: rgba(18, 18, 18, 0.58);
+  --glass-strong: rgba(18, 18, 18, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-blur: 16px;
+
+  /* Z-index scale — see /docs/KOV-MOTION.md, never improvise a z-index outside this scale */
+  --z-canvas: 0;
+  --z-atmosphere: 10;
+  --z-layer-secondary: 20;
+  --z-content: 30;
+  --z-glass: 40;
+  --z-nav: 50;
+  --z-cursor: 60;
+  --z-modal: 70;
+}

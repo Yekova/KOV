@@ -1,26 +1,30 @@
 @import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@import "../styles/tokens.css";
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-kov-black: var(--kov-black);
+  --color-kov-carbon: var(--kov-carbon);
+  --color-kov-graphite: var(--kov-graphite);
+  --color-kov-red: var(--kov-red);
+  --color-kov-red-signal: var(--kov-red-signal);
+  --color-kov-bone: var(--kov-bone);
+  --color-kov-white: var(--kov-white);
+  --color-kov-concrete: var(--kov-concrete);
+  --color-kov-steel: var(--kov-steel);
+  --color-kov-muted: var(--kov-muted);
+  --color-kov-border: var(--kov-border);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-archivo-narrow);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* KOV is a fixed dark identity, not a light/dark adaptive theme — see /docs/KOV-BRAND.md */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--kov-black);
+  color: var(--kov-bone);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
