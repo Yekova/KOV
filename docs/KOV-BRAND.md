@@ -64,6 +64,15 @@ Couleurs autorisées : blanc sur noir, rouge sur noir, noir sur blanc cassé.
 
 **Interdit** : effets 3D, chrome, gradient sur le logo.
 
+### Assets
+
+| Fichier | Usage |
+|---|---|
+| `/kov/brand/kov-wordmark-bone-on-black.png` | Wordmark principal, blanc sur noir |
+| `/kov/brand/kov-wordmark-black-on-bone.png` | Wordmark, noir sur blanc cassé |
+| `/kov/brand/kov-signature-red-dot.png` | Signature `KOV.` avec le point rouge |
+| `/kov/brand/kov-monogram-k.png` | Monogramme `K`, favicon / espaces réduits |
+
 ## Typographie
 
 Deux familles maximum.
