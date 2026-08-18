@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useScrollProgress } from "@/hooks/useScrollProgress";
+import { useImmersiveScrollProgress } from "@/hooks/useImmersiveScrollProgress";
 import { useSceneProgress } from "@/hooks/useSceneProgress";
 
 const LINKS = [
@@ -20,13 +20,14 @@ const PAGE_LABELS: Record<string, string> = {
 
 export function Nav() {
   const pathname = usePathname();
-  const progress = useScrollProgress();
+  const { progress, active } = useImmersiveScrollProgress();
   const { scene, index } = useSceneProgress(progress);
 
   const isHome = pathname === "/";
-  const indicator = isHome
-    ? `${String(index + 1).padStart(2, "0")} / ${scene.id.toUpperCase()}`
-    : PAGE_LABELS[pathname] ?? "";
+  const indicator =
+    isHome && active
+      ? `${String(index + 1).padStart(2, "0")} / ${scene.id.toUpperCase()}`
+      : PAGE_LABELS[pathname] ?? "KOV";
 
   return (
     <nav

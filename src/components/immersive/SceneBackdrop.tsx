@@ -1,24 +1,31 @@
 "use client";
 
-import { useScrollProgress } from "@/hooks/useScrollProgress";
+import { useImmersiveScrollProgress } from "@/hooks/useImmersiveScrollProgress";
 import { useSceneProgress } from "@/hooks/useSceneProgress";
 import { scenes } from "@/data/scenes";
 
 // Placeholder for the real frame-by-frame sequence / canvas (see /docs/KOV-IMMERSIVE-SCENES.md).
 // Fixed full-viewport layer at z-canvas — swap the flat depth color for the actual
 // scrubbed sequence once keyframes exist, keeping the same scene/progress inputs.
+// Fades out once scroll passes the #work section, where the regular (non-scene)
+// homepage sections take over.
 const DEPTHS = ["var(--kov-black)", "var(--kov-carbon)", "var(--kov-graphite)"];
 const PLACEHOLDER_FRAME_COUNT = 48;
 
 export function SceneBackdrop() {
-  const progress = useScrollProgress();
+  const { progress, active } = useImmersiveScrollProgress();
   const { scene, index, localProgress } = useSceneProgress(progress);
   const frame = Math.round(localProgress * (PLACEHOLDER_FRAME_COUNT - 1)) + 1;
 
   return (
     <div
-      className="fixed inset-0 flex items-end justify-center pb-10 transition-colors duration-500"
-      style={{ zIndex: "var(--z-canvas)", background: DEPTHS[index % DEPTHS.length] }}
+      className="fixed inset-0 flex items-end justify-center pb-10 transition-opacity duration-500"
+      style={{
+        zIndex: "var(--z-canvas)",
+        background: DEPTHS[index % DEPTHS.length],
+        opacity: active ? 1 : 0,
+        pointerEvents: "none",
+      }}
     >
       <div className="font-mono text-[11px] text-kov-steel tracking-widest uppercase text-center space-y-3">
         <p>placeholder sequence — replace with real frames</p>
