@@ -1,87 +1,150 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { logout } from "@/app/login/actions";
-import { Button } from "@/components/ui/Button";
-import { LeadStatusSelect } from "./LeadStatusSelect";
-import { OnlineToggle } from "./OnlineToggle";
+import { getActiveProjectsKpi, getNewLeadsKpi, getMonthlyRevenueKpi, getPendingTasksKpi, getGlobalProgressKpi } from "@/lib/admin/kpis";
+import { KpiGrid } from "@/components/admin/dashboard/KpiGrid";
+import { ProjectPipeline } from "@/components/admin/dashboard/ProjectPipeline";
+import { LeadFeed } from "@/components/admin/dashboard/LeadFeed";
+import { TeamWorkload } from "@/components/admin/dashboard/TeamWorkload";
+import { ProjectTable } from "@/components/admin/dashboard/ProjectTable";
+import { TaskFeed } from "@/components/admin/dashboard/TaskFeed";
+import { ActivityFeed } from "@/components/admin/dashboard/ActivityFeed";
 
 export const metadata: Metadata = {
-  title: "Admin — KOV",
+  title: "Dashboard — Admin KOV",
 };
 
-export default async function AdminPage() {
-  const user = await requireAdmin();
+export default async function AdminDashboardPage() {
+  await requireAdmin();
 
-  const [{ data: leads }, { data: profile }] = await Promise.all([
+  const [
+    { data: projects },
+    { data: recentLeads },
+    { data: activity },
+    { data: adminProfiles },
+    { data: openTasks },
+    { data: pendingTasks },
+  ] = await Promise.all([
+    supabaseAdmin
+      .from("projects")
+      .select(
+        "id, name, category, status, pipeline_stage, progress_percent, next_deadline_date, budget_cents, currency, client_id, project_manager_id, created_at"
+      )
+      .order("created_at", { ascending: false }),
     supabaseAdmin
       .from("leads")
-      .select("id, created_at, name, email, phone, message, status")
-      .order("created_at", { ascending: false }),
-    supabaseAdmin.from("profiles").select("is_online").eq("id", user.id).maybeSingle(),
+      .select("id, name, company, project_type, status, created_at")
+      .order("created_at", { ascending: false })
+      .limit(6),
+    supabaseAdmin
+      .from("activity_log")
+      .select("id, type, title, admin_title, created_at")
+      .order("created_at", { ascending: false })
+      .limit(8),
+    supabaseAdmin.from("profiles").select("id, full_name, email, display_title").eq("role", "admin"),
+    supabaseAdmin.from("project_tasks").select("assigned_to").in("status", ["todo", "in_progress", "blocked"]),
+    supabaseAdmin
+      .from("project_tasks")
+      .select("id, title, priority, assigned_to, project_id")
+      .in("status", ["todo", "blocked"])
+      .order("created_at", { ascending: false })
+      .limit(6),
   ]);
 
-  const rows = leads ?? [];
+  const projectRows = projects ?? [];
+  const adminRows = adminProfiles ?? [];
+
+  const clientIds = Array.from(new Set(projectRows.map((p) => p.client_id)));
+  const managerIds = Array.from(
+    new Set(projectRows.map((p) => p.project_manager_id).filter((id): id is string => !!id))
+  );
+
+  const [{ data: clientProfiles }] = await Promise.all([
+    clientIds.length
+      ? supabaseAdmin.from("profiles").select("id, full_name, email, company").in("id", clientIds)
+      : Promise.resolve({ data: [] as { id: string; full_name: string | null; email: string; company: string | null }[] }),
+  ]);
+
+  const clientNameById = new Map(
+    (clientProfiles ?? []).map((c) => [c.id, c.full_name || c.company || c.email])
+  );
+  const managerNameById = new Map(adminRows.map((a) => [a.id, a.full_name || a.email]));
+
+  // Team workload: open task count per admin, relative to the busiest member.
+  const openTaskCountByAdmin = new Map<string, number>();
+  for (const t of openTasks ?? []) {
+    if (!t.assigned_to) continue;
+    openTaskCountByAdmin.set(t.assigned_to, (openTaskCountByAdmin.get(t.assigned_to) ?? 0) + 1);
+  }
+  const teamMembers = adminRows.map((a) => ({
+    id: a.id,
+    name: a.full_name || a.email,
+    title: a.display_title,
+    openTaskCount: openTaskCountByAdmin.get(a.id) ?? 0,
+  }));
+
+  const pipelineProjects = projectRows.map((p) => ({
+    id: p.id,
+    name: p.name,
+    category: p.category,
+    budgetCents: p.budget_cents,
+    currency: p.currency,
+    pipelineStage: p.pipeline_stage,
+    clientName: clientNameById.get(p.client_id) ?? "—",
+  }));
+
+  const recentProjectsForTable = projectRows.slice(0, 8).map((p) => ({
+    id: p.id,
+    name: p.name,
+    clientId: p.client_id,
+    clientName: clientNameById.get(p.client_id) ?? "—",
+    managerName: p.project_manager_id ? managerNameById.get(p.project_manager_id) ?? null : null,
+    status: p.status,
+    progressPercent: p.progress_percent,
+    dueDate: p.next_deadline_date,
+  }));
+
+  const taskFeedItems = (pendingTasks ?? []).map((t) => ({
+    id: t.id,
+    title: t.title,
+    assigneeName: t.assigned_to ? managerNameById.get(t.assigned_to) ?? null : null,
+    priority: t.priority,
+  }));
+
+  const [activeProjectsKpi, newLeadsKpi, monthlyRevenueKpi, pendingTasksKpi] = await Promise.all([
+    Promise.resolve(getActiveProjectsKpi(projectRows)),
+    getNewLeadsKpi(),
+    getMonthlyRevenueKpi(),
+    getPendingTasksKpi(),
+  ]);
+  const globalProgress = getGlobalProgressKpi(projectRows);
 
   return (
-    <main className="min-h-screen px-6 py-32 max-w-6xl mx-auto w-full">
-      <div className="flex items-center justify-between mb-8">
-        <nav className="flex items-center gap-6 text-xs uppercase tracking-widest">
-          <span className="text-kov-bone border-b border-kov-red pb-1">Leads</span>
-          <Link href="/admin/clients" className="text-kov-steel hover:text-kov-bone transition-colors">
-            Clients
-          </Link>
-        </nav>
-        <div className="flex items-center gap-6">
-          <OnlineToggle isOnline={profile?.is_online ?? false} />
-          <form action={logout}>
-            <Button type="submit" variant="ghost">
-              Se déconnecter
-            </Button>
-          </form>
+    <main className="px-6 py-10 max-w-[1800px] mx-auto w-full space-y-6">
+      <KpiGrid
+        activeProjects={activeProjectsKpi}
+        newLeads={newLeadsKpi}
+        monthlyRevenue={monthlyRevenueKpi}
+        pendingTasks={pendingTasksKpi}
+        globalProgress={globalProgress}
+      />
+
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="xl:col-span-2">
+          <ProjectPipeline initialProjects={pipelineProjects} />
+        </div>
+        <LeadFeed leads={recentLeads ?? []} />
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <TeamWorkload members={teamMembers} />
+        <div className="xl:col-span-2 space-y-6">
+          <ProjectTable projects={recentProjectsForTable} title="Projets récents" viewAllHref="/admin/projects" />
+          <TaskFeed tasks={taskFeedItems} />
         </div>
       </div>
 
-      <h1 className="font-display text-kov-bone text-2xl uppercase mb-8">Demandes de contact</h1>
-
-      {rows.length === 0 ? (
-        <p className="text-kov-steel">Aucune demande pour l&apos;instant.</p>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead>
-              <tr className="text-xs uppercase tracking-widest text-kov-steel border-b" style={{ borderColor: "var(--kov-border)" }}>
-                <th className="py-3 pr-4">Date</th>
-                <th className="py-3 pr-4">Nom</th>
-                <th className="py-3 pr-4">Contact</th>
-                <th className="py-3 pr-4">Message</th>
-                <th className="py-3 pr-4">Statut</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((lead) => (
-                <tr key={lead.id} className="border-b align-top" style={{ borderColor: "var(--kov-border)" }}>
-                  <td className="py-4 pr-4 text-kov-steel whitespace-nowrap">
-                    {new Date(lead.created_at).toLocaleDateString("fr-FR")}
-                  </td>
-                  <td className="py-4 pr-4 text-kov-bone">{lead.name}</td>
-                  <td className="py-4 pr-4 text-kov-bone">
-                    <a href={`mailto:${lead.email}`} className="hover:text-kov-red transition-colors">
-                      {lead.email}
-                    </a>
-                    {lead.phone && <div className="text-kov-steel text-xs mt-1">{lead.phone}</div>}
-                  </td>
-                  <td className="py-4 pr-4 text-kov-bone max-w-sm">{lead.message}</td>
-                  <td className="py-4 pr-4">
-                    <LeadStatusSelect leadId={lead.id} status={lead.status} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <ActivityFeed items={activity ?? []} />
     </main>
   );
 }

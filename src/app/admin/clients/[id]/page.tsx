@@ -10,6 +10,7 @@ import {
   INVOICE_STATUSES,
   INVOICE_STATUS_LABELS,
 } from "@/lib/portal/status";
+import { PIPELINE_STAGES, PIPELINE_STAGE_LABELS, PRIORITIES, PRIORITY_LABELS } from "@/lib/admin/status";
 import {
   setAccountManager,
   createProject,
@@ -88,7 +89,7 @@ export default async function AdminClientDetailPage(props: PageProps<"/admin/cli
   const setAccountManagerWithId = setAccountManager.bind(null, clientId);
 
   return (
-    <main className="min-h-screen px-6 py-32 max-w-5xl mx-auto w-full space-y-16">
+    <main className="px-6 py-10 max-w-5xl mx-auto w-full space-y-16">
       <div>
         <Link href="/admin/clients" className="text-kov-steel text-xs uppercase tracking-widest hover:text-kov-bone transition-colors">
           ← Retour aux clients
@@ -146,6 +147,48 @@ export default async function AdminClientDetailPage(props: PageProps<"/admin/cli
                     {PROJECT_STATUSES.map((s) => (
                       <option key={s} value={s}>
                         {PROJECT_STATUS_LABELS[s]}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="text-xs text-kov-steel">
+                  Étape pipeline
+                  <select name="pipeline_stage" defaultValue={project.pipeline_stage} className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }}>
+                    {PIPELINE_STAGES.map((s) => (
+                      <option key={s} value={s}>
+                        {PIPELINE_STAGE_LABELS[s]}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="text-xs text-kov-steel">
+                  Chef de projet
+                  <select name="project_manager_id" defaultValue={project.project_manager_id ?? ""} className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }}>
+                    <option value="">— Aucun —</option>
+                    {(admins ?? []).map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.full_name || a.email}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="text-xs text-kov-steel">
+                  Budget (€)
+                  <input
+                    type="text"
+                    name="budget_eur"
+                    defaultValue={project.budget_cents !== null ? (project.budget_cents / 100).toFixed(2) : ""}
+                    className={`${FIELD_CLASS} w-28`}
+                    style={{ borderColor: "var(--kov-border)" }}
+                  />
+                </label>
+                <label className="text-xs text-kov-steel">
+                  Priorité
+                  <select name="priority" defaultValue={project.priority ?? ""} className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }}>
+                    <option value="">—</option>
+                    {PRIORITIES.map((p) => (
+                      <option key={p} value={p}>
+                        {PRIORITY_LABELS[p]}
                       </option>
                     ))}
                   </select>
@@ -210,6 +253,42 @@ export default async function AdminClientDetailPage(props: PageProps<"/admin/cli
               {PROJECT_STATUSES.map((s) => (
                 <option key={s} value={s}>
                   {PROJECT_STATUS_LABELS[s]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="text-xs text-kov-steel">
+            Étape pipeline
+            <select name="pipeline_stage" defaultValue="discovery" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }}>
+              {PIPELINE_STAGES.map((s) => (
+                <option key={s} value={s}>
+                  {PIPELINE_STAGE_LABELS[s]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="text-xs text-kov-steel">
+            Chef de projet
+            <select name="project_manager_id" defaultValue="" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }}>
+              <option value="">— Aucun —</option>
+              {(admins ?? []).map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.full_name || a.email}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="text-xs text-kov-steel">
+            Budget (€)
+            <input type="text" name="budget_eur" placeholder="4200.00" className={`${FIELD_CLASS} w-28`} style={{ borderColor: "var(--kov-border)" }} />
+          </label>
+          <label className="text-xs text-kov-steel">
+            Priorité
+            <select name="priority" defaultValue="" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }}>
+              <option value="">—</option>
+              {PRIORITIES.map((p) => (
+                <option key={p} value={p}>
+                  {PRIORITY_LABELS[p]}
                 </option>
               ))}
             </select>

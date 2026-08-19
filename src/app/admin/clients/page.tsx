@@ -39,16 +39,7 @@ export default async function AdminClientsPage() {
   }
 
   return (
-    <main className="min-h-screen px-6 py-32 max-w-6xl mx-auto w-full">
-      <div className="flex items-center justify-between mb-8">
-        <nav className="flex items-center gap-6 text-xs uppercase tracking-widest">
-          <Link href="/admin" className="text-kov-steel hover:text-kov-bone transition-colors">
-            Leads
-          </Link>
-          <span className="text-kov-bone border-b border-kov-red pb-1">Clients</span>
-        </nav>
-      </div>
-
+    <main className="px-6 py-10 max-w-6xl mx-auto w-full">
       <h1 className="font-display text-kov-bone text-2xl uppercase mb-8">Clients</h1>
 
       {rows.length === 0 ? (

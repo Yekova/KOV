@@ -20,7 +20,11 @@ export default async function ClientDashboardPage() {
   const [{ data: profile }, { data: projects }, { data: documents }, { data: invoices }, { data: activity }] =
     await Promise.all([
       supabaseAdmin.from("profiles").select("full_name, account_manager_id").eq("id", user.id).maybeSingle(),
-      supabaseAdmin.from("projects").select("*").eq("client_id", user.id).order("created_at", { ascending: false }),
+      supabaseAdmin
+        .from("projects")
+        .select("id, name, category, status, progress_percent, thumbnail_path, next_deadline_date, deadline_phase_label")
+        .eq("client_id", user.id)
+        .order("created_at", { ascending: false }),
       supabaseAdmin
         .from("documents")
         .select("id, filename")

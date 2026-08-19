@@ -28,6 +28,8 @@
   /* Radius */
   --radius-sm: 4px;
   --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-glass: 18px;
   --radius-pill: 999px;
 
   /* Liquid Glass — a light, translucent tint + blur/saturate + a bright rim

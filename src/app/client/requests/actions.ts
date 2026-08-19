@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { logActivity, getActorDisplayName } from "@/lib/activity";
 
 export async function createRequestThread(formData: FormData) {
   const user = await requireUser();
@@ -37,11 +38,15 @@ export async function createRequestThread(formData: FormData) {
 
   if (messageError) throw new Error("L'envoi du message a échoué.");
 
-  await supabaseAdmin.from("activity_log").insert({
-    client_id: user.id,
-    project_id: projectIdValue,
+  const actorName = await getActorDisplayName(user.id);
+
+  await logActivity({
+    clientId: user.id,
+    projectId: projectIdValue,
     type: "message",
     title: "Nouvelle demande envoyée",
+    adminTitle: `${actorName} a envoyé une nouvelle demande « ${subject.trim()} »`,
+    actorId: user.id,
     description: subject.trim(),
   });
 
