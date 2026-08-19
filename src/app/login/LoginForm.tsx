@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { login, type LoginState } from "./actions";
+import { setGazeOverride } from "@/components/login/characterGaze";
 
 const FIELD_CLASS =
   "w-full bg-transparent border-b py-3 pr-8 text-kov-bone placeholder:text-kov-steel focus:outline-none focus:border-kov-red transition-colors";
@@ -34,7 +35,15 @@ export function LoginForm({ next, justReset }: { next?: string; justReset?: bool
             Email
           </label>
           <div className="relative">
-            <input id="email" name="email" type="email" required className={FIELD_CLASS} />
+            <input
+              id="email"
+              name="email"
+              type="email"
+              required
+              className={FIELD_CLASS}
+              onFocus={() => setGazeOverride({ yaw: 0.85, pitch: -0.1 })}
+              onBlur={() => setGazeOverride(null)}
+            />
             <svg
               width="16"
               height="16"
@@ -66,6 +75,8 @@ export function LoginForm({ next, justReset }: { next?: string; justReset?: bool
               type={showPassword ? "text" : "password"}
               required
               className={FIELD_CLASS}
+              onFocus={() => setGazeOverride({ yaw: 0.85, pitch: 0.35 })}
+              onBlur={() => setGazeOverride(null)}
             />
             <button
               type="button"

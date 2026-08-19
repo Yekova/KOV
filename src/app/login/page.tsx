@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { LoginForm } from "./LoginForm";
-import { CharacterColumn } from "@/components/login/CharacterColumn";
+import { KovCharacterScene } from "@/components/login/KovCharacterScene";
 
 export const metadata: Metadata = {
   title: "Connexion — KOV",
@@ -65,7 +65,7 @@ export default async function LoginPage(props: PageProps<"/login">) {
         className="hidden xl:flex border-r"
         style={{ borderColor: "var(--kov-border)" }}
       >
-        <CharacterColumn />
+        <KovCharacterScene />
       </section>
 
       <section className="flex items-center justify-center px-6 py-32">
