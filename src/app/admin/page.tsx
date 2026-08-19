@@ -1,34 +1,49 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { logout } from "@/app/login/actions";
 import { Button } from "@/components/ui/Button";
 import { LeadStatusSelect } from "./LeadStatusSelect";
+import { OnlineToggle } from "./OnlineToggle";
 
 export const metadata: Metadata = {
   title: "Admin — KOV",
 };
 
 export default async function AdminPage() {
-  await requireAdmin();
+  const user = await requireAdmin();
 
-  const { data: leads } = await supabaseAdmin
-    .from("leads")
-    .select("id, created_at, name, email, phone, message, status")
-    .order("created_at", { ascending: false });
+  const [{ data: leads }, { data: profile }] = await Promise.all([
+    supabaseAdmin
+      .from("leads")
+      .select("id, created_at, name, email, phone, message, status")
+      .order("created_at", { ascending: false }),
+    supabaseAdmin.from("profiles").select("is_online").eq("id", user.id).maybeSingle(),
+  ]);
 
   const rows = leads ?? [];
 
   return (
     <main className="min-h-screen px-6 py-32 max-w-6xl mx-auto w-full">
-      <div className="flex items-center justify-between mb-12">
-        <h1 className="font-display text-kov-bone text-2xl uppercase">Demandes de contact</h1>
-        <form action={logout}>
-          <Button type="submit" variant="ghost">
-            Se déconnecter
-          </Button>
-        </form>
+      <div className="flex items-center justify-between mb-8">
+        <nav className="flex items-center gap-6 text-xs uppercase tracking-widest">
+          <span className="text-kov-bone border-b border-kov-red pb-1">Leads</span>
+          <Link href="/admin/clients" className="text-kov-steel hover:text-kov-bone transition-colors">
+            Clients
+          </Link>
+        </nav>
+        <div className="flex items-center gap-6">
+          <OnlineToggle isOnline={profile?.is_online ?? false} />
+          <form action={logout}>
+            <Button type="submit" variant="ghost">
+              Se déconnecter
+            </Button>
+          </form>
+        </div>
       </div>
+
+      <h1 className="font-display text-kov-bone text-2xl uppercase mb-8">Demandes de contact</h1>
 
       {rows.length === 0 ? (
         <p className="text-kov-steel">Aucune demande pour l&apos;instant.</p>

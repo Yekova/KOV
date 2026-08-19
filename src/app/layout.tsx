@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Geist_Mono } from "next/font/google";
-import { Nav } from "@/components/navigation/Nav";
-import { Footer } from "@/components/layout/Footer";
+import { SiteChrome } from "@/components/layout/SiteChrome";
 import { CustomCursor } from "@/components/ui/CustomCursor";
 import "./globals.css";
 
@@ -25,9 +24,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="fr" className={`${spaceGrotesk.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         <CustomCursor />
-        <Nav />
-        {children}
-        <Footer />
+        <SiteChrome>{children}</SiteChrome>
       </body>
     </html>
   );
