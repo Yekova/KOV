@@ -2,9 +2,6 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
-import { useImmersiveScrollProgress } from "@/hooks/useImmersiveScrollProgress";
-import { useSceneProgress } from "@/hooks/useSceneProgress";
 import { Button } from "@/components/ui/Button";
 import { GlobalSearch } from "@/components/search/GlobalSearch";
 
@@ -13,12 +10,6 @@ const LINKS = [
   { href: "/expertise", label: "Expertise" },
   { href: "/studio", label: "Studio" },
 ];
-
-const PAGE_LABELS: Record<string, string> = {
-  "/expertise": "EXPERTISE",
-  "/studio": "STUDIO",
-  "/contact": "CONTACT",
-};
 
 const GLASS_PILL_STYLE = {
   background: "var(--glass-bg)",
@@ -30,16 +21,6 @@ const GLASS_PILL_STYLE = {
 } as const;
 
 export function Nav() {
-  const pathname = usePathname();
-  const { progress, active } = useImmersiveScrollProgress();
-  const { scene, index } = useSceneProgress(progress);
-
-  const isHome = pathname === "/";
-  const indicator =
-    isHome && active
-      ? `${String(index + 1).padStart(2, "0")} / ${scene.id.toUpperCase()}`
-      : PAGE_LABELS[pathname] ?? "KOV";
-
   return (
     <div
       className="fixed top-4 inset-x-4 md:top-6 md:inset-x-8 flex items-center justify-between gap-4"
@@ -51,15 +32,16 @@ export function Nav() {
             src="/kov/brand/kov-wordmark-bone-on-black.png"
             alt="KOV"
             fill
+            sizes="64px"
             className="object-cover"
-            style={{ objectPosition: "50% 48%", transform: "scale(1.65)" }}
+            style={{ objectPosition: "50% 48%", transform: "scale(1.65)", mixBlendMode: "screen" }}
             priority
           />
         </span>
       </Link>
 
       <nav
-        className="flex items-center gap-8 px-6 py-3 text-xs uppercase tracking-widest text-kov-bone border"
+        className="flex items-center gap-3 sm:gap-8 px-4 sm:px-6 py-3 text-xs uppercase tracking-widest text-kov-bone border"
         style={GLASS_PILL_STYLE}
       >
         <div className="hidden md:flex items-center gap-8">
@@ -69,8 +51,18 @@ export function Nav() {
             </Link>
           ))}
         </div>
-        <span className="hidden lg:inline text-kov-steel">{indicator}</span>
         <GlobalSearch />
+        <Link
+          href="/login"
+          aria-label="Espace client"
+          title="Espace client"
+          className="w-10 h-10 flex items-center justify-center text-kov-bone hover:text-kov-red transition-colors"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="5" y="11" width="14" height="9" rx="1.5" />
+            <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+          </svg>
+        </Link>
         <Button href="/contact" variant="pill">
           Contact
         </Button>
