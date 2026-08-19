@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { LoginForm } from "./LoginForm";
-import { CharacterBackdrop } from "@/components/login/CharacterBackdrop";
+import { CharacterColumn } from "@/components/login/CharacterColumn";
 
 export const metadata: Metadata = {
   title: "Connexion — KOV",
@@ -14,14 +14,12 @@ export default async function LoginPage(props: PageProps<"/login">) {
   const justReset = searchParams.reset === "success";
 
   return (
-    <main className="min-h-screen grid md:grid-cols-2">
+    <main className="min-h-screen grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[minmax(280px,1fr)_minmax(380px,1.3fr)_minmax(380px,1fr)]">
       <section
-        className="hidden md:flex relative overflow-hidden flex-col justify-center px-12 lg:px-20 py-32 border-r"
+        className="hidden md:flex flex-col justify-center px-12 lg:px-16 py-32 border-r"
         style={{ borderColor: "var(--kov-border)" }}
       >
-        <CharacterBackdrop />
-
-        <div className="relative z-10 max-w-xs lg:max-w-sm">
+        <div className="max-w-xs">
           <p className="text-kov-red text-xs uppercase tracking-widest mb-6">Espace sécurisé</p>
           <h1
             className="font-display text-kov-bone uppercase"
@@ -39,7 +37,7 @@ export default async function LoginPage(props: PageProps<"/login">) {
 
           <div
             className="mt-12 flex items-start gap-4 border p-4"
-            style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-md)", background: "rgba(10,10,10,0.55)" }}
+            style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-md)" }}
           >
             <svg
               width="20"
@@ -61,6 +59,13 @@ export default async function LoginPage(props: PageProps<"/login">) {
             </div>
           </div>
         </div>
+      </section>
+
+      <section
+        className="hidden xl:flex border-r"
+        style={{ borderColor: "var(--kov-border)" }}
+      >
+        <CharacterColumn />
       </section>
 
       <section className="flex items-center justify-center px-6 py-32">
