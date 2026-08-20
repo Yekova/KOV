@@ -1,77 +1,76 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { damp } from "@/lib/damp";
 
 interface LoginCharacterBackdropProps {
-  src: string;
+  basePath: string;
+  frameCount: number;
   poster: string;
 }
 
-const SCROLL_SENSITIVITY = 1 / 1400; // px of cumulative horizontal scroll to cover the full clip
+const LAMBDA = 10;
 
-function clamp(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, value));
+function frameUrl(basePath: string, index: number) {
+  return `${basePath}/frame-${String(index).padStart(3, "0")}.jpg`;
 }
 
-// Full-viewport backdrop — same fixed/z-canvas/pointer-events:none convention as
-// SceneBackdrop.tsx (the homepage's scroll-driven scene layer). object-fit: contain,
-// not cover: the source clip is a tall 9:16 portrait, and this page's near-black
-// background matches the clip's own dark backdrop closely enough that letterboxing
-// reads as the character standing in the page's own darkness, not as a boxed video.
-export function LoginCharacterBackdrop({ src, poster }: LoginCharacterBackdropProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const progress = useRef(0);
+// Full-viewport backdrop, frame-sequence version — ambient mouse position (not
+// drag, not scroll) directly indexes into a pre-rendered, pre-extracted frame
+// sequence: mouse left → frames further left in the sequence, mouse right →
+// frames further right, eased with the same damp() used everywhere else for
+// organic (not 1:1-snappy) motion. Same fixed/z-canvas/pointer-events:none
+// convention as SceneBackdrop.tsx.
+export function LoginCharacterBackdrop({ basePath, frameCount, poster }: LoginCharacterBackdropProps) {
+  const imgRef = useRef<HTMLImageElement>(null);
+  const targetProgress = useRef(0.5);
+  const currentProgress = useRef(0.5);
+  const lastFrameIndex = useRef(0);
 
   useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reducedMotion) return;
+    const finePointer = window.matchMedia("(pointer: fine)").matches;
+    if (reducedMotion || !finePointer) return;
 
-    video.loop = true;
-    video.play().catch(() => {});
-
-    let scrubbing = false;
-    let resumeTimeout: ReturnType<typeof setTimeout> | null = null;
-
-    function handleWheel(event: WheelEvent) {
-      if (!video || !video.duration) return;
-      // Only hijack an actual horizontal gesture (trackpad swipe) or an explicit
-      // shift+wheel — plain vertical scroll/wheel passes through untouched.
-      const horizontalDelta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.shiftKey ? event.deltaY : 0;
-      if (horizontalDelta === 0) return;
-
-      event.preventDefault();
-      if (!scrubbing) {
-        scrubbing = true;
-        video.pause();
-      }
-      if (resumeTimeout) clearTimeout(resumeTimeout);
-
-      progress.current = clamp(progress.current + horizontalDelta * SCROLL_SENSITIVITY, 0, 1);
-      video.currentTime = progress.current * video.duration;
-
-      resumeTimeout = setTimeout(() => {
-        scrubbing = false;
-        video?.play().catch(() => {});
-      }, 500);
+    let cancelled = false;
+    for (let i = 0; i < frameCount; i++) {
+      const img = new window.Image();
+      img.src = frameUrl(basePath, i);
     }
 
-    window.addEventListener("wheel", handleWheel, { passive: false });
+    function handlePointerMove(event: PointerEvent) {
+      targetProgress.current = Math.min(1, Math.max(0, event.clientX / window.innerWidth));
+    }
+    window.addEventListener("pointermove", handlePointerMove);
+
+    let raf: number;
+    let last = performance.now();
+    function tick(now: number) {
+      const dt = (now - last) / 1000;
+      last = now;
+      currentProgress.current = damp(currentProgress.current, targetProgress.current, LAMBDA, dt);
+      const frameIndex = Math.round(currentProgress.current * (frameCount - 1));
+      if (frameIndex !== lastFrameIndex.current && imgRef.current && !cancelled) {
+        imgRef.current.src = frameUrl(basePath, frameIndex);
+        lastFrameIndex.current = frameIndex;
+      }
+      raf = requestAnimationFrame(tick);
+    }
+    raf = requestAnimationFrame(tick);
+
     return () => {
-      window.removeEventListener("wheel", handleWheel);
-      if (resumeTimeout) clearTimeout(resumeTimeout);
+      cancelled = true;
+      window.removeEventListener("pointermove", handlePointerMove);
+      cancelAnimationFrame(raf);
     };
-  }, []);
+  }, [basePath, frameCount]);
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center" style={{ zIndex: "var(--z-canvas)", pointerEvents: "none" }}>
-      <video ref={videoRef} src={src} poster={poster} muted playsInline preload="metadata" className="w-full h-full object-contain" />
-      <div
-        className="absolute inset-0"
-        style={{ background: "radial-gradient(ellipse at center, transparent 35%, rgba(10, 10, 10, 0.65) 100%)" }}
-      />
+    <div className="fixed inset-0" style={{ zIndex: "var(--z-canvas)", pointerEvents: "none" }}>
+      {/* Imperative src swaps on every animation frame — next/image's lazy-load/
+          optimization lifecycle fights this pattern, so a plain img is correct here. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img ref={imgRef} src={poster} alt="" className="w-full h-full object-cover" />
     </div>
   );
 }

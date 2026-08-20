@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   description: "Connexion à l'espace client ou admin KOV.",
 };
 
+// Must match the number of frames actually extracted into public/kov/character/login-frames/.
+const LOGIN_FRAME_COUNT = 60;
+
 export default async function LoginPage(props: PageProps<"/login">) {
   const searchParams = await props.searchParams;
   const nextParam = searchParams.next;
@@ -16,7 +19,11 @@ export default async function LoginPage(props: PageProps<"/login">) {
 
   return (
     <main className="min-h-screen relative" style={{ background: "var(--kov-black)" }}>
-      <LoginCharacterBackdrop src="/kov/character/login-scrub.mp4" poster="/kov/character/login-still.png" />
+      <LoginCharacterBackdrop
+        basePath="/kov/character/login-frames"
+        frameCount={LOGIN_FRAME_COUNT}
+        poster={`/kov/character/login-frames/frame-${String(Math.floor(LOGIN_FRAME_COUNT / 2)).padStart(3, "0")}.jpg`}
+      />
 
       <div className="relative min-h-screen max-w-[1800px] mx-auto flex flex-col md:flex-row items-center justify-between gap-16 px-6 md:px-16 py-24">
         <div className="hidden md:block max-w-xs">

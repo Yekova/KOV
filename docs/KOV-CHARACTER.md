@@ -45,6 +45,6 @@ Il accompagne l'utilisateur sans être constamment visible, comme fil narratif :
 |---|---|
 | `/kov/character/character-reference-sheet.png` | Feuille de référence du design verrouillé (source pour toute génération) |
 | `/kov/character/contact-corridor-scrub.mp4` + `-still.png` | Clip Kling (image-to-video), personnage de dos dans un couloir en béton — utilisé par `/contact` (drag-to-scrub) |
-| `/kov/character/login-scrub.mp4` + `-still.png` | Clip Kling distinct, personnage trois-quarts avec un filet de lumière rouge — utilisé par `/login` (drag-to-scrub) |
+| `/kov/character/login-frames/frame-000.jpg` … `frame-059.jpg` | Séquence de 60 images extraites d'un clip Kling 16:9 (rotation face → profil droit) — utilisée par `/login`, indexée en direct par la position horizontale de la souris (pas de drag, pas de scroll) |
 
-*(2026-08-20 : remplace l'ancien placeholder procédural Three.js de `/login` — voir `src/components/ui/ScrubVideo.tsx`. Aucun modèle Kling n'expose de contrôle d'orbite caméra précis ; les deux clips sont un mouvement de caméra approximatif décrit par prompt, pas un tourniquet 3D exact.)*
+*(2026-08-20 : remplace l'ancien placeholder procédural Three.js de `/login` — voir `src/components/login/LoginCharacterBackdrop.tsx`. Le premier essai en 9:16 laissait trop de vide à l'écran une fois en fond de page ; regénéré en 16:9 avec le personnage centré et dominant le cadre. Aucun modèle Kling n'expose de contrôle d'orbite caméra précis ; le clip est un mouvement de caméra approximatif décrit par prompt, pas un tourniquet 3D exact — la rotation obtenue va d'un cadrage face-caméra à un profil droit complet, pas symétrique gauche/droite.)*
