@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { LoginForm } from "./LoginForm";
-import { KovCharacterScene } from "@/components/login/KovCharacterScene";
+import { ScrubVideo } from "@/components/ui/ScrubVideo";
 
 export const metadata: Metadata = {
   title: "Connexion — KOV",
@@ -62,10 +62,15 @@ export default async function LoginPage(props: PageProps<"/login">) {
       </section>
 
       <section
-        className="hidden xl:flex border-r"
+        className="hidden xl:flex items-center justify-center p-12 border-r"
         style={{ borderColor: "var(--kov-border)" }}
       >
-        <KovCharacterScene />
+        <ScrubVideo
+          src="/kov/character/login-scrub.mp4"
+          poster="/kov/character/login-still.png"
+          aspectRatio="9 / 16"
+          className="w-full h-full"
+        />
       </section>
 
       <section className="flex items-center justify-center px-6 py-32">

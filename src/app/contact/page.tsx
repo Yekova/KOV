@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ContactForm } from "@/components/contact/ContactForm";
+import { ContactCharacterPanel } from "@/components/contact/ContactCharacterPanel";
 
 export const metadata: Metadata = {
   title: "Contact — KOV",
@@ -20,7 +21,10 @@ export default function ContactPage() {
         <span className="text-kov-red">On le construit.</span>
       </h1>
 
-      <ContactForm />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+        <ContactCharacterPanel />
+        <ContactForm />
+      </div>
     </main>
   );
 }

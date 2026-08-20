@@ -38,3 +38,13 @@ Il accompagne l'utilisateur sans être constamment visible, comme fil narratif :
 | Portfolio | Il regarde ou présente un projet |
 | Process | Il accompagne légèrement la progression |
 | Contact | Dernière apparition, éventuellement de dos |
+
+## Assets
+
+| Fichier | Usage |
+|---|---|
+| `/kov/character/character-reference-sheet.png` | Feuille de référence du design verrouillé (source pour toute génération) |
+| `/kov/character/contact-corridor-scrub.mp4` + `-still.png` | Clip Kling (image-to-video), personnage de dos dans un couloir en béton — utilisé par `/contact` (drag-to-scrub) |
+| `/kov/character/login-scrub.mp4` + `-still.png` | Clip Kling distinct, personnage trois-quarts avec un filet de lumière rouge — utilisé par `/login` (drag-to-scrub) |
+
+*(2026-08-20 : remplace l'ancien placeholder procédural Three.js de `/login` — voir `src/components/ui/ScrubVideo.tsx`. Aucun modèle Kling n'expose de contrôle d'orbite caméra précis ; les deux clips sont un mouvement de caméra approximatif décrit par prompt, pas un tourniquet 3D exact.)*

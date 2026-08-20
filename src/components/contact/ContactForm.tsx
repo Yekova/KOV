@@ -25,7 +25,7 @@ export function ContactForm() {
       body: JSON.stringify({
         name: data.get("name"),
         email: data.get("email"),
-        phone: data.get("phone"),
+        company: data.get("company"),
         message: data.get("message"),
       }),
     });
@@ -67,15 +67,15 @@ export function ContactForm() {
         </div>
 
         <div>
-          <label htmlFor="phone" className="text-xs uppercase tracking-widest text-kov-steel">
-            Téléphone (facultatif)
+          <label htmlFor="company" className="text-xs uppercase tracking-widest text-kov-steel">
+            Entreprise
           </label>
-          <input id="phone" name="phone" type="tel" className={FIELD_CLASS} />
+          <input id="company" name="company" type="text" className={FIELD_CLASS} />
         </div>
 
         <div>
           <label htmlFor="message" className="text-xs uppercase tracking-widest text-kov-steel">
-            Projet
+            Votre projet
           </label>
           <textarea id="message" name="message" required rows={4} className={FIELD_CLASS} />
         </div>
