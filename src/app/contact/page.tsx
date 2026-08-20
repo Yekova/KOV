@@ -1,29 +1,40 @@
 import type { Metadata } from "next";
 import { ContactForm } from "@/components/contact/ContactForm";
-import { ContactCharacterPanel } from "@/components/contact/ContactCharacterPanel";
+import { MouseFrameBackdrop } from "@/components/ui/MouseFrameBackdrop";
 
 export const metadata: Metadata = {
   title: "Contact — KOV",
   description: "Un projet en tête ? On le construit.",
 };
 
+// Must match the number of frames actually extracted into public/kov/character/contact-frames/.
+const CONTACT_FRAME_COUNT = 60;
+
 export default function ContactPage() {
   return (
-    <main className="min-h-screen px-6 pt-40 pb-32 max-w-[1600px] mx-auto">
-      <p className="text-xs uppercase tracking-widest text-kov-steel mb-4">Contact</p>
+    <main className="min-h-screen relative" style={{ background: "var(--kov-black)" }}>
+      <MouseFrameBackdrop
+        basePath="/kov/character/contact-frames"
+        frameCount={CONTACT_FRAME_COUNT}
+        poster={`/kov/character/contact-frames/frame-${String(Math.floor(CONTACT_FRAME_COUNT / 2)).padStart(3, "0")}.jpg`}
+      />
 
-      <h1
-        className="font-display text-kov-bone uppercase max-w-3xl mb-16"
-        style={{ fontSize: "var(--display-lg)", lineHeight: "var(--line-height-display)" }}
-      >
-        Un projet en tête ?
-        <br />
-        <span className="text-kov-red">On le construit.</span>
-      </h1>
+      <div className="relative min-h-screen max-w-[1800px] mx-auto flex flex-col md:flex-row items-center justify-between gap-16 px-6 md:px-16 py-32">
+        <div className="max-w-xl">
+          <p className="text-xs uppercase tracking-widest text-kov-steel mb-6">Contact</p>
+          <h1
+            className="font-display text-kov-bone uppercase"
+            style={{ fontSize: "var(--display-lg)", lineHeight: "var(--line-height-display)" }}
+          >
+            Un projet en tête ?
+            <br />
+            <span className="text-kov-red">On le construit.</span>
+          </h1>
+        </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-        <ContactCharacterPanel />
-        <ContactForm />
+        <div className="w-full max-w-xl">
+          <ContactForm />
+        </div>
       </div>
     </main>
   );

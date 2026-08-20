@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { damp } from "@/lib/damp";
 
-interface LoginCharacterBackdropProps {
+interface MouseFrameBackdropProps {
   basePath: string;
   frameCount: number;
   poster: string;
@@ -20,8 +20,10 @@ function frameUrl(basePath: string, index: number) {
 // sequence: mouse left → frames further left in the sequence, mouse right →
 // frames further right, eased with the same damp() used everywhere else for
 // organic (not 1:1-snappy) motion. Same fixed/z-canvas/pointer-events:none
-// convention as SceneBackdrop.tsx.
-export function LoginCharacterBackdrop({ basePath, frameCount, poster }: LoginCharacterBackdropProps) {
+// convention as SceneBackdrop.tsx. Used by /login (character rotates in place)
+// and /contact (character walks away down a corridor) with different frame
+// sequences — the mechanism is identical, only the source footage differs.
+export function MouseFrameBackdrop({ basePath, frameCount, poster }: MouseFrameBackdropProps) {
   const imgRef = useRef<HTMLImageElement>(null);
   const targetProgress = useRef(0.5);
   const currentProgress = useRef(0.5);
@@ -69,10 +71,10 @@ export function LoginCharacterBackdrop({ basePath, frameCount, poster }: LoginCh
     <div className="fixed inset-0" style={{ zIndex: "var(--z-canvas)", pointerEvents: "none" }}>
       {/* Imperative src swaps on every animation frame — next/image's lazy-load/
           optimization lifecycle fights this pattern, so a plain img is correct here.
-          The frames themselves are pre-composited (see docs/KOV-CHARACTER.md) so the
-          character's size/position within frame already lines up with page content —
-          no CSS transform here, since scaling the element down reveals a seam between
-          the frame's pure-black background and --kov-black (they don't quite match). */}
+          Frames are pre-composited (see docs/KOV-CHARACTER.md) so character size/
+          position within frame already lines up with page content — no CSS transform
+          here, since scaling the element down reveals a seam between the frame's
+          pure-black background and --kov-black (they don't quite match). */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img ref={imgRef} src={poster} alt="" className="w-full h-full object-cover" />
     </div>

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { LoginForm } from "./LoginForm";
-import { LoginCharacterBackdrop } from "@/components/login/LoginCharacterBackdrop";
+import { MouseFrameBackdrop } from "@/components/ui/MouseFrameBackdrop";
 import { GlassCard } from "@/components/ui/GlassCard";
 
 export const metadata: Metadata = {
@@ -19,7 +19,7 @@ export default async function LoginPage(props: PageProps<"/login">) {
 
   return (
     <main className="min-h-screen relative" style={{ background: "var(--kov-black)" }}>
-      <LoginCharacterBackdrop
+      <MouseFrameBackdrop
         basePath="/kov/character/login-frames"
         frameCount={LOGIN_FRAME_COUNT}
         poster={`/kov/character/login-frames/frame-${String(Math.floor(LOGIN_FRAME_COUNT / 2)).padStart(3, "0")}.jpg`}
