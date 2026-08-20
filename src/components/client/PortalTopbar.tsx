@@ -19,10 +19,7 @@ export function PortalTopbar({
   unreadCount: number;
 }) {
   return (
-    <header
-      className="flex items-center justify-between gap-6 px-6 py-4 border-b"
-      style={{ borderColor: "var(--kov-border)" }}
-    >
+    <header className="flex items-center justify-between gap-6 px-6 py-4" style={{ background: "var(--kov-carbon)" }}>
       <Link href="/" className="flex items-center">
         <Image
           src="/kov/brand/kov-wordmark-bone.png"

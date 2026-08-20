@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { GlassCard } from "@/components/ui/GlassCard";
 
 const NAV_ITEMS = [
   {
@@ -77,8 +78,8 @@ export function PortalSidebar({ openRequestsCount }: { openRequestsCount: number
 
   return (
     <aside
-      className="hidden md:flex w-64 shrink-0 flex-col justify-between p-6 border-r"
-      style={{ borderColor: "var(--kov-border)" }}
+      className="hidden md:flex w-64 shrink-0 flex-col justify-between p-6"
+      style={{ background: "var(--kov-carbon)" }}
     >
       <nav className="space-y-1">
         {NAV_ITEMS.map((item) => {
@@ -112,13 +113,13 @@ export function PortalSidebar({ openRequestsCount }: { openRequestsCount: number
         })}
       </nav>
 
-      <div className="border p-4" style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-md)" }}>
+      <GlassCard className="p-4">
         <p className="text-kov-bone text-xs uppercase tracking-widest mb-2">Besoin d&apos;aide ?</p>
         <p className="text-kov-steel text-xs leading-relaxed mb-4">Notre équipe est là pour vous.</p>
         <Link href="/client/support" className="text-kov-red text-xs uppercase tracking-widest hover:underline">
           Contacter KOV →
         </Link>
-      </div>
+      </GlassCard>
     </aside>
   );
 }

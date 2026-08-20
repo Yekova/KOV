@@ -9,10 +9,7 @@ export function AdminSidebar({ badgeCounts }: { badgeCounts: Record<string, numb
   const pathname = usePathname();
 
   return (
-    <aside
-      className="hidden md:flex w-60 shrink-0 flex-col p-6 border-r"
-      style={{ borderColor: "var(--kov-border)" }}
-    >
+    <aside className="hidden md:flex w-60 shrink-0 flex-col p-6" style={{ background: "var(--kov-carbon)" }}>
       <Link href="/admin" className="flex items-center gap-2.5 mb-10">
         <Image
           src="/kov/brand/kov-wordmark-bone.png"

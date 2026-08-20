@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { LoginForm } from "./LoginForm";
-import { ScrubVideo } from "@/components/ui/ScrubVideo";
+import { LoginCharacterBackdrop } from "@/components/login/LoginCharacterBackdrop";
+import { GlassCard } from "@/components/ui/GlassCard";
 
 export const metadata: Metadata = {
   title: "Connexion — KOV",
@@ -14,12 +15,11 @@ export default async function LoginPage(props: PageProps<"/login">) {
   const justReset = searchParams.reset === "success";
 
   return (
-    <main className="min-h-screen grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[minmax(280px,1fr)_minmax(380px,1.3fr)_minmax(380px,1fr)]">
-      <section
-        className="hidden md:flex flex-col justify-center px-12 lg:px-16 py-32 border-r"
-        style={{ borderColor: "var(--kov-border)" }}
-      >
-        <div className="max-w-xs">
+    <main className="min-h-screen relative" style={{ background: "var(--kov-black)" }}>
+      <LoginCharacterBackdrop src="/kov/character/login-scrub.mp4" poster="/kov/character/login-still.png" />
+
+      <div className="relative min-h-screen max-w-[1800px] mx-auto flex flex-col md:flex-row items-center justify-between gap-16 px-6 md:px-16 py-24">
+        <div className="hidden md:block max-w-xs">
           <p className="text-kov-red text-xs uppercase tracking-widest mb-6">Espace sécurisé</p>
           <h1
             className="font-display text-kov-bone uppercase"
@@ -35,10 +35,7 @@ export default async function LoginPage(props: PageProps<"/login">) {
             Connexion réservée aux clients et à l&apos;équipe KOV — suivi de projet et échanges centralisés.
           </p>
 
-          <div
-            className="mt-12 flex items-start gap-4 border p-4"
-            style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-md)" }}
-          >
+          <GlassCard className="mt-12 flex items-start gap-4 p-4">
             <svg
               width="20"
               height="20"
@@ -57,28 +54,14 @@ export default async function LoginPage(props: PageProps<"/login">) {
                 Hébergement sécurisé dans l&apos;UE (Irlande). Connexion chiffrée de bout en bout.
               </p>
             </div>
-          </div>
+          </GlassCard>
         </div>
-      </section>
 
-      <section
-        className="hidden xl:flex items-center justify-center p-12 border-r"
-        style={{ borderColor: "var(--kov-border)" }}
-      >
-        <ScrubVideo
-          src="/kov/character/login-scrub.mp4"
-          poster="/kov/character/login-still.png"
-          aspectRatio="9 / 16"
-          className="w-full h-full"
-        />
-      </section>
-
-      <section className="flex items-center justify-center px-6 py-32">
         <div className="w-full max-w-md">
           <p className="font-display text-kov-bone text-lg tracking-widest mb-8 md:hidden text-center">KOV</p>
           <LoginForm next={next} justReset={justReset} />
         </div>
-      </section>
+      </div>
     </main>
   );
 }

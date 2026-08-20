@@ -25,10 +25,7 @@ export function AdminTopbar({
   isOnline: boolean;
 }) {
   return (
-    <header
-      className="flex items-center gap-4 px-6 py-4 border-b"
-      style={{ borderColor: "var(--kov-border)" }}
-    >
+    <header className="flex items-center gap-4 px-6 py-4" style={{ background: "var(--kov-carbon)" }}>
       <GlobalAdminSearch items={searchItems} />
       <QuickActionMenu clients={clients} projects={projects} admins={admins} />
       <div className="flex items-center gap-2 ml-auto">
