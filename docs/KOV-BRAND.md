@@ -70,10 +70,13 @@ Couleurs autorisées : blanc sur noir, rouge sur noir, noir sur blanc cassé.
 
 | Fichier | Usage |
 |---|---|
-| `/kov/brand/kov-wordmark-bone-on-black.png` | Wordmark principal, blanc sur noir |
+| `/kov/brand/kov-wordmark-bone.png` | Wordmark principal, fond transparent (rogné, sans halo) — celui utilisé dans le code (nav, sidebar admin, topbar client) |
+| `/kov/brand/kov-wordmark-bone-on-black.png` | Wordmark source, blanc sur noir plein (référence design, non utilisé directement en UI) |
 | `/kov/brand/kov-wordmark-black-on-bone.png` | Wordmark, noir sur blanc cassé |
 | `/kov/brand/kov-signature-red-dot.png` | Signature `KOV.` avec le point rouge |
 | `/kov/brand/kov-monogram-k.png` | Monogramme `K`, favicon / espaces réduits |
+
+*(2026-08-20 : l'ancien wordmark était composité en direct via `mix-blend-mode: screen` + un recadrage `object-cover` sur un canevas non rogné, ce qui écrasait les bords du K et du V et laissait un léger halo sur les fonds non noirs. `kov-wordmark-bone.png` est un export rogné à la bounding box réelle du glyphe avec une vraie transparence alpha, affiché en `object-contain` — plus de recadrage ni de blend mode nécessaires.)*
 
 ## Typographie
 

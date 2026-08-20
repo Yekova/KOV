@@ -13,19 +13,18 @@ export function AdminSidebar({ badgeCounts }: { badgeCounts: Record<string, numb
       className="hidden md:flex w-60 shrink-0 flex-col p-6 border-r"
       style={{ borderColor: "var(--kov-border)" }}
     >
-      <Link href="/admin" className="flex items-center gap-2 mb-10">
-        <span className="relative w-16 h-4 overflow-hidden block">
-          <Image
-            src="/kov/brand/kov-wordmark-bone-on-black.png"
-            alt="KOV"
-            fill
-            sizes="64px"
-            className="object-cover"
-            style={{ objectPosition: "50% 48%", transform: "scale(1.65)", mixBlendMode: "screen" }}
-            priority
-          />
+      <Link href="/admin" className="flex items-center gap-2.5 mb-10">
+        <Image
+          src="/kov/brand/kov-wordmark-bone.png"
+          alt="KOV"
+          width={1116}
+          height={209}
+          className="h-5 w-auto"
+          priority
+        />
+        <span className="text-kov-steel text-[10px] uppercase tracking-widest border-l pl-2.5" style={{ borderColor: "var(--kov-border)" }}>
+          Studio
         </span>
-        <span className="text-kov-steel text-[10px] uppercase tracking-widest">Studio</span>
       </Link>
 
       <nav className="space-y-1 flex-1">

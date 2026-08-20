@@ -27,17 +27,14 @@ export function Nav() {
       style={{ zIndex: "var(--z-nav)" }}
     >
       <Link href="/" className="flex items-center px-5 py-3 border" style={GLASS_PILL_STYLE}>
-        <span className="relative w-16 h-4 overflow-hidden block">
-          <Image
-            src="/kov/brand/kov-wordmark-bone-on-black.png"
-            alt="KOV"
-            fill
-            sizes="64px"
-            className="object-cover"
-            style={{ objectPosition: "50% 48%", transform: "scale(1.65)", mixBlendMode: "screen" }}
-            priority
-          />
-        </span>
+        <Image
+          src="/kov/brand/kov-wordmark-bone.png"
+          alt="KOV"
+          width={1116}
+          height={209}
+          className="h-5 w-auto"
+          priority
+        />
       </Link>
 
       <nav
