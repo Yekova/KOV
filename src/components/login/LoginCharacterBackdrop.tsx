@@ -68,7 +68,11 @@ export function LoginCharacterBackdrop({ basePath, frameCount, poster }: LoginCh
   return (
     <div className="fixed inset-0" style={{ zIndex: "var(--z-canvas)", pointerEvents: "none" }}>
       {/* Imperative src swaps on every animation frame — next/image's lazy-load/
-          optimization lifecycle fights this pattern, so a plain img is correct here. */}
+          optimization lifecycle fights this pattern, so a plain img is correct here.
+          The frames themselves are pre-composited (see docs/KOV-CHARACTER.md) so the
+          character's size/position within frame already lines up with page content —
+          no CSS transform here, since scaling the element down reveals a seam between
+          the frame's pure-black background and --kov-black (they don't quite match). */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img ref={imgRef} src={poster} alt="" className="w-full h-full object-cover" />
     </div>
