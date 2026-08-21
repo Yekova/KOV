@@ -8,6 +8,7 @@ import { UserMenu } from "./UserMenu";
 const MARKETING_LINKS = [
   { href: "/#work", label: "Projets" },
   { href: "/expertise", label: "Expertise" },
+  { href: "/journal", label: "Journal" },
   { href: "/studio", label: "Studio" },
 ];
 

@@ -9,6 +9,7 @@ import { LiquidNavLinks } from "@/components/navigation/LiquidNavLinks";
 const LINKS = [
   { href: "/#work", label: "Projets" },
   { href: "/expertise", label: "Expertise" },
+  { href: "/journal", label: "Journal" },
   { href: "/studio", label: "Studio" },
 ];
 
