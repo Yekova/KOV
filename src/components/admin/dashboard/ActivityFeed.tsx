@@ -26,6 +26,13 @@ const ICON_PATHS: Record<ActivityType, React.ReactNode> = {
     </>
   ),
   milestone: <path d="M20 6L9 17l-5-5" />,
+  quote: (
+    <>
+      <path d="M7 3h7l5 5v13H7z" />
+      <path d="M14 3v5h5" />
+      <path d="M9.5 13.5l2 2 4-4.5" />
+    </>
+  ),
 };
 
 function isKnownType(type: string): type is ActivityType {

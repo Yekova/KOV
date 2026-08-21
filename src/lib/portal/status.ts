@@ -56,7 +56,7 @@ export const REQUEST_THREAD_STATUS_LABELS: Record<RequestThreadStatus, string> =
   closed: "Fermée",
 };
 
-export const ACTIVITY_TYPES = ["document", "message", "invoice", "milestone"] as const;
+export const ACTIVITY_TYPES = ["document", "message", "invoice", "milestone", "quote"] as const;
 export type ActivityType = (typeof ACTIVITY_TYPES)[number];
 
 export function isActivityType(value: string): value is ActivityType {

@@ -46,7 +46,7 @@ export default async function AdminLeadsPage(props: PageProps<"/admin/leads">) {
   const rows = leads ?? [];
   const totalPages = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE));
 
-  const { data: adminProfiles } = await supabaseAdmin.from("profiles").select("id, full_name, email").eq("role", "admin").order("full_name");
+  const { data: adminProfiles } = await supabaseAdmin.from("profiles").select("id, full_name, email").eq("role", "admin").is("archived_at", null).order("full_name");
   const adminOptions = (adminProfiles ?? []).map((a) => ({ id: a.id, label: a.full_name || a.email }));
 
   const baseParams = { q: q || undefined };

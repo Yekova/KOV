@@ -17,7 +17,7 @@ export default async function AdminLeadDetailPage(props: PageProps<"/admin/leads
   const { data: lead } = await supabaseAdmin.from("leads").select("*").eq("id", leadId).maybeSingle();
   if (!lead) notFound();
 
-  const { data: adminProfiles } = await supabaseAdmin.from("profiles").select("id, full_name, email").eq("role", "admin").order("full_name");
+  const { data: adminProfiles } = await supabaseAdmin.from("profiles").select("id, full_name, email").eq("role", "admin").is("archived_at", null).order("full_name");
   const adminOptions = (adminProfiles ?? []).map((a) => ({ id: a.id, label: a.full_name || a.email }));
 
   return (

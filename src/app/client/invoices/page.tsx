@@ -15,7 +15,7 @@ export default async function ClientInvoicesPage() {
 
   const { data: invoices } = await supabaseAdmin
     .from("invoices")
-    .select("id, reference, amount_cents, currency, status, pdf_storage_path, issued_at")
+    .select("id, reference, amount_cents, currency, status, pdf_storage_path, issued_at, kind, deposit_percent")
     .eq("client_id", user.id)
     .order("issued_at", { ascending: false });
 
@@ -37,7 +37,15 @@ export default async function ClientInvoicesPage() {
                 style={{ borderColor: "var(--kov-border)" }}
               >
                 <div className="min-w-0">
-                  <p className="text-kov-bone text-sm">{invoice.reference}</p>
+                  <p className="text-kov-bone text-sm">
+                    {invoice.reference}
+                    {invoice.kind === "deposit" && (
+                      <span className="text-kov-steel text-xs ml-2 uppercase tracking-widest">
+                        Acompte{invoice.deposit_percent ? ` ${invoice.deposit_percent}%` : ""}
+                      </span>
+                    )}
+                    {invoice.kind === "balance" && <span className="text-kov-steel text-xs ml-2 uppercase tracking-widest">Solde</span>}
+                  </p>
                   <p className="text-kov-steel text-xs mt-1">
                     {new Date(invoice.issued_at).toLocaleDateString("fr-FR")} —{" "}
                     {(invoice.amount_cents / 100).toFixed(2)} {invoice.currency}

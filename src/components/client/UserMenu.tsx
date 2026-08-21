@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import { logout } from "@/app/login/actions";
 
 export function UserMenu({ fullName, avatarUrl }: { fullName: string | null; avatarUrl: string | null }) {
@@ -55,6 +56,14 @@ export function UserMenu({ fullName, avatarUrl }: { fullName: string | null; ava
             boxShadow: "var(--glass-shadow-full)",
           }}
         >
+          <Link
+            href="/client/profile"
+            onClick={() => setOpen(false)}
+            className="block px-4 py-2 text-xs uppercase tracking-widest text-kov-bone hover:text-kov-red transition-colors"
+          >
+            Mon profil
+          </Link>
+          <div className="border-t my-1" style={{ borderColor: "var(--glass-border)" }} />
           <form action={logout}>
             <button
               type="submit"

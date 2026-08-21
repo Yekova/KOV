@@ -42,7 +42,7 @@ export default async function AdminDashboardPage() {
       .select("id, type, title, admin_title, created_at")
       .order("created_at", { ascending: false })
       .limit(8),
-    supabaseAdmin.from("profiles").select("id, full_name, email, display_title").eq("role", "admin"),
+    supabaseAdmin.from("profiles").select("id, full_name, email, display_title").eq("role", "admin").is("archived_at", null),
     supabaseAdmin.from("project_tasks").select("assigned_to").in("status", ["todo", "in_progress", "blocked"]),
     supabaseAdmin
       .from("project_tasks")
@@ -122,8 +122,20 @@ export default async function AdminDashboardPage() {
   const currentAdminName = adminRows.find((a) => a.id === user.id)?.full_name ?? null;
 
   return (
-    <main className="px-6 py-10 max-w-[1800px] mx-auto w-full space-y-6">
-      <DashboardHeader fullName={currentAdminName} />
+    <div className="relative">
+      {/* Fixed, not absolute — stays put behind every glass card while the
+          dashboard scrolls, which is the point of a liquid-glass backdrop. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/kov/character/contact-frames/frame-015.jpg"
+        alt=""
+        aria-hidden="true"
+        className="fixed inset-0 w-full h-full object-cover pointer-events-none select-none -z-10"
+      />
+      <div className="fixed inset-0 -z-10" style={{ background: "linear-gradient(180deg, rgba(10,10,10,0.55) 0%, var(--kov-black) 85%)" }} />
+
+      <main className="relative px-6 py-10 max-w-[1800px] mx-auto w-full space-y-6">
+        <DashboardHeader fullName={currentAdminName} />
 
       <KpiGrid
         activeProjects={activeProjectsKpi}
@@ -148,7 +160,8 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
 
-      <ActivityFeed items={activity ?? []} />
-    </main>
+        <ActivityFeed items={activity ?? []} />
+      </main>
+    </div>
   );
 }

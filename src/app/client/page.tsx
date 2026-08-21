@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 export default async function ClientDashboardPage() {
   const user = await requireUser();
 
-  const [{ data: profile }, { data: projects }, { data: documents }, { data: invoices }, { data: activity }] =
+  const [{ data: profile }, { data: projects }, { data: documents }, { data: invoices }, { data: quotes }, { data: activity }] =
     await Promise.all([
       supabaseAdmin.from("profiles").select("full_name, account_manager_id").eq("id", user.id).maybeSingle(),
       supabaseAdmin
@@ -36,6 +36,12 @@ export default async function ClientDashboardPage() {
         .select("id, reference")
         .eq("client_id", user.id)
         .order("issued_at", { ascending: false })
+        .limit(30),
+      supabaseAdmin
+        .from("quotes")
+        .select("id, reference")
+        .eq("client_id", user.id)
+        .order("created_at", { ascending: false })
         .limit(30),
       supabaseAdmin
         .from("activity_log")
@@ -69,6 +75,7 @@ export default async function ClientDashboardPage() {
     ...projectRows.map((p) => ({ label: p.name, sublabel: p.category, href: "/client/projects" })),
     ...(documents ?? []).map((d) => ({ label: d.filename, sublabel: "Document", href: "/client/documents" })),
     ...(invoices ?? []).map((i) => ({ label: i.reference, sublabel: "Facture", href: "/client/invoices" })),
+    ...(quotes ?? []).map((q) => ({ label: q.reference, sublabel: "Devis", href: "/client/quotes" })),
   ];
 
   return (

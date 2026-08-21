@@ -44,7 +44,7 @@ export default async function AdminClientDetailPage(props: PageProps<"/admin/cli
 
   const [{ data: admins }, { data: projects }, { data: documents }, { data: invoices }, { data: threads }] =
     await Promise.all([
-      supabaseAdmin.from("profiles").select("id, full_name, email").eq("role", "admin").order("full_name"),
+      supabaseAdmin.from("profiles").select("id, full_name, email").eq("role", "admin").is("archived_at", null).order("full_name"),
       supabaseAdmin.from("projects").select("*").eq("client_id", clientId).order("created_at", { ascending: false }),
       supabaseAdmin
         .from("documents")

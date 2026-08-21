@@ -33,7 +33,7 @@ export async function AdminTopbarData({ userId }: { userId: string }) {
     supabaseAdmin.from("profiles").select("id, full_name, email, company").eq("role", "client").limit(SEARCH_LIMIT),
     supabaseAdmin.from("projects").select("id, name, client_id").limit(SEARCH_LIMIT),
     supabaseAdmin.from("leads").select("id, name, company").order("created_at", { ascending: false }).limit(SEARCH_LIMIT),
-    supabaseAdmin.from("profiles").select("id, full_name, email").eq("role", "admin").order("full_name"),
+    supabaseAdmin.from("profiles").select("id, full_name, email").eq("role", "admin").is("archived_at", null).order("full_name"),
     supabaseAdmin.from("quotes").select("id, reference, recipient_name").order("created_at", { ascending: false }).limit(SEARCH_LIMIT),
     supabaseAdmin
       .from("invoices")

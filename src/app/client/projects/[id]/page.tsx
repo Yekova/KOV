@@ -8,7 +8,7 @@ import { GlassCard } from "@/components/ui/GlassCard";
 import { FolderIcon } from "@/lib/documentIcons";
 import { DocumentGrid, type DocumentGridItem } from "@/components/documents/DocumentGrid";
 import { PROJECT_STATUS_LABELS, type ProjectStatus } from "@/lib/portal/status";
-import { getClientDocumentPreviewUrl, downloadClientProjectDocument } from "./actions";
+import { getClientDocumentPreviewUrl, downloadDocument } from "@/app/client/documents/actions";
 
 export const metadata: Metadata = {
   title: "Projet — KOV",
@@ -138,7 +138,7 @@ export default async function ClientProjectDetailPage(props: PageProps<"/client/
         <DocumentGrid
           documents={gridItems}
           getPreviewUrl={getClientDocumentPreviewUrl}
-          downloadAction={downloadClientProjectDocument}
+          downloadAction={downloadDocument}
         />
       </GlassCard>
     </main>
