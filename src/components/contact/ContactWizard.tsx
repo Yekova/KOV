@@ -79,6 +79,11 @@ export function ContactWizard() {
     message: "",
   });
   const [status, setStatus] = useState<Status>("idle");
+  // Lazy initializer runs once at mount — a legitimate one-time capture, not
+  // an impure render (that rule is about Server Components re-executing per
+  // request; this is a plain client-side useState).
+  const [renderedAt] = useState(() => Date.now());
+  const [honeypot, setHoneypot] = useState("");
 
   const current = STEPS[step];
   const isLast = step === STEPS.length - 1;
@@ -131,6 +136,8 @@ export function ContactWizard() {
         timeline: answers.timeline,
         project_type: answers.project_type.join(", "),
         message: answers.message,
+        website: honeypot,
+        rendered_at: renderedAt,
       }),
     });
     if (!response.ok) {
@@ -181,6 +188,20 @@ export function ContactWizard() {
       </div>
 
       <form key={step} onSubmit={handleFormSubmit} style={{ animation: "fadeInUp 0.3s ease-out" }}>
+        {/* Honeypot: invisible to real users (off-screen, unreachable by tab,
+            hidden from screen readers), but a bot that indiscriminately
+            fills every input on the page will populate it — caught server-side. */}
+        <input
+          type="text"
+          name="website"
+          value={honeypot}
+          onChange={(e) => setHoneypot(e.target.value)}
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+          style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }}
+        />
+
         <label className="block text-kov-steel text-xs uppercase tracking-widest mb-4">{current.label}</label>
 
         {(current.kind === "text" || current.kind === "email") && (

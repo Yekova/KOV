@@ -6,6 +6,13 @@ const MAX_LENGTHS = { name: 200, email: 254, phone: 40, message: 5000, company: 
 const CONTACT_METHODS = ["phone", "video", "in_person"];
 const TIMELINES = ["today", "week", "month"];
 
+// Baseline anti-spam, not a hard guarantee — this stops unsophisticated bots
+// (generic form-fillers, replayed requests with no timing signal) without
+// any new infrastructure (a real rate limiter needs Redis/Vercel KV, which
+// isn't set up here). A targeted attacker who studies this exact endpoint
+// could still work around it.
+const MIN_SUBMIT_MS = 1500;
+
 export async function POST(request: Request) {
   let body: Record<string, unknown>;
   try {
@@ -22,6 +29,14 @@ export async function POST(request: Request) {
   const projectType = typeof body.project_type === "string" ? body.project_type.trim() : "";
   const contactMethod = typeof body.contact_method === "string" ? body.contact_method.trim() : "";
   const timeline = typeof body.timeline === "string" ? body.timeline.trim() : "";
+  const honeypot = typeof body.website === "string" ? body.website.trim() : "";
+  const renderedAt = typeof body.rendered_at === "number" ? body.rendered_at : null;
+
+  // Silent success: a bot that gets a normal-looking {ok:true} has no signal
+  // to adapt on, unlike a 4xx it could use to tune its next attempt.
+  if (honeypot || !renderedAt || Date.now() - renderedAt < MIN_SUBMIT_MS) {
+    return NextResponse.json({ ok: true });
+  }
 
   if (!name || name.length > MAX_LENGTHS.name) {
     return NextResponse.json({ error: "Invalid name" }, { status: 400 });
