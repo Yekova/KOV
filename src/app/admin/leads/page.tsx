@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { LeadStatusSelect } from "./LeadStatusSelect";
+import { CONTACT_METHOD_LABELS, LEAD_TIMELINE_LABELS, isContactMethod, isLeadTimeline } from "@/lib/admin/status";
 
 export const metadata: Metadata = {
   title: "Leads — Admin KOV",
@@ -12,7 +13,7 @@ export default async function AdminLeadsPage() {
 
   const { data: leads } = await supabaseAdmin
     .from("leads")
-    .select("id, created_at, name, email, phone, company, project_type, message, status")
+    .select("id, created_at, name, email, phone, company, project_type, contact_method, timeline, message, status")
     .order("created_at", { ascending: false });
 
   const rows = leads ?? [];
@@ -33,6 +34,8 @@ export default async function AdminLeadsPage() {
                 <th className="py-3 pr-4">Entreprise</th>
                 <th className="py-3 pr-4">Contact</th>
                 <th className="py-3 pr-4">Type de projet</th>
+                <th className="py-3 pr-4">Moyen</th>
+                <th className="py-3 pr-4">Délai</th>
                 <th className="py-3 pr-4">Statut</th>
               </tr>
             </thead>
@@ -51,6 +54,14 @@ export default async function AdminLeadsPage() {
                     {lead.phone && <div className="text-kov-steel text-xs mt-1">{lead.phone}</div>}
                   </td>
                   <td className="py-4 pr-4 text-kov-steel">{lead.project_type || "—"}</td>
+                  <td className="py-4 pr-4 text-kov-steel">
+                    {lead.contact_method && isContactMethod(lead.contact_method)
+                      ? CONTACT_METHOD_LABELS[lead.contact_method]
+                      : "—"}
+                  </td>
+                  <td className="py-4 pr-4 text-kov-steel">
+                    {lead.timeline && isLeadTimeline(lead.timeline) ? LEAD_TIMELINE_LABELS[lead.timeline] : "—"}
+                  </td>
                   <td className="py-4 pr-4">
                     <LeadStatusSelect leadId={lead.id} status={lead.status} />
                   </td>

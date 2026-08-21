@@ -64,3 +64,16 @@ body {
   background: transparent;
   border: 1px solid var(--kov-red);
 }
+
+/* Per-step entrance for the contact wizard (ContactWizard.tsx) — a plain,
+   brief fade+rise, not a "wow" effect (see /docs/KOV-MOTION.md rhythm rule). */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

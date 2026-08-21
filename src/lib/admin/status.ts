@@ -56,3 +56,30 @@ export const PRIORITY_LABELS: Record<Priority, string> = {
   medium: "Moyenne",
   high: "Haute",
 };
+
+// How a lead asked to be recontacted, captured by the /contact wizard.
+export const CONTACT_METHODS = ["phone", "video", "in_person"] as const;
+export type ContactMethod = (typeof CONTACT_METHODS)[number];
+
+export function isContactMethod(value: string): value is ContactMethod {
+  return (CONTACT_METHODS as readonly string[]).includes(value);
+}
+
+export const CONTACT_METHOD_LABELS: Record<ContactMethod, string> = {
+  phone: "Appel téléphonique",
+  video: "Visioconférence",
+  in_person: "En personne",
+};
+
+export const LEAD_TIMELINES = ["today", "week", "month"] as const;
+export type LeadTimeline = (typeof LEAD_TIMELINES)[number];
+
+export function isLeadTimeline(value: string): value is LeadTimeline {
+  return (LEAD_TIMELINES as readonly string[]).includes(value);
+}
+
+export const LEAD_TIMELINE_LABELS: Record<LeadTimeline, string> = {
+  today: "Dès aujourd'hui",
+  week: "Cette semaine",
+  month: "Ce mois-ci",
+};

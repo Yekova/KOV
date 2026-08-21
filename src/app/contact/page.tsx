@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ContactForm } from "@/components/contact/ContactForm";
+import { ContactWizard } from "@/components/contact/ContactWizard";
 import { MouseFrameBackdrop } from "@/components/ui/MouseFrameBackdrop";
 
 export const metadata: Metadata = {
@@ -33,7 +33,7 @@ export default function ContactPage() {
         </div>
 
         <div className="w-full max-w-xl">
-          <ContactForm />
+          <ContactWizard />
         </div>
       </div>
     </main>
