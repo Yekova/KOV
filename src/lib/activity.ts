@@ -1,5 +1,7 @@
 import "server-only";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { sendEmail } from "@/lib/email/brevo";
+import { requestReplyNotificationSubject, requestReplyNotificationHtml } from "@/lib/email/reminderEmail";
 
 export type ActivityLogType = "document" | "message" | "invoice" | "milestone" | "quote";
 
@@ -32,4 +34,35 @@ export async function logActivity(params: {
 export async function getActorDisplayName(actorId: string): Promise<string> {
   const { data } = await supabaseAdmin.from("profiles").select("full_name, email").eq("id", actorId).maybeSingle();
   return data?.full_name || data?.email || "Équipe KOV";
+}
+
+// Client messages otherwise only surface via the in-app notification bell —
+// invisible unless someone happens to be logged into the admin panel. Best
+// effort: a failed send here must never break the reply/thread-creation
+// action itself, so callers don't need to (and shouldn't) await/catch this.
+export async function notifyAdminsOfClientMessage(params: {
+  clientId: string;
+  clientDisplayName: string;
+  subject: string;
+}) {
+  try {
+    const { data: admins } = await supabaseAdmin
+      .from("profiles")
+      .select("email, full_name")
+      .eq("role", "admin")
+      .is("archived_at", null);
+
+    const recipients = (admins ?? []).filter((a): a is { email: string; full_name: string | null } => !!a.email);
+    if (recipients.length === 0) return;
+
+    const emailData = { clientDisplayName: params.clientDisplayName, subject: params.subject, clientId: params.clientId };
+    const html = await requestReplyNotificationHtml(emailData);
+    const subject = requestReplyNotificationSubject(emailData);
+
+    await Promise.allSettled(
+      recipients.map((admin) => sendEmail({ to: admin.email, toName: admin.full_name ?? undefined, subject, html }))
+    );
+  } catch {
+    // Swallowed deliberately — see comment above.
+  }
 }

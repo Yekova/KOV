@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { logActivity, getActorDisplayName } from "@/lib/activity";
+import { logActivity, getActorDisplayName, notifyAdminsOfClientMessage } from "@/lib/activity";
 
 export async function createRequestThread(formData: FormData) {
   const user = await requireUser();
@@ -49,6 +49,7 @@ export async function createRequestThread(formData: FormData) {
     actorId: user.id,
     description: subject.trim(),
   });
+  await notifyAdminsOfClientMessage({ clientId: user.id, clientDisplayName: actorName, subject: subject.trim() });
 
   revalidatePath("/client");
   revalidatePath("/client/requests");
@@ -91,6 +92,7 @@ export async function replyToOwnThread(threadId: string, formData: FormData) {
     adminTitle: `${actorName} a répondu dans la demande « ${thread.subject} »`,
     actorId: user.id,
   });
+  await notifyAdminsOfClientMessage({ clientId: user.id, clientDisplayName: actorName, subject: thread.subject });
 
   revalidatePath("/client/requests");
   revalidatePath(`/client/requests/${threadId}`);
