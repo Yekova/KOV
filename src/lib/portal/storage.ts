@@ -38,10 +38,18 @@ export async function uploadClientFileBuffer(path: string, buffer: Buffer, conte
 // (client_id === user.id) before calling this — it does no ownership check
 // itself, matching the rest of this codebase's "supabaseAdmin bypasses RLS,
 // application code is the real gate" convention.
-export async function createSignedDownloadUrl(path: string, expiresInSeconds = 60): Promise<string | null> {
+//
+// `download` controls Content-Disposition on the signed URL: omitted/false
+// serves the PDF inline (for viewing in a new tab), a filename string forces
+// a real "Save As" download under that name.
+export async function createSignedDownloadUrl(
+  path: string,
+  expiresInSeconds = 60,
+  download?: string | boolean
+): Promise<string | null> {
   const { data, error } = await supabaseAdmin.storage
     .from(CLIENT_FILES_BUCKET)
-    .createSignedUrl(path, expiresInSeconds);
+    .createSignedUrl(path, expiresInSeconds, download !== undefined ? { download } : undefined);
   if (error || !data) return null;
   return data.signedUrl;
 }

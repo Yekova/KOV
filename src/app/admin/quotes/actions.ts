@@ -168,8 +168,21 @@ export async function downloadQuotePdf(formData: FormData) {
   const quoteId = formData.get("quote_id");
   if (typeof quoteId !== "string" || !quoteId) throw new Error("Devis invalide.");
 
-  const url = await createSignedDownloadUrl(`quotes/${quoteId}.pdf`);
+  const { data: quote } = await supabaseAdmin.from("quotes").select("reference").eq("id", quoteId).maybeSingle();
+
+  const url = await createSignedDownloadUrl(`quotes/${quoteId}.pdf`, 60, `${quote?.reference ?? quoteId}.pdf`);
   if (!url) throw new Error("Le téléchargement a échoué.");
 
   redirect(url);
+}
+
+// Returns an inline-viewable signed URL (no Content-Disposition: attachment)
+// so the client can open it in a new tab without leaving the quotes list.
+export async function getQuotePdfUrl(quoteId: string): Promise<string> {
+  await requireAdmin();
+
+  const url = await createSignedDownloadUrl(`quotes/${quoteId}.pdf`);
+  if (!url) throw new Error("Aperçu indisponible.");
+
+  return url;
 }
