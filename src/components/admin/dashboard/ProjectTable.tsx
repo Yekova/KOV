@@ -62,7 +62,7 @@ export function ProjectTable({
                 return (
                   <tr key={project.id} className="border-b" style={{ borderColor: "var(--kov-border)" }}>
                     <td className="py-3 pr-4">
-                      <Link href={`/admin/clients/${project.clientId}`} className="text-kov-bone hover:text-kov-red transition-colors">
+                      <Link href={`/admin/projects/${project.id}`} className="text-kov-bone hover:text-kov-red transition-colors">
                         {project.name}
                       </Link>
                     </td>

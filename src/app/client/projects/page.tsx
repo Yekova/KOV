@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { GlassCard } from "@/components/ui/GlassCard";
@@ -33,7 +34,9 @@ export default async function ClientProjectsPage() {
             <GlassCard key={p.id} className="p-6">
               <div className="flex flex-wrap items-center justify-between gap-4 mb-3">
                 <div>
-                  <p className="text-kov-bone text-lg">{p.name}</p>
+                  <Link href={`/client/projects/${p.id}`} className="text-kov-bone text-lg hover:text-kov-red transition-colors">
+                    {p.name}
+                  </Link>
                   <p className="text-kov-steel text-xs uppercase tracking-widest mt-1">{p.category}</p>
                 </div>
                 <span className="text-kov-red text-xs uppercase tracking-widest">
@@ -59,6 +62,10 @@ export default async function ClientProjectsPage() {
                   {p.deadline_phase_label ? ` — ${p.deadline_phase_label}` : ""}
                 </p>
               )}
+
+              <Link href={`/client/projects/${p.id}`} className="inline-block text-kov-red text-xs uppercase tracking-widest hover:underline mt-4">
+                Voir les documents →
+              </Link>
             </GlassCard>
           ))}
         </div>
