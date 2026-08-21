@@ -130,16 +130,21 @@ export default async function AdminDashboardPage() {
           no matter how deeply nested, so the photo silently painted behind
           it and never showed. isolate creates a local stacking context so
           -z-10 only has to lose to *this page's* content, as intended. */}
-      {/* Fixed, not absolute — stays put behind every glass card while the
-          dashboard scrolls, which is the point of a liquid-glass backdrop. */}
+      {/* Absolute, not fixed — a fixed, viewport-spanning element ignores
+          this wrapper's box entirely and paints over the sidebar/topbar too
+          (isolate raises this whole wrapper's paint layer above their plain,
+          non-positioned <aside>/<header>, so a fixed child bleeds into their
+          screen area). Absolute confines it to this wrapper's own box, which
+          is exactly the dashboard content column — it now simply scrolls
+          with the page instead of staying pinned to the viewport. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/kov/character/contact-frames/frame-015.jpg"
         alt=""
         aria-hidden="true"
-        className="fixed inset-0 w-full h-full object-cover pointer-events-none select-none -z-10"
+        className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none -z-10"
       />
-      <div className="fixed inset-0 -z-10" style={{ background: "linear-gradient(180deg, rgba(10,10,10,0.55) 0%, var(--kov-black) 85%)" }} />
+      <div className="absolute inset-0 -z-10" style={{ background: "linear-gradient(180deg, rgba(10,10,10,0.55) 0%, var(--kov-black) 85%)" }} />
 
       <main className="relative px-6 py-10 max-w-[1800px] mx-auto w-full space-y-6">
         <DashboardHeader fullName={currentAdminName} />
