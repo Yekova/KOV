@@ -27,6 +27,16 @@ export const INVOICE_STATUS_LABELS: Record<InvoiceStatus, string> = {
   cancelled: "Annulée",
 };
 
+// "overdue" is a real status an admin can set manually, but nothing ever
+// transitions a "sent" invoice into it automatically — there's no scheduled
+// job in this stack to do that. Rather than add cron infrastructure just to
+// flip a column, this derives the same information at display time: always
+// accurate, no moving parts, and never fights the dropdown's own authority
+// over the stored status (admin can still mark it paid/cancelled normally).
+export function isInvoiceOverdue(status: string, dueAt: string | null): boolean {
+  return status === "sent" && !!dueAt && new Date(dueAt).getTime() < Date.now();
+}
+
 export const QUOTE_STATUSES = ["draft", "sent", "accepted", "declined", "expired", "cancelled"] as const;
 export type QuoteStatus = (typeof QUOTE_STATUSES)[number];
 

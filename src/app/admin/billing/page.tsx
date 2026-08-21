@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { INVOICE_STATUSES, INVOICE_STATUS_LABELS } from "@/lib/portal/status";
+import { INVOICE_STATUSES, INVOICE_STATUS_LABELS, isInvoiceOverdue } from "@/lib/portal/status";
 import { InvoiceStatusSelect } from "@/components/admin/invoices/InvoiceStatusSelect";
 import { InvoiceRowActions } from "@/components/admin/invoices/InvoiceRowActions";
 import { EmptyState } from "@/components/admin/EmptyState";
@@ -132,6 +132,14 @@ export default async function AdminBillingPage(props: PageProps<"/admin/billing"
                     {invoice.reference}
                   </Link>
                   {kindLabel && <span className="text-kov-steel text-xs ml-2 uppercase tracking-widest">{kindLabel}</span>}
+                  {isInvoiceOverdue(invoice.status, invoice.due_at) && (
+                    <span
+                      className="text-[10px] uppercase tracking-widest text-kov-red px-2 py-0.5 ml-2"
+                      style={{ background: "rgba(220,38,38,0.1)", borderRadius: "var(--radius-sm)" }}
+                    >
+                      En retard
+                    </span>
+                  )}
                   <p className="text-kov-steel text-xs mt-1">{clientNameById.get(invoice.client_id) ?? "—"}</p>
                 </div>
                 <span className="text-kov-steel text-sm">{(invoice.amount_cents / 100).toFixed(2)} €</span>

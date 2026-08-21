@@ -3,7 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Button } from "@/components/ui/Button";
-import { INVOICE_STATUS_LABELS, type InvoiceStatus } from "@/lib/portal/status";
+import { INVOICE_STATUS_LABELS, isInvoiceOverdue, type InvoiceStatus } from "@/lib/portal/status";
 import { downloadInvoice } from "./actions";
 
 export const metadata: Metadata = {
@@ -15,7 +15,7 @@ export default async function ClientInvoicesPage() {
 
   const { data: invoices } = await supabaseAdmin
     .from("invoices")
-    .select("id, reference, amount_cents, currency, status, pdf_storage_path, issued_at, kind, deposit_percent")
+    .select("id, reference, amount_cents, currency, status, pdf_storage_path, issued_at, due_at, kind, deposit_percent")
     .eq("client_id", user.id)
     .order("issued_at", { ascending: false });
 
@@ -45,6 +45,14 @@ export default async function ClientInvoicesPage() {
                       </span>
                     )}
                     {invoice.kind === "balance" && <span className="text-kov-steel text-xs ml-2 uppercase tracking-widest">Solde</span>}
+                    {isInvoiceOverdue(invoice.status, invoice.due_at) && (
+                      <span
+                        className="text-[10px] uppercase tracking-widest text-kov-red px-2 py-0.5 ml-2"
+                        style={{ background: "rgba(220,38,38,0.1)", borderRadius: "var(--radius-sm)" }}
+                      >
+                        En retard
+                      </span>
+                    )}
                   </p>
                   <p className="text-kov-steel text-xs mt-1">
                     {new Date(invoice.issued_at).toLocaleDateString("fr-FR")} —{" "}

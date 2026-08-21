@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { Button } from "@/components/ui/Button";
-import { PROJECT_STATUSES, PROJECT_STATUS_LABELS } from "@/lib/portal/status";
+import { PROJECT_STATUSES, PROJECT_STATUS_LABELS, isInvoiceOverdue } from "@/lib/portal/status";
 import { PIPELINE_STAGES, PIPELINE_STAGE_LABELS, PRIORITIES, PRIORITY_LABELS } from "@/lib/admin/status";
 import {
   setAccountManager,
@@ -389,6 +389,14 @@ export default async function AdminClientDetailPage(props: PageProps<"/admin/cli
                 <div className="min-w-0">
                   <span className="text-kov-bone text-sm">{invoice.reference}</span>
                   {kindLabel && <span className="text-kov-steel text-xs ml-2 uppercase tracking-widest">{kindLabel}</span>}
+                  {isInvoiceOverdue(invoice.status, invoice.due_at) && (
+                    <span
+                      className="text-[10px] uppercase tracking-widest text-kov-red px-2 py-0.5 ml-2"
+                      style={{ background: "rgba(220,38,38,0.1)", borderRadius: "var(--radius-sm)" }}
+                    >
+                      En retard
+                    </span>
+                  )}
                   {invoice.sent_at && (
                     <span className="text-kov-steel text-xs ml-2">
                       Envoyée le {new Date(invoice.sent_at).toLocaleDateString("fr-FR")}
