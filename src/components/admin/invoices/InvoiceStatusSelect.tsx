@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { updateInvoiceStatus } from "../actions";
+import { updateInvoiceStatus } from "@/app/admin/clients/actions";
 import { INVOICE_STATUSES, INVOICE_STATUS_LABELS, type InvoiceStatus } from "@/lib/portal/status";
 
 const FIELD_CLASS =

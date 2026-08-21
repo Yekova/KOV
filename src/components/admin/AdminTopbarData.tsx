@@ -1,6 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { AdminTopbar } from "./AdminTopbar";
 import type { AdminSearchItem } from "./GlobalAdminSearch";
+import type { NotificationItem } from "./NotificationBell";
 
 const SEARCH_LIMIT = 200;
 
@@ -24,6 +25,8 @@ export async function AdminTopbarData({ userId }: { userId: string }) {
     { data: quoteRows },
     { data: invoiceRows },
     { data: documentRows },
+    { data: activityRows },
+    { data: recentLeadRows },
   ] = await Promise.all([
     supabaseAdmin.from("profiles").select("full_name, is_online").eq("id", userId).maybeSingle(),
     supabaseAdmin.from("leads").select("id", { count: "exact", head: true }).gte("created_at", oneDayAgo),
@@ -42,6 +45,12 @@ export async function AdminTopbarData({ userId }: { userId: string }) {
       .select("id, filename, project_id")
       .order("created_at", { ascending: false })
       .limit(SEARCH_LIMIT),
+    supabaseAdmin
+      .from("activity_log")
+      .select("id, admin_title, type, client_id, created_at")
+      .order("created_at", { ascending: false })
+      .limit(8),
+    supabaseAdmin.from("leads").select("id, name, created_at").order("created_at", { ascending: false }).limit(5),
   ]);
 
   const clientNameById = new Map((clientProfiles ?? []).map((c) => [c.id, c.full_name || c.company || c.email]));
@@ -97,6 +106,23 @@ export async function AdminTopbarData({ userId }: { userId: string }) {
     label: a.full_name || a.email,
   }));
 
+  const notifications: NotificationItem[] = [
+    ...(activityRows ?? []).map((a) => ({
+      id: `activity-${a.id}`,
+      title: a.admin_title,
+      href: a.type === "quote" ? "/admin/quotes" : `/admin/clients/${a.client_id}`,
+      createdAt: a.created_at,
+    })),
+    ...(recentLeadRows ?? []).map((l) => ({
+      id: `lead-${l.id}`,
+      title: `Nouveau lead : ${l.name}`,
+      href: "/admin/leads",
+      createdAt: l.created_at,
+    })),
+  ]
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 10);
+
   return (
     <AdminTopbar
       searchItems={searchItems}
@@ -104,6 +130,7 @@ export async function AdminTopbarData({ userId }: { userId: string }) {
       projects={projectOptions}
       admins={adminOptions}
       newLeadsCount={newLeadsToday ?? 0}
+      notifications={notifications}
       fullName={profile?.full_name ?? null}
       roleLabel="Administrateur"
       isOnline={profile?.is_online ?? false}

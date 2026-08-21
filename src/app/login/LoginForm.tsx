@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { login, type LoginState } from "./actions";
+import { LoginLoadingOverlay } from "./LoginLoadingOverlay";
 
 const FIELD_CLASS =
   "w-full bg-transparent border-b py-3 pr-8 text-kov-bone placeholder:text-kov-steel focus:outline-none focus:border-kov-red transition-colors";
@@ -16,7 +17,9 @@ export function LoginForm({ next, justReset }: { next?: string; justReset?: bool
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <GlassCard className="max-w-md w-full p-8 md:p-12">
+    <>
+      {isPending && <LoginLoadingOverlay />}
+      <GlassCard className="max-w-md w-full p-8 md:p-12">
       <p className="font-display text-kov-bone text-xl uppercase mb-1">Connexion</p>
       <p className="text-kov-steel text-sm mb-8">Accédez à votre espace client ou admin.</p>
 
@@ -109,6 +112,7 @@ export function LoginForm({ next, justReset }: { next?: string; justReset?: bool
         </svg>
         Connexion sécurisée
       </div>
-    </GlassCard>
+      </GlassCard>
+    </>
   );
 }

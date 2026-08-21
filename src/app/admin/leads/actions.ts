@@ -4,6 +4,9 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { isLeadStatus } from "@/lib/admin/status";
+import { inviteUser } from "@/lib/auth/inviteUser";
+import { clientInviteEmailHtml, clientInviteEmailSubject } from "@/lib/email/inviteEmail";
+import { logActivity, getActorDisplayName } from "@/lib/activity";
 
 // Note: leads have no client_id (they're pre-signature prospects, not
 // linked to a profiles row), so lead events are never written to
@@ -45,6 +48,64 @@ export async function assignLead(leadId: string, formData: FormData) {
 
   revalidatePath("/admin");
   revalidatePath("/admin/leads");
+}
+
+export async function updateLeadNotes(leadId: string, formData: FormData) {
+  await requireAdmin();
+
+  const notes = formData.get("notes");
+
+  const { error } = await supabaseAdmin
+    .from("leads")
+    .update({ notes: typeof notes === "string" ? notes : null, updated_at: new Date().toISOString() })
+    .eq("id", leadId);
+
+  if (error) throw new Error("L'enregistrement des notes a échoué.");
+
+  revalidatePath(`/admin/leads/${leadId}`);
+}
+
+export async function convertLeadToClient(leadId: string) {
+  const admin = await requireAdmin();
+
+  const { data: lead } = await supabaseAdmin
+    .from("leads")
+    .select("name, email, company, converted_profile_id")
+    .eq("id", leadId)
+    .maybeSingle();
+  if (!lead) throw new Error("Lead introuvable.");
+  if (lead.converted_profile_id) throw new Error("Ce lead a déjà été converti en client.");
+
+  const { userId } = await inviteUser({
+    email: lead.email,
+    fullName: lead.name,
+    role: "client",
+    emailSubject: clientInviteEmailSubject(),
+    emailHtml: (actionLink) => clientInviteEmailHtml({ fullName: lead.name, actionLink }),
+  });
+
+  if (lead.company) {
+    await supabaseAdmin.from("profiles").update({ company: lead.company }).eq("id", userId);
+  }
+
+  const { error } = await supabaseAdmin
+    .from("leads")
+    .update({ converted_profile_id: userId, status: "won", updated_at: new Date().toISOString() })
+    .eq("id", leadId);
+  if (error) throw new Error("La conversion a échoué.");
+
+  const actorName = await getActorDisplayName(admin.id);
+  await logActivity({
+    clientId: userId,
+    type: "milestone",
+    title: "Bienvenue chez KOV",
+    adminTitle: `${actorName} a converti le lead ${lead.name} en client`,
+    actorId: admin.id,
+  });
+
+  revalidatePath("/admin/leads");
+  revalidatePath(`/admin/leads/${leadId}`);
+  revalidatePath("/admin/clients");
 }
 
 export async function createLead(formData: FormData) {

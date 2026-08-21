@@ -130,4 +130,4 @@ export const adminNavigation: AdminNavItem[] = [
 // Sections without a real Phase-1 build yet — the nav item still appears
 // (full target IA is shown per the approved plan), but routes to an honest
 // "Bientôt disponible" stub rather than hiding the link or faking content.
-export const UNBUILT_ADMIN_SECTIONS = new Set(["content", "billing", "team", "analytics", "automations", "settings"]);
+export const UNBUILT_ADMIN_SECTIONS = new Set(["content", "automations"]);

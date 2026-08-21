@@ -91,7 +91,11 @@ export default async function AdminLeadsPage(props: PageProps<"/admin/leads">) {
                   <td className="py-4 pr-4 text-kov-steel whitespace-nowrap">
                     {new Date(lead.created_at).toLocaleDateString("fr-FR")}
                   </td>
-                  <td className="py-4 pr-4 text-kov-bone">{lead.name}</td>
+                  <td className="py-4 pr-4 text-kov-bone">
+                    <Link href={`/admin/leads/${lead.id}`} className="hover:text-kov-red transition-colors">
+                      {lead.name}
+                    </Link>
+                  </td>
                   <td className="py-4 pr-4 text-kov-steel">{lead.company || "—"}</td>
                   <td className="py-4 pr-4 text-kov-bone">
                     <a href={`mailto:${lead.email}`} className="hover:text-kov-red transition-colors">

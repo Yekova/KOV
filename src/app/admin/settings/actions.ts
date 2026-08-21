@@ -2,7 +2,30 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { updateBusinessInfo } from "@/lib/billing/businessInfo";
+
+export async function updateMyProfile(formData: FormData) {
+  const admin = await requireAdmin();
+
+  const fullName = formData.get("full_name");
+  const displayTitle = formData.get("display_title");
+
+  if (typeof fullName !== "string" || !fullName.trim()) throw new Error("Nom requis.");
+
+  const { error } = await supabaseAdmin
+    .from("profiles")
+    .update({
+      full_name: fullName.trim(),
+      display_title: typeof displayTitle === "string" && displayTitle.trim() ? displayTitle.trim() : null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", admin.id);
+  if (error) throw new Error("L'enregistrement a échoué.");
+
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin");
+}
 
 function requiredField(formData: FormData, name: string, label: string): string {
   const value = formData.get(name);

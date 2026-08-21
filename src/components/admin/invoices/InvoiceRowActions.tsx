@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { sendInvoiceEmail, downloadInvoicePdf, deleteInvoice } from "../actions";
+import { sendInvoiceEmail, downloadInvoicePdf, deleteInvoice } from "@/app/admin/clients/actions";
 import { Button } from "@/components/ui/Button";
 
 export function InvoiceRowActions({

@@ -1,6 +1,6 @@
 import { GlobalAdminSearch, type AdminSearchItem } from "./GlobalAdminSearch";
 import { QuickActionMenu } from "./QuickActionMenu";
-import { NotificationBell } from "./NotificationBell";
+import { NotificationBell, type NotificationItem } from "./NotificationBell";
 import { UserMenu } from "./UserMenu";
 
 type PickerOption = { id: string; label: string };
@@ -11,6 +11,7 @@ export function AdminTopbar({
   projects,
   admins,
   newLeadsCount,
+  notifications,
   fullName,
   roleLabel,
   isOnline,
@@ -20,6 +21,7 @@ export function AdminTopbar({
   projects: PickerOption[];
   admins: PickerOption[];
   newLeadsCount: number;
+  notifications: NotificationItem[];
   fullName: string | null;
   roleLabel: string;
   isOnline: boolean;
@@ -29,7 +31,7 @@ export function AdminTopbar({
       <GlobalAdminSearch items={searchItems} />
       <QuickActionMenu clients={clients} projects={projects} admins={admins} />
       <div className="flex items-center gap-2 ml-auto">
-        <NotificationBell unreadCount={newLeadsCount} />
+        <NotificationBell unreadCount={newLeadsCount} items={notifications} />
         <UserMenu fullName={fullName} roleLabel={roleLabel} isOnline={isOnline} />
       </div>
     </header>

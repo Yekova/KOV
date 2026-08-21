@@ -16,8 +16,8 @@ import {
 } from "../actions";
 import { InvoiceKindFields } from "./InvoiceKindFields";
 import { InvoiceLineItemsField } from "./InvoiceLineItemsField";
-import { InvoiceRowActions } from "./InvoiceRowActions";
-import { InvoiceStatusSelect } from "./InvoiceStatusSelect";
+import { InvoiceRowActions } from "@/components/admin/invoices/InvoiceRowActions";
+import { InvoiceStatusSelect } from "@/components/admin/invoices/InvoiceStatusSelect";
 import { DeleteDocumentButton } from "./DeleteDocumentButton";
 import { ArchiveClientButton } from "./ArchiveClientButton";
 

@@ -77,3 +77,27 @@ body {
     transform: translateY(0);
   }
 }
+
+/* Indeterminate sweep for the login loading bar (LoginLoadingOverlay.tsx) —
+   the bar's own width is 1/3 of the track, so -120%..340% sweeps it fully
+   off-screen on both sides before looping. */
+@keyframes loginLoadingSweep {
+  from {
+    transform: translateX(-120%);
+  }
+  to {
+    transform: translateX(340%);
+  }
+}
+
+.login-loading-bar {
+  animation: loginLoadingSweep 1.1s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-loading-bar {
+    animation: none;
+    width: 100% !important;
+    transform: none !important;
+  }
+}
