@@ -5,12 +5,13 @@ import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { isProjectStatus, isInvoiceStatus, PROJECT_STATUS_LABELS, type ProjectStatus } from "@/lib/portal/status";
-import { uploadClientFile, uploadClientFileBuffer, createSignedDownloadUrl } from "@/lib/portal/storage";
+import { uploadClientFile, uploadClientFileBuffer, createSignedDownloadUrl, deleteClientFile } from "@/lib/portal/storage";
 import { logActivity, getActorDisplayName } from "@/lib/activity";
 import { isPipelineStage, isPriority } from "@/lib/admin/status";
 import { generateInvoicePdfBuffer } from "@/lib/billing/generatePdf";
 import { sendEmail } from "@/lib/email/brevo";
 import { invoiceEmailHtml, invoiceEmailSubject } from "@/lib/email/invoiceEmail";
+import { toDbLineItems, fromDbLineItems, parseLineItemsFromForm } from "@/lib/billing/quoteLineItems";
 
 const INVOICE_KINDS = ["full", "deposit", "balance"] as const;
 type InvoiceKind = (typeof INVOICE_KINDS)[number];
@@ -29,14 +30,49 @@ function revalidateClient(clientId: string) {
   revalidatePath("/client/requests");
 }
 
-export async function setAccountManager(clientId: string, formData: FormData) {
+export async function archiveClient(clientId: string) {
   await requireAdmin();
+
+  const { error } = await supabaseAdmin
+    .from("profiles")
+    .update({ archived_at: new Date().toISOString() })
+    .eq("id", clientId);
+  if (error) throw new Error("L'archivage a échoué.");
+
+  revalidatePath("/admin/clients");
+  revalidatePath(`/admin/clients/${clientId}`);
+}
+
+export async function unarchiveClient(clientId: string) {
+  await requireAdmin();
+
+  const { error } = await supabaseAdmin.from("profiles").update({ archived_at: null }).eq("id", clientId);
+  if (error) throw new Error("La réactivation a échoué.");
+
+  revalidatePath("/admin/clients");
+  revalidatePath(`/admin/clients/${clientId}`);
+}
+
+export async function setAccountManager(clientId: string, formData: FormData) {
+  const admin = await requireAdmin();
 
   const adminId = formData.get("account_manager_id");
   const value = typeof adminId === "string" && adminId ? adminId : null;
 
   const { error } = await supabaseAdmin.from("profiles").update({ account_manager_id: value }).eq("id", clientId);
   if (error) throw new Error("L'attribution a échoué.");
+
+  const actorName = await getActorDisplayName(admin.id);
+  const managerName = value ? await getActorDisplayName(value) : null;
+  await logActivity({
+    clientId,
+    type: "milestone",
+    title: managerName ? `Chargé de compte : ${managerName}` : "Chargé de compte retiré",
+    adminTitle: managerName
+      ? `${actorName} a attribué ce client à ${managerName}`
+      : `${actorName} a retiré le chargé de compte de ce client`,
+    actorId: admin.id,
+  });
 
   revalidateClient(clientId);
 }
@@ -249,6 +285,34 @@ export async function uploadDocument(formData: FormData) {
   revalidateClient(clientId);
 }
 
+export async function deleteDocument(documentId: string) {
+  const admin = await requireAdmin();
+
+  const { data: doc } = await supabaseAdmin
+    .from("documents")
+    .select("client_id, project_id, filename, storage_path")
+    .eq("id", documentId)
+    .maybeSingle();
+  if (!doc) throw new Error("Document introuvable.");
+
+  const { error } = await supabaseAdmin.from("documents").delete().eq("id", documentId);
+  if (error) throw new Error("La suppression a échoué.");
+
+  await deleteClientFile(doc.storage_path);
+
+  const actorName = await getActorDisplayName(admin.id);
+  await logActivity({
+    clientId: doc.client_id,
+    projectId: doc.project_id,
+    type: "document",
+    title: "Document supprimé",
+    adminTitle: `${actorName} a supprimé ${doc.filename}`,
+    actorId: admin.id,
+  });
+
+  revalidateClient(doc.client_id);
+}
+
 export async function createInvoice(formData: FormData) {
   const admin = await requireAdmin();
 
@@ -261,6 +325,7 @@ export async function createInvoice(formData: FormData) {
   const kind = formData.get("kind");
   const depositPercent = formData.get("deposit_percent");
   const totalProject = formData.get("total_project_eur");
+  const lineItems = parseLineItemsFromForm(formData.get("line_items"));
 
   if (typeof clientId !== "string" || !clientId) throw new Error("Client invalide.");
   if (typeof reference !== "string" || !reference.trim()) throw new Error("Référence requise.");
@@ -284,7 +349,9 @@ export async function createInvoice(formData: FormData) {
 
   if (pdfFile instanceof File && pdfFile.size > 0) {
     // Admin supplied their own PDF (e.g. a custom-formatted invoice) — use it
-    // as-is instead of generating one from the template.
+    // as-is instead of generating one from the template. The <input accept>
+    // is only a browser hint, so the real type is checked here too.
+    if (pdfFile.type !== "application/pdf") throw new Error("Le fichier personnalisé doit être un PDF.");
     await uploadClientFile(pdfPath, pdfFile);
   } else {
     const { data: client } = await supabaseAdmin
@@ -308,6 +375,7 @@ export async function createInvoice(formData: FormData) {
       clientCompany: client?.company ?? null,
       clientEmail: client?.email ?? null,
       projectName: project?.name ?? null,
+      lineItems,
     });
     await uploadClientFileBuffer(pdfPath, pdfBuffer, "application/pdf");
   }
@@ -325,6 +393,7 @@ export async function createInvoice(formData: FormData) {
     kind: kindValue,
     deposit_percent: depositPercentValue,
     total_project_cents: totalProjectCents,
+    line_items: toDbLineItems(lineItems),
   });
 
   if (error) throw new Error("La création de la facture a échoué.");
@@ -388,12 +457,43 @@ export async function updateInvoiceStatus(invoiceId: string, formData: FormData)
   revalidateClient(existing.client_id);
 }
 
+export async function deleteInvoice(invoiceId: string) {
+  const admin = await requireAdmin();
+
+  const { data: invoice } = await supabaseAdmin
+    .from("invoices")
+    .select("client_id, project_id, reference, status, pdf_storage_path")
+    .eq("id", invoiceId)
+    .maybeSingle();
+  if (!invoice) throw new Error("Facture introuvable.");
+  if (invoice.status === "paid") throw new Error("Une facture payée ne peut pas être supprimée — annulez-la si besoin de la retirer.");
+
+  const { error } = await supabaseAdmin.from("invoices").delete().eq("id", invoiceId);
+  if (error) throw new Error("La suppression a échoué.");
+
+  if (invoice.pdf_storage_path) await deleteClientFile(invoice.pdf_storage_path);
+
+  const actorName = await getActorDisplayName(admin.id);
+  await logActivity({
+    clientId: invoice.client_id,
+    projectId: invoice.project_id,
+    type: "invoice",
+    title: "Facture supprimée",
+    adminTitle: `${actorName} a supprimé la facture ${invoice.reference}`,
+    actorId: admin.id,
+  });
+
+  revalidateClient(invoice.client_id);
+}
+
 export async function sendInvoiceEmail(invoiceId: string) {
   const admin = await requireAdmin();
 
   const { data: invoice } = await supabaseAdmin
     .from("invoices")
-    .select("client_id, project_id, reference, amount_cents, kind, deposit_percent, total_project_cents, due_at, issued_at")
+    .select(
+      "client_id, project_id, reference, amount_cents, kind, deposit_percent, total_project_cents, due_at, issued_at, pdf_storage_path, line_items"
+    )
     .eq("id", invoiceId)
     .maybeSingle();
   if (!invoice) throw new Error("Facture introuvable.");
@@ -413,22 +513,36 @@ export async function sendInvoiceEmail(invoiceId: string) {
 
   const clientName = client.full_name || client.company || client.email;
 
-  const pdfBuffer = await generateInvoicePdfBuffer({
-    reference: invoice.reference,
-    issuedAt: invoice.issued_at,
-    dueAt: invoice.due_at,
-    kind: invoice.kind as "full" | "deposit" | "balance",
-    depositPercent: invoice.deposit_percent,
-    totalProjectCents: invoice.total_project_cents,
-    amountCents: invoice.amount_cents,
-    clientName,
-    clientCompany: client.company,
-    clientEmail: client.email,
-    projectName,
-  });
-
-  const pdfPath = `${invoice.client_id}/invoices/${invoiceId}.pdf`;
-  await uploadClientFileBuffer(pdfPath, pdfBuffer, "application/pdf");
+  // Never regenerate a PDF that already exists — it may be a custom file the
+  // admin uploaded by hand (createInvoice's "PDF personnalisé" field), and
+  // clobbering it here previously destroyed that upload silently. Only
+  // fall back to generating one for legacy rows that predate auto-generation.
+  let pdfPath = invoice.pdf_storage_path;
+  let pdfBuffer: Buffer;
+  if (pdfPath) {
+    const signedUrl = await createSignedDownloadUrl(pdfPath, 60);
+    if (!signedUrl) throw new Error("Le PDF existant est introuvable — recréez la facture.");
+    const response = await fetch(signedUrl);
+    if (!response.ok) throw new Error("Le téléchargement du PDF existant a échoué.");
+    pdfBuffer = Buffer.from(await response.arrayBuffer());
+  } else {
+    pdfBuffer = await generateInvoicePdfBuffer({
+      reference: invoice.reference,
+      issuedAt: invoice.issued_at,
+      dueAt: invoice.due_at,
+      kind: invoice.kind as "full" | "deposit" | "balance",
+      depositPercent: invoice.deposit_percent,
+      totalProjectCents: invoice.total_project_cents,
+      amountCents: invoice.amount_cents,
+      clientName,
+      clientCompany: client.company,
+      clientEmail: client.email,
+      projectName,
+      lineItems: fromDbLineItems(invoice.line_items),
+    });
+    pdfPath = `${invoice.client_id}/invoices/${invoiceId}.pdf`;
+    await uploadClientFileBuffer(pdfPath, pdfBuffer, "application/pdf");
+  }
 
   const emailData = {
     clientName,
@@ -443,7 +557,7 @@ export async function sendInvoiceEmail(invoiceId: string) {
     to: client.email,
     toName: clientName,
     subject: invoiceEmailSubject(emailData),
-    html: invoiceEmailHtml(emailData),
+    html: await invoiceEmailHtml(emailData),
     attachments: [{ name: `${invoice.reference}.pdf`, content: pdfBuffer.toString("base64") }],
   });
 

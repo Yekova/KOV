@@ -1,3 +1,5 @@
+import { getBusinessInfo } from "@/lib/billing/businessInfo";
+
 const SITE_URL = "https://kov-agency.site";
 // Bone-on-transparent, not the black variant — it sits on the header's dark
 // background below. CSS filter:invert() isn't reliable enough across email
@@ -9,7 +11,8 @@ const LOGO_URL = `${SITE_URL}/kov/brand/kov-wordmark-bone.png`;
 // because email clients (Outlook especially) don't reliably support modern
 // CSS. Kept light-background for the same reason the PDFs are: a heavy dark
 // theme doesn't reproduce reliably across mail clients.
-export function emailLayout({ preheader, body }: { preheader: string; body: string }) {
+export async function emailLayout({ preheader, body }: { preheader: string; body: string }) {
+  const businessInfo = await getBusinessInfo();
   return `<!doctype html>
 <html lang="fr">
   <head>
@@ -38,8 +41,8 @@ export function emailLayout({ preheader, body }: { preheader: string; body: stri
             </tr>
             <tr>
               <td style="padding:20px 32px; background-color:#f4f3f1; color:#777774; font-size:11px; line-height:1.6;">
-                KOV — Mattéo Delorme, Entreprise individuelle — 49 rue André Maginot, 33000 Bordeaux<br />
-                SIRET 941 801 391 00017 — TVA non applicable, art. 293 B du CGI
+                ${businessInfo.commercialName} — ${businessInfo.legalName}, ${businessInfo.legalForm} — ${businessInfo.address.street}, ${businessInfo.address.postalCode} ${businessInfo.address.city}<br />
+                SIRET ${businessInfo.siret} — ${businessInfo.vatMention}
               </td>
             </tr>
           </table>

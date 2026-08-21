@@ -4,35 +4,13 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { uploadClientFileBuffer, createSignedDownloadUrl } from "@/lib/portal/storage";
+import { uploadClientFile, uploadClientFileBuffer, createSignedDownloadUrl, deleteClientFile } from "@/lib/portal/storage";
+import { logActivity, getActorDisplayName } from "@/lib/activity";
 import { generateQuotePdfBuffer } from "@/lib/billing/generatePdf";
 import { sendEmail } from "@/lib/email/brevo";
 import { quoteEmailHtml, quoteEmailSubject } from "@/lib/email/quoteEmail";
-import { isQuoteStatus } from "@/lib/portal/status";
-import { toDbLineItems } from "@/lib/billing/quoteLineItems";
-import type { QuoteLineItem } from "@/lib/billing/QuoteDocument";
-
-function parseLineItems(raw: FormDataEntryValue | null): QuoteLineItem[] {
-  if (typeof raw !== "string" || !raw.trim()) throw new Error("Au moins une ligne de devis est requise.");
-
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(raw);
-  } catch {
-    throw new Error("Lignes de devis invalides.");
-  }
-  if (!Array.isArray(parsed) || parsed.length === 0) throw new Error("Au moins une ligne de devis est requise.");
-
-  return parsed.map((item): QuoteLineItem => {
-    const description = typeof item?.description === "string" ? item.description.trim() : "";
-    const quantity = Number(item?.quantity);
-    const unitPriceCents = Math.round(Number(item?.unitPriceEur) * 100);
-    if (!description || !Number.isFinite(quantity) || quantity <= 0 || !Number.isFinite(unitPriceCents) || unitPriceCents < 0) {
-      throw new Error("Lignes de devis invalides.");
-    }
-    return { description, quantity, unitPriceCents };
-  });
-}
+import { isQuoteStatus, QUOTE_STATUS_LABELS } from "@/lib/portal/status";
+import { toDbLineItems, parseLineItemsFromForm } from "@/lib/billing/quoteLineItems";
 
 function parseEuroToCents(value: FormDataEntryValue | null): number {
   if (typeof value !== "string" || !value.trim()) return 0;
@@ -41,7 +19,7 @@ function parseEuroToCents(value: FormDataEntryValue | null): number {
 }
 
 export async function createQuote(formData: FormData) {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
   const reference = formData.get("reference");
   const recipientName = formData.get("recipient_name");
@@ -54,7 +32,8 @@ export async function createQuote(formData: FormData) {
   if (typeof reference !== "string" || !reference.trim()) throw new Error("Référence requise.");
   if (typeof recipientName !== "string" || !recipientName.trim()) throw new Error("Nom du destinataire requis.");
 
-  const lineItems = parseLineItems(formData.get("line_items"));
+  const lineItems = parseLineItemsFromForm(formData.get("line_items"));
+  if (lineItems.length === 0) throw new Error("Au moins une ligne de devis est requise.");
   const subtotalCents = lineItems.reduce((sum, item) => sum + item.quantity * item.unitPriceCents, 0);
   const discountCents = Math.min(subtotalCents, parseEuroToCents(discountEur));
   const totalCents = subtotalCents - discountCents;
@@ -65,21 +44,29 @@ export async function createQuote(formData: FormData) {
   const validUntilValue = typeof validUntil === "string" && validUntil ? validUntil : null;
 
   const quoteId = crypto.randomUUID();
-
-  const pdfBuffer = await generateQuotePdfBuffer({
-    reference: reference.trim(),
-    createdAt: new Date().toISOString(),
-    validUntil: validUntilValue,
-    recipientName: recipientName.trim(),
-    recipientEmail: recipientEmailValue,
-    lineItems,
-    subtotalCents,
-    discountCents,
-    totalCents,
-  });
-
   const pdfPath = `quotes/${quoteId}.pdf`;
-  await uploadClientFileBuffer(pdfPath, pdfBuffer, "application/pdf");
+
+  const pdfFile = formData.get("pdf_file");
+  if (pdfFile instanceof File && pdfFile.size > 0) {
+    // Admin supplied their own PDF (e.g. a custom-formatted devis) — use it
+    // as-is instead of generating one from the template. The line items
+    // above still drive the stored subtotal/total shown in the app and email.
+    if (pdfFile.type !== "application/pdf") throw new Error("Le fichier personnalisé doit être un PDF.");
+    await uploadClientFile(pdfPath, pdfFile);
+  } else {
+    const pdfBuffer = await generateQuotePdfBuffer({
+      reference: reference.trim(),
+      createdAt: new Date().toISOString(),
+      validUntil: validUntilValue,
+      recipientName: recipientName.trim(),
+      recipientEmail: recipientEmailValue,
+      lineItems,
+      subtotalCents,
+      discountCents,
+      totalCents,
+    });
+    await uploadClientFileBuffer(pdfPath, pdfBuffer, "application/pdf");
+  }
 
   const { error } = await supabaseAdmin.from("quotes").insert({
     id: quoteId,
@@ -98,13 +85,28 @@ export async function createQuote(formData: FormData) {
 
   if (error) throw new Error("La création du devis a échoué (référence déjà utilisée ?).");
 
+  if (clientIdValue) {
+    const actorName = await getActorDisplayName(admin.id);
+    await logActivity({
+      clientId: clientIdValue,
+      type: "quote",
+      title: "Devis créé",
+      adminTitle: `${actorName} a créé le devis ${reference.trim()}`,
+      actorId: admin.id,
+      description: `Devis ${reference.trim()}`,
+    });
+  }
+
   revalidatePath("/admin/quotes");
 }
 
 export async function updateQuoteStatus(quoteId: string, status: string) {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
   if (!isQuoteStatus(status)) throw new Error("Statut invalide.");
+
+  const { data: existing } = await supabaseAdmin.from("quotes").select("client_id, reference").eq("id", quoteId).maybeSingle();
+  if (!existing) throw new Error("Devis introuvable.");
 
   const { error } = await supabaseAdmin
     .from("quotes")
@@ -112,15 +114,56 @@ export async function updateQuoteStatus(quoteId: string, status: string) {
     .eq("id", quoteId);
   if (error) throw new Error("La mise à jour a échoué.");
 
+  if (existing.client_id) {
+    const actorName = await getActorDisplayName(admin.id);
+    await logActivity({
+      clientId: existing.client_id,
+      type: "quote",
+      title: `Devis ${QUOTE_STATUS_LABELS[status as keyof typeof QUOTE_STATUS_LABELS]?.toLowerCase() ?? status}`,
+      adminTitle: `${actorName} a changé le statut du devis ${existing.reference} → ${status}`,
+      actorId: admin.id,
+    });
+  }
+
+  revalidatePath("/admin/quotes");
+}
+
+export async function deleteQuote(quoteId: string) {
+  const admin = await requireAdmin();
+
+  const { data: quote } = await supabaseAdmin
+    .from("quotes")
+    .select("client_id, reference, status, pdf_storage_path")
+    .eq("id", quoteId)
+    .maybeSingle();
+  if (!quote) throw new Error("Devis introuvable.");
+  if (quote.status === "accepted") throw new Error("Un devis accepté ne peut pas être supprimé — annulez-le si besoin de le retirer.");
+
+  const { error } = await supabaseAdmin.from("quotes").delete().eq("id", quoteId);
+  if (error) throw new Error("La suppression a échoué.");
+
+  if (quote.pdf_storage_path) await deleteClientFile(quote.pdf_storage_path);
+
+  if (quote.client_id) {
+    const actorName = await getActorDisplayName(admin.id);
+    await logActivity({
+      clientId: quote.client_id,
+      type: "quote",
+      title: "Devis supprimé",
+      adminTitle: `${actorName} a supprimé le devis ${quote.reference}`,
+      actorId: admin.id,
+    });
+  }
+
   revalidatePath("/admin/quotes");
 }
 
 export async function sendQuoteEmail(quoteId: string) {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
   const { data: quote } = await supabaseAdmin
     .from("quotes")
-    .select("recipient_name, recipient_email, reference, total_cents, valid_until, status")
+    .select("client_id, recipient_name, recipient_email, reference, total_cents, valid_until, status")
     .eq("id", quoteId)
     .maybeSingle();
   if (!quote) throw new Error("Devis introuvable.");
@@ -145,7 +188,7 @@ export async function sendQuoteEmail(quoteId: string) {
     to: quote.recipient_email,
     toName: quote.recipient_name,
     subject: quoteEmailSubject(emailData),
-    html: quoteEmailHtml(emailData),
+    html: await quoteEmailHtml(emailData),
     attachments: [{ name: `${quote.reference}.pdf`, content: pdfBuffer.toString("base64") }],
   });
 
@@ -158,6 +201,18 @@ export async function sendQuoteEmail(quoteId: string) {
     })
     .eq("id", quoteId);
   if (error) throw new Error("L'enregistrement après envoi a échoué.");
+
+  if (quote.client_id) {
+    const actorName = await getActorDisplayName(admin.id);
+    await logActivity({
+      clientId: quote.client_id,
+      type: "quote",
+      title: "Devis envoyé par email",
+      adminTitle: `${actorName} a envoyé le devis ${quote.reference} par email`,
+      actorId: admin.id,
+      description: `Devis ${quote.reference} → ${quote.recipient_email}`,
+    });
+  }
 
   revalidatePath("/admin/quotes");
 }

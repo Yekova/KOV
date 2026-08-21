@@ -21,7 +21,7 @@ export function invoiceEmailSubject(data: InvoiceEmailData) {
   return `${kindWord} ${data.reference} — KOV${data.projectName ? ` · ${data.projectName}` : ""}`;
 }
 
-export function invoiceEmailHtml(data: InvoiceEmailData) {
+export async function invoiceEmailHtml(data: InvoiceEmailData) {
   const firstName = data.clientName.split(" ")[0] || data.clientName;
 
   const body = `

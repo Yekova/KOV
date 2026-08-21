@@ -1,6 +1,6 @@
 import { Document, Page, View, Text, Image } from "@react-pdf/renderer";
 import { pdfStyles, formatEuros, formatDate } from "./pdfStyles";
-import { BUSINESS_INFO } from "./businessInfo";
+import type { BusinessInfo } from "./businessInfo";
 import { PdfFooter } from "./PdfFooter";
 import { KOV_LOGO_SRC } from "./logoImage";
 
@@ -22,7 +22,7 @@ export interface QuotePdfData {
   totalCents: number;
 }
 
-export function QuoteDocument({ data }: { data: QuotePdfData }) {
+export function QuoteDocument({ data, businessInfo }: { data: QuotePdfData; businessInfo: BusinessInfo }) {
   return (
     <Document>
       <Page size="A4" style={pdfStyles.page}>
@@ -40,13 +40,13 @@ export function QuoteDocument({ data }: { data: QuotePdfData }) {
           <View style={pdfStyles.partyBlock}>
             <Text style={pdfStyles.partyLabel}>Émetteur</Text>
             <Text style={pdfStyles.partyLine}>
-              {BUSINESS_INFO.legalName} ({BUSINESS_INFO.commercialName})
+              {businessInfo.legalName} ({businessInfo.commercialName})
             </Text>
-            <Text style={pdfStyles.partyLine}>{BUSINESS_INFO.address.street}</Text>
+            <Text style={pdfStyles.partyLine}>{businessInfo.address.street}</Text>
             <Text style={pdfStyles.partyLine}>
-              {BUSINESS_INFO.address.postalCode} {BUSINESS_INFO.address.city}
+              {businessInfo.address.postalCode} {businessInfo.address.city}
             </Text>
-            <Text style={pdfStyles.partyLine}>SIRET {BUSINESS_INFO.siret}</Text>
+            <Text style={pdfStyles.partyLine}>SIRET {businessInfo.siret}</Text>
           </View>
           <View style={pdfStyles.partyBlock}>
             <Text style={pdfStyles.partyLabel}>Destinataire</Text>
@@ -91,12 +91,12 @@ export function QuoteDocument({ data }: { data: QuotePdfData }) {
 
         <View style={pdfStyles.noteBox}>
           <Text>
-            {BUSINESS_INFO.vatMention}. Devis valable {data.validUntil ? `jusqu'au ${formatDate(data.validUntil)}` : "30 jours"}
+            {businessInfo.vatMention}. Devis valable {data.validUntil ? `jusqu'au ${formatDate(data.validUntil)}` : "30 jours"}
             . Bon pour accord — merci de retourner ce devis signé pour valider le lancement de la prestation.
           </Text>
         </View>
 
-        <PdfFooter />
+        <PdfFooter businessInfo={businessInfo} />
       </Page>
     </Document>
   );

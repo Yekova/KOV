@@ -4,11 +4,11 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { uploadClientFile, createSignedDownloadUrl } from "@/lib/portal/storage";
+import { uploadClientFile, createSignedDownloadUrl, deleteClientFile } from "@/lib/portal/storage";
 import { logActivity, getActorDisplayName } from "@/lib/activity";
 
 export async function createDocumentFolder(formData: FormData) {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
   const projectId = formData.get("project_id");
   const parentFolderId = formData.get("parent_folder_id");
@@ -31,7 +31,48 @@ export async function createDocumentFolder(formData: FormData) {
 
   if (error) throw new Error("La création du dossier a échoué (nom déjà utilisé à cet emplacement ?).");
 
+  const actorName = await getActorDisplayName(admin.id);
+  await logActivity({
+    clientId: project.client_id,
+    projectId,
+    type: "document",
+    title: `Dossier créé : ${name.trim()}`,
+    adminTitle: `${actorName} a créé le dossier ${name.trim()}`,
+    actorId: admin.id,
+  });
+
   revalidatePath(`/admin/projects/${projectId}`);
+}
+
+export async function renameDocumentFolder(folderId: string, formData: FormData) {
+  await requireAdmin();
+
+  const name = formData.get("name");
+  if (typeof name !== "string" || !name.trim()) throw new Error("Nom de dossier requis.");
+
+  const { data: folder } = await supabaseAdmin.from("document_folders").select("project_id").eq("id", folderId).maybeSingle();
+  if (!folder) throw new Error("Dossier introuvable.");
+
+  const { error } = await supabaseAdmin.from("document_folders").update({ name: name.trim() }).eq("id", folderId);
+  if (error) throw new Error("Le renommage a échoué (nom déjà utilisé à cet emplacement ?).");
+
+  revalidatePath(`/admin/projects/${folder.project_id}`);
+}
+
+// Safe by construction: documents.folder_id is ON DELETE SET NULL (files move
+// to the project root, never deleted) and document_folders.parent_folder_id
+// is ON DELETE CASCADE (only empty folder rows disappear, chained the same
+// way down the tree) — see 20260822100000_add_document_folders.sql.
+export async function deleteDocumentFolder(folderId: string) {
+  await requireAdmin();
+
+  const { data: folder } = await supabaseAdmin.from("document_folders").select("project_id").eq("id", folderId).maybeSingle();
+  if (!folder) throw new Error("Dossier introuvable.");
+
+  const { error } = await supabaseAdmin.from("document_folders").delete().eq("id", folderId);
+  if (error) throw new Error("La suppression a échoué.");
+
+  revalidatePath(`/admin/projects/${folder.project_id}`);
 }
 
 export async function uploadProjectDocument(formData: FormData) {
@@ -94,6 +135,24 @@ export async function getDocumentPreviewUrl(documentId: string): Promise<{ url: 
   if (!url) throw new Error("Aperçu indisponible.");
 
   return { url, mimeType: doc.mime_type };
+}
+
+export async function deleteProjectDocument(documentId: string) {
+  await requireAdmin();
+
+  const { data: doc } = await supabaseAdmin
+    .from("documents")
+    .select("project_id, storage_path")
+    .eq("id", documentId)
+    .maybeSingle();
+  if (!doc) throw new Error("Document introuvable.");
+
+  const { error } = await supabaseAdmin.from("documents").delete().eq("id", documentId);
+  if (error) throw new Error("La suppression a échoué.");
+
+  await deleteClientFile(doc.storage_path);
+
+  if (doc.project_id) revalidatePath(`/admin/projects/${doc.project_id}`);
 }
 
 export async function downloadProjectDocument(formData: FormData) {

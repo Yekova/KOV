@@ -1,17 +1,17 @@
 import { View, Text } from "@react-pdf/renderer";
 import { pdfStyles } from "./pdfStyles";
-import { BUSINESS_INFO } from "./businessInfo";
+import type { BusinessInfo } from "./businessInfo";
 
-export function PdfFooter() {
+export function PdfFooter({ businessInfo }: { businessInfo: BusinessInfo }) {
   return (
     <View style={pdfStyles.footer} fixed>
       <Text style={pdfStyles.footerText}>
-        {BUSINESS_INFO.legalName} — {BUSINESS_INFO.legalForm} — {BUSINESS_INFO.address.street},{" "}
-        {BUSINESS_INFO.address.postalCode} {BUSINESS_INFO.address.city}
+        {businessInfo.legalName} — {businessInfo.legalForm} — {businessInfo.address.street},{" "}
+        {businessInfo.address.postalCode} {businessInfo.address.city}
         {"\n"}
-        SIRET {BUSINESS_INFO.siret} — APE {BUSINESS_INFO.apeCode} — {BUSINESS_INFO.vatMention}
+        SIRET {businessInfo.siret} — APE {businessInfo.apeCode} — {businessInfo.vatMention}
         {"\n"}
-        {BUSINESS_INFO.latePaymentMention}
+        {businessInfo.latePaymentMention}
       </Text>
     </View>
   );

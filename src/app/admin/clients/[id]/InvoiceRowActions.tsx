@@ -1,11 +1,22 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { sendInvoiceEmail, downloadInvoicePdf } from "../actions";
+import { sendInvoiceEmail, downloadInvoicePdf, deleteInvoice } from "../actions";
 import { Button } from "@/components/ui/Button";
 
-export function InvoiceRowActions({ invoiceId, hasPdf }: { invoiceId: string; hasPdf: boolean }) {
+export function InvoiceRowActions({
+  invoiceId,
+  hasPdf,
+  status,
+  reference,
+}: {
+  invoiceId: string;
+  hasPdf: boolean;
+  status: string;
+  reference: string;
+}) {
   const [isPending, startTransition] = useTransition();
+  const [isDeleting, startDeleting] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
 
@@ -37,6 +48,26 @@ export function InvoiceRowActions({ invoiceId, hasPdf }: { invoiceId: string; ha
       >
         {isPending ? "Envoi…" : sent ? "Envoyé ✓" : "Envoyer par email"}
       </Button>
+      {status !== "paid" && (
+        <Button
+          type="button"
+          variant="ghost"
+          disabled={isDeleting}
+          onClick={() => {
+            if (!window.confirm(`Supprimer définitivement la facture ${reference} ?`)) return;
+            setError(null);
+            startDeleting(async () => {
+              try {
+                await deleteInvoice(invoiceId);
+              } catch (err) {
+                setError(err instanceof Error ? err.message : "La suppression a échoué.");
+              }
+            });
+          }}
+        >
+          <span className="text-kov-red">{isDeleting ? "Suppression…" : "Supprimer"}</span>
+        </Button>
+      )}
       {error && <span className="text-kov-red text-xs">{error}</span>}
     </div>
   );

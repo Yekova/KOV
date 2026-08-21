@@ -99,6 +99,10 @@ export function NewQuoteForm({
           Valable jusqu&apos;au
           <input type="date" name="valid_until" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
         </label>
+        <label className="text-xs text-kov-steel">
+          PDF personnalisé (facultatif — sinon généré automatiquement)
+          <input type="file" name="pdf_file" accept="application/pdf" className={`${FIELD_CLASS} py-1.5`} style={{ borderColor: "var(--kov-border)" }} />
+        </label>
       </div>
 
       <div className="space-y-2">

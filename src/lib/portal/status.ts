@@ -12,7 +12,7 @@ export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
   on_hold: "En attente",
 };
 
-export const INVOICE_STATUSES = ["draft", "sent", "paid", "overdue"] as const;
+export const INVOICE_STATUSES = ["draft", "sent", "paid", "overdue", "cancelled"] as const;
 export type InvoiceStatus = (typeof INVOICE_STATUSES)[number];
 
 export function isInvoiceStatus(value: string): value is InvoiceStatus {
@@ -24,9 +24,10 @@ export const INVOICE_STATUS_LABELS: Record<InvoiceStatus, string> = {
   sent: "Envoyée",
   paid: "Payée",
   overdue: "En retard",
+  cancelled: "Annulée",
 };
 
-export const QUOTE_STATUSES = ["draft", "sent", "accepted", "declined", "expired"] as const;
+export const QUOTE_STATUSES = ["draft", "sent", "accepted", "declined", "expired", "cancelled"] as const;
 export type QuoteStatus = (typeof QUOTE_STATUSES)[number];
 
 export function isQuoteStatus(value: string): value is QuoteStatus {
@@ -39,6 +40,7 @@ export const QUOTE_STATUS_LABELS: Record<QuoteStatus, string> = {
   accepted: "Accepté",
   declined: "Refusé",
   expired: "Expiré",
+  cancelled: "Annulé",
 };
 
 export const REQUEST_THREAD_STATUSES = ["open", "answered", "closed"] as const;

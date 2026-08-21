@@ -12,14 +12,16 @@ interface DocumentPreviewModalProps {
   item: DocumentGridItem;
   getPreviewUrl: (documentId: string) => Promise<{ url: string; mimeType: string | null }>;
   downloadAction: (formData: FormData) => Promise<void>;
+  onDelete?: () => Promise<void>;
   onClose: () => void;
 }
 
-export function DocumentPreviewModal({ item, getPreviewUrl, downloadAction, onClose }: DocumentPreviewModalProps) {
+export function DocumentPreviewModal({ item, getPreviewUrl, downloadAction, onDelete, onClose }: DocumentPreviewModalProps) {
   const [visible, setVisible] = useState(false);
   const [url, setUrl] = useState<string | null>(null);
   const [mimeType, setMimeType] = useState<string | null>(item.mimeType);
   const [error, setError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)));
@@ -111,12 +113,31 @@ export function DocumentPreviewModal({ item, getPreviewUrl, downloadAction, onCl
 
           <div className="flex items-center justify-between gap-4">
             <p className="text-kov-steel text-xs">{formatFileSize(item.sizeBytes)}</p>
-            <form action={downloadAction}>
-              <input type="hidden" name="document_id" value={item.id} />
-              <Button type="submit" variant="primary">
-                Télécharger
-              </Button>
-            </form>
+            <div className="flex items-center gap-4">
+              {onDelete && (
+                <button
+                  type="button"
+                  disabled={isDeleting}
+                  onClick={() => {
+                    if (!window.confirm(`Supprimer définitivement « ${item.filename} » ?`)) return;
+                    setIsDeleting(true);
+                    onDelete().catch((err) => {
+                      setIsDeleting(false);
+                      setError(err instanceof Error ? err.message : "La suppression a échoué.");
+                    });
+                  }}
+                  className="text-kov-red text-xs uppercase tracking-widest hover:underline disabled:opacity-50"
+                >
+                  {isDeleting ? "Suppression…" : "Supprimer"}
+                </button>
+              )}
+              <form action={downloadAction}>
+                <input type="hidden" name="document_id" value={item.id} />
+                <Button type="submit" variant="primary">
+                  Télécharger
+                </Button>
+              </form>
+            </div>
           </div>
         </GlassCard>
       </div>

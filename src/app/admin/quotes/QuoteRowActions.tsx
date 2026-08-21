@@ -1,12 +1,23 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { sendQuoteEmail, downloadQuotePdf, getQuotePdfUrl } from "./actions";
+import { sendQuoteEmail, downloadQuotePdf, getQuotePdfUrl, deleteQuote } from "./actions";
 import { Button } from "@/components/ui/Button";
 
-export function QuoteRowActions({ quoteId, hasEmail }: { quoteId: string; hasEmail: boolean }) {
+export function QuoteRowActions({
+  quoteId,
+  hasEmail,
+  status,
+  reference,
+}: {
+  quoteId: string;
+  hasEmail: boolean;
+  status: string;
+  reference: string;
+}) {
   const [isSending, startSending] = useTransition();
   const [isViewing, startViewing] = useTransition();
+  const [isDeleting, startDeleting] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
 
@@ -54,6 +65,26 @@ export function QuoteRowActions({ quoteId, hasEmail }: { quoteId: string; hasEma
       >
         {isSending ? "Envoi…" : sent ? "Envoyé ✓" : "Envoyer par email"}
       </Button>
+      {status !== "accepted" && (
+        <Button
+          type="button"
+          variant="ghost"
+          disabled={isDeleting}
+          onClick={() => {
+            if (!window.confirm(`Supprimer définitivement le devis ${reference} ?`)) return;
+            setError(null);
+            startDeleting(async () => {
+              try {
+                await deleteQuote(quoteId);
+              } catch (err) {
+                setError(err instanceof Error ? err.message : "La suppression a échoué.");
+              }
+            });
+          }}
+        >
+          <span className="text-kov-red">{isDeleting ? "Suppression…" : "Supprimer"}</span>
+        </Button>
+      )}
       {!hasEmail && <span className="text-kov-steel text-xs">Aucun email destinataire</span>}
       {error && <span className="text-kov-red text-xs">{error}</span>}
     </div>

@@ -1,17 +1,18 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { GlassCard } from "@/components/ui/GlassCard";
 
 export type AdminSearchItem = {
   title: string;
   subtitle?: string;
-  category: "Clients" | "Projets" | "Leads";
+  category: "Clients" | "Projets" | "Leads" | "Devis" | "Factures" | "Documents";
   href: string;
 };
 
-const CATEGORIES = ["Tout", "Clients", "Projets", "Leads"] as const;
+const CATEGORIES = ["Tout", "Clients", "Projets", "Leads", "Devis", "Factures", "Documents"] as const;
 
 // Prefetch-once-and-filter-client-side, same technique already proven by
 // GreetingSearchPanel in the client portal — this agency's data volume
@@ -75,7 +76,7 @@ export function GlobalAdminSearch({ items }: { items: AdminSearchItem[] }) {
           <circle cx="11" cy="11" r="7" />
           <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
-        <span className="flex-1">Rechercher un client, projet, lead…</span>
+        <span className="flex-1">Rechercher un client, projet, lead, devis…</span>
         <span
           className="text-[10px] uppercase tracking-widest border px-1.5 py-0.5"
           style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
@@ -84,14 +85,15 @@ export function GlobalAdminSearch({ items }: { items: AdminSearchItem[] }) {
         </span>
       </button>
 
-      {open && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 flex items-start justify-center pt-24 md:pt-32 px-4"
-          style={{ zIndex: "var(--z-modal)", background: "rgba(10,10,10,0.7)" }}
-          onClick={() => setOpen(false)}
-        >
+      {open &&
+        createPortal(
+          <div
+            role="dialog"
+            aria-modal="true"
+            className="fixed inset-0 flex items-start justify-center pt-24 md:pt-32 px-4"
+            style={{ zIndex: "var(--z-modal)", background: "rgba(10,10,10,0.7)" }}
+            onClick={() => setOpen(false)}
+          >
           <GlassCard className="w-full max-w-2xl p-6" onClick={(e) => e.stopPropagation()}>
             <div
               className="flex items-center gap-3 border-b pb-4"
@@ -105,7 +107,7 @@ export function GlobalAdminSearch({ items }: { items: AdminSearchItem[] }) {
                 ref={inputRef}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Rechercher un client, projet, lead…"
+                placeholder="Rechercher un client, projet, lead, devis…"
                 className="flex-1 bg-transparent text-kov-bone placeholder:text-kov-steel focus:outline-none"
               />
               <span
@@ -176,8 +178,9 @@ export function GlobalAdminSearch({ items }: { items: AdminSearchItem[] }) {
               )}
             </div>
           </GlassCard>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </>
   );
 }

@@ -12,7 +12,7 @@ export function quoteEmailSubject(data: QuoteEmailData) {
   return `Votre devis ${data.reference} — KOV`;
 }
 
-export function quoteEmailHtml(data: QuoteEmailData) {
+export async function quoteEmailHtml(data: QuoteEmailData) {
   const firstName = data.recipientName.split(" ")[0] || data.recipientName;
 
   const body = `

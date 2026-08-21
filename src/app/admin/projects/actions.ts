@@ -4,9 +4,10 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { isTaskStatus, isPriority } from "@/lib/admin/status";
+import { logActivity, getActorDisplayName } from "@/lib/activity";
 
 export async function createTask(formData: FormData) {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
   const projectId = formData.get("project_id");
   const title = formData.get("title");
@@ -20,6 +21,9 @@ export async function createTask(formData: FormData) {
 
   const priorityValue = typeof priority === "string" && isPriority(priority) ? priority : null;
 
+  const { data: project } = await supabaseAdmin.from("projects").select("client_id, name").eq("id", projectId).maybeSingle();
+  if (!project) throw new Error("Projet introuvable.");
+
   const { error } = await supabaseAdmin.from("project_tasks").insert({
     project_id: projectId,
     title: title.trim(),
@@ -31,14 +35,31 @@ export async function createTask(formData: FormData) {
 
   if (error) throw new Error("La création de la tâche a échoué.");
 
+  const actorName = await getActorDisplayName(admin.id);
+  await logActivity({
+    clientId: project.client_id,
+    projectId,
+    type: "milestone",
+    title: `Nouvelle tâche : ${title.trim()}`,
+    adminTitle: `${actorName} a créé la tâche « ${title.trim()} » sur ${project.name}`,
+    actorId: admin.id,
+  });
+
   revalidatePath("/admin");
   revalidatePath("/admin/projects");
 }
 
 export async function updateTaskStatus(taskId: string, status: string) {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
   if (!isTaskStatus(status)) throw new Error("Statut invalide.");
+
+  const { data: existing } = await supabaseAdmin
+    .from("project_tasks")
+    .select("title, project_id")
+    .eq("id", taskId)
+    .maybeSingle();
+  if (!existing) throw new Error("Tâche introuvable.");
 
   const { error } = await supabaseAdmin
     .from("project_tasks")
@@ -46,6 +67,23 @@ export async function updateTaskStatus(taskId: string, status: string) {
     .eq("id", taskId);
 
   if (error) throw new Error("La mise à jour a échoué.");
+
+  const { data: project } = await supabaseAdmin
+    .from("projects")
+    .select("client_id, name")
+    .eq("id", existing.project_id)
+    .maybeSingle();
+  if (project) {
+    const actorName = await getActorDisplayName(admin.id);
+    await logActivity({
+      clientId: project.client_id,
+      projectId: existing.project_id,
+      type: "milestone",
+      title: `Tâche mise à jour : ${existing.title}`,
+      adminTitle: `${actorName} a changé le statut de « ${existing.title} » sur ${project.name}`,
+      actorId: admin.id,
+    });
+  }
 
   revalidatePath("/admin");
   revalidatePath("/admin/projects");

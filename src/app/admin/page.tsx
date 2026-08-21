@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getActiveProjectsKpi, getNewLeadsKpi, getMonthlyRevenueKpi, getPendingTasksKpi, getGlobalProgressKpi } from "@/lib/admin/kpis";
 import { KpiGrid } from "@/components/admin/dashboard/KpiGrid";
+import { DashboardHeader } from "@/components/admin/dashboard/DashboardHeader";
 import { ProjectPipeline } from "@/components/admin/dashboard/ProjectPipeline";
 import { LeadFeed } from "@/components/admin/dashboard/LeadFeed";
 import { TeamWorkload } from "@/components/admin/dashboard/TeamWorkload";
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminDashboardPage() {
-  await requireAdmin();
+  const user = await requireAdmin();
 
   const [
     { data: projects },
@@ -118,9 +119,12 @@ export default async function AdminDashboardPage() {
     getPendingTasksKpi(),
   ]);
   const globalProgress = getGlobalProgressKpi(projectRows);
+  const currentAdminName = adminRows.find((a) => a.id === user.id)?.full_name ?? null;
 
   return (
     <main className="px-6 py-10 max-w-[1800px] mx-auto w-full space-y-6">
+      <DashboardHeader fullName={currentAdminName} />
+
       <KpiGrid
         activeProjects={activeProjectsKpi}
         newLeads={newLeadsKpi}

@@ -5,10 +5,16 @@ import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { createSignedDownloadUrl } from "@/lib/portal/storage";
 import { Button } from "@/components/ui/Button";
-import { FolderIcon } from "@/lib/documentIcons";
 import { DocumentGrid, type DocumentGridItem } from "@/components/documents/DocumentGrid";
 import { PROJECT_STATUS_LABELS, type ProjectStatus } from "@/lib/portal/status";
-import { createDocumentFolder, uploadProjectDocument, getDocumentPreviewUrl, downloadProjectDocument } from "./actions";
+import {
+  createDocumentFolder,
+  uploadProjectDocument,
+  getDocumentPreviewUrl,
+  downloadProjectDocument,
+  deleteProjectDocument,
+} from "./actions";
+import { FolderCard } from "./FolderCard";
 
 export const metadata: Metadata = {
   title: "Projet — Admin KOV",
@@ -130,20 +136,17 @@ export default async function AdminProjectDetailPage(props: PageProps<"/admin/pr
         {folderRows.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6">
             {folderRows.map((folder) => (
-              <Link
-                key={folder.id}
-                href={`/admin/projects/${projectId}?folder=${folder.id}`}
-                className="border p-4 flex flex-col items-center gap-2 hover:border-kov-red transition-colors"
-                style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-md)" }}
-              >
-                <FolderIcon className="w-8 h-8 text-kov-steel" />
-                <p className="text-kov-bone text-xs text-center truncate w-full">{folder.name}</p>
-              </Link>
+              <FolderCard key={folder.id} projectId={projectId} folderId={folder.id} name={folder.name} />
             ))}
           </div>
         )}
 
-        <DocumentGrid documents={gridItems} getPreviewUrl={getDocumentPreviewUrl} downloadAction={downloadProjectDocument} />
+        <DocumentGrid
+          documents={gridItems}
+          getPreviewUrl={getDocumentPreviewUrl}
+          downloadAction={downloadProjectDocument}
+          onDelete={deleteProjectDocument}
+        />
 
         <div className="flex flex-wrap gap-4 mt-8">
           <form action={createDocumentFolder} className="border p-4 flex items-end gap-3" style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-md)" }}>

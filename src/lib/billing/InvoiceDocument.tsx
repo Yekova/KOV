@@ -1,6 +1,7 @@
 import { Document, Page, View, Text, Image } from "@react-pdf/renderer";
 import { pdfStyles, formatEuros, formatDate } from "./pdfStyles";
-import { BUSINESS_INFO } from "./businessInfo";
+import type { BusinessInfo } from "./businessInfo";
+import type { LineItem } from "./quoteLineItems";
 import { PdfFooter } from "./PdfFooter";
 import { KOV_LOGO_SRC } from "./logoImage";
 
@@ -16,6 +17,7 @@ export interface InvoicePdfData {
   clientCompany: string | null;
   clientEmail: string | null;
   projectName: string | null;
+  lineItems: LineItem[];
 }
 
 const KIND_LABEL: Record<InvoicePdfData["kind"], string> = {
@@ -24,7 +26,7 @@ const KIND_LABEL: Record<InvoicePdfData["kind"], string> = {
   balance: "Facture de solde",
 };
 
-export function InvoiceDocument({ data }: { data: InvoicePdfData }) {
+export function InvoiceDocument({ data, businessInfo }: { data: InvoicePdfData; businessInfo: BusinessInfo }) {
   return (
     <Document>
       <Page size="A4" style={pdfStyles.page}>
@@ -41,13 +43,13 @@ export function InvoiceDocument({ data }: { data: InvoicePdfData }) {
           <View style={pdfStyles.partyBlock}>
             <Text style={pdfStyles.partyLabel}>Émetteur</Text>
             <Text style={pdfStyles.partyLine}>
-              {BUSINESS_INFO.legalName} ({BUSINESS_INFO.commercialName})
+              {businessInfo.legalName} ({businessInfo.commercialName})
             </Text>
-            <Text style={pdfStyles.partyLine}>{BUSINESS_INFO.address.street}</Text>
+            <Text style={pdfStyles.partyLine}>{businessInfo.address.street}</Text>
             <Text style={pdfStyles.partyLine}>
-              {BUSINESS_INFO.address.postalCode} {BUSINESS_INFO.address.city}
+              {businessInfo.address.postalCode} {businessInfo.address.city}
             </Text>
-            <Text style={pdfStyles.partyLine}>SIRET {BUSINESS_INFO.siret}</Text>
+            <Text style={pdfStyles.partyLine}>SIRET {businessInfo.siret}</Text>
           </View>
           <View style={pdfStyles.partyBlock}>
             <Text style={pdfStyles.partyLabel}>Facturé à</Text>
@@ -67,16 +69,35 @@ export function InvoiceDocument({ data }: { data: InvoicePdfData }) {
           </View>
         )}
 
-        <View style={pdfStyles.table}>
-          <View style={pdfStyles.tableHeaderRow}>
-            <Text style={[pdfStyles.colDescription, pdfStyles.tableHeaderText]}>Description</Text>
-            <Text style={[pdfStyles.colTotal, pdfStyles.tableHeaderText]}>Montant</Text>
+        {data.lineItems.length > 0 ? (
+          <View style={pdfStyles.table}>
+            <View style={pdfStyles.tableHeaderRow}>
+              <Text style={[pdfStyles.colDescription, pdfStyles.tableHeaderText]}>Description</Text>
+              <Text style={[pdfStyles.colQty, pdfStyles.tableHeaderText]}>Qté</Text>
+              <Text style={[pdfStyles.colUnitPrice, pdfStyles.tableHeaderText]}>Prix unitaire</Text>
+              <Text style={[pdfStyles.colTotal, pdfStyles.tableHeaderText]}>Total</Text>
+            </View>
+            {data.lineItems.map((item, index) => (
+              <View key={index} style={pdfStyles.tableRow}>
+                <Text style={pdfStyles.colDescription}>{item.description}</Text>
+                <Text style={pdfStyles.colQty}>{item.quantity}</Text>
+                <Text style={pdfStyles.colUnitPrice}>{formatEuros(item.unitPriceCents)}</Text>
+                <Text style={pdfStyles.colTotal}>{formatEuros(item.quantity * item.unitPriceCents)}</Text>
+              </View>
+            ))}
           </View>
-          <View style={pdfStyles.tableRow}>
-            <Text style={pdfStyles.colDescription}>{data.projectName ?? "Prestation KOV"}</Text>
-            <Text style={pdfStyles.colTotal}>{formatEuros(data.amountCents)}</Text>
+        ) : (
+          <View style={pdfStyles.table}>
+            <View style={pdfStyles.tableHeaderRow}>
+              <Text style={[pdfStyles.colDescription, pdfStyles.tableHeaderText]}>Description</Text>
+              <Text style={[pdfStyles.colTotal, pdfStyles.tableHeaderText]}>Montant</Text>
+            </View>
+            <View style={pdfStyles.tableRow}>
+              <Text style={pdfStyles.colDescription}>{data.projectName ?? "Prestation KOV"}</Text>
+              <Text style={pdfStyles.colTotal}>{formatEuros(data.amountCents)}</Text>
+            </View>
           </View>
-        </View>
+        )}
 
         <View style={pdfStyles.totalsBlock}>
           <View style={pdfStyles.totalsRowFinal}>
@@ -88,10 +109,10 @@ export function InvoiceDocument({ data }: { data: InvoicePdfData }) {
         <View style={pdfStyles.paymentBlock}>
           <Text style={pdfStyles.paymentLabel}>Paiement</Text>
           {data.dueAt && <Text style={pdfStyles.paymentLine}>Échéance : {formatDate(data.dueAt)}</Text>}
-          <Text style={pdfStyles.paymentLine}>IBAN : {BUSINESS_INFO.iban}</Text>
+          <Text style={pdfStyles.paymentLine}>IBAN : {businessInfo.iban}</Text>
         </View>
 
-        <PdfFooter />
+        <PdfFooter businessInfo={businessInfo} />
       </Page>
     </Document>
   );

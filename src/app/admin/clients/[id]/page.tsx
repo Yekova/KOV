@@ -4,12 +4,7 @@ import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { Button } from "@/components/ui/Button";
-import {
-  PROJECT_STATUSES,
-  PROJECT_STATUS_LABELS,
-  INVOICE_STATUSES,
-  INVOICE_STATUS_LABELS,
-} from "@/lib/portal/status";
+import { PROJECT_STATUSES, PROJECT_STATUS_LABELS } from "@/lib/portal/status";
 import { PIPELINE_STAGES, PIPELINE_STAGE_LABELS, PRIORITIES, PRIORITY_LABELS } from "@/lib/admin/status";
 import {
   setAccountManager,
@@ -17,11 +12,14 @@ import {
   updateProject,
   uploadDocument,
   createInvoice,
-  updateInvoiceStatus,
   replyToRequestThread,
 } from "../actions";
 import { InvoiceKindFields } from "./InvoiceKindFields";
+import { InvoiceLineItemsField } from "./InvoiceLineItemsField";
 import { InvoiceRowActions } from "./InvoiceRowActions";
+import { InvoiceStatusSelect } from "./InvoiceStatusSelect";
+import { DeleteDocumentButton } from "./DeleteDocumentButton";
+import { ArchiveClientButton } from "./ArchiveClientButton";
 
 export const metadata: Metadata = {
   title: "Client — Admin KOV",
@@ -36,7 +34,7 @@ export default async function AdminClientDetailPage(props: PageProps<"/admin/cli
 
   const { data: client } = await supabaseAdmin
     .from("profiles")
-    .select("id, full_name, email, company, account_manager_id, role")
+    .select("id, full_name, email, company, account_manager_id, role, archived_at")
     .eq("id", clientId)
     .maybeSingle();
 
@@ -99,7 +97,15 @@ export default async function AdminClientDetailPage(props: PageProps<"/admin/cli
         <h1 className="font-display text-kov-bone text-2xl uppercase mt-4">
           {client.full_name || client.company || client.email}
         </h1>
-        <p className="text-kov-steel text-sm mt-1">{client.email}</p>
+        <div className="flex items-center gap-4 mt-1">
+          <p className="text-kov-steel text-sm">{client.email}</p>
+          {client.archived_at && (
+            <span className="text-kov-steel text-[10px] uppercase tracking-widest border px-1.5 py-0.5" style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}>
+              Archivé
+            </span>
+          )}
+          <ArchiveClientButton clientId={client.id} isArchived={Boolean(client.archived_at)} />
+        </div>
       </div>
 
       <section>
@@ -317,7 +323,10 @@ export default async function AdminClientDetailPage(props: PageProps<"/admin/cli
           {documentRows.map((doc) => (
             <li key={doc.id} className="text-sm text-kov-bone flex items-center justify-between border-b py-2" style={{ borderColor: "var(--kov-border)" }}>
               <span>{doc.filename}</span>
-              <span className="text-kov-steel text-xs">{new Date(doc.created_at).toLocaleDateString("fr-FR")}</span>
+              <span className="flex items-center gap-4">
+                <span className="text-kov-steel text-xs">{new Date(doc.created_at).toLocaleDateString("fr-FR")}</span>
+                <DeleteDocumentButton documentId={doc.id} filename={doc.filename} />
+              </span>
             </li>
           ))}
         </ul>
@@ -355,7 +364,6 @@ export default async function AdminClientDetailPage(props: PageProps<"/admin/cli
         <div className="space-y-2 mb-8">
           {invoiceRows.length === 0 && <p className="text-kov-steel text-sm">Aucune facture.</p>}
           {invoiceRows.map((invoice) => {
-            const updateInvoiceStatusWithId = updateInvoiceStatus.bind(null, invoice.id);
             const kindLabel =
               invoice.kind === "deposit"
                 ? `Acompte${invoice.deposit_percent ? ` ${invoice.deposit_percent}%` : ""}`
@@ -378,24 +386,13 @@ export default async function AdminClientDetailPage(props: PageProps<"/admin/cli
                   )}
                 </div>
                 <span className="text-kov-steel text-sm">{(invoice.amount_cents / 100).toFixed(2)} €</span>
-                <form action={updateInvoiceStatusWithId} className="flex items-center gap-4">
-                  <select
-                    name="status"
-                    defaultValue={invoice.status}
-                    className={`${FIELD_CLASS} w-40`}
-                    style={{ borderColor: "var(--kov-border)" }}
-                  >
-                    {INVOICE_STATUSES.map((s) => (
-                      <option key={s} value={s}>
-                        {INVOICE_STATUS_LABELS[s]}
-                      </option>
-                    ))}
-                  </select>
-                  <Button type="submit" variant="ghost">
-                    Mettre à jour
-                  </Button>
-                </form>
-                <InvoiceRowActions invoiceId={invoice.id} hasPdf={Boolean(invoice.pdf_storage_path)} />
+                <InvoiceStatusSelect invoiceId={invoice.id} status={invoice.status} />
+                <InvoiceRowActions
+                  invoiceId={invoice.id}
+                  hasPdf={Boolean(invoice.pdf_storage_path)}
+                  status={invoice.status}
+                  reference={invoice.reference}
+                />
               </div>
             );
           })}
@@ -424,6 +421,7 @@ export default async function AdminClientDetailPage(props: PageProps<"/admin/cli
             PDF personnalisé (facultatif — sinon généré automatiquement)
             <input type="file" name="pdf_file" accept="application/pdf" className={`${FIELD_CLASS} py-1.5`} style={{ borderColor: "var(--kov-border)" }} />
           </label>
+          <InvoiceLineItemsField />
           <Button type="submit" variant="primary">
             Créer la facture
           </Button>

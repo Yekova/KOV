@@ -4,6 +4,17 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 const PORTAL_ASSETS_BUCKET = "portal-assets";
 const CLIENT_FILES_BUCKET = "client-files";
 
+// No bucket-level limit is configured in Supabase Storage for either bucket,
+// so without this a multi-GB upload would sit in the request until it times
+// out instead of failing fast with a readable message.
+const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
+
+function assertUploadable(file: File) {
+  if (file.size > MAX_UPLOAD_BYTES) {
+    throw new Error(`Fichier trop volumineux (${(file.size / (1024 * 1024)).toFixed(1)} Mo — 25 Mo maximum).`);
+  }
+}
+
 export function getPublicAssetUrl(path: string | null | undefined): string | null {
   if (!path) return null;
   const { data } = supabaseAdmin.storage.from(PORTAL_ASSETS_BUCKET).getPublicUrl(path);
@@ -11,6 +22,7 @@ export function getPublicAssetUrl(path: string | null | undefined): string | nul
 }
 
 export async function uploadPortalAsset(path: string, file: File) {
+  assertUploadable(file);
   const { error } = await supabaseAdmin.storage.from(PORTAL_ASSETS_BUCKET).upload(path, file, {
     upsert: true,
   });
@@ -18,6 +30,7 @@ export async function uploadPortalAsset(path: string, file: File) {
 }
 
 export async function uploadClientFile(path: string, file: File) {
+  assertUploadable(file);
   const { error } = await supabaseAdmin.storage.from(CLIENT_FILES_BUCKET).upload(path, file, {
     upsert: true,
   });
@@ -32,6 +45,12 @@ export async function uploadClientFileBuffer(path: string, buffer: Buffer, conte
     contentType,
   });
   if (error) throw new Error("Le téléversement a échoué.");
+}
+
+// Best-effort: callers should not fail the whole operation (e.g. deleting a
+// DB row) just because the underlying object was already gone from storage.
+export async function deleteClientFile(path: string) {
+  await supabaseAdmin.storage.from(CLIENT_FILES_BUCKET).remove([path]);
 }
 
 // Callers must have already verified the requesting user owns this file

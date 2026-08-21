@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useTransition, type FormEvent } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/Button";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { createLead } from "@/app/admin/leads/actions";
@@ -21,86 +22,127 @@ const FIELD_CLASS =
 
 type ActiveModal = "lead" | "project" | "task" | null;
 
+const ACTIONS = { lead: createLead, project: createProject, task: createTask } as const;
+
 export function QuickActionMenu({ clients, projects, admins }: QuickActionMenuProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
   const [activeModal, setActiveModal] = useState<ActiveModal>(null);
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
+
+  // Portaled to document.body below (see the backdrop-filter-breaks-hit-testing
+  // note on the dropdown), so its position can no longer come from CSS
+  // "position: absolute" relative to this local wrapper — computed here instead.
+  function toggleMenu() {
+    if (!menuOpen && ref.current) {
+      const rect = ref.current.getBoundingClientRect();
+      setMenuPosition({ top: rect.bottom + 8, right: window.innerWidth - rect.right });
+    }
+    setMenuOpen((v) => !v);
+  }
 
   function openModal(modal: ActiveModal) {
     setMenuOpen(false);
+    setError(null);
     setActiveModal(modal);
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!activeModal) return;
+    const action = ACTIONS[activeModal];
+    const formData = new FormData(event.currentTarget);
+    setError(null);
+    startTransition(async () => {
+      try {
+        await action(formData);
+        setActiveModal(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "L'action a échoué.");
+      }
+    });
   }
 
   return (
     <div className="relative" ref={ref}>
-      <Button type="button" variant="primary" onClick={() => setMenuOpen((v) => !v)}>
+      <Button type="button" variant="primary" onClick={toggleMenu}>
         + Nouvelle action
       </Button>
 
-      {menuOpen && (
-        <>
-          <div className="fixed inset-0" style={{ zIndex: "var(--z-modal)" }} onClick={() => setMenuOpen(false)} />
+      {menuOpen &&
+        createPortal(
+          <>
+            <div className="fixed inset-0" style={{ zIndex: "var(--z-modal)" }} onClick={() => setMenuOpen(false)} />
+            <div
+              className="fixed w-56 border py-2"
+              style={{
+                top: menuPosition.top,
+                right: menuPosition.right,
+                zIndex: "var(--z-modal)",
+                background: "var(--glass-bg)",
+                backdropFilter: "blur(var(--glass-blur)) saturate(180%)",
+                WebkitBackdropFilter: "blur(var(--glass-blur)) saturate(180%)",
+                borderColor: "var(--glass-border)",
+                borderRadius: "var(--radius-glass)",
+                boxShadow: "var(--glass-shadow-full)",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => openModal("lead")}
+                className="w-full text-left px-4 py-2.5 text-sm text-kov-bone hover:text-kov-red transition-colors"
+              >
+                Nouveau lead
+              </button>
+              <button
+                type="button"
+                onClick={() => openModal("project")}
+                className="w-full text-left px-4 py-2.5 text-sm text-kov-bone hover:text-kov-red transition-colors"
+              >
+                Nouveau projet
+              </button>
+              <button
+                type="button"
+                onClick={() => openModal("task")}
+                className="w-full text-left px-4 py-2.5 text-sm text-kov-bone hover:text-kov-red transition-colors"
+              >
+                Nouvelle tâche
+              </button>
+              <div className="border-t my-2" style={{ borderColor: "var(--glass-border)" }} />
+              <div className="px-4 py-2.5 text-sm text-kov-steel flex items-center justify-between">
+                Nouveau client
+                <span className="text-[10px] uppercase tracking-widest border px-1.5 py-0.5" style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}>
+                  Bientôt
+                </span>
+              </div>
+              <div className="px-4 py-2.5 text-sm text-kov-steel flex items-center justify-between">
+                Nouvelle facture
+                <span className="text-[10px] uppercase tracking-widest border px-1.5 py-0.5" style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}>
+                  Bientôt
+                </span>
+              </div>
+            </div>
+          </>,
+          document.body
+        )}
+
+      {activeModal &&
+        createPortal(
           <div
-            className="absolute right-0 top-full mt-2 w-56 border py-2"
-            style={{
-              zIndex: "var(--z-modal)",
-              background: "var(--glass-bg)",
-              backdropFilter: "blur(var(--glass-blur)) saturate(180%)",
-              WebkitBackdropFilter: "blur(var(--glass-blur)) saturate(180%)",
-              borderColor: "var(--glass-border)",
-              borderRadius: "var(--radius-glass)",
-              boxShadow: "var(--glass-shadow-full)",
+            role="dialog"
+            aria-modal="true"
+            className="fixed inset-0 flex items-center justify-center px-4"
+            style={{ zIndex: "var(--z-modal)", background: "rgba(10,10,10,0.7)" }}
+            onClick={() => {
+              setActiveModal(null);
+              setError(null);
             }}
           >
-            <button
-              type="button"
-              onClick={() => openModal("lead")}
-              className="w-full text-left px-4 py-2.5 text-sm text-kov-bone hover:text-kov-red transition-colors"
-            >
-              Nouveau lead
-            </button>
-            <button
-              type="button"
-              onClick={() => openModal("project")}
-              className="w-full text-left px-4 py-2.5 text-sm text-kov-bone hover:text-kov-red transition-colors"
-            >
-              Nouveau projet
-            </button>
-            <button
-              type="button"
-              onClick={() => openModal("task")}
-              className="w-full text-left px-4 py-2.5 text-sm text-kov-bone hover:text-kov-red transition-colors"
-            >
-              Nouvelle tâche
-            </button>
-            <div className="border-t my-2" style={{ borderColor: "var(--glass-border)" }} />
-            <div className="px-4 py-2.5 text-sm text-kov-steel flex items-center justify-between">
-              Nouveau client
-              <span className="text-[10px] uppercase tracking-widest border px-1.5 py-0.5" style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}>
-                Bientôt
-              </span>
-            </div>
-            <div className="px-4 py-2.5 text-sm text-kov-steel flex items-center justify-between">
-              Nouvelle facture
-              <span className="text-[10px] uppercase tracking-widest border px-1.5 py-0.5" style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}>
-                Bientôt
-              </span>
-            </div>
-          </div>
-        </>
-      )}
-
-      {activeModal && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 flex items-center justify-center px-4"
-          style={{ zIndex: "var(--z-modal)", background: "rgba(10,10,10,0.7)" }}
-          onClick={() => setActiveModal(null)}
-        >
           <GlassCard variant="solid" className="w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
             {activeModal === "lead" && (
-              <form action={createLead} onSubmit={() => setActiveModal(null)} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <p className="font-display text-kov-bone text-lg uppercase mb-2">Nouveau lead</p>
                 <input name="name" placeholder="Nom" required className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
                 <input name="email" type="email" placeholder="Email" required className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
@@ -109,14 +151,15 @@ export function QuickActionMenu({ clients, projects, admins }: QuickActionMenuPr
                 <input name="project_type" placeholder="Type de projet (facultatif)" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
                 <input name="budget_eur" placeholder="Budget estimé € (facultatif)" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
                 <textarea name="message" placeholder="Message (facultatif)" rows={3} className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
-                <Button type="submit" variant="primary" className="w-full justify-center">
-                  Créer le lead
+                {error && <p className="text-kov-red text-xs">{error}</p>}
+                <Button type="submit" variant="primary" className="w-full justify-center" disabled={isPending}>
+                  {isPending ? "Création…" : "Créer le lead"}
                 </Button>
               </form>
             )}
 
             {activeModal === "project" && (
-              <form action={createProject} onSubmit={() => setActiveModal(null)} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <p className="font-display text-kov-bone text-lg uppercase mb-2">Nouveau projet</p>
                 <select name="client_id" required defaultValue="" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }}>
                   <option value="" disabled>
@@ -147,14 +190,15 @@ export function QuickActionMenu({ clients, projects, admins }: QuickActionMenuPr
                     </option>
                   ))}
                 </select>
-                <Button type="submit" variant="primary" className="w-full justify-center">
-                  Créer le projet
+                {error && <p className="text-kov-red text-xs">{error}</p>}
+                <Button type="submit" variant="primary" className="w-full justify-center" disabled={isPending}>
+                  {isPending ? "Création…" : "Créer le projet"}
                 </Button>
               </form>
             )}
 
             {activeModal === "task" && (
-              <form action={createTask} onSubmit={() => setActiveModal(null)} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <p className="font-display text-kov-bone text-lg uppercase mb-2">Nouvelle tâche</p>
                 <select name="project_id" required defaultValue="" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }}>
                   <option value="" disabled>
@@ -185,14 +229,16 @@ export function QuickActionMenu({ clients, projects, admins }: QuickActionMenuPr
                   ))}
                 </select>
                 <input name="due_date" type="date" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
-                <Button type="submit" variant="primary" className="w-full justify-center">
-                  Créer la tâche
+                {error && <p className="text-kov-red text-xs">{error}</p>}
+                <Button type="submit" variant="primary" className="w-full justify-center" disabled={isPending}>
+                  {isPending ? "Création…" : "Créer la tâche"}
                 </Button>
               </form>
             )}
           </GlassCard>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 }
