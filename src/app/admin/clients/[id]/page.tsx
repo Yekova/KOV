@@ -322,7 +322,17 @@ export default async function AdminClientDetailPage(props: PageProps<"/admin/cli
           {documentRows.length === 0 && <li className="text-kov-steel text-sm">Aucun document.</li>}
           {documentRows.map((doc) => (
             <li key={doc.id} className="text-sm text-kov-bone flex items-center justify-between border-b py-2" style={{ borderColor: "var(--kov-border)" }}>
-              <span>{doc.filename}</span>
+              <span className="flex items-center gap-2">
+                {doc.filename}
+                {doc.uploaded_by === clientId && (
+                  <span
+                    className="text-[10px] uppercase tracking-widest text-kov-red px-2 py-0.5"
+                    style={{ background: "rgba(220,38,38,0.1)", borderRadius: "var(--radius-sm)" }}
+                  >
+                    Envoyé par le client
+                  </span>
+                )}
+              </span>
               <span className="flex items-center gap-4">
                 <span className="text-kov-steel text-xs">{new Date(doc.created_at).toLocaleDateString("fr-FR")}</span>
                 <DeleteDocumentButton documentId={doc.id} filename={doc.filename} />

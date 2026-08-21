@@ -122,7 +122,14 @@ export default async function AdminDashboardPage() {
   const currentAdminName = adminRows.find((a) => a.id === user.id)?.full_name ?? null;
 
   return (
-    <div className="relative">
+    <div className="relative isolate">
+      {/* isolate: without it, the negative z-index below competes with the
+          WHOLE app's stacking context, not just this page — the admin
+          layout's own solid black background is a plain non-positioned box
+          too, and per CSS painting order that beats a negative-z descendant
+          no matter how deeply nested, so the photo silently painted behind
+          it and never showed. isolate creates a local stacking context so
+          -z-10 only has to lose to *this page's* content, as intended. */}
       {/* Fixed, not absolute — stays put behind every glass card while the
           dashboard scrolls, which is the point of a liquid-glass backdrop. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}

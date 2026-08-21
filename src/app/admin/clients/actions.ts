@@ -265,6 +265,8 @@ export async function uploadDocument(formData: FormData) {
     project_id: projectIdValue,
     filename: file.name,
     storage_path: storagePath,
+    mime_type: file.type || null,
+    size_bytes: file.size,
     uploaded_by: admin.id,
   });
 
