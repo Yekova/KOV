@@ -98,7 +98,7 @@ export function QuickActionMenu({ clients, projects, admins }: QuickActionMenuPr
           style={{ zIndex: "var(--z-modal)", background: "rgba(10,10,10,0.7)" }}
           onClick={() => setActiveModal(null)}
         >
-          <GlassCard className="w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
+          <GlassCard variant="solid" className="w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
             {activeModal === "lead" && (
               <form action={createLead} onSubmit={() => setActiveModal(null)} className="space-y-4">
                 <p className="font-display text-kov-bone text-lg uppercase mb-2">Nouveau lead</p>
