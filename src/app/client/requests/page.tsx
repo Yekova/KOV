@@ -50,7 +50,7 @@ export default async function ClientRequestsPage() {
     <main className="px-6 md:px-10 py-10 max-w-[1400px] mx-auto w-full space-y-8">
       <h1 className="font-display text-kov-bone text-2xl uppercase">Demandes</h1>
 
-      <GlassCard className="p-6">
+      <GlassCard className="p-6" variant="solid">
         <p className="text-xs uppercase tracking-widest text-kov-steel mb-4">Nouvelle demande</p>
         <form action={createRequestThread} className="space-y-4">
           <input

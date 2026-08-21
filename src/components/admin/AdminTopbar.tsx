@@ -2,6 +2,7 @@ import { GlobalAdminSearch, type AdminSearchItem } from "./GlobalAdminSearch";
 import { QuickActionMenu } from "./QuickActionMenu";
 import { NotificationBell, type NotificationItem } from "./NotificationBell";
 import { UserMenu } from "./UserMenu";
+import { MobileNavToggle } from "./MobileNavToggle";
 
 type PickerOption = { id: string; label: string };
 
@@ -28,6 +29,7 @@ export function AdminTopbar({
 }) {
   return (
     <header className="flex items-center gap-4 px-6 py-4" style={{ background: "var(--kov-carbon)" }}>
+      <MobileNavToggle />
       <GlobalAdminSearch items={searchItems} />
       <QuickActionMenu clients={clients} projects={projects} admins={admins} />
       <div className="flex items-center gap-2 ml-auto">
