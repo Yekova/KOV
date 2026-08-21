@@ -24,6 +24,16 @@ export async function uploadClientFile(path: string, file: File) {
   if (error) throw new Error("Le téléversement a échoué.");
 }
 
+// For server-generated content (invoice/devis PDFs) — no File/Blob to wrap,
+// just the raw bytes already in hand.
+export async function uploadClientFileBuffer(path: string, buffer: Buffer, contentType: string) {
+  const { error } = await supabaseAdmin.storage.from(CLIENT_FILES_BUCKET).upload(path, buffer, {
+    upsert: true,
+    contentType,
+  });
+  if (error) throw new Error("Le téléversement a échoué.");
+}
+
 // Callers must have already verified the requesting user owns this file
 // (client_id === user.id) before calling this — it does no ownership check
 // itself, matching the rest of this codebase's "supabaseAdmin bypasses RLS,

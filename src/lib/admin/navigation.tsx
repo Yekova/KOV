@@ -73,6 +73,18 @@ export const adminNavigation: AdminNavItem[] = [
     ),
   },
   {
+    id: "quotes",
+    label: "Devis",
+    href: "/admin/quotes",
+    icon: (
+      <>
+        <path d="M7 3h7l5 5v13H7z" />
+        <path d="M14 3v5h5" />
+        <path d="M9.5 13.5l2 2 4-4.5" />
+      </>
+    ),
+  },
+  {
     id: "team",
     label: "Équipe",
     href: "/admin/team",

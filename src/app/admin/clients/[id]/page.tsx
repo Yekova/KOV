@@ -20,6 +20,8 @@ import {
   updateInvoiceStatus,
   replyToRequestThread,
 } from "../actions";
+import { InvoiceKindFields } from "./InvoiceKindFields";
+import { InvoiceRowActions } from "./InvoiceRowActions";
 
 export const metadata: Metadata = {
   title: "Client — Admin KOV",
@@ -354,31 +356,47 @@ export default async function AdminClientDetailPage(props: PageProps<"/admin/cli
           {invoiceRows.length === 0 && <p className="text-kov-steel text-sm">Aucune facture.</p>}
           {invoiceRows.map((invoice) => {
             const updateInvoiceStatusWithId = updateInvoiceStatus.bind(null, invoice.id);
+            const kindLabel =
+              invoice.kind === "deposit"
+                ? `Acompte${invoice.deposit_percent ? ` ${invoice.deposit_percent}%` : ""}`
+                : invoice.kind === "balance"
+                  ? "Solde"
+                  : null;
             return (
-              <form
+              <div
                 key={invoice.id}
-                action={updateInvoiceStatusWithId}
-                className="flex items-center justify-between gap-4 border-b py-2"
+                className="flex flex-wrap items-center justify-between gap-4 border-b py-3"
                 style={{ borderColor: "var(--kov-border)" }}
               >
-                <span className="text-kov-bone text-sm">{invoice.reference}</span>
+                <div className="min-w-0">
+                  <span className="text-kov-bone text-sm">{invoice.reference}</span>
+                  {kindLabel && <span className="text-kov-steel text-xs ml-2 uppercase tracking-widest">{kindLabel}</span>}
+                  {invoice.sent_at && (
+                    <span className="text-kov-steel text-xs ml-2">
+                      Envoyée le {new Date(invoice.sent_at).toLocaleDateString("fr-FR")}
+                    </span>
+                  )}
+                </div>
                 <span className="text-kov-steel text-sm">{(invoice.amount_cents / 100).toFixed(2)} €</span>
-                <select
-                  name="status"
-                  defaultValue={invoice.status}
-                  className={`${FIELD_CLASS} w-40`}
-                  style={{ borderColor: "var(--kov-border)" }}
-                >
-                  {INVOICE_STATUSES.map((s) => (
-                    <option key={s} value={s}>
-                      {INVOICE_STATUS_LABELS[s]}
-                    </option>
-                  ))}
-                </select>
-                <Button type="submit" variant="ghost">
-                  Mettre à jour
-                </Button>
-              </form>
+                <form action={updateInvoiceStatusWithId} className="flex items-center gap-4">
+                  <select
+                    name="status"
+                    defaultValue={invoice.status}
+                    className={`${FIELD_CLASS} w-40`}
+                    style={{ borderColor: "var(--kov-border)" }}
+                  >
+                    {INVOICE_STATUSES.map((s) => (
+                      <option key={s} value={s}>
+                        {INVOICE_STATUS_LABELS[s]}
+                      </option>
+                    ))}
+                  </select>
+                  <Button type="submit" variant="ghost">
+                    Mettre à jour
+                  </Button>
+                </form>
+                <InvoiceRowActions invoiceId={invoice.id} hasPdf={Boolean(invoice.pdf_storage_path)} />
+              </div>
             );
           })}
         </div>
@@ -401,8 +419,9 @@ export default async function AdminClientDetailPage(props: PageProps<"/admin/cli
             Échéance
             <input type="date" name="due_at" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
           </label>
+          <InvoiceKindFields />
           <label className="text-xs text-kov-steel">
-            PDF (facultatif)
+            PDF personnalisé (facultatif — sinon généré automatiquement)
             <input type="file" name="pdf_file" accept="application/pdf" className={`${FIELD_CLASS} py-1.5`} style={{ borderColor: "var(--kov-border)" }} />
           </label>
           <Button type="submit" variant="primary">

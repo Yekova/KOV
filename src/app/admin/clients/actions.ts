@@ -1,12 +1,22 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { isProjectStatus, isInvoiceStatus, PROJECT_STATUS_LABELS, type ProjectStatus } from "@/lib/portal/status";
-import { uploadClientFile } from "@/lib/portal/storage";
+import { uploadClientFile, uploadClientFileBuffer, createSignedDownloadUrl } from "@/lib/portal/storage";
 import { logActivity, getActorDisplayName } from "@/lib/activity";
 import { isPipelineStage, isPriority } from "@/lib/admin/status";
+import { generateInvoicePdfBuffer } from "@/lib/billing/generatePdf";
+import { sendEmail } from "@/lib/email/brevo";
+import { invoiceEmailHtml, invoiceEmailSubject } from "@/lib/email/invoiceEmail";
+
+const INVOICE_KINDS = ["full", "deposit", "balance"] as const;
+type InvoiceKind = (typeof INVOICE_KINDS)[number];
+function isInvoiceKind(value: string): value is InvoiceKind {
+  return (INVOICE_KINDS as readonly string[]).includes(value);
+}
 
 function revalidateClient(clientId: string) {
   revalidatePath(`/admin/clients/${clientId}`);
@@ -248,6 +258,9 @@ export async function createInvoice(formData: FormData) {
   const amount = formData.get("amount_eur");
   const dueAt = formData.get("due_at");
   const pdfFile = formData.get("pdf_file");
+  const kind = formData.get("kind");
+  const depositPercent = formData.get("deposit_percent");
+  const totalProject = formData.get("total_project_eur");
 
   if (typeof clientId !== "string" || !clientId) throw new Error("Client invalide.");
   if (typeof reference !== "string" || !reference.trim()) throw new Error("Référence requise.");
@@ -255,14 +268,49 @@ export async function createInvoice(formData: FormData) {
   const amountCents = parseEuroToCents(amount);
   if (amountCents === null) throw new Error("Montant invalide.");
 
-  const invoiceId = crypto.randomUUID();
-  let pdfPath: string | null = null;
-  if (pdfFile instanceof File && pdfFile.size > 0) {
-    pdfPath = `${clientId}/invoices/${invoiceId}.pdf`;
-    await uploadClientFile(pdfPath, pdfFile);
-  }
+  const kindValue: InvoiceKind = typeof kind === "string" && isInvoiceKind(kind) ? kind : "full";
+  const depositPercentValue =
+    kindValue === "deposit" && typeof depositPercent === "string" && depositPercent
+      ? Math.min(100, Math.max(1, parseInt(depositPercent, 10) || 0))
+      : null;
+  const totalProjectCents = kindValue !== "full" ? parseEuroToCents(totalProject) : null;
 
   const projectIdValue = typeof projectId === "string" && projectId ? projectId : null;
+  const issuedAt = new Date().toISOString();
+  const dueAtValue = typeof dueAt === "string" && dueAt ? new Date(dueAt).toISOString() : null;
+
+  const invoiceId = crypto.randomUUID();
+  const pdfPath = `${clientId}/invoices/${invoiceId}.pdf`;
+
+  if (pdfFile instanceof File && pdfFile.size > 0) {
+    // Admin supplied their own PDF (e.g. a custom-formatted invoice) — use it
+    // as-is instead of generating one from the template.
+    await uploadClientFile(pdfPath, pdfFile);
+  } else {
+    const { data: client } = await supabaseAdmin
+      .from("profiles")
+      .select("full_name, company, email")
+      .eq("id", clientId)
+      .maybeSingle();
+    const { data: project } = projectIdValue
+      ? await supabaseAdmin.from("projects").select("name").eq("id", projectIdValue).maybeSingle()
+      : { data: null };
+
+    const pdfBuffer = await generateInvoicePdfBuffer({
+      reference: reference.trim(),
+      issuedAt,
+      dueAt: dueAtValue,
+      kind: kindValue,
+      depositPercent: depositPercentValue,
+      totalProjectCents,
+      amountCents,
+      clientName: client?.full_name || client?.company || client?.email || "Client",
+      clientCompany: client?.company ?? null,
+      clientEmail: client?.email ?? null,
+      projectName: project?.name ?? null,
+    });
+    await uploadClientFileBuffer(pdfPath, pdfBuffer, "application/pdf");
+  }
 
   const { error } = await supabaseAdmin.from("invoices").insert({
     id: invoiceId,
@@ -272,7 +320,11 @@ export async function createInvoice(formData: FormData) {
     amount_cents: amountCents,
     status: "sent",
     pdf_storage_path: pdfPath,
-    due_at: typeof dueAt === "string" && dueAt ? new Date(dueAt).toISOString() : null,
+    issued_at: issuedAt,
+    due_at: dueAtValue,
+    kind: kindValue,
+    deposit_percent: depositPercentValue,
+    total_project_cents: totalProjectCents,
   });
 
   if (error) throw new Error("La création de la facture a échoué.");
@@ -334,6 +386,104 @@ export async function updateInvoiceStatus(invoiceId: string, formData: FormData)
   }
 
   revalidateClient(existing.client_id);
+}
+
+export async function sendInvoiceEmail(invoiceId: string) {
+  const admin = await requireAdmin();
+
+  const { data: invoice } = await supabaseAdmin
+    .from("invoices")
+    .select("client_id, project_id, reference, amount_cents, kind, deposit_percent, total_project_cents, due_at, issued_at")
+    .eq("id", invoiceId)
+    .maybeSingle();
+  if (!invoice) throw new Error("Facture introuvable.");
+
+  const { data: client } = await supabaseAdmin
+    .from("profiles")
+    .select("full_name, company, email")
+    .eq("id", invoice.client_id)
+    .maybeSingle();
+  if (!client?.email) throw new Error("Ce client n'a pas d'adresse email.");
+
+  let projectName: string | null = null;
+  if (invoice.project_id) {
+    const { data: project } = await supabaseAdmin.from("projects").select("name").eq("id", invoice.project_id).maybeSingle();
+    projectName = project?.name ?? null;
+  }
+
+  const clientName = client.full_name || client.company || client.email;
+
+  const pdfBuffer = await generateInvoicePdfBuffer({
+    reference: invoice.reference,
+    issuedAt: invoice.issued_at,
+    dueAt: invoice.due_at,
+    kind: invoice.kind as "full" | "deposit" | "balance",
+    depositPercent: invoice.deposit_percent,
+    totalProjectCents: invoice.total_project_cents,
+    amountCents: invoice.amount_cents,
+    clientName,
+    clientCompany: client.company,
+    clientEmail: client.email,
+    projectName,
+  });
+
+  const pdfPath = `${invoice.client_id}/invoices/${invoiceId}.pdf`;
+  await uploadClientFileBuffer(pdfPath, pdfBuffer, "application/pdf");
+
+  const emailData = {
+    clientName,
+    reference: invoice.reference,
+    kind: invoice.kind as "full" | "deposit" | "balance",
+    amountCents: invoice.amount_cents,
+    dueAt: invoice.due_at,
+    projectName,
+  };
+
+  await sendEmail({
+    to: client.email,
+    toName: clientName,
+    subject: invoiceEmailSubject(emailData),
+    html: invoiceEmailHtml(emailData),
+    attachments: [{ name: `${invoice.reference}.pdf`, content: pdfBuffer.toString("base64") }],
+  });
+
+  const { error } = await supabaseAdmin
+    .from("invoices")
+    .update({ pdf_storage_path: pdfPath, sent_at: new Date().toISOString() })
+    .eq("id", invoiceId);
+  if (error) throw new Error("L'enregistrement après envoi a échoué.");
+
+  const actorName = await getActorDisplayName(admin.id);
+  await logActivity({
+    clientId: invoice.client_id,
+    projectId: invoice.project_id,
+    type: "invoice",
+    title: "Facture envoyée par email",
+    adminTitle: `${actorName} a envoyé la facture ${invoice.reference} par email`,
+    actorId: admin.id,
+    description: `Facture ${invoice.reference} → ${client.email}`,
+  });
+
+  revalidateClient(invoice.client_id);
+}
+
+export async function downloadInvoicePdf(formData: FormData) {
+  await requireAdmin();
+
+  const invoiceId = formData.get("invoice_id");
+  if (typeof invoiceId !== "string" || !invoiceId) throw new Error("Facture invalide.");
+
+  const { data: invoice } = await supabaseAdmin
+    .from("invoices")
+    .select("pdf_storage_path")
+    .eq("id", invoiceId)
+    .maybeSingle();
+  if (!invoice?.pdf_storage_path) throw new Error("Aucun PDF disponible pour cette facture.");
+
+  const url = await createSignedDownloadUrl(invoice.pdf_storage_path);
+  if (!url) throw new Error("Le téléchargement a échoué.");
+
+  redirect(url);
 }
 
 export async function replyToRequestThread(threadId: string, formData: FormData) {

@@ -26,6 +26,21 @@ export const INVOICE_STATUS_LABELS: Record<InvoiceStatus, string> = {
   overdue: "En retard",
 };
 
+export const QUOTE_STATUSES = ["draft", "sent", "accepted", "declined", "expired"] as const;
+export type QuoteStatus = (typeof QUOTE_STATUSES)[number];
+
+export function isQuoteStatus(value: string): value is QuoteStatus {
+  return (QUOTE_STATUSES as readonly string[]).includes(value);
+}
+
+export const QUOTE_STATUS_LABELS: Record<QuoteStatus, string> = {
+  draft: "Brouillon",
+  sent: "Envoyé",
+  accepted: "Accepté",
+  declined: "Refusé",
+  expired: "Expiré",
+};
+
 export const REQUEST_THREAD_STATUSES = ["open", "answered", "closed"] as const;
 export type RequestThreadStatus = (typeof REQUEST_THREAD_STATUSES)[number];
 
