@@ -10,3 +10,8 @@ export const motion = {
 } as const;
 
 export type MotionSpeed = keyof typeof motion;
+
+// Smooth accelerate-decelerate, no overshoot — see docs/KOV-MOTION.md
+// ("éviter : spring exagéré, bounce"). Used for the liquid nav indicator
+// and the search reveal so both share one motion signature.
+export const LIQUID_EASE = "cubic-bezier(0.4, 0, 0.2, 1)";

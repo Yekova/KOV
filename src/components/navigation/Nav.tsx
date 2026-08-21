@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/Button";
 import { GlobalSearch } from "@/components/search/GlobalSearch";
+import { LiquidNavLinks } from "@/components/navigation/LiquidNavLinks";
 
 const LINKS = [
   { href: "/#work", label: "Projets" },
@@ -41,12 +42,8 @@ export function Nav() {
         className="flex items-center gap-3 sm:gap-8 px-4 sm:px-6 py-3 text-xs uppercase tracking-widest text-kov-bone border"
         style={GLASS_PILL_STYLE}
       >
-        <div className="hidden md:flex items-center gap-8">
-          {LINKS.map((link) => (
-            <Link key={link.href} href={link.href} className="hover:text-kov-red transition-colors">
-              {link.label}
-            </Link>
-          ))}
+        <div className="hidden md:block">
+          <LiquidNavLinks links={LINKS} />
         </div>
         <GlobalSearch />
         <Link
