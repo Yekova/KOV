@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { requireUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { QUOTE_STATUS_LABELS, type QuoteStatus } from "@/lib/portal/status";
+import { QUOTE_STATUS_LABELS, isQuoteExpired, type QuoteStatus } from "@/lib/portal/status";
 import { fromDbLineItems } from "@/lib/billing/quoteLineItems";
 import { QuoteRowActions } from "./QuoteRowActions";
 
@@ -39,7 +39,17 @@ export default async function ClientQuotesPage() {
                   style={{ borderColor: "var(--kov-border)" }}
                 >
                   <div className="min-w-0">
-                    <p className="text-kov-bone text-sm">{quote.reference}</p>
+                    <p className="text-kov-bone text-sm">
+                      {quote.reference}
+                      {isQuoteExpired(quote.status, quote.valid_until) && (
+                        <span
+                          className="text-[10px] uppercase tracking-widest text-kov-red px-2 py-0.5 ml-2"
+                          style={{ background: "rgba(220,38,38,0.1)", borderRadius: "var(--radius-sm)" }}
+                        >
+                          Expiré
+                        </span>
+                      )}
+                    </p>
                     <p className="text-kov-steel text-xs mt-1">
                       {items.length} prestation{items.length > 1 ? "s" : ""}
                       {quote.valid_until && ` — valable jusqu'au ${new Date(quote.valid_until).toLocaleDateString("fr-FR")}`}

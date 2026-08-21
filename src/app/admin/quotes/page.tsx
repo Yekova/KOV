@@ -3,6 +3,7 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { fromDbLineItems } from "@/lib/billing/quoteLineItems";
+import { isQuoteExpired } from "@/lib/portal/status";
 import { QuoteStatusSelect } from "./QuoteStatusSelect";
 import { QuoteRowActions } from "./QuoteRowActions";
 import { NewQuoteForm } from "./NewQuoteForm";
@@ -87,7 +88,17 @@ export default async function AdminQuotesPage(props: PageProps<"/admin/quotes">)
                   style={{ borderColor: "var(--kov-border)" }}
                 >
                   <div className="min-w-0">
-                    <p className="text-kov-bone text-sm">{quote.reference}</p>
+                    <p className="text-kov-bone text-sm">
+                      {quote.reference}
+                      {isQuoteExpired(quote.status, quote.valid_until) && (
+                        <span
+                          className="text-[10px] uppercase tracking-widest text-kov-red px-2 py-0.5 ml-2"
+                          style={{ background: "rgba(220,38,38,0.1)", borderRadius: "var(--radius-sm)" }}
+                        >
+                          Expiré
+                        </span>
+                      )}
+                    </p>
                     <p className="text-kov-steel text-xs mt-1">
                       {quote.recipient_name}
                       {quote.recipient_email ? ` — ${quote.recipient_email}` : ""}

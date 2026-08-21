@@ -66,6 +66,12 @@ export const REQUEST_THREAD_STATUS_LABELS: Record<RequestThreadStatus, string> =
   closed: "Fermée",
 };
 
+// Same rationale as isInvoiceOverdue above — "expired" is a real, selectable
+// quote status that nothing ever sets automatically.
+export function isQuoteExpired(status: string, validUntil: string | null): boolean {
+  return status === "sent" && !!validUntil && new Date(validUntil).getTime() < Date.now();
+}
+
 export const ACTIVITY_TYPES = ["document", "message", "invoice", "milestone", "quote"] as const;
 export type ActivityType = (typeof ACTIVITY_TYPES)[number];
 
