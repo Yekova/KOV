@@ -84,14 +84,24 @@ export default async function ClientDashboardPage() {
           that file's comment for why this is `absolute`, not `fixed`, and
           why the wrapper needs `isolate`. A different photo than admin's,
           so the two portals don't feel like the same backdrop reused. */}
+      {/* object-position favors the right side of the frame — that's where
+          the gradient below lets it actually show through, behind the
+          narrower widget column rather than the text-heavy greeting panel. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/kov/character/contact-frames/frame-040.jpg"
         alt=""
         aria-hidden="true"
         className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none -z-10"
+        style={{ objectPosition: "75% center" }}
       />
-      <div className="absolute inset-0 -z-10" style={{ background: "linear-gradient(180deg, rgba(10,10,10,0.55) 0%, var(--kov-black) 85%)" }} />
+      <div
+        className="absolute inset-0 -z-10"
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(10,10,10,0.5) 0%, rgba(10,10,10,0.3) 45%, var(--kov-black) 90%), linear-gradient(90deg, var(--kov-black) 0%, rgba(10,10,10,0.55) 40%, rgba(10,10,10,0.25) 75%)",
+        }}
+      />
 
       <main className="relative px-6 md:px-10 py-10 max-w-[1800px] mx-auto w-full">
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">

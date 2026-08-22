@@ -4,8 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
-import { GlassCard } from "@/components/ui/GlassCard";
 import { useMobileNav } from "@/components/ui/MobileNavContext";
+import { KovAssistant } from "@/components/client/dashboard/KovAssistant";
 
 const NAV_ITEMS = [
   {
@@ -152,13 +152,7 @@ export function PortalSidebar({ openRequestsCount }: { openRequestsCount: number
           <NavLinks pathname={pathname} openRequestsCount={openRequestsCount} />
         </div>
 
-        <GlassCard className="p-4">
-          <p className="text-kov-bone text-xs uppercase tracking-widest mb-2">Besoin d&apos;aide ?</p>
-          <p className="text-kov-steel text-xs leading-relaxed mb-4">Notre équipe est là pour vous.</p>
-          <Link href="/client/support" className="text-kov-red text-xs uppercase tracking-widest hover:underline">
-            Contacter KOV →
-          </Link>
-        </GlassCard>
+        <KovAssistant />
       </aside>
 
       {mobileOpen &&
