@@ -1,5 +1,6 @@
 import { GlassCard } from "@/components/ui/GlassCard";
 import { TagPill } from "@/components/ui/Chip";
+import { Reveal } from "@/components/ui/Reveal";
 
 // Placeholder gallery — real project imagery pending. Sizes are intentionally
 // varied per docs/KOV-IMMERSIVE-SCENES.md ("never a uniform 3x2 card grid").
@@ -13,21 +14,25 @@ const PROJECTS = [
 export function WorkGallery() {
   return (
     <section id="work-gallery" className="px-6 py-32 max-w-[1600px] mx-auto">
-      <p className="text-xs uppercase tracking-widest text-kov-steel mb-4">Projets sélectionnés</p>
-      <h2
-        className="font-display text-kov-bone uppercase max-w-3xl mb-16"
-        style={{ fontSize: "var(--heading-lg)", lineHeight: "var(--line-height-display)" }}
-      >
-        Projets<span className="text-kov-red">.</span>
-      </h2>
+      <Reveal>
+        <p className="text-xs uppercase tracking-widest text-kov-steel mb-4">Projets sélectionnés</p>
+        <h2
+          className="font-display text-kov-bone uppercase max-w-3xl mb-16"
+          style={{ fontSize: "var(--heading-lg)", lineHeight: "var(--line-height-display)" }}
+        >
+          Projets<span className="text-kov-red">.</span>
+        </h2>
+      </Reveal>
 
       <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-6">
-        {PROJECTS.map((project) => (
-          <GlassCard key={project.id} className={`flex flex-col justify-end p-6 min-h-[240px] ${project.span}`}>
-            <p className="text-kov-steel font-mono text-xs mb-3">{project.id} — visuel à venir</p>
-            <p className="font-display text-kov-bone uppercase text-lg mb-2">{project.name}</p>
-            <TagPill>{project.tag}</TagPill>
-          </GlassCard>
+        {PROJECTS.map((project, index) => (
+          <Reveal key={project.id} delay={0.1 + index * 0.06} className={project.span}>
+            <GlassCard className="flex flex-col justify-end p-6 min-h-[240px] h-full transition-transform duration-500 hover:-translate-y-1">
+              <p className="text-kov-steel font-mono text-xs mb-3">{project.id} — visuel à venir</p>
+              <p className="font-display text-kov-bone uppercase text-lg mb-2">{project.name}</p>
+              <TagPill>{project.tag}</TagPill>
+            </GlassCard>
+          </Reveal>
         ))}
       </div>
     </section>
