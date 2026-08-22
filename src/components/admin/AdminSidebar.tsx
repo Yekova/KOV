@@ -5,7 +5,7 @@ import Image from "next/image";
 import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { adminNavigation } from "@/lib/admin/navigation";
-import { useMobileNav } from "./MobileNavContext";
+import { useMobileNav } from "@/components/ui/MobileNavContext";
 
 function NavLinks({
   pathname,

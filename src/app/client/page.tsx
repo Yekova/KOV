@@ -79,42 +79,57 @@ export default async function ClientDashboardPage() {
   ];
 
   return (
-    <main className="px-6 md:px-10 py-10 max-w-[1800px] mx-auto w-full">
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-2 space-y-6">
-          <GreetingSearchPanel fullName={profile?.full_name ?? null} searchIndex={searchIndex} />
+    <div className="relative isolate">
+      {/* Same pattern as the admin dashboard (src/app/admin/page.tsx) — see
+          that file's comment for why this is `absolute`, not `fixed`, and
+          why the wrapper needs `isolate`. A different photo than admin's,
+          so the two portals don't feel like the same backdrop reused. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/kov/character/contact-frames/frame-040.jpg"
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none -z-10"
+      />
+      <div className="absolute inset-0 -z-10" style={{ background: "linear-gradient(180deg, rgba(10,10,10,0.55) 0%, var(--kov-black) 85%)" }} />
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <StatusDonutCard projects={projectRows} />
-            <NextDeadlineCard project={nextDeadlineProject} today={new Date()} />
-            <AccountManagerCard
-              manager={
-                manager
-                  ? {
-                      full_name: manager.full_name,
-                      display_title: manager.display_title,
-                      avatar_url: getPublicAssetUrl(manager.avatar_path),
-                      is_online: manager.is_online,
-                    }
-                  : null
-              }
+      <main className="relative px-6 md:px-10 py-10 max-w-[1800px] mx-auto w-full">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          <div className="xl:col-span-2 space-y-6">
+            <GreetingSearchPanel fullName={profile?.full_name ?? null} searchIndex={searchIndex} />
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <StatusDonutCard projects={projectRows} />
+              <NextDeadlineCard project={nextDeadlineProject} today={new Date()} />
+              <AccountManagerCard
+                manager={
+                  manager
+                    ? {
+                        full_name: manager.full_name,
+                        display_title: manager.display_title,
+                        avatar_url: getPublicAssetUrl(manager.avatar_path),
+                        is_online: manager.is_online,
+                      }
+                    : null
+                }
+              />
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <ActiveProjectsList
+              projects={projectRows.map((p) => ({
+                id: p.id,
+                name: p.name,
+                category: p.category,
+                progress_percent: p.progress_percent,
+                thumbnail_url: getPublicAssetUrl(p.thumbnail_path),
+              }))}
             />
+            <RecentActivityFeed items={activity ?? []} />
           </div>
         </div>
-
-        <div className="space-y-6">
-          <ActiveProjectsList
-            projects={projectRows.map((p) => ({
-              id: p.id,
-              name: p.name,
-              category: p.category,
-              progress_percent: p.progress_percent,
-              thumbnail_url: getPublicAssetUrl(p.thumbnail_path),
-            }))}
-          />
-          <RecentActivityFeed items={activity ?? []} />
-        </div>
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }

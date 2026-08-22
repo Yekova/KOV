@@ -1,6 +1,6 @@
 "use client";
 
-import { useMobileNav } from "./MobileNavContext";
+import { useMobileNav } from "@/components/ui/MobileNavContext";
 
 export function MobileNavToggle() {
   const { setOpen } = useMobileNav();

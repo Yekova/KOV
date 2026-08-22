@@ -56,9 +56,6 @@ export default async function AdminDashboardPage() {
   const adminRows = adminProfiles ?? [];
 
   const clientIds = Array.from(new Set(projectRows.map((p) => p.client_id)));
-  const managerIds = Array.from(
-    new Set(projectRows.map((p) => p.project_manager_id).filter((id): id is string => !!id))
-  );
 
   const [{ data: clientProfiles }] = await Promise.all([
     clientIds.length

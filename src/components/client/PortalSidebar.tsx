@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { GlassCard } from "@/components/ui/GlassCard";
+import { useMobileNav } from "@/components/ui/MobileNavContext";
 
 const NAV_ITEMS = [
   {
@@ -122,16 +124,10 @@ function NavLinks({ pathname, openRequestsCount, onNavigate }: { pathname: strin
   );
 }
 
-export function PortalSidebar({
-  openRequestsCount,
-  mobileOpen = false,
-  onCloseMobile,
-}: {
-  openRequestsCount: number;
-  mobileOpen?: boolean;
-  onCloseMobile?: () => void;
-}) {
+export function PortalSidebar({ openRequestsCount }: { openRequestsCount: number }) {
   const pathname = usePathname();
+  const { open: mobileOpen, setOpen: setMobileOpen } = useMobileNav();
+  const onCloseMobile = () => setMobileOpen(false);
 
   return (
     <>
@@ -139,7 +135,22 @@ export function PortalSidebar({
         className="hidden md:flex w-64 shrink-0 flex-col justify-between p-6"
         style={{ background: "var(--kov-carbon)" }}
       >
-        <NavLinks pathname={pathname} openRequestsCount={openRequestsCount} />
+        <div>
+          <Link href="/client" className="flex items-center gap-2.5 mb-10">
+            <Image
+              src="/kov/brand/kov-wordmark-bone.png"
+              alt="KOV"
+              width={1116}
+              height={209}
+              className="h-5 w-auto"
+              priority
+            />
+            <span className="text-kov-steel text-[10px] uppercase tracking-widest border-l pl-2.5" style={{ borderColor: "var(--kov-border)" }}>
+              Studio
+            </span>
+          </Link>
+          <NavLinks pathname={pathname} openRequestsCount={openRequestsCount} />
+        </div>
 
         <GlassCard className="p-4">
           <p className="text-kov-bone text-xs uppercase tracking-widest mb-2">Besoin d&apos;aide ?</p>
@@ -151,7 +162,6 @@ export function PortalSidebar({
       </aside>
 
       {mobileOpen &&
-        onCloseMobile &&
         createPortal(
           <div className="md:hidden fixed inset-0" style={{ zIndex: "var(--z-modal)" }}>
             <div className="absolute inset-0" style={{ background: "rgba(10,10,10,0.7)" }} onClick={onCloseMobile} />

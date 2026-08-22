@@ -4,7 +4,7 @@ import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { SidebarBadges } from "@/components/admin/SidebarBadges";
 import { AdminTopbarData } from "@/components/admin/AdminTopbarData";
 import { AdminTopbarSkeleton } from "@/components/admin/AdminTopbarSkeleton";
-import { MobileNavProvider } from "@/components/admin/MobileNavContext";
+import { MobileNavProvider } from "@/components/ui/MobileNavContext";
 
 // requireAdmin() reads cookies(), which makes this whole layout dynamic —
 // per Next.js's own docs, a loading.tsx in a page below this layout cannot
