@@ -1,47 +1,65 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useImmersiveScrollProgress } from "@/hooks/useImmersiveScrollProgress";
 import { useSceneProgress } from "@/hooks/useSceneProgress";
-import { scenes } from "@/data/scenes";
 
-// Placeholder for the real frame-by-frame sequence / canvas (see /docs/KOV-IMMERSIVE-SCENES.md).
-// Fixed full-viewport layer at z-canvas — swap the flat depth color for the actual
-// scrubbed sequence once keyframes exist, keeping the same scene/progress inputs.
-// Fades out once scroll passes the #work section, where the regular (non-scene)
-// homepage sections take over.
-const DEPTHS = ["var(--kov-black)", "var(--kov-carbon)", "var(--kov-graphite)"];
-const PLACEHOLDER_FRAME_COUNT = 48;
+const FRAME_COUNT = 60;
+const HERO_BASE = "/kov/home/hero-frames";
+const ENTER_BASE = "/kov/home/enter-frames";
 
+function frameUrl(basePath: string, index: number) {
+  return `${basePath}/frame-${String(index).padStart(3, "0")}.jpg`;
+}
+
+function preload(basePath: string) {
+  for (let i = 0; i < FRAME_COUNT; i++) {
+    const img = new window.Image();
+    img.src = frameUrl(basePath, i);
+  }
+}
+
+// Real scroll-scrubbed frame sequences for "hero" and "enter-screen" (see
+// docs/KOV-IMMERSIVE-SCENES.md — this is the site's signature moment).
+// "work" has no produced footage yet, so it holds on enter-screen's last
+// frame rather than either cutting to a flat color or showing debug text —
+// least jarring placeholder until that scene is produced.
 export function SceneBackdrop() {
   const { progress, active } = useImmersiveScrollProgress();
-  const { scene, index, localProgress } = useSceneProgress(progress);
-  const frame = Math.round(localProgress * (PLACEHOLDER_FRAME_COUNT - 1)) + 1;
+  const { scene, localProgress } = useSceneProgress(progress);
+  // Lazy initializer (not a setState-in-effect call) — see components/ui/Reveal.tsx
+  // for why this avoids the extra render pass the naive version would cause.
+  const [reducedMotion] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+
+  useEffect(() => {
+    if (reducedMotion) return;
+    preload(HERO_BASE);
+    preload(ENTER_BASE);
+  }, [reducedMotion]);
+
+  let src: string;
+  if (reducedMotion) {
+    // Static keyframes only, no scrubbing — docs/KOV-IMMERSIVE-SCENES.md
+    // accessibility section: replace long sequences with a few keyframes,
+    // remove large movement, keep all content.
+    src = scene.id === "hero" ? frameUrl(HERO_BASE, 0) : frameUrl(ENTER_BASE, FRAME_COUNT - 1);
+  } else if (scene.id === "hero") {
+    src = frameUrl(HERO_BASE, Math.round(localProgress * (FRAME_COUNT - 1)));
+  } else if (scene.id === "enter-screen") {
+    src = frameUrl(ENTER_BASE, Math.round(localProgress * (FRAME_COUNT - 1)));
+  } else {
+    src = frameUrl(ENTER_BASE, FRAME_COUNT - 1);
+  }
 
   return (
     <div
-      className="fixed inset-0 flex items-end justify-center pb-10 transition-opacity duration-500"
-      style={{
-        zIndex: "var(--z-canvas)",
-        background: DEPTHS[index % DEPTHS.length],
-        opacity: active ? 1 : 0,
-        pointerEvents: "none",
-      }}
+      className="fixed inset-0 transition-opacity duration-500"
+      style={{ zIndex: "var(--z-canvas)", opacity: active ? 1 : 0, pointerEvents: "none" }}
     >
-      <div className="font-mono text-[11px] text-kov-steel tracking-widest uppercase text-center space-y-3">
-        <p>placeholder sequence — replace with real frames</p>
-        <p className="text-kov-concrete">
-          {String(index + 1).padStart(2, "0")} / {String(scenes.length).padStart(2, "0")} — {scene.id}
-        </p>
-        <p>
-          frame {String(frame).padStart(2, "0")} / {PLACEHOLDER_FRAME_COUNT}
-        </p>
-        <div className="w-48 h-px bg-kov-border relative mx-auto">
-          <div
-            className="absolute inset-y-0 left-0 bg-kov-red"
-            style={{ width: `${localProgress * 100}%` }}
-          />
-        </div>
-      </div>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={src} alt="" className="w-full h-full object-cover" />
     </div>
   );
 }
