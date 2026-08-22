@@ -1,44 +1,12 @@
 import type { Metadata } from "next";
 import { Button } from "@/components/ui/Button";
 import { TagPill } from "@/components/ui/Chip";
+import { PILLARS } from "@/data/expertisePillars";
 
 export const metadata: Metadata = {
   title: "Expertise — KOV",
   description: "Stratégie, design, développement, motion, systèmes et intégration, construits comme un seul système.",
 };
-
-const PILLARS = [
-  {
-    number: "01",
-    title: "Stratégie",
-    body: "Positionnement, structure et parcours utilisateurs — décidés avant même de commencer à designer quoi que ce soit.",
-  },
-  {
-    number: "02",
-    title: "Design",
-    body: "Des interfaces pensées comme de l'architecture. La structure d'abord, le style ensuite — jamais l'inverse pour masquer une mauvaise structure.",
-  },
-  {
-    number: "03",
-    title: "Développement",
-    body: "Du code de production dès le premier jour. Rapide, précis, conçu pour tenir face aux vrais utilisateurs et au vrai trafic.",
-  },
-  {
-    number: "04",
-    title: "Motion",
-    body: "Un mouvement qui explique, jamais qui joue un rôle. Chaque transition existe pour communiquer quelque chose — ou n'existe pas.",
-  },
-  {
-    number: "05",
-    title: "Systèmes",
-    body: "Une architecture numérique conçue pour évoluer — pas un site figé qui casse dès que l'activité grandit.",
-  },
-  {
-    number: "06",
-    title: "Intégration",
-    body: "Outils, données et automatisations, connectés — pour que le site soit la façade de quelque chose qui tourne vraiment.",
-  },
-];
 
 const PROCESS = [
   { number: "01", title: "Découvrir", body: "Ce qui compte vraiment ici, pas un brief générique." },
@@ -75,7 +43,7 @@ export default function ExpertisePage() {
 
       <div className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-12 border-t" style={{ borderColor: "var(--kov-border)" }}>
         {PILLARS.map((pillar) => (
-          <div key={pillar.number} className="pt-10">
+          <div key={pillar.number} id={pillar.slug} className="pt-10 scroll-mt-32">
             <p className="text-kov-red font-mono text-xs mb-4">{pillar.number}</p>
             <h2 className="font-display text-kov-bone uppercase text-2xl mb-4">{pillar.title}</h2>
             <p className="text-kov-concrete text-sm leading-relaxed">{pillar.body}</p>

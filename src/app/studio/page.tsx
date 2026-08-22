@@ -1,17 +1,11 @@
 import type { Metadata } from "next";
 import { Button } from "@/components/ui/Button";
+import { PRINCIPLES } from "@/data/studioPrinciples";
 
 export const metadata: Metadata = {
   title: "Studio — KOV",
   description: "KOV est un studio construit autour d'une idée : transformer des idées en expériences numériques dont on se souvient.",
 };
-
-const PRINCIPLES = [
-  { word: "Brutal", body: "On dit ce dont un projet a besoin, pas ce qui est confortable à entendre." },
-  { word: "Précis", body: "Chaque décision — un pixel, une ligne de texte, une ligne de code — a une raison d'être." },
-  { word: "Immersif", body: "On conçoit des expériences, pas des pages. La différence, c'est ce dont on se souvient." },
-  { word: "Intentionnel", body: "Rien n'est livré parce que c'est tendance. Ça l'est parce que ça mérite sa place." },
-];
 
 const PHILOSOPHY_WORDS = ["Clarté", "Intention", "Impact"];
 
@@ -59,7 +53,7 @@ export default function StudioPage() {
         style={{ borderColor: "var(--kov-border)" }}
       >
         {PRINCIPLES.map((principle) => (
-          <div key={principle.word}>
+          <div key={principle.word} id={principle.slug} className="scroll-mt-32">
             <h2 className="font-display text-kov-bone uppercase text-2xl mb-3">{principle.word}</h2>
             <p className="text-kov-concrete text-sm leading-relaxed">{principle.body}</p>
           </div>

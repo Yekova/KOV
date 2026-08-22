@@ -1,20 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { GlobalSearch } from "@/components/search/GlobalSearch";
-import { LiquidNavLinks } from "@/components/navigation/LiquidNavLinks";
+import { NavLinks, type NavLinkItem } from "@/components/navigation/NavLinks";
 import { MobileNavMenu } from "@/components/navigation/MobileNavMenu";
 import { REVEAL_EASE } from "@/lib/motion";
 
-const LINKS = [
-  { href: "/#work", label: "Projets" },
-  { href: "/expertise", label: "Expertise" },
+const LINKS: NavLinkItem[] = [
+  { href: "/#work-gallery", label: "Projets" },
+  { href: "/expertise", label: "Expertise", dropdownKey: "expertise" },
   { href: "/journal", label: "Journal" },
-  { href: "/studio", label: "Studio" },
+  { href: "/studio", label: "Studio", dropdownKey: "studio" },
 ];
 
 const SCROLL_THRESHOLD = 40;
@@ -43,6 +43,7 @@ export function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [visible, setVisible] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pillRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleScroll() {
@@ -84,71 +85,81 @@ export function Nav() {
 
   return (
     <>
-      <div
-        className="fixed top-4 inset-x-4 md:top-6 md:inset-x-8 flex items-center justify-between gap-4"
-        style={{
-          zIndex: "var(--z-nav)",
-          transform: visible ? "scaleX(1)" : "scaleX(0)",
-          opacity: visible ? 1 : 0,
-          filter: visible ? "blur(0px)" : "blur(2px)",
-          transformOrigin: "right center",
-          transition: `transform 0.9s ${REVEAL_EASE}, opacity 0.9s ${REVEAL_EASE}, filter 0.9s ${REVEAL_EASE}`,
-          willChange: "transform",
-        }}
-      >
-        <Link href="/" className={`flex items-center px-5 ${padding} border transition-all duration-500`} style={pillStyle}>
-          <Image
-            src="/kov/brand/kov-wordmark-bone.png"
-            alt="KOV"
-            width={1116}
-            height={209}
-            className="h-5 w-auto"
-            priority
-          />
-        </Link>
-
-        <nav
-          className={`hidden md:flex items-center gap-3 sm:gap-8 px-4 sm:px-6 ${padding} text-xs uppercase tracking-widest text-kov-bone border transition-all duration-500`}
-          style={pillStyle}
+      {/* Outer element owns centering only (a permanent, un-animated
+          translateX(-50%)); the inner element owns the route-change unfurl
+          (scaleX from its own center). Keeping the two transforms on
+          separate elements avoids composing "translate + scale" into one
+          transform string, which would need the unfurl to fight the
+          centering offset. */}
+      <div className="fixed top-4 md:top-6 left-1/2 -translate-x-1/2" style={{ zIndex: "var(--z-nav)" }}>
+        <div
+          ref={pillRef}
+          className={`flex items-center justify-between gap-2 sm:gap-4 px-2.5 sm:px-3 ${padding} border`}
+          style={{
+            ...pillStyle,
+            transform: visible ? "scaleX(1)" : "scaleX(0)",
+            opacity: visible ? 1 : 0,
+            filter: visible ? "blur(0px)" : "blur(2px)",
+            transformOrigin: "center",
+            transitionProperty: "transform, opacity, filter, background, border-color, box-shadow, padding",
+            transitionDuration: "0.9s, 0.9s, 0.9s, 0.5s, 0.5s, 0.5s, 0.5s",
+            transitionTimingFunction: REVEAL_EASE,
+            willChange: "transform",
+          }}
         >
-          <LiquidNavLinks links={LINKS} />
-          <GlobalSearch />
-          <Link
-            href="/login"
-            aria-label="Espace client"
-            title="Espace client"
-            className="w-10 h-10 flex items-center justify-center text-kov-bone hover:text-kov-red transition-colors"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="5" y="11" width="14" height="9" rx="1.5" />
-              <path d="M8 11V7a4 4 0 0 1 8 0v4" />
-            </svg>
+          <Link href="/" className="flex items-center px-3">
+            <Image
+              src="/kov/brand/kov-wordmark-bone.png"
+              alt="KOV"
+              width={1116}
+              height={209}
+              className="h-5 w-auto"
+              priority
+            />
           </Link>
-          <Button href="/contact" variant="pill">
-            Contact
-          </Button>
-        </nav>
 
-        <button
-          type="button"
-          onClick={() => setMobileOpen((v) => !v)}
-          aria-label={mobileOpen ? "Fermer le menu" : "Ouvrir le menu"}
-          className={`md:hidden flex flex-col justify-center items-end gap-1.5 w-11 h-11 px-4 border transition-all duration-500`}
-          style={pillStyle}
-        >
-          <span
-            className="block h-[1.5px] w-5 bg-kov-bone transition-transform duration-300"
-            style={{ transform: mobileOpen ? "rotate(45deg) translateY(7px)" : "none" }}
-          />
-          <span
-            className="block h-[1.5px] w-5 bg-kov-bone transition-opacity duration-300"
-            style={{ opacity: mobileOpen ? 0 : 1 }}
-          />
-          <span
-            className="block h-[1.5px] w-5 bg-kov-bone transition-transform duration-300"
-            style={{ transform: mobileOpen ? "rotate(-45deg) translateY(-7px)" : "none" }}
-          />
-        </button>
+          <nav className="hidden md:flex items-center gap-3 sm:gap-8 px-3 sm:px-4 text-xs uppercase tracking-widest text-kov-bone">
+            <NavLinks links={LINKS} pillRef={pillRef} />
+          </nav>
+
+          <div className="hidden md:flex items-center gap-1 pr-1">
+            <GlobalSearch />
+            <Link
+              href="/login"
+              aria-label="Espace client"
+              title="Espace client"
+              className="w-10 h-10 flex items-center justify-center text-kov-bone hover:text-kov-red transition-colors"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="5" y="11" width="14" height="9" rx="1.5" />
+                <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+              </svg>
+            </Link>
+            <Button href="/contact" variant="pill">
+              Contact
+            </Button>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setMobileOpen((v) => !v)}
+            aria-label={mobileOpen ? "Fermer le menu" : "Ouvrir le menu"}
+            className="md:hidden flex flex-col justify-center items-end gap-1.5 w-11 h-11 px-3"
+          >
+            <span
+              className="block h-[1.5px] w-5 bg-kov-bone transition-transform duration-300"
+              style={{ transform: mobileOpen ? "rotate(45deg) translateY(7px)" : "none" }}
+            />
+            <span
+              className="block h-[1.5px] w-5 bg-kov-bone transition-opacity duration-300"
+              style={{ opacity: mobileOpen ? 0 : 1 }}
+            />
+            <span
+              className="block h-[1.5px] w-5 bg-kov-bone transition-transform duration-300"
+              style={{ transform: mobileOpen ? "rotate(-45deg) translateY(-7px)" : "none" }}
+            />
+          </button>
+        </div>
       </div>
 
       <MobileNavMenu open={mobileOpen} onClose={() => setMobileOpen(false)} links={LINKS} />

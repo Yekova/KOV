@@ -13,7 +13,7 @@ const PROJECTS = [
 
 export function WorkGallery() {
   return (
-    <section id="work-gallery" className="px-6 py-32 max-w-[1600px] mx-auto">
+    <section id="work-gallery" className="px-6 py-32 max-w-[1600px] mx-auto scroll-mt-24">
       <Reveal>
         <p className="text-xs uppercase tracking-widest text-kov-steel mb-4">Projets sélectionnés</p>
         <h2

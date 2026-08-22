@@ -1,6 +1,6 @@
 "use client";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 // Vendored from reactbits.dev (DavidHDev/react-bits, Backgrounds/LiquidEther,
 // MIT-licensed) rather than hand-rolled — this is a full WebGL fluid
 // simulation (advection, viscosity diffusion, Poisson pressure solve), not an
