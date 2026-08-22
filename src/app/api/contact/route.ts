@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { sendEmail } from "@/lib/email/brevo";
+import { leadConfirmationSubject, leadConfirmationHtml, newLeadNotificationSubject, newLeadNotificationHtml } from "@/lib/email/leadEmail";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_LENGTHS = { name: 200, email: 254, phone: 40, message: 5000, company: 200, project_type: 200 };
@@ -77,6 +79,29 @@ export async function POST(request: Request) {
 
   if (error) {
     return NextResponse.json({ error: "Could not submit — try again shortly" }, { status: 500 });
+  }
+
+  // Best effort — a failed email must never fail the form submission itself,
+  // the lead is already safely recorded at this point.
+  try {
+    const { data: admins } = await supabaseAdmin.from("profiles").select("email, full_name").eq("role", "admin").is("archived_at", null);
+    const notificationData = { name, email, company: company || null, message: message || null };
+    const [confirmationHtml, notificationHtml] = await Promise.all([
+      leadConfirmationHtml({ name }),
+      newLeadNotificationHtml(notificationData),
+    ]);
+    const notificationSubject = newLeadNotificationSubject(notificationData);
+
+    await Promise.allSettled([
+      sendEmail({ to: email, toName: name, subject: leadConfirmationSubject(), html: confirmationHtml }),
+      ...(admins ?? [])
+        .filter((a): a is { email: string; full_name: string | null } => !!a.email)
+        .map((admin) =>
+          sendEmail({ to: admin.email, toName: admin.full_name ?? undefined, subject: notificationSubject, html: notificationHtml })
+        ),
+    ]);
+  } catch {
+    // Swallowed deliberately — see comment above.
   }
 
   return NextResponse.json({ ok: true });
