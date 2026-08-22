@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
@@ -26,7 +27,16 @@ export default async function EditPostPage(props: PageProps<"/admin/content/[id]
 
   return (
     <main className="px-6 py-10 max-w-4xl mx-auto w-full space-y-8">
-      <h1 className="font-display text-kov-bone text-2xl uppercase">Modifier l&apos;article</h1>
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="font-display text-kov-bone text-2xl uppercase">Modifier l&apos;article</h1>
+        <Link
+          href={`/journal/preview/${post.id}`}
+          target="_blank"
+          className="text-kov-steel hover:text-kov-red text-xs uppercase tracking-widest transition-colors"
+        >
+          Aperçu →
+        </Link>
+      </div>
       <PostForm
         projects={projectOptions}
         post={{
