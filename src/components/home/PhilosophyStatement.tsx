@@ -1,11 +1,10 @@
 import { Reveal } from "@/components/ui/Reveal";
-
-const WORDS = ["Clarté", "Intention", "Impact"];
+import { PRINCIPLES } from "@/data/studioPrinciples";
 
 export function PhilosophyStatement() {
   return (
     <section className="px-6 py-32 max-w-[1600px] mx-auto">
-      <Reveal>
+      <Reveal variant="blur">
         <p className="text-xs uppercase tracking-widest text-kov-steel mb-4">Philosophie</p>
         <h2
           className="font-display text-kov-bone uppercase max-w-3xl"
@@ -13,16 +12,23 @@ export function PhilosophyStatement() {
         >
           Le bon design n&apos;a pas besoin de crier<span className="text-kov-red">.</span>
         </h2>
+        <p className="mt-6 max-w-xl text-kov-concrete text-sm leading-relaxed">
+          On construit des sites et des plateformes pour ceux qui ne veulent
+          pas ressembler à tout le monde. Pas de templates, pas de banques
+          d&apos;images, pas de discours d&apos;agence générique — chaque
+          projet part de ce qui le rend différent, pas de ce qui est facile à
+          livrer.
+        </p>
       </Reveal>
-      <Reveal delay={0.15}>
-        <div className="mt-10 flex flex-wrap gap-x-10 gap-y-2">
-          {WORDS.map((word) => (
-            <span key={word} className="text-kov-concrete text-sm uppercase tracking-widest">
-              {word}.
-            </span>
-          ))}
-        </div>
-      </Reveal>
+
+      <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10 border-t pt-10" style={{ borderColor: "var(--kov-border)" }}>
+        {PRINCIPLES.map((principle, index) => (
+          <Reveal key={principle.slug} variant="blur" delay={0.15 + index * 0.08}>
+            <h3 className="font-display text-kov-bone uppercase text-xl mb-2">{principle.word}</h3>
+            <p className="text-kov-concrete text-sm leading-relaxed">{principle.body}</p>
+          </Reveal>
+        ))}
+      </div>
     </section>
   );
 }

@@ -7,16 +7,24 @@ import { Reveal } from "@/components/ui/Reveal";
 export function WorkSpotlight() {
   return (
     <section className="px-6 py-32 max-w-[1600px] mx-auto">
+      <Reveal>
+        <p className="max-w-xl text-kov-concrete text-sm leading-relaxed mb-16">
+          Chaque projet devient une expérience, pas une carte de plus dans une
+          grille : une identité, quelques informations essentielles, et un
+          chemin clair vers ce qui a été construit.
+        </p>
+      </Reveal>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-        <Reveal className="md:col-span-2">
-          <GlassCard className="min-h-[360px] flex items-end p-8">
+        <Reveal variant="zoom" className="md:col-span-2">
+          <GlassCard interactive className="min-h-[360px] flex items-end p-8">
             <p className="text-kov-steel font-mono text-xs uppercase tracking-widest">
               Visuel à venir — étude de cas en préparation
             </p>
           </GlassCard>
         </Reveal>
 
-        <Reveal delay={0.15} className="flex flex-col justify-center">
+        <Reveal variant="zoom" delay={0.15} className="flex flex-col justify-center">
           <p className="text-kov-red font-mono text-xs mb-2">Projet / 01</p>
           <h3 className="font-display text-kov-bone uppercase text-3xl mb-3">Kanti</h3>
           <p className="text-kov-steel text-xs uppercase tracking-widest mb-6">Gestion de patrimoine</p>

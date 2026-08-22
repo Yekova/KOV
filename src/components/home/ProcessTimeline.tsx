@@ -1,14 +1,5 @@
 import { Reveal } from "@/components/ui/Reveal";
-
-const STEPS = [
-  { number: "01", title: "Découvrir" },
-  { number: "02", title: "Structurer" },
-  { number: "03", title: "Design" },
-  { number: "04", title: "Développer" },
-  { number: "05", title: "Motion" },
-  { number: "06", title: "Lancer" },
-  { number: "07", title: "Évoluer" },
-];
+import { PROCESS } from "@/data/processSteps";
 
 export function ProcessTimeline() {
   return (
@@ -23,22 +14,23 @@ export function ProcessTimeline() {
         </h2>
       </Reveal>
 
-      <ol className="relative flex flex-col md:flex-row md:items-start justify-between gap-10 md:gap-4">
+      <ol className="relative flex flex-col md:flex-row md:items-start justify-between gap-10 md:gap-6">
         <div
           className="hidden md:block absolute top-1.5 left-0 right-0 h-px"
           style={{ background: "var(--kov-border)" }}
         />
-        {STEPS.map((step, index) => (
+        {PROCESS.map((step, index) => (
           <Reveal
             key={step.number}
             as="li"
             delay={index * 0.06}
-            className="relative flex md:flex-col items-center md:items-start gap-3 md:gap-4 md:flex-1"
+            className="relative flex md:flex-col items-start gap-3 md:gap-4 md:flex-1"
           >
-            <span className="w-3 h-3 rounded-full bg-kov-red shrink-0" />
+            <span className="w-3 h-3 rounded-full bg-kov-red shrink-0 mt-1 md:mt-0" />
             <div>
-              <p className="text-kov-red font-mono text-xs">{step.number}</p>
-              <p className="font-display text-kov-bone uppercase text-sm">{step.title}</p>
+              <p className="text-kov-red font-mono text-xs mb-1">{step.number}</p>
+              <p className="font-display text-kov-bone uppercase text-sm mb-2">{step.title}</p>
+              <p className="text-kov-steel text-xs leading-relaxed max-w-[16rem]">{step.body}</p>
             </div>
           </Reveal>
         ))}

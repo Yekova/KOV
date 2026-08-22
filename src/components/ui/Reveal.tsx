@@ -1,14 +1,41 @@
 "use client";
 
 import { useEffect, useRef, useState, type CSSProperties, type ElementType, type ReactNode } from "react";
-import { motion, LIQUID_EASE } from "@/lib/motion";
+import { motion, LIQUID_EASE, REVEAL_EASE } from "@/lib/motion";
+
+export type RevealVariant = "fade" | "blur" | "zoom";
+
+// Hidden/visible transform+filter pairs per variant, plus which easing reads
+// right for each — REVEAL_EASE (fast-out, gentle-settle) for the two variants
+// that carry a filter (blur resolving into focus wants a bit of initial snap),
+// LIQUID_EASE (symmetric) for the plain fade+rise, matching how those two
+// curves are already split elsewhere in the codebase (nav unfurl vs. liquid
+// blob). Kept to three variants, not a variant per section, so the page reads
+// as one system with a bit of rhythm — not a different animation everywhere.
+const VARIANTS: Record<RevealVariant, { hidden: CSSProperties; visible: CSSProperties; ease: string }> = {
+  fade: {
+    hidden: { opacity: 0, transform: "translateY(28px)" },
+    visible: { opacity: 1, transform: "translateY(0)" },
+    ease: LIQUID_EASE,
+  },
+  blur: {
+    hidden: { opacity: 0, transform: "translateY(12px)", filter: "blur(16px)" },
+    visible: { opacity: 1, transform: "translateY(0)", filter: "blur(0px)" },
+    ease: REVEAL_EASE,
+  },
+  zoom: {
+    hidden: { opacity: 0, transform: "scale(0.94)" },
+    visible: { opacity: 1, transform: "scale(1)" },
+    ease: REVEAL_EASE,
+  },
+};
 
 // Hand-rolled scroll reveal — no new dependency, matches this codebase's
 // existing pattern (see KovCharacterScene/CustomCursor) of building
 // interaction from raw browser APIs rather than a motion library.
 // docs/KOV-MOTION.md: "motion = communication, never decoration" and
-// "avoid: exaggerated spring, bounce" — this is a single, slow, linear
-// fade + rise, nothing bouncier.
+// "avoid: exaggerated spring, bounce" — every variant here is a single,
+// slow settle, nothing bouncier.
 //
 // `as` lets this render as something other than a <div> — e.g. "li" inside
 // an <ol>, where a wrapping div would break list semantics.
@@ -18,12 +45,14 @@ export function Reveal({
   className = "",
   as: Tag = "div",
   style,
+  variant = "fade",
 }: {
   children: ReactNode;
   delay?: number;
   className?: string;
   as?: ElementType;
   style?: CSSProperties;
+  variant?: RevealVariant;
 }) {
   const ref = useRef<HTMLElement>(null);
   // Lazy initializer runs once at mount, during render — unlike setting this
@@ -52,16 +81,17 @@ export function Reveal({
     return () => observer.disconnect();
   }, [visible]);
 
+  const { hidden, visible: visibleStyle, ease } = VARIANTS[variant];
+  const state = visible ? visibleStyle : hidden;
+  const transition = Object.keys(state)
+    .map((property) => `${property} ${motion.slow}s ${ease} ${delay}s`)
+    .join(", ");
+
   return (
     <Tag
       ref={ref}
       className={className}
-      style={{
-        ...style,
-        opacity: visible ? 1 : 0,
-        transform: visible ? "translateY(0)" : "translateY(28px)",
-        transition: `opacity ${motion.slow}s ${LIQUID_EASE} ${delay}s, transform ${motion.slow}s ${LIQUID_EASE} ${delay}s`,
-      }}
+      style={{ ...style, ...state, transition }}
     >
       {children}
     </Tag>
