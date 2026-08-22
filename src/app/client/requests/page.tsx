@@ -3,16 +3,12 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { Button } from "@/components/ui/Button";
 import { REQUEST_THREAD_STATUS_LABELS, type RequestThreadStatus } from "@/lib/portal/status";
-import { createRequestThread } from "./actions";
+import { NewRequestForm } from "./NewRequestForm";
 
 export const metadata: Metadata = {
   title: "Demandes — KOV",
 };
-
-const FIELD_CLASS =
-  "w-full bg-transparent border py-2.5 px-3 text-kov-bone placeholder:text-kov-steel text-sm focus:outline-none focus:border-kov-red transition-colors";
 
 export default async function ClientRequestsPage() {
   const user = await requireUser();
@@ -52,42 +48,7 @@ export default async function ClientRequestsPage() {
 
       <GlassCard className="p-6" variant="solid">
         <p className="text-xs uppercase tracking-widest text-kov-steel mb-4">Nouvelle demande</p>
-        <form action={createRequestThread} className="space-y-4">
-          <input
-            type="text"
-            name="subject"
-            required
-            placeholder="Sujet"
-            className={FIELD_CLASS}
-            style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
-          />
-          {projectRows.length > 0 && (
-            <select
-              name="project_id"
-              defaultValue=""
-              className={FIELD_CLASS}
-              style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
-            >
-              <option value="">Projet concerné (facultatif)</option>
-              {projectRows.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-          )}
-          <textarea
-            name="body"
-            required
-            rows={3}
-            placeholder="Votre message…"
-            className={FIELD_CLASS}
-            style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
-          />
-          <Button type="submit" variant="primary">
-            Envoyer
-          </Button>
-        </form>
+        <NewRequestForm projects={projectRows} />
       </GlassCard>
 
       <GlassCard className="p-6">

@@ -153,8 +153,17 @@ export const pdfStyles = StyleSheet.create({
   },
 });
 
+// Not toLocaleString("fr-FR", ...) — that inserts a narrow no-break space
+// (U+202F) as the thousands separator, which the PDFs' standard Helvetica
+// font has no glyph for, rendering as a stray bar/slash instead of a space
+// (react-pdf can only use PDF base-14 fonts here; embedding a custom font
+// with a fuller charset would be the fix if this space were load-bearing).
+// A plain ASCII space renders identically in HTML emails and sidesteps the
+// PDF issue entirely, so it's used everywhere this helper is called.
 export function formatEuros(cents: number) {
-  return (cents / 100).toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
+  const [integerPart, decimalPart] = (Math.abs(cents) / 100).toFixed(2).split(".");
+  const grouped = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  return `${cents < 0 ? "-" : ""}${grouped},${decimalPart} €`;
 }
 
 export function formatDate(value: string | Date) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition, type FormEvent } from "react";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Button } from "@/components/ui/Button";
 import { createRequestThread } from "@/app/client/requests/actions";
@@ -14,6 +14,22 @@ type Manager = {
 
 export function AccountManagerCard({ manager }: { manager: Manager | null }) {
   const [composing, setComposing] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    setError(null);
+    startTransition(async () => {
+      try {
+        await createRequestThread(formData);
+        setComposing(false);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "L'envoi a échoué.");
+      }
+    });
+  }
 
   return (
     <GlassCard className="p-6 flex flex-col">
@@ -49,11 +65,7 @@ export function AccountManagerCard({ manager }: { manager: Manager | null }) {
           </div>
 
           {composing ? (
-            <form
-              action={createRequestThread}
-              onSubmit={() => setComposing(false)}
-              className="space-y-3 mt-auto"
-            >
+            <form onSubmit={handleSubmit} className="space-y-3 mt-auto">
               <input type="hidden" name="subject" value={`Message pour ${manager.full_name || "votre chef de projet"}`} />
               <textarea
                 name="body"
@@ -63,8 +75,9 @@ export function AccountManagerCard({ manager }: { manager: Manager | null }) {
                 className="w-full bg-transparent border p-3 text-sm text-kov-bone placeholder:text-kov-steel focus:outline-none focus:border-kov-red transition-colors"
                 style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-md)" }}
               />
-              <Button type="submit" variant="primary" className="w-full justify-center">
-                Envoyer
+              {error && <p className="text-kov-red text-xs">{error}</p>}
+              <Button type="submit" variant="primary" className="w-full justify-center" disabled={isPending}>
+                {isPending ? "Envoi…" : "Envoyer"}
               </Button>
             </form>
           ) : (

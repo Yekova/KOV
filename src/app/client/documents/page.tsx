@@ -3,9 +3,9 @@ import { requireUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { createSignedDownloadUrl } from "@/lib/portal/storage";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { Button } from "@/components/ui/Button";
 import { DocumentGrid, type DocumentGridItem } from "@/components/documents/DocumentGrid";
-import { getClientDocumentPreviewUrl, downloadDocument, uploadClientDocument } from "./actions";
+import { getClientDocumentPreviewUrl, downloadDocument } from "./actions";
+import { UploadDocumentForm } from "./UploadDocumentForm";
 
 export const metadata: Metadata = {
   title: "Documents — KOV",
@@ -60,38 +60,7 @@ export default async function ClientDocumentsPage() {
 
       <GlassCard className="p-6" variant="solid">
         <p className="text-xs uppercase tracking-widest text-kov-steel mb-4">Envoyer un document</p>
-        <form action={uploadClientDocument} className="flex flex-wrap items-end gap-4">
-          {projectRows.length > 0 && (
-            <label className="text-xs text-kov-steel">
-              Projet (facultatif)
-              <select
-                name="project_id"
-                defaultValue=""
-                className="block bg-transparent border px-3 py-2 mt-1 text-kov-bone text-sm focus:outline-none focus:border-kov-red transition-colors"
-                style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
-              >
-                <option value="">Général</option>
-                {projectRows.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
-          <label className="text-xs text-kov-steel">
-            Fichier
-            <input
-              type="file"
-              name="file"
-              required
-              className="block text-kov-bone text-sm mt-1 file:mr-3 file:py-2 file:px-3 file:border-0 file:text-xs file:uppercase file:tracking-widest file:bg-kov-red file:text-white"
-            />
-          </label>
-          <Button type="submit" variant="primary">
-            Envoyer
-          </Button>
-        </form>
+        <UploadDocumentForm projects={projectRows} />
       </GlassCard>
 
       {rows.length === 0 ? (
