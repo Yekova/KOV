@@ -1,9 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/Button";
-import { TextPressure } from "@/components/layout/TextPressure";
-import { FooterGlobe } from "@/components/layout/FooterGlobe";
-import { robotoFlex } from "@/lib/fonts/robotoFlex";
 import { PILLARS } from "@/data/expertisePillars";
 
 const NAV_LINKS = [
@@ -27,24 +24,45 @@ const LEGAL_LINKS = [
   { href: "/terms", label: "Conditions d'utilisation" },
 ];
 
-// KOV has no real social profiles to link yet — a single genuinely
-// functional icon (contact) instead of fabricated social links.
-const CONTACT_ICON_HREF = "/contact";
+// KOV has no real social profiles yet — these are the recognizable icons for
+// the standard platforms, all pointing at /contact for now as a placeholder
+// rather than a dead "#" link. Swap each href for the real profile URL as
+// soon as one exists.
+const SOCIAL_LINKS = [
+  {
+    name: "LinkedIn",
+    href: "/contact",
+    icon: (
+      <path d="M4.98 3.5C4.98 4.88 3.9 6 2.5 6S0 4.88 0 3.5 1.12 1 2.5 1s2.48 1.12 2.48 2.5zM.5 8h4v13h-4V8zM8.5 8h3.83v1.78h.05c.53-1 1.85-2.05 3.8-2.05 4.07 0 4.82 2.68 4.82 6.16V21h-4v-6.3c0-1.5-.03-3.44-2.1-3.44-2.1 0-2.42 1.64-2.42 3.33V21h-4V8z" />
+    ),
+  },
+  {
+    name: "Instagram",
+    href: "/contact",
+    icon: (
+      <>
+        <rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" strokeWidth="1.6" />
+        <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" strokeWidth="1.6" />
+        <circle cx="17.4" cy="6.6" r="1.1" />
+      </>
+    ),
+  },
+  {
+    name: "X",
+    href: "/contact",
+    icon: (
+      <path d="M13.6 10.4 20.4 2.5h-1.7l-5.9 6.9-4.8-6.9H2l7.2 10.3L2 21.5h1.7l6.3-7.3 5 7.3H21zm-2.2 2.6-.7-1-5.8-8.3H7.3l4.7 6.7.7 1 6.1 8.7h-2.5z" />
+    ),
+  },
+];
 
 export function Footer() {
   return (
     <footer className="px-6 pt-24 pb-10 max-w-[1600px] mx-auto border-t" style={{ borderColor: "var(--kov-border)" }}>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-10 lg:gap-8">
         <div className="sm:col-span-2 lg:col-span-2">
-          <Link href="/" aria-label="KOV — Accueil" className="block w-full max-w-[280px]">
-            <TextPressure
-              text="KOV"
-              fontFamily={robotoFlex.style.fontFamily}
-              textColor="#E7E7E5"
-              minFontSize={48}
-              widthRange={[130, 70]}
-              weightRange={[650, 400]}
-            />
+          <Link href="/" aria-label="KOV — Accueil" className="block">
+            <Image src="/kov/brand/kov-wordmark-bone.png" alt="KOV" width={1116} height={209} className="h-9 w-auto" />
           </Link>
           <p className="mt-4 max-w-xs text-kov-concrete text-sm leading-relaxed">
             Studio digital spécialisé en stratégie, design, développement et systèmes interactifs.
@@ -52,17 +70,6 @@ export function Footer() {
           <Link href="/studio" className="mt-3 inline-flex items-center gap-1 text-kov-red text-xs uppercase tracking-widest hover:text-kov-red-signal transition-colors">
             Voir le studio →
           </Link>
-
-          <div className="mt-8 relative w-full max-w-[280px] aspect-[4/3] overflow-hidden" style={{ borderRadius: "var(--radius-md)" }}>
-            <Image
-              src="/kov/character/contact-frames/frame-040.jpg"
-              alt=""
-              aria-hidden="true"
-              fill
-              sizes="280px"
-              className="object-cover"
-            />
-          </div>
         </div>
 
         <div>
@@ -127,43 +134,21 @@ export function Footer() {
           </ul>
 
           <p className="text-kov-steel text-xs uppercase tracking-widest mb-3 mt-8">Suivez-nous</p>
-          <Link
-            href={CONTACT_ICON_HREF}
-            aria-label="Contacter KOV"
-            title="Contacter KOV"
-            className="w-10 h-10 flex items-center justify-center border text-kov-bone hover:text-kov-red hover:border-kov-red transition-colors"
-            style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-pill)" }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="3" y="5" width="18" height="14" rx="2" />
-              <path d="m3 7 9 6 9-6" />
-            </svg>
-          </Link>
-        </div>
-      </div>
-
-      <div className="mt-16 pt-10 border-t grid grid-cols-1 md:grid-cols-2 gap-10 items-center" style={{ borderColor: "var(--kov-border)" }}>
-        <div className="flex items-center gap-5">
-          <Image
-            src="/kov/character/assistant-portrait-transparent.png"
-            alt=""
-            aria-hidden="true"
-            width={621}
-            height={1007}
-            className="w-20 h-auto shrink-0"
-          />
-          <div>
-            <p className="font-display text-kov-bone uppercase text-lg">Besoin d&apos;aide ?</p>
-            <p className="text-kov-steel text-sm mt-1">Notre équipe est là pour vous accompagner.</p>
-            <Link href="/contact" className="mt-2 inline-flex items-center gap-1 text-kov-red text-xs uppercase tracking-widest hover:text-kov-red-signal transition-colors">
-              Contacter KOV →
-            </Link>
-          </div>
-        </div>
-
-        <div className="hidden md:flex justify-end">
-          <div className="w-32 h-32">
-            <FooterGlobe />
+          <div className="flex gap-2">
+            {SOCIAL_LINKS.map((social) => (
+              <Link
+                key={social.name}
+                href={social.href}
+                aria-label={social.name}
+                title={social.name}
+                className="w-10 h-10 flex items-center justify-center border text-kov-bone hover:text-kov-red hover:border-kov-red transition-colors"
+                style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-pill)" }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  {social.icon}
+                </svg>
+              </Link>
+            ))}
           </div>
         </div>
       </div>
