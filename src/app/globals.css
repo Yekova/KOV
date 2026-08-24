@@ -101,3 +101,33 @@ body {
     transform: none !important;
   }
 }
+
+/* Shimmering glass tile background (Hero, GlassTiles.tsx) — each tile's own
+   --glass-tile-glow (set inline, per tile) drives the inset highlight color,
+   so the same keyframe serves both the plain bone glints and the sparse red
+   ones. Staggered per-tile animation-delay/duration (also inline) is what
+   reads as an organic shimmer instead of a synchronized pulse. */
+.glass-tile {
+  border-width: 1px;
+  border-style: solid;
+  animation: glassTileShimmer 5s ease-in-out infinite;
+}
+
+@keyframes glassTileShimmer {
+  0%,
+  100% {
+    opacity: 0.4;
+    box-shadow: inset 0 0 0 1px var(--glass-tile-glow, rgba(255, 255, 255, 0.12));
+  }
+  50% {
+    opacity: 0.85;
+    box-shadow: inset 0 0 24px var(--glass-tile-glow, rgba(255, 255, 255, 0.12));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass-tile {
+    animation: none;
+    opacity: 0.5;
+  }
+}

@@ -2,20 +2,19 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/Button";
 import { Reveal } from "@/components/ui/Reveal";
-import { ArchitecturalGrid } from "@/components/home/ArchitecturalGrid";
+import { GlassTiles } from "@/components/home/GlassTiles";
 
-// The former video-backed cinematic intro is gone — ArchitecturalGrid replaces
-// it as ambient texture, and the section is back in normal document flow (no
-// more scroll-scrub coupling to src/data/scenes.ts, which no longer exists).
-// One positioning boundary matters here: the grid (position: absolute,
-// z-canvas) and this content wrapper (position: relative, z-content) are
-// sibling stacking contexts, so the whole wrapper paints above the whole
-// grid regardless of what's static inside it — no need to position every
-// child individually.
+// The former video-backed cinematic intro is gone; the section is back in
+// normal document flow (no more scroll-scrub coupling to src/data/scenes.ts,
+// which no longer exists). One positioning boundary matters here: the tile
+// background (position: absolute, z-canvas) and this content wrapper
+// (position: relative, z-content) are sibling stacking contexts, so the
+// whole wrapper paints above the whole background regardless of what's
+// static inside it — no need to position every child individually.
 export function HeroScene() {
   return (
     <section id="hero" className="relative min-h-screen overflow-hidden">
-      <ArchitecturalGrid />
+      <GlassTiles />
 
       <div
         className="relative flex flex-col justify-between min-h-screen px-6 py-24 md:py-32 max-w-[1600px] mx-auto"
