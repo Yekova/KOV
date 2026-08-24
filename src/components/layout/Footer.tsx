@@ -26,6 +26,8 @@ export function Footer() {
             fontFamily={robotoFlex.style.fontFamily}
             textColor="#E7E7E5"
             minFontSize={56}
+            widthRange={[130, 70]}
+            weightRange={[650, 400]}
           />
         </Link>
       </div>

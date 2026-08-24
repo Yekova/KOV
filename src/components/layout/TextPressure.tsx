@@ -17,6 +17,16 @@ interface TextPressureProps {
   strokeColor?: string;
   className?: string;
   minFontSize?: number;
+  /**
+   * [floor, range] passed straight into the original's own distance curve —
+   * far from the cursor a character settles at `floor`, close to the cursor
+   * it approaches `floor + range` (then clamps to whatever the actual font's
+   * variable axis allows). Defaults match the original component's faithful
+   * values (5/200 width, 100/900 weight) — raise `floor` to make the resting
+   * (no cursor nearby) state already wide/bold instead of condensed/thin.
+   */
+  widthRange?: [number, number];
+  weightRange?: [number, number];
 }
 
 interface Point {
@@ -62,6 +72,8 @@ export function TextPressure({
   strokeColor = "#FFFFFF",
   className = "",
   minFontSize = 24,
+  widthRange = [5, 200],
+  weightRange = [100, 900],
 }: TextPressureProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLParagraphElement>(null);
@@ -80,6 +92,11 @@ export function TextPressure({
   );
 
   const chars = useMemo(() => text.split(""), [text]);
+  // Destructured to primitives so the animate effect below depends on plain
+  // numbers, not array references that would be a new identity every render
+  // if the caller passes an inline array literal.
+  const [widthFloor, widthCeilDelta] = widthRange;
+  const [weightFloor, weightCeilDelta] = weightRange;
 
   useEffect(() => {
     const container = containerRef.current;
@@ -172,8 +189,8 @@ export function TextPressure({
           const charCenter = { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
           const d = distance(mouseRef.current, charCenter);
 
-          const wdth = width ? Math.floor(attrForDistance(d, maxDist, 5, 200)) : 100;
-          const wght = weight ? Math.floor(attrForDistance(d, maxDist, 100, 900)) : 400;
+          const wdth = width ? Math.floor(attrForDistance(d, maxDist, widthFloor, widthCeilDelta)) : 100;
+          const wght = weight ? Math.floor(attrForDistance(d, maxDist, weightFloor, weightCeilDelta)) : 400;
           const italVal = italic ? attrForDistance(d, maxDist, 0, 1).toFixed(2) : 0;
           const alphaVal = alpha ? attrForDistance(d, maxDist, 0, 1).toFixed(2) : 1;
 
@@ -190,7 +207,7 @@ export function TextPressure({
     }
     rafId = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(rafId);
-  }, [width, weight, italic, alpha, reducedMotion, inView]);
+  }, [width, weight, italic, alpha, reducedMotion, inView, widthFloor, widthCeilDelta, weightFloor, weightCeilDelta]);
 
   const dynamicClassName = [className, flex ? "text-pressure-flex" : "", stroke ? "text-pressure-stroke" : ""]
     .filter(Boolean)
