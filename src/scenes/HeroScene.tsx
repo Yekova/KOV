@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/Button";
 import { Reveal } from "@/components/ui/Reveal";
 import { ArchitecturalGrid } from "@/components/home/ArchitecturalGrid";
@@ -21,25 +22,30 @@ export function HeroScene() {
         style={{ zIndex: "var(--z-content)" }}
       >
         <Reveal variant="fade">
-          <p className="font-display text-kov-bone text-lg tracking-widest">
-            KOV
-            <span className="block font-sans normal-case text-xs tracking-widest text-kov-steel mt-2">
+          <div className="flex flex-col items-start gap-3">
+            <Image
+              src="/kov/brand/kov-wordmark-bone.png"
+              alt="KOV"
+              width={1116}
+              height={209}
+              priority
+              className="h-7 md:h-9 w-auto"
+            />
+            <p className="font-sans normal-case text-xs tracking-widest text-kov-steel">
               Studio digital — Bordeaux, France
-            </span>
-          </p>
+            </p>
+          </div>
         </Reveal>
 
         <div>
           <Reveal variant="blur">
             <h1
-              className="font-display text-kov-bone uppercase max-w-[68%]"
+              className="font-display text-kov-bone uppercase max-w-[85%]"
               style={{ fontSize: "var(--display-xl)", lineHeight: "var(--line-height-display)" }}
             >
-              ON CONSTRUIT
+              DES SYSTÈMES
               <br />
-              CE QU&apos;ON
-              <br />
-              RETIENT<span className="text-kov-red">.</span>
+              QUI TIENNENT<span className="text-kov-red">.</span>
             </h1>
           </Reveal>
 
@@ -47,7 +53,7 @@ export function HeroScene() {
             <p className="mt-8 max-w-lg text-kov-concrete text-sm leading-relaxed">
               Design, développement et motion pensés comme un seul système —
               pas trois prestataires qui se renvoient la responsabilité. On
-              construit des sites et des plateformes qui tiennent, pas des
+              construit des sites et des plateformes qui durent, pas des
               maquettes qui s&apos;arrêtent à la livraison.
             </p>
           </Reveal>

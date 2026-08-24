@@ -1,0 +1,24 @@
+# KOV
+
+> KOV est un studio de design, développement et motion basé à Bordeaux, France. Il construit des sites, applications et systèmes numériques sur mesure — pas de templates, pas de banques d'images, pas de discours d'agence générique.
+
+KOV pense chaque projet comme un seul système : stratégie, design, développement, motion, systèmes et intégration, plutôt que des prestations séparées confiées à des équipes différentes. Le studio est volontairement petit ("Petit par choix") : moins de niveaux hiérarchiques, plus d'implication directe sur chaque projet.
+
+## Pages
+
+- [Accueil](https://kov-agency.site/): présentation du studio et de son approche.
+- [Expertise](https://kov-agency.site/expertise): les six disciplines (stratégie, design, développement, motion, systèmes, intégration) et le processus en sept étapes.
+- [Sites corporate](https://kov-agency.site/expertise/sites-corporate)
+- [Sites immersifs](https://kov-agency.site/expertise/sites-immersifs)
+- [Applications web](https://kov-agency.site/expertise/applications-web)
+- [Dashboards](https://kov-agency.site/expertise/dashboards)
+- [Espaces clients](https://kov-agency.site/expertise/espaces-clients)
+- [Systèmes numériques](https://kov-agency.site/expertise/systemes-numeriques)
+- [Studio](https://kov-agency.site/studio): la philosophie et les principes du studio.
+- [Journal](https://kov-agency.site/journal): études de cas et notes de studio.
+- [FAQ](https://kov-agency.site/faq): réponses aux questions fréquentes (délais, processus, budget, maintenance).
+- [Contact](https://kov-agency.site/contact): démarrer un projet.
+
+## Contact
+
+Pour démarrer un projet ou poser une question : https://kov-agency.site/contact

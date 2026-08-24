@@ -3,6 +3,8 @@
 // enough that this goes stale, generate it from the actual page content
 // instead of hand-maintaining it further.
 
+import { SERVICES } from "@/data/services";
+
 export interface SearchItem {
   title: string;
   category: "Expertise" | "Studio" | "Projets" | "Contact";
@@ -63,10 +65,23 @@ export const searchIndex: SearchItem[] = [
     description: "Sites corporate, sites immersifs, applications web, dashboards, espaces clients, systèmes numériques.",
     keywords: ["services", "quels services proposez-vous", "crm", "application web"],
   },
+  ...SERVICES.map((service) => ({
+    title: service.title,
+    category: "Expertise" as const,
+    href: `/expertise/${service.slug}`,
+    description: service.tagline,
+  })),
+  {
+    title: "FAQ",
+    category: "Contact",
+    href: "/faq",
+    description: "Délais, processus, budget, maintenance — les réponses aux questions fréquentes.",
+    keywords: ["questions", "faq", "combien ça coûte", "combien de temps"],
+  },
   {
     title: "Kanti — Gestion de patrimoine",
     category: "Projets",
-    href: "/#work",
+    href: "/#work-gallery",
     description: "Stratégie, design et développement pour une expérience numérique de gestion de patrimoine.",
     keywords: ["étude de cas", "projet", "portfolio", "montrez-moi vos projets"],
   },

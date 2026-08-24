@@ -6,6 +6,7 @@ import { getPublicAssetUrl } from "@/lib/portal/storage";
 export const metadata: Metadata = {
   title: "Journal — KOV",
   description: "Études de cas et notes de studio — comment on construit ce dont on est fiers.",
+  alternates: { canonical: "https://kov-agency.site/journal" },
 };
 
 export default async function JournalPage() {

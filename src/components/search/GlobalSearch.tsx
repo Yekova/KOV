@@ -17,7 +17,7 @@ const QUICK_LINKS = [
   { title: "Démarrer un projet", href: "/contact" },
   { title: "Voir l'expertise", href: "/expertise" },
   { title: "À propos du studio", href: "/studio" },
-  { title: "Voir les projets", href: "/#work" },
+  { title: "Voir les projets", href: "/#work-gallery" },
 ];
 
 export function GlobalSearch() {

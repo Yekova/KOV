@@ -14,7 +14,11 @@ export async function generateMetadata(props: PageProps<"/journal/[slug]">): Pro
     .maybeSingle();
 
   if (!post) return { title: "Journal — KOV" };
-  return { title: `${post.title} — KOV`, description: post.excerpt ?? undefined };
+  return {
+    title: `${post.title} — KOV`,
+    description: post.excerpt ?? undefined,
+    alternates: { canonical: `https://kov-agency.site/journal/${slug}` },
+  };
 }
 
 export default async function JournalPostPage(props: PageProps<"/journal/[slug]">) {

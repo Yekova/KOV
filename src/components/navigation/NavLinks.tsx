@@ -15,8 +15,8 @@ export interface NavLinkItem {
 }
 
 const DROPDOWNS: Record<string, { width: number; render: (onNavigate: () => void) => ReactNode }> = {
-  expertise: { width: 640, render: (onNavigate) => <ExpertiseDropdown onNavigate={onNavigate} /> },
-  studio: { width: 420, render: (onNavigate) => <StudioDropdown onNavigate={onNavigate} /> },
+  expertise: { width: 480, render: (onNavigate) => <ExpertiseDropdown onNavigate={onNavigate} /> },
+  studio: { width: 380, render: (onNavigate) => <StudioDropdown onNavigate={onNavigate} /> },
 };
 
 const BLOB_PADDING_X = 20;

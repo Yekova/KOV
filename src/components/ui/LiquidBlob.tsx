@@ -11,14 +11,17 @@ interface LiquidBlobProps {
 
 // Two identical shapes chase the same target rect on different transition
 // durations — the lead arrives first, the trail lags behind, and while
-// they're apart a shared blur+contrast filter reads the gap between them as
-// a stretching liquid connector. No spring/bounce (see docs/KOV-MOTION.md) —
-// the "liquid" quality comes from that lead/trail lag, not from overshoot.
-// Used by LiquidNavLinks (nav hover/active) and ContactWizard (step progress).
+// they're apart the lag itself reads as a stretching liquid connector. No
+// spring/bounce (see docs/KOV-MOTION.md) — the "liquid" quality comes from
+// that lead/trail lag, not from overshoot. The layered inset shadows (rim
+// highlight + underside shade) are what read as a glossy bubble rather than
+// a flat shape — deliberately NOT a blur+contrast "goo" filter, which reads
+// as a neon glow instead.
+// Used by NavLinks (nav hover/active) and ContactWizard (step progress).
 export function LiquidBlob({ rect, height, paddingX = 0 }: LiquidBlobProps) {
   if (!rect) return null;
   return (
-    <div className="absolute inset-y-0 left-0 pointer-events-none" style={{ filter: "blur(6px) contrast(24)" }}>
+    <div className="absolute inset-y-0 left-0 pointer-events-none">
       {[motion.fast, motion.normal].map((duration) => (
         <span
           key={duration}
@@ -28,6 +31,10 @@ export function LiquidBlob({ rect, height, paddingX = 0 }: LiquidBlobProps) {
             height,
             width: rect.width + paddingX * 2,
             transform: `translateX(${rect.left - paddingX}px)`,
+            boxShadow:
+              "inset 0 1.5px 2px rgba(255, 255, 255, 0.45), " +
+              "inset 0 -8px 12px rgba(0, 0, 0, 0.35), " +
+              "0 4px 14px rgba(227, 30, 36, 0.35)",
             transitionProperty: "transform, width",
             transitionDuration: `${duration}s`,
             transitionTimingFunction: LIQUID_EASE,

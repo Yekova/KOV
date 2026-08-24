@@ -1,22 +1,18 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { TagPill } from "@/components/ui/Chip";
 import { PILLARS } from "@/data/expertisePillars";
 import { PROCESS } from "@/data/processSteps";
+import { SERVICES } from "@/data/services";
+
+const SITE_URL = "https://kov-agency.site";
 
 export const metadata: Metadata = {
   title: "Expertise — KOV",
   description: "Stratégie, design, développement, motion, systèmes et intégration, construits comme un seul système.",
+  alternates: { canonical: `${SITE_URL}/expertise` },
 };
-
-const WHAT_WE_BUILD = [
-  "Sites corporate",
-  "Sites immersifs",
-  "Applications web",
-  "Dashboards",
-  "Espaces clients",
-  "Systèmes numériques",
-];
 
 export default function ExpertisePage() {
   return (
@@ -71,8 +67,10 @@ export default function ExpertisePage() {
       <section className="mt-40">
         <p className="text-xs uppercase tracking-widest text-kov-steel mb-6">Ce qu&apos;on construit</p>
         <div className="flex flex-wrap gap-3 max-w-3xl">
-          {WHAT_WE_BUILD.map((item) => (
-            <TagPill key={item}>{item}</TagPill>
+          {SERVICES.map((service) => (
+            <Link key={service.slug} href={`/expertise/${service.slug}`} className="hover:opacity-70 transition-opacity">
+              <TagPill>{service.title}</TagPill>
+            </Link>
           ))}
         </div>
       </section>

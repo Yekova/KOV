@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { SERVICES } from "@/data/services";
 
 const SITE_URL = "https://kov-agency.site";
 
@@ -10,7 +11,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/studio`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${SITE_URL}/journal`, changeFrequency: "weekly", priority: 0.7 },
     { url: `${SITE_URL}/contact`, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${SITE_URL}/faq`, changeFrequency: "monthly", priority: 0.6 },
   ];
+
+  const serviceRoutes: MetadataRoute.Sitemap = SERVICES.map((service) => ({
+    url: `${SITE_URL}/expertise/${service.slug}`,
+    changeFrequency: "monthly",
+    priority: 0.6,
+  }));
 
   const { data: posts } = await supabaseAdmin.from("posts").select("slug, updated_at").eq("status", "published");
 
@@ -21,5 +29,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.5,
   }));
 
-  return [...staticRoutes, ...postRoutes];
+  return [...staticRoutes, ...serviceRoutes, ...postRoutes];
 }

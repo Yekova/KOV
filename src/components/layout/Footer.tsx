@@ -1,7 +1,9 @@
 import Link from "next/link";
+import Image from "next/image";
+import { Button } from "@/components/ui/Button";
 
 const NAV_LINKS = [
-  { href: "/#work", label: "Projets" },
+  { href: "/#work-gallery", label: "Projets" },
   { href: "/expertise", label: "Expertise" },
   { href: "/studio", label: "Studio" },
   { href: "/contact", label: "Contact" },
@@ -15,10 +17,22 @@ const LEGAL_LINKS = [
 
 export function Footer() {
   return (
-    <footer className="px-6 pt-24 pb-10 max-w-[1600px] mx-auto border-t" style={{ borderColor: "var(--kov-border)" }}>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-10 pt-16">
+    <footer className="px-6 pt-32 pb-10 max-w-[1600px] mx-auto border-t" style={{ borderColor: "var(--kov-border)" }}>
+      <div className="pt-16 pb-16">
+        <Link href="/" className="block">
+          <Image
+            src="/kov/brand/kov-wordmark-bone.png"
+            alt="KOV"
+            width={1116}
+            height={209}
+            sizes="(max-width: 768px) 100vw, 1040px"
+            className="w-full max-w-[1040px] h-auto"
+          />
+        </Link>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-10 pt-10 border-t" style={{ borderColor: "var(--kov-border)" }}>
         <div className="col-span-2 md:col-span-1">
-          <p className="font-display text-kov-bone text-lg mb-3">KOV</p>
           <p className="text-kov-steel text-xs uppercase tracking-widest leading-relaxed">
             Design / Développement / Motion
             <br />
@@ -54,9 +68,9 @@ export function Footer() {
 
         <div>
           <p className="text-kov-steel text-xs uppercase tracking-widest mb-4">Contact</p>
-          <Link href="/contact" className="text-kov-bone text-sm hover:text-kov-red transition-colors">
+          <Button href="/contact" variant="secondary">
             Démarrer un projet →
-          </Link>
+          </Button>
         </div>
       </div>
 

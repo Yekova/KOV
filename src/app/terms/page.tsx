@@ -4,6 +4,7 @@ import { LegalDoc } from "@/components/legal/LegalDoc";
 export const metadata: Metadata = {
   title: "Conditions d'utilisation — KOV",
   description: "Conditions d'utilisation du site KOV.",
+  alternates: { canonical: "https://kov-agency.site/terms" },
 };
 
 export default function TermsPage() {

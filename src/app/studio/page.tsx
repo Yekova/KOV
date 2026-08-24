@@ -5,6 +5,7 @@ import { PRINCIPLES } from "@/data/studioPrinciples";
 export const metadata: Metadata = {
   title: "Studio — KOV",
   description: "KOV est un studio construit autour d'une idée : transformer des idées en expériences numériques dont on se souvient.",
+  alternates: { canonical: "https://kov-agency.site/studio" },
 };
 
 const PHILOSOPHY_WORDS = ["Clarté", "Intention", "Impact"];

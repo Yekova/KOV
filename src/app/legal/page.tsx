@@ -5,6 +5,7 @@ import { Todo } from "@/components/legal/Todo";
 export const metadata: Metadata = {
   title: "Mentions légales — KOV",
   description: "Mentions légales du site KOV.",
+  alternates: { canonical: "https://kov-agency.site/legal" },
 };
 
 export default function LegalNoticePage() {

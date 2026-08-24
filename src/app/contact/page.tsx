@@ -5,6 +5,7 @@ import LiquidEther from "@/components/contact/LiquidEther";
 export const metadata: Metadata = {
   title: "Contact — KOV",
   description: "Un projet en tête ? On le construit.",
+  alternates: { canonical: "https://kov-agency.site/contact" },
 };
 
 export default function ContactPage() {

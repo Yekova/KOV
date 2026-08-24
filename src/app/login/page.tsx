@@ -6,6 +6,7 @@ import { GlassCard } from "@/components/ui/GlassCard";
 export const metadata: Metadata = {
   title: "Connexion — KOV",
   description: "Connexion à l'espace client ou admin KOV.",
+  alternates: { canonical: "https://kov-agency.site/login" },
 };
 
 // Must match the number of frames actually extracted into public/kov/character/login-frames/.

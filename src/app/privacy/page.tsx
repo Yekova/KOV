@@ -5,6 +5,7 @@ import { Todo } from "@/components/legal/Todo";
 export const metadata: Metadata = {
   title: "Confidentialité — KOV",
   description: "Comment KOV collecte et traite les données personnelles.",
+  alternates: { canonical: "https://kov-agency.site/privacy" },
 };
 
 export default function PrivacyPolicyPage() {
