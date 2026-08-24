@@ -1,6 +1,7 @@
 import Link from "next/link";
-import Image from "next/image";
 import { Button } from "@/components/ui/Button";
+import { TextPressure } from "@/components/layout/TextPressure";
+import { robotoFlex } from "@/lib/fonts/robotoFlex";
 
 const NAV_LINKS = [
   { href: "/#work-gallery", label: "Projets" },
@@ -18,15 +19,13 @@ const LEGAL_LINKS = [
 export function Footer() {
   return (
     <footer className="px-6 pt-32 pb-10 max-w-[1600px] mx-auto border-t" style={{ borderColor: "var(--kov-border)" }}>
-      <div className="pt-16 pb-16">
-        <Link href="/" className="block">
-          <Image
-            src="/kov/brand/kov-wordmark-bone.png"
-            alt="KOV"
-            width={1116}
-            height={209}
-            sizes="(max-width: 768px) 100vw, 1040px"
-            className="w-full max-w-[1040px] h-auto"
+      <div className="pt-16 pb-16 flex justify-center">
+        <Link href="/" aria-label="KOV — Accueil" className="block w-full max-w-[240px] sm:max-w-[320px] md:max-w-[420px]">
+          <TextPressure
+            text="KOV"
+            fontFamily={robotoFlex.style.fontFamily}
+            textColor="#E7E7E5"
+            minFontSize={56}
           />
         </Link>
       </div>
