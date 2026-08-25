@@ -2,19 +2,30 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/Button";
 import { Reveal } from "@/components/ui/Reveal";
-import { GlassTiles } from "@/components/home/GlassTiles";
+import { ParticleImage } from "@/components/home/ParticleImage";
 
 // The former video-backed cinematic intro is gone; the section is back in
 // normal document flow (no more scroll-scrub coupling to src/data/scenes.ts,
-// which no longer exists). One positioning boundary matters here: the tile
-// background (position: absolute, z-canvas) and this content wrapper
-// (position: relative, z-content) are sibling stacking contexts, so the
-// whole wrapper paints above the whole background regardless of what's
-// static inside it — no need to position every child individually.
+// which no longer exists). One positioning boundary matters here: the
+// particle background (position: absolute, z-canvas) and this content
+// wrapper (position: relative, z-content) are sibling stacking contexts, so
+// the whole wrapper paints above the whole background regardless of what's
+// static inside it — no need to position every child individually. A
+// gradient scrim sits between the two, since particles swirl and disperse
+// continuously — without it, a bright cluster could pass directly behind
+// the headline and hurt legibility at any given moment.
 export function HeroScene() {
   return (
     <section id="hero" className="relative min-h-screen overflow-hidden">
-      <GlassTiles />
+      <ParticleImage src="/kov/home/particle-source.jpg" />
+      <div
+        className="absolute inset-0"
+        style={{
+          zIndex: "var(--z-atmosphere)",
+          background:
+            "linear-gradient(180deg, rgba(10,10,10,0.35) 0%, rgba(10,10,10,0.55) 55%, rgba(10,10,10,0.85) 100%)",
+        }}
+      />
 
       <div
         className="relative flex flex-col justify-between min-h-screen px-6 py-24 md:py-32 max-w-[1600px] mx-auto"
