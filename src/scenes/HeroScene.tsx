@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/Button";
 import { Reveal } from "@/components/ui/Reveal";
 import { ParticleImage } from "@/components/home/ParticleImage";
+import { HeroContactCard } from "@/components/home/HeroContactCard";
 
 // The former video-backed cinematic intro is gone; the section is back in
 // normal document flow (no more scroll-scrub coupling to src/data/scenes.ts,
@@ -69,13 +70,16 @@ export function HeroScene() {
           </Reveal>
 
           <Reveal variant="fade" delay={0.4}>
-            <div className="mt-10 flex flex-wrap items-center gap-4">
-              <Button href="/contact" variant="primary">
-                Démarrer un projet →
-              </Button>
-              <Button href="/#work-gallery" variant="secondary">
-                Voir les projets
-              </Button>
+            <div className="mt-10 flex flex-wrap items-end justify-between gap-8">
+              <div className="flex flex-wrap items-center gap-4">
+                <Button href="/contact" variant="primary">
+                  Démarrer un projet →
+                </Button>
+                <Button href="/#work-gallery" variant="secondary">
+                  Voir les projets
+                </Button>
+              </div>
+              <HeroContactCard />
             </div>
           </Reveal>
         </div>
