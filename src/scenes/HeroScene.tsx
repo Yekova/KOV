@@ -1,96 +1,125 @@
+import Link from "next/link";
 import Image from "next/image";
 import { Reveal } from "@/components/ui/Reveal";
-import { ParticleImage } from "@/components/home/ParticleImage";
-import { HeroContactCard } from "@/components/home/HeroContactCard";
+import ShapeBlur from "@/components/ui/ShapeBlur";
 
-// Framed "liquid glass" treatment, inspired by a reference the user pasted
-// (Circular's landing page: a big rounded-corner black-bordered panel inset
-// from the viewport edge, floating nav on top). KOV's page background is
-// already near-black, so a literal pure-black border wouldn't read as a
-// border at all — the frame here is the same structural idea (inset margin,
-// large rounded corners, overflow-hidden, a visible border stroke, an
-// elevation shadow) built from KOV's own tokens (`--kov-border` for the
-// stroke) rather than copying the reference's literal light-on-black
-// contrast, which only works because ITS page background is white.
+const GLASS_PILL_STYLE = {
+  background: "var(--glass-bg)",
+  backdropFilter: "blur(var(--glass-blur)) saturate(180%)",
+  WebkitBackdropFilter: "blur(var(--glass-blur)) saturate(180%)",
+  borderColor: "var(--glass-border)",
+} as const;
+
+// Second pass on a reference the user shared (Circular's landing page):
+// centered layout, a black/glass bar enclosing the nav at the top, no
+// particle interactivity, a single halo-bordered CTA. Structural choices
+// that differ from a literal copy:
 //
-// Nav and GlobalMenuButton are both sitewide fixed-position elements
-// rendered outside this component's subtree (SiteChrome/Nav.tsx), so they
-// float above the frame unaffected by its own overflow-hidden clipping —
-// nothing here needs to reach out and reposition them.
-//
-// The particle background (position: absolute, painted first) and this
-// content wrapper (position: relative, z-content) are sibling stacking
-// contexts, so the whole wrapper paints above the whole background
-// regardless of what's static inside it. A gradient scrim sits between the
-// two, since particles swirl and disperse continuously — without it, a
-// bright cluster could pass directly behind the headline and hurt
-// legibility at any given moment.
+// - The reference's nav sits INSIDE its frame because that frame is a flat
+//   opaque black rectangle. Nav.tsx is a genuinely sitewide fixed element
+//   (same component on every page), so instead of moving it into this
+//   component's DOM, the frame here is flush with the viewport edges (no
+//   margin, unlike the first pass) and carries its own translucent glass
+//   strip at the top — Nav's already-fixed pill then visually reads as
+//   "inside" that strip without any architectural coupling between the two.
+//   Nav's home-page transparent-pill variant was dropped for the same
+//   reason: an invisible pill can't look "enclosed" by anything.
+// - ShapeBlur (previously the framing effect on HeroContactCard, now
+//   removed per this round's request) is reused on the CTA button instead —
+//   same component, new host, roundness re-tuned for a pill instead of a
+//   card (see ShapeBlur.tsx's own VAR==0 comment for the underlying SDF
+//   math this was derived from).
+// - No particle field: `next/image` renders the same character-free
+//   Accueil-menu photo (atrium-brutaliste.jpg) as a plain static cover
+//   background, so the gradient scrim only has to counteract one fixed
+//   frame, not a continuously-swirling one.
 export function HeroScene() {
   return (
     <section id="hero" className="relative min-h-screen">
       <div
-        className="absolute inset-3 md:inset-4 overflow-hidden rounded-[2rem] md:rounded-[2.5rem] border"
-        style={{ borderColor: "var(--kov-border)", boxShadow: "0 40px 100px rgba(0, 0, 0, 0.6)" }}
+        className="absolute inset-0 overflow-hidden rounded-[2rem] md:rounded-[2.5rem] border"
+        style={{ borderColor: "var(--glass-border)" }}
       >
-        <ParticleImage src="/kov/menu/atrium-brutaliste.jpg" />
+        <Image
+          src="/kov/menu/atrium-brutaliste.jpg"
+          alt=""
+          aria-hidden="true"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+        />
+
         <div
           className="absolute inset-0"
           style={{
             zIndex: "var(--z-atmosphere)",
             background:
-              "linear-gradient(180deg, rgba(10,10,10,0.35) 0%, rgba(10,10,10,0.55) 55%, rgba(10,10,10,0.85) 100%)",
+              "linear-gradient(180deg, rgba(10,10,10,0.55) 0%, rgba(10,10,10,0.35) 30%, rgba(10,10,10,0.55) 65%, rgba(10,10,10,0.9) 100%)",
           }}
         />
 
+        {/* Liquid-glass strip enclosing the fixed Nav pill — Nav itself
+            renders outside this component's tree, this only supplies the
+            visual container it floats inside. */}
         <div
-          className="relative flex flex-col justify-between h-full px-6 py-16 md:py-20 max-w-[1600px] mx-auto"
+          className="absolute top-0 inset-x-0 h-20 md:h-24 border-b"
+          style={{ zIndex: "var(--z-glass)", ...GLASS_PILL_STYLE }}
+        />
+
+        <div
+          className="relative h-full flex flex-col items-center justify-center text-center px-6"
           style={{ zIndex: "var(--z-content)" }}
         >
           <Reveal variant="fade">
-            <div className="flex flex-col items-start gap-3">
-              <Image
-                src="/kov/brand/kov-wordmark-bone.png"
-                alt="KOV"
-                width={1116}
-                height={209}
-                priority
-                className="h-7 md:h-9 w-auto"
-              />
-              <p className="font-sans normal-case text-xs tracking-widest text-kov-steel">
-                Studio digital — Bordeaux, France
-              </p>
-            </div>
+            <span
+              className="inline-flex items-center px-4 py-2 border text-xs uppercase tracking-widest text-kov-bone"
+              style={{ ...GLASS_PILL_STYLE, borderRadius: "var(--radius-pill)" }}
+            >
+              Studio digital — Bordeaux, France
+            </span>
           </Reveal>
 
-          <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-10">
-            <div className="flex-1">
-              <Reveal variant="blur">
-                <h1
-                  className="font-display text-kov-bone uppercase"
-                  style={{ fontSize: "clamp(40px, 9vw, 160px)", lineHeight: "var(--line-height-display)" }}
-                >
-                  CONSTRUIRE VITE
-                  <br />
-                  SANS RIEN <span className="italic text-kov-red">CASSER</span>
-                  <span className="text-kov-red">.</span>
-                </h1>
-              </Reveal>
+          <Reveal variant="blur" delay={0.15}>
+            <h1
+              className="mt-8 font-display text-kov-bone uppercase"
+              style={{ fontSize: "clamp(40px, 9vw, 160px)", lineHeight: "var(--line-height-display)" }}
+            >
+              CONSTRUIRE VITE
+              <br />
+              SANS RIEN <span className="italic text-kov-red">CASSER</span>
+              <span className="text-kov-red">.</span>
+            </h1>
+          </Reveal>
 
-              <Reveal variant="fade" delay={0.25}>
-                <p className="mt-8 max-w-lg text-kov-concrete text-sm leading-relaxed">
-                  Design, développement et motion pensés comme un seul système —
-                  pas trois prestataires qui se renvoient la responsabilité.
-                </p>
-              </Reveal>
+          <Reveal variant="fade" delay={0.3}>
+            <p className="mt-8 max-w-lg mx-auto text-kov-concrete text-sm leading-relaxed">
+              Design, développement et motion pensés comme un seul système —
+              pas trois prestataires qui se renvoient la responsabilité.
+            </p>
+          </Reveal>
+
+          <Reveal variant="fade" delay={0.45}>
+            <div className="relative mt-10 inline-block">
+              <div className="absolute -inset-3 pointer-events-none">
+                <ShapeBlur
+                  variation={0}
+                  shapeSize={1.7}
+                  roundness={1.7}
+                  borderSize={0.08}
+                  circleSize={0.5}
+                  circleEdge={1}
+                  color="#E31E24"
+                />
+              </div>
+              <Link
+                href="/contact"
+                className="relative inline-flex items-center gap-2 px-8 py-4 border text-kov-bone text-xs uppercase tracking-widest hover:text-kov-red transition-colors"
+                style={{ ...GLASS_PILL_STYLE, borderRadius: "var(--radius-pill)" }}
+              >
+                Démarrer un projet →
+              </Link>
             </div>
-
-            <Reveal variant="fade" delay={0.5} className="hidden lg:block shrink-0">
-              <HeroContactCard />
-            </Reveal>
-          </div>
-
-          <Reveal variant="fade" delay={0.5}>
-            <p className="text-xs uppercase tracking-widest text-kov-steel">Design / Développement / Motion</p>
           </Reveal>
         </div>
       </div>

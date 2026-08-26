@@ -28,15 +28,6 @@ const GLASS_PILL_STYLE = {
   boxShadow: "var(--glass-shadow-full)",
 } as const;
 
-const TRANSPARENT_PILL_STYLE = {
-  background: "transparent",
-  backdropFilter: "none",
-  WebkitBackdropFilter: "none",
-  borderColor: "transparent",
-  borderRadius: "var(--radius-pill)",
-  boxShadow: "none",
-} as const;
-
 export function Nav() {
   const pathname = usePathname();
   const isHome = pathname === "/";
@@ -74,13 +65,10 @@ export function Nav() {
     return () => clearTimeout(timer);
   }, [pathname]);
 
-  // KOV has no light-background pages to contrast against (see
-  // docs/KOV-BRAND.md — the whole site is dark), so unlike a typical
-  // marketing site there's no light/dark logo swap here. The equivalent
-  // translation: transparent pill blending into the dark hero vs. the glass
-  // pill everywhere else, text color stays constant.
-  const transparent = isHome && !scrolled;
-  const pillStyle = transparent ? TRANSPARENT_PILL_STYLE : GLASS_PILL_STYLE;
+  // Always the glass pill now — the Hero itself supplies a glass strip for
+  // Nav to visually sit inside (src/scenes/HeroScene.tsx), so an invisible
+  // transparent-on-home variant would defeat that "enclosed" look.
+  const pillStyle = GLASS_PILL_STYLE;
   const padding = scrolled || !isHome ? "py-2.5" : "py-3";
 
   return (
