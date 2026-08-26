@@ -109,7 +109,16 @@ void main() {
 
     float sdf;
     if (VAR == 0) {
-        sdf = sdRoundRect(st, vec2(size), roundness);
+        // coord() above stretches whichever axis is longer so round shapes
+        // (VAR 1/2/3) stay true circles regardless of container aspect —
+        // exactly what we DON'T want for a rectangle meant to trace the
+        // box's own real proportions. Counter-scale the half-extent along
+        // that same stretched axis so the rect hugs the container's actual
+        // shape instead of staying square with empty margins on one side.
+        vec2 rectSize = u_resolution.x > u_resolution.y
+            ? vec2(size * (u_resolution.x / u_resolution.y), size)
+            : vec2(size, size * (u_resolution.y / u_resolution.x));
+        sdf = sdRoundRect(st, rectSize, roundness);
         sdf = strokeAA(sdf, 0.0, borderSize, sdfCircle) * 4.0;
     } else if (VAR == 1) {
         sdf = sdCircle(st, vec2(0.5));

@@ -5,13 +5,16 @@ import ShapeBlur from "@/components/ui/ShapeBlur";
 // A glass box (character + CTA) whose only frame is the ShapeBlur red glow
 // that follows the cursor along the outline — no separate static border or
 // inset rim highlight underneath it, so the shader is the one and only line
-// the box draws. Visibility (`hidden lg:block`) is handled by the caller
-// (HeroScene.tsx wraps this in a Reveal with that class) since this
-// component's own root is the sized box itself.
+// the box draws. Stacked vertically (character above the text, not
+// side-by-side) and given an explicit tall minimum height, both so the box
+// itself reads as a portrait rectangle — ShapeBlur's rect now traces
+// whichever real proportions this box ends up with (see the aspect-fix
+// comment in ShapeBlur.tsx). Visibility (`hidden lg:block`) is handled by
+// the caller (HeroScene.tsx wraps this in a Reveal with that class).
 export function HeroContactCard() {
   return (
     <div
-      className="relative overflow-hidden p-8 w-full max-w-md"
+      className="relative overflow-hidden p-10 w-full max-w-md min-h-[560px] lg:min-h-[640px] flex flex-col items-center justify-center text-center"
       style={{
         background: "var(--glass-bg)",
         backdropFilter: "blur(var(--glass-blur)) saturate(180%)",
@@ -32,32 +35,30 @@ export function HeroContactCard() {
         />
       </div>
 
-      <div className="relative flex items-end gap-5">
+      <div className="relative flex flex-col items-center">
         <Image
           src="/kov/character/assistant-portrait-transparent.png"
           alt=""
           aria-hidden="true"
           width={621}
           height={1007}
-          className="h-36 w-auto shrink-0"
+          className="h-64 w-auto shrink-0"
         />
-        <div>
-          <p className="font-display text-kov-bone uppercase text-lg">Un projet en tête ?</p>
-          <p className="text-kov-steel text-sm mt-1.5 leading-relaxed">On en discute, sans engagement.</p>
-          <div className="mt-4 flex flex-col items-start gap-2">
-            <Link
-              href="/contact"
-              className="text-kov-red text-xs uppercase tracking-widest hover:text-kov-red-signal transition-colors"
-            >
-              Contacter KOV →
-            </Link>
-            <Link
-              href="/#work-gallery"
-              className="text-kov-steel text-xs uppercase tracking-widest hover:text-kov-bone transition-colors"
-            >
-              Voir les projets →
-            </Link>
-          </div>
+        <p className="mt-6 font-display text-kov-bone uppercase text-xl">Un projet en tête ?</p>
+        <p className="mt-2 max-w-[16rem] text-kov-steel text-sm leading-relaxed">On en discute, sans engagement.</p>
+        <div className="mt-6 flex flex-col items-center gap-2">
+          <Link
+            href="/contact"
+            className="text-kov-red text-xs uppercase tracking-widest hover:text-kov-red-signal transition-colors"
+          >
+            Contacter KOV →
+          </Link>
+          <Link
+            href="/#work-gallery"
+            className="text-kov-steel text-xs uppercase tracking-widest hover:text-kov-bone transition-colors"
+          >
+            Voir les projets →
+          </Link>
         </div>
       </div>
     </div>

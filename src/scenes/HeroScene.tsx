@@ -1,4 +1,3 @@
-import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/Button";
 import { Reveal } from "@/components/ui/Reveal";
@@ -90,12 +89,7 @@ export function HeroScene() {
         </div>
 
         <Reveal variant="fade" delay={0.5}>
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 text-xs uppercase tracking-widest text-kov-steel">
-            <p>Design / Développement / Motion</p>
-            <Link href="/studio" className="hover:text-kov-red transition-colors">
-              Découvrir le studio →
-            </Link>
-          </div>
+          <p className="text-xs uppercase tracking-widest text-kov-steel">Design / Développement / Motion</p>
         </Reveal>
       </div>
     </section>
