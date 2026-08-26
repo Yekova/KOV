@@ -1,0 +1,90 @@
+.infinite-grid-menu-canvas {
+  cursor: grab;
+  width: 100%;
+  height: 100%;
+  display: block;
+  outline: none;
+  touch-action: none;
+}
+
+.infinite-grid-menu-canvas:active {
+  cursor: grabbing;
+}
+
+.face-title,
+.face-description {
+  position: absolute;
+  top: 50%;
+  pointer-events: none;
+  user-select: none;
+  transform: translateY(-50%);
+}
+
+.face-title {
+  left: 1.5rem;
+  max-width: 60%;
+}
+
+.face-description {
+  right: 1.5rem;
+  max-width: 16ch;
+  text-align: right;
+}
+
+.face-title.active,
+.face-description.active {
+  opacity: 1;
+  transition: opacity 0.5s ease;
+}
+
+.face-title.inactive,
+.face-description.inactive {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.action-button {
+  position: absolute;
+  left: 50%;
+  bottom: 1.5rem;
+  z-index: 2;
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  background: var(--kov-red);
+  border: none;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background-color 0.2s ease, opacity 0.5s ease, transform 0.5s ease;
+}
+
+.action-button:hover {
+  background: var(--kov-red-signal);
+}
+
+.action-button.active {
+  transform: translateX(-50%) scale(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.action-button.inactive {
+  transform: translateX(-50%) scale(0.6);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.action-button-icon {
+  color: var(--kov-white);
+  font-size: 20px;
+  line-height: 1;
+}
+
+@media (max-width: 900px) {
+  .face-title,
+  .face-description {
+    display: none;
+  }
+}

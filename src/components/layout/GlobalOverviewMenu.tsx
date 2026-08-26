@@ -5,11 +5,19 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, LIQUID_EASE } from "@/lib/motion";
-import { ImmersiveMenuList } from "@/components/layout/ImmersiveMenuList";
+import { InfiniteMenu, type InfiniteMenuItem } from "@/components/layout/InfiniteMenu";
+import { SITE_SECTIONS } from "@/data/siteSections";
+
+const MENU_ITEMS: InfiniteMenuItem[] = SITE_SECTIONS.map((section) => ({
+  image: section.image,
+  link: section.href,
+  title: section.label,
+  description: section.description,
+}));
 
 const DOT_POSITIONS = [4, 12, 20];
 
-// Quick actions, distinct from the 5 sections in ImmersiveMenuList — real
+// Quick actions, distinct from the 5 sections in InfiniteMenu — real
 // destinations only (no fabricated "Ressources"/"Paramètres" pages).
 const QUICK_LINKS = [
   {
@@ -72,13 +80,13 @@ const GLASS_PANEL_STYLE = {
 // clip-path reveal (same mechanism, anchored at the button's fixed position
 // instead of a measured trigger rect, since both are already bottom-center).
 //
-// The centerpiece is ImmersiveMenuList — a full-width row per section, each
-// revealing a sliding red marquee panel on hover (adapted from reactbits.dev's
-// FlowingMenu). Replaces an earlier orbital-diagram version: connecting
-// lines between small circular nodes read as "not well connected" once
-// actually in front of the user, and a full-bleed reveal-on-hover list is
-// both a more common "immersive site menu" pattern and sidesteps needing
-// per-section photoreal imagery that doesn't exist for 4 of the 5 sections.
+// The centerpiece is InfiniteMenu — a drag-to-rotate WebGL sphere of the 5
+// site sections (reactbits.dev's free InfiniteMenu, ported in full). Third
+// redesign of this menu: an orbital diagram of connected nodes read as "not
+// well connected", and a full-width hover-reveal list (FlowingMenu-style)
+// was rejected in turn for something more immersive. Textures come from
+// SITE_SECTIONS' own `image` field — real, already-existing repo photography
+// reused as atlas tiles, not fabricated per-section imagery.
 export function GlobalOverviewMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [visible, setVisible] = useState(false);
 
@@ -165,7 +173,9 @@ export function GlobalOverviewMenu({ open, onClose }: { open: boolean; onClose: 
         </div>
 
         <div className="mt-8 md:mt-10 flex-1 grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-12 items-start">
-          <ImmersiveMenuList onNavigate={onClose} />
+          <div className="h-[460px] md:h-[600px]">
+            <InfiniteMenu items={MENU_ITEMS} scale={3} onNavigate={onClose} />
+          </div>
 
           <div className="border p-6" style={{ ...GLASS_PANEL_STYLE, borderRadius: "var(--radius-glass)" }}>
             <p className="text-xs uppercase tracking-widest text-kov-steel mb-5">Accès rapides</p>
