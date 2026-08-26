@@ -60,28 +60,33 @@ export function HeroScene() {
             </h1>
           </Reveal>
 
-          <Reveal variant="fade" delay={0.25}>
-            <p className="mt-8 max-w-lg text-kov-concrete text-sm leading-relaxed">
-              Design, développement et motion pensés comme un seul système —
-              pas trois prestataires qui se renvoient la responsabilité. On
-              construit des sites et des plateformes qui durent, pas des
-              maquettes qui s&apos;arrêtent à la livraison.
-            </p>
-          </Reveal>
+          <div className="mt-8 flex flex-col lg:flex-row lg:items-end justify-between gap-10">
+            <div className="flex-1 max-w-lg">
+              <Reveal variant="fade" delay={0.25}>
+                <p className="text-kov-concrete text-sm leading-relaxed">
+                  Design, développement et motion pensés comme un seul système —
+                  pas trois prestataires qui se renvoient la responsabilité. On
+                  construit des sites et des plateformes qui durent, pas des
+                  maquettes qui s&apos;arrêtent à la livraison.
+                </p>
+              </Reveal>
 
-          <Reveal variant="fade" delay={0.4}>
-            <div className="mt-10 flex flex-wrap items-end justify-between gap-8">
-              <div className="flex flex-wrap items-center gap-4">
-                <Button href="/contact" variant="primary">
-                  Démarrer un projet →
-                </Button>
-                <Button href="/#work-gallery" variant="secondary">
-                  Voir les projets
-                </Button>
-              </div>
-              <HeroContactCard />
+              <Reveal variant="fade" delay={0.4}>
+                <div className="mt-10 flex flex-wrap items-center gap-4">
+                  <Button href="/contact" variant="primary">
+                    Démarrer un projet →
+                  </Button>
+                  <Button href="/#work-gallery" variant="secondary">
+                    Voir les projets
+                  </Button>
+                </div>
+              </Reveal>
             </div>
-          </Reveal>
+
+            <Reveal variant="fade" delay={0.5} className="hidden lg:block shrink-0">
+              <HeroContactCard />
+            </Reveal>
+          </div>
         </div>
 
         <Reveal variant="fade" delay={0.5}>

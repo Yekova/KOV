@@ -2,22 +2,22 @@ import Link from "next/link";
 import Image from "next/image";
 import ShapeBlur from "@/components/ui/ShapeBlur";
 
-// A glass box (character + CTA) whose border resolves into a red glow that
-// follows the cursor along the outline — see ShapeBlur.tsx. Hidden below
-// `lg`: at hero-headline sizes there isn't reliably enough clear space next
-// to the CTA row on narrower viewports for a box this size without risking
-// overlap, and the hover effect itself is meaningless on touch anyway.
+// A glass box (character + CTA) whose only frame is the ShapeBlur red glow
+// that follows the cursor along the outline — no separate static border or
+// inset rim highlight underneath it, so the shader is the one and only line
+// the box draws. Visibility (`hidden lg:block`) is handled by the caller
+// (HeroScene.tsx wraps this in a Reveal with that class) since this
+// component's own root is the sized box itself.
 export function HeroContactCard() {
   return (
     <div
-      className="hidden lg:block relative overflow-hidden border p-5 max-w-xs"
+      className="relative overflow-hidden p-8 w-full max-w-md"
       style={{
         background: "var(--glass-bg)",
         backdropFilter: "blur(var(--glass-blur)) saturate(180%)",
         WebkitBackdropFilter: "blur(var(--glass-blur)) saturate(180%)",
-        borderColor: "var(--glass-border)",
         borderRadius: "var(--radius-glass)",
-        boxShadow: "var(--glass-shadow-full)",
+        boxShadow: "0 24px 70px rgba(0, 0, 0, 0.55)",
       }}
     >
       <div className="absolute inset-0 pointer-events-none">
@@ -32,19 +32,19 @@ export function HeroContactCard() {
         />
       </div>
 
-      <div className="relative flex items-end gap-4">
+      <div className="relative flex items-end gap-5">
         <Image
           src="/kov/character/assistant-portrait-transparent.png"
           alt=""
           aria-hidden="true"
           width={621}
           height={1007}
-          className="h-24 w-auto shrink-0"
+          className="h-36 w-auto shrink-0"
         />
         <div>
-          <p className="font-display text-kov-bone uppercase text-sm">Un projet en tête ?</p>
-          <p className="text-kov-steel text-xs mt-1 leading-relaxed">On en discute, sans engagement.</p>
-          <div className="mt-3 flex flex-col items-start gap-1.5">
+          <p className="font-display text-kov-bone uppercase text-lg">Un projet en tête ?</p>
+          <p className="text-kov-steel text-sm mt-1.5 leading-relaxed">On en discute, sans engagement.</p>
+          <div className="mt-4 flex flex-col items-start gap-2">
             <Link
               href="/contact"
               className="text-kov-red text-xs uppercase tracking-widest hover:text-kov-red-signal transition-colors"
