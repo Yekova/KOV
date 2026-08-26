@@ -3,11 +3,9 @@
 // reasoning searchIndex.ts already applies: this is core marketing content,
 // not every route that exists.
 //
-// `image` feeds the InfiniteMenu sphere (GlobalOverviewMenu). Four are
+// `image` feeds the InfiniteMenu sphere (GlobalOverviewMenu) — all 5 are
 // dedicated architectural renders the user supplied specifically for this
-// (self-hosted under public/kov/menu/, not hotlinked) — Accueil/Studio/
-// Journal/Contact each got a distinct, purpose-made image. Expertise keeps
-// an existing repo asset (no 5th dedicated image was supplied for it).
+// (self-hosted under public/kov/menu/, not hotlinked), one per section.
 export const SITE_SECTIONS = [
   {
     href: "/",
@@ -19,7 +17,7 @@ export const SITE_SECTIONS = [
     href: "/expertise",
     label: "Expertise",
     description: "Stratégie, design, développement, motion, systèmes, intégration.",
-    image: "/kov/keyframes/hero-01-establishing.png",
+    image: "/kov/menu/bureau-moderne.jpg",
   },
   {
     href: "/studio",
