@@ -33,8 +33,11 @@ export function HeroScene() {
   return (
     <section id="hero" className="relative min-h-screen">
       <div
-        className="absolute inset-2 md:inset-3 overflow-hidden rounded-[28px] md:rounded-[32px] border"
-        style={{ borderColor: "rgba(255, 255, 255, 0.12)" }}
+        className="absolute inset-4 md:inset-6 overflow-hidden rounded-[28px] md:rounded-[32px] border-2"
+        style={{
+          borderColor: "rgba(255, 255, 255, 0.28)",
+          boxShadow: "0 30px 90px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.06)",
+        }}
       >
         <Image
           src="/kov/menu/atrium-brutaliste.jpg"
