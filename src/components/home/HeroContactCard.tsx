@@ -24,10 +24,15 @@ export function HeroContactCard() {
       }}
     >
       <div className="absolute inset-0 pointer-events-none">
+        {/* shapeSize: sdRoundRect scales its input by 4.2 before comparing
+            to this half-extent, so a rect edge that actually touches the
+            box's own visible boundary (normalized coord ±0.5 from center)
+            needs shapeSize ≈ 0.5 * 4.2 = 2.1 — the demo's own example value
+            (0.5) draws a much smaller rect floating well inside the box. */}
         <ShapeBlur
           variation={0}
-          shapeSize={0.62}
-          roundness={0.35}
+          shapeSize={1.95}
+          roundness={0.25}
           borderSize={0.06}
           circleSize={0.5}
           circleEdge={1}

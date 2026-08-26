@@ -46,34 +46,32 @@ export function HeroScene() {
           </div>
         </Reveal>
 
-        <div>
-          <Reveal variant="blur">
-            <h1
-              className="font-display text-kov-bone uppercase max-w-[85%]"
-              style={{ fontSize: "var(--display-xl)", lineHeight: "var(--line-height-display)" }}
-            >
-              DES SYSTÈMES
-              <br />
-              QUI TIENNENT<span className="text-kov-red">.</span>
-            </h1>
-          </Reveal>
+        <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-10">
+          <div className="flex-1">
+            <Reveal variant="blur">
+              <h1
+                className="font-display text-kov-bone uppercase"
+                style={{ fontSize: "var(--display-xl)", lineHeight: "var(--line-height-display)" }}
+              >
+                DES SYSTÈMES
+                <br />
+                QUI TIENNENT<span className="text-kov-red">.</span>
+              </h1>
+            </Reveal>
 
-          <div className="mt-8 flex flex-col lg:flex-row lg:items-start justify-between gap-10">
-            <div className="flex-1 max-w-lg">
-              <Reveal variant="fade" delay={0.25}>
-                <p className="text-kov-concrete text-sm leading-relaxed">
-                  Design, développement et motion pensés comme un seul système —
-                  pas trois prestataires qui se renvoient la responsabilité. On
-                  construit des sites et des plateformes qui durent, pas des
-                  maquettes qui s&apos;arrêtent à la livraison.
-                </p>
-              </Reveal>
-            </div>
-
-            <Reveal variant="fade" delay={0.5} className="hidden lg:block shrink-0">
-              <HeroContactCard />
+            <Reveal variant="fade" delay={0.25}>
+              <p className="mt-8 max-w-lg text-kov-concrete text-sm leading-relaxed">
+                Design, développement et motion pensés comme un seul système —
+                pas trois prestataires qui se renvoient la responsabilité. On
+                construit des sites et des plateformes qui durent, pas des
+                maquettes qui s&apos;arrêtent à la livraison.
+              </p>
             </Reveal>
           </div>
+
+          <Reveal variant="fade" delay={0.5} className="hidden lg:block shrink-0">
+            <HeroContactCard />
+          </Reveal>
         </div>
 
         <Reveal variant="fade" delay={0.5}>

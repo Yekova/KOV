@@ -12,7 +12,12 @@ const VARIANT_CLASSES: Record<Variant, string> = {
   primary: "px-6 py-4 bg-kov-red text-kov-white hover:bg-kov-red-signal",
   secondary: "px-6 py-4 border text-kov-bone hover:text-kov-red hover:border-kov-red",
   ghost: "text-kov-bone hover:text-kov-red",
-  pill: "px-5 py-2.5 border text-kov-bone hover:bg-kov-red hover:text-kov-white hover:border-kov-red",
+  // overflow-hidden: SpecularButtonEffect's canvas deliberately bleeds past
+  // its own edges (see SpecularButtonEffect.css) so the glow can extend
+  // beyond the button — fine for isolated CTAs with room to spare, but pill
+  // is the compact Nav CTA sitting a few px from sibling icons, where that
+  // bleed visibly overlapped the neighboring icon as a stray line.
+  pill: "px-5 py-2.5 border text-kov-bone hover:bg-kov-red hover:text-kov-white hover:border-kov-red overflow-hidden",
 };
 
 // One entry per variant that has a real edge/surface for the specular shine
