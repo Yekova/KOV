@@ -15,8 +15,6 @@ const MENU_ITEMS: InfiniteMenuItem[] = SITE_SECTIONS.map((section) => ({
   description: section.description,
 }));
 
-const DOT_POSITIONS = [4, 12, 20];
-
 // Quick actions, distinct from the 5 sections in InfiniteMenu — real
 // destinations only (no fabricated "Ressources"/"Paramètres" pages).
 const QUICK_LINKS = [
@@ -87,6 +85,17 @@ const GLASS_PANEL_STYLE = {
 // was rejected in turn for something more immersive. Textures come from
 // SITE_SECTIONS' own `image` field — real, already-existing repo photography
 // reused as atlas tiles, not fabricated per-section imagery.
+//
+// The sphere is full-bleed (fills the entire modal, not a boxed panel) with
+// every other element — logo, heading, help panel, quick links — floating
+// on top as an overlay. The overlay wrapper is pointer-events-none so a drag
+// anywhere empty still rotates the sphere; only the actual interactive
+// pieces re-enable pointer-events. Backdrop-click-to-close is gone along
+// with it — once the sphere fills the whole screen there's no inert
+// "backdrop" left to click, so Escape and the ✕ button are the close paths.
+// The old bottom-center "Retour au bureau" pill was dropped rather than
+// relocated: it would sit exactly where the sphere's own navigate button
+// already lives, and it was already redundant with ✕ / Escape.
 export function GlobalOverviewMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [visible, setVisible] = useState(false);
 
@@ -125,19 +134,28 @@ export function GlobalOverviewMenu({ open, onClose }: { open: boolean; onClose: 
       role="dialog"
       aria-modal="true"
       aria-label="Menu global"
-      className="fixed inset-0 overflow-y-auto"
+      className="fixed inset-0 overflow-hidden"
       style={{
         zIndex: "var(--z-modal)",
-        background: "rgba(10, 10, 10, 0.96)",
-        backdropFilter: "blur(var(--glass-blur))",
-        WebkitBackdropFilter: "blur(var(--glass-blur))",
+        background: "var(--kov-black)",
         clipPath: `circle(${visible ? radius : 0}px at ${anchorX}px ${anchorY}px)`,
         transition: `clip-path ${motion.slow}s ${LIQUID_EASE}`,
       }}
-      onClick={onClose}
     >
-      <div className="min-h-full px-6 md:px-12 py-8 flex flex-col" onClick={(event) => event.stopPropagation()}>
-        <div className="flex items-center justify-between">
+      <div className="absolute inset-0">
+        <InfiniteMenu items={MENU_ITEMS} scale={3} onNavigate={onClose} />
+      </div>
+
+      {/* Vignette so the corner-anchored UI below stays legible over
+          whichever disc happens to be rotated underneath it, while leaving
+          the center — where the sphere's own title/description sit — clear. */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{ background: "radial-gradient(ellipse at center, transparent 40%, rgba(10, 10, 10, 0.6) 90%)" }}
+      />
+
+      <div className="absolute inset-0 flex flex-col px-6 md:px-12 py-8 pointer-events-none">
+        <div className="flex items-center justify-between pointer-events-auto">
           <Image src="/kov/brand/kov-wordmark-bone.png" alt="KOV" width={1116} height={209} className="h-5 w-auto" />
           <button
             type="button"
@@ -157,7 +175,7 @@ export function GlobalOverviewMenu({ open, onClose }: { open: boolean; onClose: 
           </button>
         </div>
 
-        <div className="mt-8 md:mt-10">
+        <div className="mt-8 md:mt-10 pointer-events-auto w-fit">
           <div className="flex items-center gap-2">
             <p
               className="font-display text-kov-bone uppercase"
@@ -168,18 +186,38 @@ export function GlobalOverviewMenu({ open, onClose }: { open: boolean; onClose: 
             <span className="w-1.5 h-1.5 rounded-full bg-kov-red shrink-0" />
           </div>
           <p className="mt-3 max-w-md text-kov-steel text-sm leading-relaxed">
-            Accédez à l&apos;ensemble de nos univers en un clin d&apos;œil.
+            Accédez à l&apos;ensemble de nos univers en un clin d&apos;œil. Glissez la sphère pour naviguer.
           </p>
         </div>
 
-        <div className="mt-8 md:mt-10 flex-1 grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-12 items-start">
-          <div className="h-[460px] md:h-[600px]">
-            <InfiniteMenu items={MENU_ITEMS} scale={3} onNavigate={onClose} />
+        <div className="flex-1" />
+
+        <div className="hidden md:flex items-end justify-between gap-8">
+          <div className="flex items-end gap-4 pointer-events-auto">
+            <Image
+              src="/kov/character/menu-character-transparent.png"
+              alt=""
+              aria-hidden="true"
+              width={624}
+              height={1007}
+              className="h-28 w-auto shrink-0"
+            />
+            <div className="border p-4 max-w-xs" style={{ ...GLASS_PANEL_STYLE, borderRadius: "var(--radius-glass)" }}>
+              <p className="font-display text-kov-bone uppercase text-sm">Besoin d&apos;aide ?</p>
+              <p className="text-kov-steel text-xs mt-1">Notre équipe est là pour vous accompagner.</p>
+              <Link
+                href="/contact"
+                onClick={onClose}
+                className="mt-2 inline-flex items-center gap-1 text-kov-red text-xs uppercase tracking-widest hover:text-kov-red-signal transition-colors"
+              >
+                Contacter KOV →
+              </Link>
+            </div>
           </div>
 
-          <div className="border p-6" style={{ ...GLASS_PANEL_STYLE, borderRadius: "var(--radius-glass)" }}>
-            <p className="text-xs uppercase tracking-widest text-kov-steel mb-5">Accès rapides</p>
-            <ul className="space-y-5">
+          <div className="border p-6 w-64 shrink-0 pointer-events-auto" style={{ ...GLASS_PANEL_STYLE, borderRadius: "var(--radius-glass)" }}>
+            <p className="text-xs uppercase tracking-widest text-kov-steel mb-4">Accès rapides</p>
+            <ul className="space-y-4">
               {QUICK_LINKS.map((link) => (
                 <li key={link.href}>
                   <Link href={link.href} onClick={onClose} className="flex items-start gap-3 group">
@@ -205,44 +243,6 @@ export function GlobalOverviewMenu({ open, onClose }: { open: boolean; onClose: 
               ))}
             </ul>
           </div>
-        </div>
-
-        <div className="mt-12 grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] items-end gap-8">
-          <div className="flex items-end gap-4">
-            <Image
-              src="/kov/character/menu-character-transparent.png"
-              alt=""
-              aria-hidden="true"
-              width={624}
-              height={1007}
-              className="h-28 md:h-36 w-auto shrink-0"
-            />
-            <div className="border p-4 max-w-xs" style={{ ...GLASS_PANEL_STYLE, borderRadius: "var(--radius-glass)" }}>
-              <p className="font-display text-kov-bone uppercase text-sm">Besoin d&apos;aide ?</p>
-              <p className="text-kov-steel text-xs mt-1">Notre équipe est là pour vous accompagner.</p>
-              <Link
-                href="/contact"
-                onClick={onClose}
-                className="mt-2 inline-flex items-center gap-1 text-kov-red text-xs uppercase tracking-widest hover:text-kov-red-signal transition-colors"
-              >
-                Contacter KOV →
-              </Link>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex items-center gap-3 px-5 py-3 border text-kov-bone hover:text-kov-red transition-colors self-center justify-self-center"
-            style={{ ...GLASS_PANEL_STYLE, borderRadius: "var(--radius-pill)" }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-              {DOT_POSITIONS.flatMap((cy) => DOT_POSITIONS.map((cx) => <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="1.6" />))}
-            </svg>
-            <span className="text-xs uppercase tracking-widest">Retour au bureau</span>
-          </button>
-
-          <div />
         </div>
       </div>
     </div>,
