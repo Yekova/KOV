@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { Button } from "@/components/ui/Button";
 import { Reveal } from "@/components/ui/Reveal";
 import { ParticleImage } from "@/components/home/ParticleImage";
 import { HeroContactCard } from "@/components/home/HeroContactCard";
@@ -59,7 +58,7 @@ export function HeroScene() {
             </h1>
           </Reveal>
 
-          <div className="mt-8 flex flex-col lg:flex-row lg:items-end justify-between gap-10">
+          <div className="mt-8 flex flex-col lg:flex-row lg:items-start justify-between gap-10">
             <div className="flex-1 max-w-lg">
               <Reveal variant="fade" delay={0.25}>
                 <p className="text-kov-concrete text-sm leading-relaxed">
@@ -68,17 +67,6 @@ export function HeroScene() {
                   construit des sites et des plateformes qui durent, pas des
                   maquettes qui s&apos;arrêtent à la livraison.
                 </p>
-              </Reveal>
-
-              <Reveal variant="fade" delay={0.4}>
-                <div className="mt-10 flex flex-wrap items-center gap-4">
-                  <Button href="/contact" variant="primary">
-                    Démarrer un projet →
-                  </Button>
-                  <Button href="/#work-gallery" variant="secondary">
-                    Voir les projets
-                  </Button>
-                </div>
               </Reveal>
             </div>
 
