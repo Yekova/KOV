@@ -101,3 +101,25 @@ body {
     transform: none !important;
   }
 }
+
+/* Looping horizontal marquee (ImmersiveMenuList.tsx, global menu) — the
+   track renders its repeated-label content twice back-to-back, so
+   translateX(0 → -50%) loops seamlessly regardless of viewport width. */
+@keyframes menuMarquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.menu-marquee-track {
+  animation: menuMarquee 18s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-marquee-track {
+    animation: none;
+  }
+}
