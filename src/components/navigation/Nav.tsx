@@ -28,7 +28,14 @@ const GLASS_PILL_STYLE = {
   boxShadow: "var(--glass-shadow-full)",
 } as const;
 
-export function Nav() {
+interface NavProps {
+  /** "contained": positioned absolute within a positioned ancestor (used by
+   * HeroScene, which nests Nav inside its own frame) instead of fixed to the
+   * viewport. Same pill, same offsets from its container's edge either way. */
+  variant?: "fixed" | "contained";
+}
+
+export function Nav({ variant = "fixed" }: NavProps) {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const [scrolled, setScrolled] = useState(false);
@@ -79,7 +86,10 @@ export function Nav() {
           separate elements avoids composing "translate + scale" into one
           transform string, which would need the unfurl to fight the
           centering offset. */}
-      <div className="fixed top-4 md:top-6 left-1/2 -translate-x-1/2" style={{ zIndex: "var(--z-nav)" }}>
+      <div
+        className={`${variant === "contained" ? "absolute" : "fixed"} top-4 md:top-6 left-1/2 -translate-x-1/2`}
+        style={{ zIndex: "var(--z-nav)" }}
+      >
         <div
           ref={pillRef}
           className={`flex items-center justify-between gap-2 sm:gap-4 px-2.5 sm:px-3 ${padding} border`}

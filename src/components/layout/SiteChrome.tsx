@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { Nav } from "@/components/navigation/Nav";
 import { Footer } from "@/components/layout/Footer";
 import { GlobalMenuButton } from "@/components/layout/GlobalMenuButton";
 import { GlobalOverviewMenu } from "@/components/layout/GlobalOverviewMenu";
+import { GlobalMenuProvider, useGlobalMenu } from "@/components/layout/GlobalMenuContext";
 
 // The client portal (/client/*) and the admin back-office (/admin/*) each
 // have their own sidebar+topbar shell (src/app/client/layout.tsx,
@@ -14,21 +14,26 @@ import { GlobalOverviewMenu } from "@/components/layout/GlobalOverviewMenu";
 // marketing chrome unchanged.
 export function SiteChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  // Safety net for back/forward navigation — every link inside the menu
-  // already calls onClose before navigating, so this rarely does the work.
-  // Adjusted during render (React's documented pattern), not in an effect —
-  // same idiom Nav.tsx uses for its own route-change reset.
-  const [prevPathname, setPrevPathname] = useState(pathname);
-  if (pathname !== prevPathname) {
-    setPrevPathname(pathname);
-    setMenuOpen(false);
-  }
 
   if (pathname?.startsWith("/client") || pathname?.startsWith("/admin")) {
     return <>{children}</>;
   }
+
+  return (
+    <GlobalMenuProvider>
+      <SiteChromeInner pathname={pathname}>{children}</SiteChromeInner>
+    </GlobalMenuProvider>
+  );
+}
+
+function SiteChromeInner({ pathname, children }: { pathname: string | null; children: React.ReactNode }) {
+  const { open, toggle, close } = useGlobalMenu();
+
+  // On the homepage, HeroScene renders its own contained Nav + GlobalMenuButton
+  // nested inside its frame (see src/scenes/HeroScene.tsx) instead of the
+  // usual viewport-fixed ones, so the frame can visually enclose them both.
+  // Skip the default fixed instances there to avoid rendering two.
+  const isHome = pathname === "/";
 
   // /login is a portal entry point, not marketing content — "browse the
   // whole site" doesn't belong next to a login form, same reasoning already
@@ -37,13 +42,13 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <Nav />
+      {!isHome && <Nav />}
       {children}
       <Footer />
       {showGlobalMenu && (
         <>
-          <GlobalMenuButton open={menuOpen} onToggle={() => setMenuOpen((v) => !v)} />
-          <GlobalOverviewMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
+          {!isHome && <GlobalMenuButton open={open} onToggle={toggle} />}
+          <GlobalOverviewMenu open={open} onClose={close} />
         </>
       )}
     </>
