@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, type ElementType, type MouseEvent as ReactMouseEvent, type MouseEventHandler, type ReactNode } from "react";
+import { useRef, type CSSProperties, type ElementType, type MouseEvent as ReactMouseEvent, type MouseEventHandler, type ReactNode } from "react";
 
 export type KovCardVariant = "primary" | "secondary" | "floating" | "glass" | "project" | "metric" | "process";
 
@@ -11,6 +11,8 @@ interface KovCardProps {
   interactive?: boolean;
   as?: ElementType;
   className?: string;
+  /** Merged over the variant's own style (aspect-ratio, min-height, etc.) — variant tokens still win for background/border/shadow/radius. */
+  style?: CSSProperties;
   onClick?: MouseEventHandler<HTMLElement>;
 }
 
@@ -37,7 +39,7 @@ interface KovCardProps {
 // This doesn't replace GlassCard (still used across the site, untouched) —
 // GlassCard's "glass"/"solid" split covers the cases already shipped;
 // KovCard is the fuller system for the homepage motion/DA rebuild.
-export function KovCard({ children, variant = "glass", interactive = false, as: Tag = "div", className = "", onClick }: KovCardProps) {
+export function KovCard({ children, variant = "glass", interactive = false, as: Tag = "div", className = "", style, onClick }: KovCardProps) {
   const spotlightRef = useRef<HTMLDivElement>(null);
 
   function handleMouseMove(event: ReactMouseEvent<HTMLElement>) {
@@ -69,7 +71,7 @@ export function KovCard({ children, variant = "glass", interactive = false, as: 
       className={`border ${padding} ${interactive ? "relative overflow-hidden group" : isProject ? "relative overflow-hidden" : ""} ${className}`}
       onClick={onClick}
       onMouseMove={handleMouseMove}
-      style={{ background, backdropFilter, WebkitBackdropFilter: backdropFilter, borderColor, borderRadius, boxShadow }}
+      style={{ background, backdropFilter, WebkitBackdropFilter: backdropFilter, borderColor, borderRadius, boxShadow, ...style }}
     >
       {interactive && (
         <div
