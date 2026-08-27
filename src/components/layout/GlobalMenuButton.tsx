@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useScrolled } from "@/hooks/useScrolled";
 
 const DOT_POSITIONS = [4, 12, 20];
 
@@ -20,10 +21,15 @@ interface GlobalMenuButtonProps {
 // duplicate their own glass style block too).
 export function GlobalMenuButton({ open, onToggle, variant = "fixed" }: GlobalMenuButtonProps) {
   const [hovered, setHovered] = useState(false);
+  // Same reasoning as Nav.tsx: "contained" would otherwise scroll away with
+  // HeroScene after the first ~40px of scroll, since absolute positioning
+  // ties it to the section's own box, not the viewport.
+  const scrolled = useScrolled();
+  const isFixed = variant === "fixed" || scrolled;
 
   return (
     <div
-      className={`${variant === "contained" ? "absolute" : "fixed"} bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2`}
+      className={`${isFixed ? "fixed" : "absolute"} bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2`}
       style={{ zIndex: "var(--z-nav)" }}
     >
       <span

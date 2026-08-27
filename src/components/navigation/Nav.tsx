@@ -9,6 +9,7 @@ import { GlobalSearch } from "@/components/search/GlobalSearch";
 import { NavLinks, type NavLinkItem } from "@/components/navigation/NavLinks";
 import { MobileNavMenu } from "@/components/navigation/MobileNavMenu";
 import { REVEAL_EASE } from "@/lib/motion";
+import { useScrolled } from "@/hooks/useScrolled";
 
 const LINKS: NavLinkItem[] = [
   { href: "/#work-gallery", label: "Projets" },
@@ -16,8 +17,6 @@ const LINKS: NavLinkItem[] = [
   { href: "/journal", label: "Journal" },
   { href: "/studio", label: "Studio", dropdownKey: "studio" },
 ];
-
-const SCROLL_THRESHOLD = 40;
 
 const GLASS_PILL_STYLE = {
   background: "var(--glass-bg)",
@@ -38,19 +37,10 @@ interface NavProps {
 export function Nav({ variant = "fixed" }: NavProps) {
   const pathname = usePathname();
   const isHome = pathname === "/";
-  const [scrolled, setScrolled] = useState(false);
+  const scrolled = useScrolled();
   const [visible, setVisible] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const pillRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleScroll() {
-      setScrolled(window.scrollY > SCROLL_THRESHOLD);
-    }
-    handleScroll();
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   // Unfurl on every route change: the pill drops to scale-x-0/invisible then
   // expands back out from the logo edge, rather than just sitting there
@@ -77,6 +67,14 @@ export function Nav({ variant = "fixed" }: NavProps) {
   // transparent-on-home variant would defeat that "enclosed" look.
   const pillStyle = GLASS_PILL_STYLE;
   const padding = scrolled || !isHome ? "py-2.5" : "py-3";
+  // "contained" starts absolute (nested inside HeroScene's own frame) but
+  // switches to fixed as soon as the page scrolls — otherwise it would
+  // scroll away with the Hero section like any other absolutely-positioned
+  // content, leaving the rest of the (very long) homepage without a nav at
+  // all. Reusing `scrolled` couples this to the same moment the pill
+  // already adopts its compact padding, so the two changes read as one
+  // adaptation rather than two independent thresholds.
+  const isFixed = variant === "fixed" || scrolled;
 
   return (
     <>
@@ -87,7 +85,7 @@ export function Nav({ variant = "fixed" }: NavProps) {
           transform string, which would need the unfurl to fight the
           centering offset. */}
       <div
-        className={`${variant === "contained" ? "absolute" : "fixed"} top-4 md:top-6 left-1/2 -translate-x-1/2`}
+        className={`${isFixed ? "fixed" : "absolute"} top-4 md:top-6 left-1/2 -translate-x-1/2`}
         style={{ zIndex: "var(--z-nav)" }}
       >
         <div
