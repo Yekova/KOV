@@ -58,6 +58,34 @@ export function HeroScene() {
           }}
         />
 
+        {/* Glass strip so the header region reads as visibly part of the
+            frame — Nav itself stays the same floating pill (unchanged
+            component), this only supplies a bounded zone for it to sit in.
+            Rounds automatically with the frame's own top corners, since it's
+            clipped by the parent's overflow-hidden. */}
+        <div
+          className="absolute top-0 inset-x-0 h-24 md:h-28 border-b"
+          style={{
+            zIndex: "var(--z-glass)",
+            background: "linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)",
+            backdropFilter: "blur(var(--glass-blur)) saturate(180%)",
+            WebkitBackdropFilter: "blur(var(--glass-blur)) saturate(180%)",
+            borderColor: "rgba(255, 255, 255, 0.14)",
+          }}
+        />
+
+        {/* Same idea at the bottom, for the global-menu button. */}
+        <div
+          className="absolute bottom-0 inset-x-0 h-24 md:h-28 border-t"
+          style={{
+            zIndex: "var(--z-glass)",
+            background: "linear-gradient(0deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)",
+            backdropFilter: "blur(var(--glass-blur)) saturate(180%)",
+            WebkitBackdropFilter: "blur(var(--glass-blur)) saturate(180%)",
+            borderColor: "rgba(255, 255, 255, 0.14)",
+          }}
+        />
+
         <Nav variant="contained" />
 
         <div
