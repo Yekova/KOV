@@ -1,80 +1,35 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/Button";
 import { Reveal } from "@/components/ui/Reveal";
 import { PILLARS } from "@/data/expertisePillars";
-import { gsap, initGsap, GSAP_LIQUID_EASE } from "@/lib/motion";
-import { FluidGlassOrb } from "@/components/ui/FluidGlassOrb";
+import { FluidGlassCards } from "@/components/ui/FluidGlassCards";
 
-// Six points on a circle, starting at 12 o'clock, clockwise — one per
-// pillar. Radius scales with viewport width (capped at 260px) — at a fixed
-// 260px the left/right chips land off-screen past ~500px wide, since half
-// that viewport is narrower than the radius itself.
-function getArcPositions(radius: number) {
-  return PILLARS.map((_, index) => {
-    const angle = (-90 + index * 60) * (Math.PI / 180);
-    return { x: Math.cos(angle) * radius, y: Math.sin(angle) * radius };
-  });
-}
+const EXPERTISE_PHOTO = "/kov/menu/bureau-moderne.jpg";
 
-// The "six disciplines converge into one system" scene from the brief:
-// pinned for a scroll span, the six pillars appear as compact chips around
-// a circle, then pull into the center as a single "Un seul système." label
-// scales up in their place — arriving on top of a real refractive glass
-// orb (FluidGlassOrb, adapted from React Bits) that grows in at the same
-// moment. The six disciplines don't just fade into a flat CSS label; they
-// condense into an actual render of KOV's own "Liquid Glass" material —
-// the literal payoff for "un seul système," not just its words. Below it
-// (always in normal flow, never pinned)
-// the exact same six pillars render as a plain, fully readable grid with
-// their real body copy — the pinned scene is the "wow" beat, the grid
-// underneath is the "information" beat KOV-MOTION.md's rhythm rule asks
-// for, and it's what prefers-reduced-motion / no-JS users see on its own.
+// Second pass, replacing the earlier pinned "chips converge into a glass
+// orb" scroll scene (too abstract — the payoff read as decoration, not as
+// KOV's actual space or the character who guides the site). This version
+// is a real composed scene instead: the studio photo as a background, the
+// KOV character standing to one side (docs/KOV-CHARACTER.md's own brief
+// for this section — "Expertises: il révèle plusieurs layers"), and real
+// text on real glass cards on the other side, each card a genuine WebGL
+// refraction (FluidGlassCards) of that same photo rather than a CSS blur
+// trick. Below it (always in normal flow) the same six pillars still
+// render as a plain, fully readable grid with their real body copy — that
+// stays the "information" beat and the reduced-motion/no-JS fallback,
+// unchanged from before.
 //
-// Reduced motion skips the pinned scene entirely rather than showing it
-// without motion — a converge animation with the motion removed is just
-// six overlapping chips, not a usable fallback.
+// Reduced motion drops the Canvas (no motion happens there anyway, but a
+// continuous WebGL render loop still isn't free) and falls back to the
+// text sitting directly on the photo — still fully legible thanks to the
+// same gradient overlay, just without the glass panels.
 export function ExpertiseTeaser() {
-  const sceneRef = useRef<HTMLDivElement>(null);
   const [reducedMotion] = useState(
     () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
   );
-  const [arcRadius] = useState(() => (typeof window !== "undefined" ? Math.min(260, window.innerWidth * 0.26) : 260));
-  const arcPositions = getArcPositions(arcRadius);
-
-  useEffect(() => {
-    if (reducedMotion) return;
-    const scene = sceneRef.current;
-    if (!scene) return;
-    initGsap();
-
-    const chips = scene.querySelectorAll<HTMLElement>("[data-chip]");
-    const converged = scene.querySelector<HTMLElement>("[data-converged-label]");
-    const glassOrb = scene.querySelector<HTMLElement>("[data-glass-orb]");
-
-    const ctx = gsap.context(() => {
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: scene,
-          start: "top top",
-          end: "+=120%",
-          pin: true,
-          scrub: 0.6,
-        },
-      });
-
-      tl.set(chips, { opacity: 0, scale: 0.7 })
-        .set(converged, { opacity: 0, scale: 0.85 })
-        .set(glassOrb, { opacity: 0, scale: 0.55 })
-        .to(chips, { opacity: 1, scale: 1, stagger: 0.08, duration: 0.4, ease: GSAP_LIQUID_EASE }, 0)
-        .to(chips, { x: 0, y: 0, opacity: 0, scale: 0.4, stagger: 0.04, duration: 0.4, ease: GSAP_LIQUID_EASE }, 0.65)
-        .to(glassOrb, { opacity: 1, scale: 1, duration: 0.4, ease: GSAP_LIQUID_EASE }, 0.7)
-        .to(converged, { opacity: 1, scale: 1, duration: 0.35, ease: GSAP_LIQUID_EASE }, 0.78);
-    }, scene);
-
-    return () => ctx.revert();
-  }, [reducedMotion]);
 
   return (
     <section id="expertise" className="px-6 max-w-[1600px] mx-auto scroll-mt-24">
@@ -97,45 +52,52 @@ export function ExpertiseTeaser() {
         </Reveal>
       </div>
 
-      {!reducedMotion && (
-        <div ref={sceneRef} className="relative h-screen overflow-hidden">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div data-glass-orb className="absolute w-[280px] h-[280px] md:w-[420px] md:h-[420px]">
-              <FluidGlassOrb className="w-full h-full" />
+      <Reveal variant="blur">
+        <div className="relative overflow-hidden" style={{ borderRadius: "var(--radius-glass)" }}>
+          <Image src={EXPERTISE_PHOTO} alt="" aria-hidden="true" fill sizes="100vw" className="object-cover" />
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(90deg, rgba(10,10,10,0.55) 0%, rgba(10,10,10,0.25) 35%, rgba(10,10,10,0.7) 100%), linear-gradient(0deg, rgba(10,10,10,0.7) 0%, rgba(10,10,10,0.1) 40%)",
+            }}
+          />
+
+          <div className="relative flex flex-col md:flex-row min-h-[520px] md:min-h-[620px]">
+            <div className="hidden md:flex items-end justify-center w-[34%] shrink-0 px-4 pointer-events-none">
+              <Image
+                src="/kov/character/assistant-portrait-transparent.png"
+                alt=""
+                aria-hidden="true"
+                width={621}
+                height={1007}
+                className="h-[92%] w-auto"
+              />
             </div>
 
-            {PILLARS.map((pillar, index) => (
-              <div
-                key={pillar.slug}
-                data-chip
-                className="absolute flex items-center gap-2 md:gap-3 px-3 md:px-5 py-2 md:py-3 border"
-                style={{
-                  transform: `translate(${arcPositions[index].x}px, ${arcPositions[index].y}px)`,
-                  background: "var(--glass-bg)",
-                  backdropFilter: "blur(var(--glass-blur)) saturate(180%)",
-                  WebkitBackdropFilter: "blur(var(--glass-blur)) saturate(180%)",
-                  borderColor: "var(--glass-border)",
-                  borderRadius: "var(--radius-pill)",
-                  boxShadow: "var(--glass-shadow-full)",
-                }}
-              >
-                <span className="text-kov-red font-mono text-[10px] md:text-xs">{pillar.number}</span>
-                <span className="font-display text-kov-bone uppercase text-xs md:text-sm whitespace-nowrap">{pillar.title}</span>
+            <div className="relative flex-1 min-h-[420px] md:min-h-0">
+              {!reducedMotion && (
+                <FluidGlassCards count={PILLARS.length} texture={EXPERTISE_PHOTO} className="absolute inset-0" />
+              )}
+              <div className="absolute inset-0 grid grid-cols-2 sm:grid-cols-3 p-3 md:p-6" style={{ gridAutoRows: "1fr" }}>
+                {PILLARS.map((pillar) => (
+                  <div key={pillar.slug} className="relative flex flex-col justify-end p-2 md:p-3">
+                    {/* Text-safe scrim, independent of whatever the glass card
+                        happens to be refracting underneath — legibility can't
+                        depend on the WebGL content staying dark at that spot. */}
+                    <div
+                      className="absolute inset-0 pointer-events-none"
+                      style={{ background: "linear-gradient(0deg, rgba(10,10,10,0.85) 0%, rgba(10,10,10,0) 70%)" }}
+                    />
+                    <p className="relative text-kov-red font-mono text-[10px] md:text-xs">{pillar.number}</p>
+                    <p className="relative font-display text-kov-bone uppercase text-xs md:text-sm leading-tight">{pillar.title}</p>
+                  </div>
+                ))}
               </div>
-            ))}
-
-            <p
-              data-converged-label
-              className="absolute font-display text-kov-bone uppercase text-center"
-              style={{ fontSize: "var(--display-lg)", lineHeight: "var(--line-height-display)" }}
-            >
-              Un seul
-              <br />
-              système<span className="text-kov-red">.</span>
-            </p>
+            </div>
           </div>
         </div>
-      )}
+      </Reveal>
 
       <div className="py-32">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-12 border-t pt-10" style={{ borderColor: "var(--kov-border)" }}>
