@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Reveal } from "@/components/ui/Reveal";
 import { PILLARS } from "@/data/expertisePillars";
 import { gsap, initGsap, GSAP_LIQUID_EASE } from "@/lib/motion";
+import { FluidGlassOrb } from "@/components/ui/FluidGlassOrb";
 
 // Six points on a circle, starting at 12 o'clock, clockwise — one per
 // pillar. Radius scales with viewport width (capped at 260px) — at a fixed
@@ -20,7 +21,12 @@ function getArcPositions(radius: number) {
 // The "six disciplines converge into one system" scene from the brief:
 // pinned for a scroll span, the six pillars appear as compact chips around
 // a circle, then pull into the center as a single "Un seul système." label
-// scales up in their place. Below it (always in normal flow, never pinned)
+// scales up in their place — arriving on top of a real refractive glass
+// orb (FluidGlassOrb, adapted from React Bits) that grows in at the same
+// moment. The six disciplines don't just fade into a flat CSS label; they
+// condense into an actual render of KOV's own "Liquid Glass" material —
+// the literal payoff for "un seul système," not just its words. Below it
+// (always in normal flow, never pinned)
 // the exact same six pillars render as a plain, fully readable grid with
 // their real body copy — the pinned scene is the "wow" beat, the grid
 // underneath is the "information" beat KOV-MOTION.md's rhythm rule asks
@@ -45,6 +51,7 @@ export function ExpertiseTeaser() {
 
     const chips = scene.querySelectorAll<HTMLElement>("[data-chip]");
     const converged = scene.querySelector<HTMLElement>("[data-converged-label]");
+    const glassOrb = scene.querySelector<HTMLElement>("[data-glass-orb]");
 
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({
@@ -59,9 +66,11 @@ export function ExpertiseTeaser() {
 
       tl.set(chips, { opacity: 0, scale: 0.7 })
         .set(converged, { opacity: 0, scale: 0.85 })
+        .set(glassOrb, { opacity: 0, scale: 0.55 })
         .to(chips, { opacity: 1, scale: 1, stagger: 0.08, duration: 0.4, ease: GSAP_LIQUID_EASE }, 0)
         .to(chips, { x: 0, y: 0, opacity: 0, scale: 0.4, stagger: 0.04, duration: 0.4, ease: GSAP_LIQUID_EASE }, 0.65)
-        .to(converged, { opacity: 1, scale: 1, duration: 0.35, ease: GSAP_LIQUID_EASE }, 0.75);
+        .to(glassOrb, { opacity: 1, scale: 1, duration: 0.4, ease: GSAP_LIQUID_EASE }, 0.7)
+        .to(converged, { opacity: 1, scale: 1, duration: 0.35, ease: GSAP_LIQUID_EASE }, 0.78);
     }, scene);
 
     return () => ctx.revert();
@@ -91,6 +100,10 @@ export function ExpertiseTeaser() {
       {!reducedMotion && (
         <div ref={sceneRef} className="relative h-screen overflow-hidden">
           <div className="absolute inset-0 flex items-center justify-center">
+            <div data-glass-orb className="absolute w-[280px] h-[280px] md:w-[420px] md:h-[420px]">
+              <FluidGlassOrb className="w-full h-full" />
+            </div>
+
             {PILLARS.map((pillar, index) => (
               <div
                 key={pillar.slug}

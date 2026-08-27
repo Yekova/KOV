@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties, type ElementType, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { motion, LIQUID_EASE, REVEAL_EASE } from "@/lib/motion";
 
 export type RevealVariant = "fade" | "blur" | "zoom";
@@ -50,7 +50,13 @@ export function Reveal({
   children: ReactNode;
   delay?: number;
   className?: string;
-  as?: ElementType;
+  // The only two tags this is ever rendered as — a narrow literal union
+  // (not `ElementType`) so `<Tag>` resolves against just these two JSX
+  // intrinsics. A fully generic `ElementType` collapses to `never` once
+  // `@react-three/fiber`'s global JSX.IntrinsicElements augmentation
+  // (FluidGlassOrb.tsx) is in scope, since TS then has to reconcile div's
+  // props against every three.js element tag's props too.
+  as?: "div" | "li";
   style?: CSSProperties;
   variant?: RevealVariant;
 }) {
@@ -87,12 +93,11 @@ export function Reveal({
     .map((property) => `${property} ${motion.slow}s ${ease} ${delay}s`)
     .join(", ");
 
+  // `ref` is typed as the HTMLElement supertype both "div"/"li" refs narrow
+  // from, but TS still wants a ref satisfying both tags' exact ref types at
+  // once for a two-member union tag — hence the cast.
   return (
-    <Tag
-      ref={ref}
-      className={className}
-      style={{ ...style, ...state, transition }}
-    >
+    <Tag ref={ref as never} className={className} style={{ ...style, ...state, transition }}>
       {children}
     </Tag>
   );
