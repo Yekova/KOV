@@ -5,27 +5,29 @@ import Image from "next/image";
 import { Button } from "@/components/ui/Button";
 import { Reveal } from "@/components/ui/Reveal";
 import { PILLARS } from "@/data/expertisePillars";
-import { FluidGlassCards } from "@/components/ui/FluidGlassCards";
+import { FluidGlassCursor } from "@/components/ui/FluidGlassCursor";
 
 const EXPERTISE_PHOTO = "/kov/menu/bureau-moderne.jpg";
 
-// Second pass, replacing the earlier pinned "chips converge into a glass
-// orb" scroll scene (too abstract — the payoff read as decoration, not as
-// KOV's actual space or the character who guides the site). This version
-// is a real composed scene instead: the studio photo as a background, the
-// KOV character standing to one side (docs/KOV-CHARACTER.md's own brief
-// for this section — "Expertises: il révèle plusieurs layers"), and real
-// text on real glass cards on the other side, each card a genuine WebGL
-// refraction (FluidGlassCards) of that same photo rather than a CSS blur
-// trick. Below it (always in normal flow) the same six pillars still
-// render as a plain, fully readable grid with their real body copy — that
-// stays the "information" beat and the reduced-motion/no-JS fallback,
-// unchanged from before.
+// Third pass. First was a pinned "chips converge into a glass orb" scroll
+// scene — too abstract, no real photo/character. Second baked the glass
+// refraction into each of the six pillar cards individually — rejected in
+// turn ("je veux vraiment que mon curseur ait l'effet"): the effect
+// belonged on the cursor itself, not static content. This version: the
+// studio photo as a background, the KOV character standing to one side
+// (docs/KOV-CHARACTER.md's own brief for this section — "Expertises: il
+// révèle plusieurs layers"), the six pillars as plain glass-CSS cards
+// (same recipe as everywhere else on the site), and ONE refractive lens
+// (FluidGlassCursor, React Bits' "lens" mode adapted) that follows the
+// pointer across the whole panel, warping a close-up of that same photo
+// as it passes over the character and the cards. Below it (always in
+// normal flow) the same six pillars still render as a plain, fully
+// readable grid with their real body copy — that stays the "information"
+// beat and the reduced-motion/no-JS fallback, unchanged throughout all
+// three passes.
 //
-// Reduced motion drops the Canvas (no motion happens there anyway, but a
-// continuous WebGL render loop still isn't free) and falls back to the
-// text sitting directly on the photo — still fully legible thanks to the
-// same gradient overlay, just without the glass panels.
+// Reduced motion drops the lens canvas entirely (a cursor-chasing effect
+// is motion by definition) — the cards stay exactly as readable either way.
 export function ExpertiseTeaser() {
   const [reducedMotion] = useState(
     () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -75,27 +77,29 @@ export function ExpertiseTeaser() {
               />
             </div>
 
-            <div className="relative flex-1 min-h-[420px] md:min-h-0">
-              {!reducedMotion && (
-                <FluidGlassCards count={PILLARS.length} texture={EXPERTISE_PHOTO} className="absolute inset-0" />
-              )}
-              <div className="absolute inset-0 grid grid-cols-2 sm:grid-cols-3 p-3 md:p-6" style={{ gridAutoRows: "1fr" }}>
-                {PILLARS.map((pillar) => (
-                  <div key={pillar.slug} className="relative flex flex-col justify-end p-2 md:p-3">
-                    {/* Text-safe scrim, independent of whatever the glass card
-                        happens to be refracting underneath — legibility can't
-                        depend on the WebGL content staying dark at that spot. */}
-                    <div
-                      className="absolute inset-0 pointer-events-none"
-                      style={{ background: "linear-gradient(0deg, rgba(10,10,10,0.85) 0%, rgba(10,10,10,0) 70%)" }}
-                    />
-                    <p className="relative text-kov-red font-mono text-[10px] md:text-xs">{pillar.number}</p>
-                    <p className="relative font-display text-kov-bone uppercase text-xs md:text-sm leading-tight">{pillar.title}</p>
-                  </div>
-                ))}
-              </div>
+            <div className="relative flex-1 grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4 p-3 md:p-6" style={{ gridAutoRows: "1fr" }}>
+              {PILLARS.map((pillar) => (
+                <div
+                  key={pillar.slug}
+                  className="flex flex-col justify-end p-3 md:p-4 border"
+                  style={{
+                    background: "var(--glass-bg)",
+                    backdropFilter: "blur(var(--glass-blur)) saturate(180%)",
+                    WebkitBackdropFilter: "blur(var(--glass-blur)) saturate(180%)",
+                    borderColor: "var(--glass-border)",
+                    borderRadius: "var(--radius-md)",
+                  }}
+                >
+                  <p className="text-kov-red font-mono text-[10px] md:text-xs">{pillar.number}</p>
+                  <p className="font-display text-kov-bone uppercase text-xs md:text-sm leading-tight">{pillar.title}</p>
+                </div>
+              ))}
             </div>
           </div>
+
+          {/* Covers the whole panel (character + cards), not just one half —
+              the lens should be able to roam anywhere the cursor goes here. */}
+          {!reducedMotion && <FluidGlassCursor texture={EXPERTISE_PHOTO} className="absolute inset-0" />}
         </div>
       </Reveal>
 
