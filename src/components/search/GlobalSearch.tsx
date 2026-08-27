@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { searchIndex } from "@/data/searchIndex";
+import type { SearchItem } from "@/data/searchIndex";
+import { searchKov } from "@/lib/search";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { motion, LIQUID_EASE } from "@/lib/motion";
 
@@ -74,17 +75,16 @@ export function GlobalSearch() {
     };
   }, []);
 
-  const results = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return [];
-    return searchIndex.filter((item) => {
-      if (category !== "Tout" && item.category !== category) return false;
-      return (
-        item.title.toLowerCase().includes(q) ||
-        item.description.toLowerCase().includes(q) ||
-        item.keywords?.some((k) => k.toLowerCase().includes(q))
-      );
+  const [results, setResults] = useState<SearchItem[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    searchKov(query, category).then((items) => {
+      if (!cancelled) setResults(items);
     });
+    return () => {
+      cancelled = true;
+    };
   }, [query, category]);
 
   return (
