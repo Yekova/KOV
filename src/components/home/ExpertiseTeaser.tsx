@@ -8,26 +8,36 @@ import { PILLARS } from "@/data/expertisePillars";
 import { FluidGlassCursor } from "@/components/ui/FluidGlassCursor";
 
 const EXPERTISE_PHOTO = "/kov/menu/bureau-moderne.jpg";
+const CARD_SLOT_HEIGHT = "140vh";
 
-// Third pass. First was a pinned "chips converge into a glass orb" scroll
+// Fourth pass. First was a pinned "chips converge into a glass orb" scroll
 // scene — too abstract, no real photo/character. Second baked the glass
-// refraction into each of the six pillar cards individually — rejected in
-// turn ("je veux vraiment que mon curseur ait l'effet"): the effect
-// belonged on the cursor itself, not static content. This version: the
-// studio photo as a background, the KOV character standing to one side
-// (docs/KOV-CHARACTER.md's own brief for this section — "Expertises: il
-// révèle plusieurs layers"), the six pillars as plain glass-CSS cards
-// (same recipe as everywhere else on the site), and ONE refractive lens
-// (FluidGlassCursor, React Bits' "lens" mode adapted) that follows the
-// pointer across the whole panel, warping a close-up of that same photo
-// as it passes over the character and the cards. Below it (always in
-// normal flow) the same six pillars still render as a plain, fully
-// readable grid with their real body copy — that stays the "information"
-// beat and the reduced-motion/no-JS fallback, unchanged throughout all
-// three passes.
+// refraction into each of the six pillar cards individually — rejected:
+// the effect belonged on the cursor, not static content. Third put ONE
+// lens on the cursor over a static panel with number+title-only cards —
+// rejected again: the section needed real dwell time (longer, sticky
+// cards) and the actual description text, and the lens needed to sit
+// UNDER the cards rather than on top of everything.
 //
-// Reduced motion drops the lens canvas entirely (a cursor-chasing effect
-// is motion by definition) — the cards stay exactly as readable either way.
+// This version: the backdrop (photo + character + lens) and the six
+// pillar cards are siblings sharing one CSS Grid cell (`gridColumn:
+// gridRow: "1"`), so the backdrop's `position: sticky` keeps it pinned to
+// the viewport for the entire scroll range while the cards — each in its
+// own tall slot, individually sticky — stack up and hand off one at a
+// time in front of it. Later cards are later in DOM order, so they
+// naturally paint over earlier ones without needing z-index; the lens,
+// part of the backdrop, paints first and so always sits under whichever
+// card is currently in view. Full body copy now lives on the cards
+// themselves, so the old separate "plain grid with body copy" fallback
+// below is gone — it would just be duplicating this content.
+//
+// Not wrapped in <Reveal>: Reveal applies a CSS transform during its
+// entrance transition, and ANY transform on an ancestor (even
+// translateY(0) once "visible" — it's still a non-none transform value)
+// creates a new containing block that breaks `position: sticky` for every
+// descendant. The individual cards still don't need their own entrance
+// animation; scrolling them into their sticky position already reads as
+// the reveal.
 export function ExpertiseTeaser() {
   const [reducedMotion] = useState(
     () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -54,8 +64,11 @@ export function ExpertiseTeaser() {
         </Reveal>
       </div>
 
-      <Reveal variant="blur">
-        <div className="relative overflow-hidden" style={{ borderRadius: "var(--radius-glass)" }}>
+      <div style={{ display: "grid" }}>
+        <div
+          className="sticky top-0 h-screen overflow-hidden self-start"
+          style={{ gridColumn: "1", gridRow: "1", borderRadius: "var(--radius-glass)" }}
+        >
           <Image src={EXPERTISE_PHOTO} alt="" aria-hidden="true" fill sizes="100vw" className="object-cover" />
           <div
             className="absolute inset-0"
@@ -65,57 +78,57 @@ export function ExpertiseTeaser() {
             }}
           />
 
-          <div className="relative flex flex-col md:flex-row min-h-[520px] md:min-h-[620px]">
-            <div className="hidden md:flex items-end justify-center w-[34%] shrink-0 px-4 pointer-events-none">
-              <Image
-                src="/kov/character/assistant-portrait-transparent.png"
-                alt=""
-                aria-hidden="true"
-                width={621}
-                height={1007}
-                className="h-[92%] w-auto"
-              />
-            </div>
+          {!reducedMotion && <FluidGlassCursor texture={EXPERTISE_PHOTO} className="absolute inset-0" />}
 
-            <div className="relative flex-1 grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4 p-3 md:p-6" style={{ gridAutoRows: "1fr" }}>
-              {PILLARS.map((pillar) => (
+          <div className="hidden md:flex absolute inset-y-0 left-0 items-end justify-center w-[34%] px-4 pointer-events-none">
+            <Image
+              src="/kov/character/assistant-portrait-transparent.png"
+              alt=""
+              aria-hidden="true"
+              width={621}
+              height={1007}
+              className="h-[92%] w-auto"
+            />
+          </div>
+        </div>
+
+        <div style={{ gridColumn: "1", gridRow: "1" }}>
+          {PILLARS.map((pillar) => (
+            <div key={pillar.slug} style={{ height: CARD_SLOT_HEIGHT }}>
+              <div
+                className="sticky top-0 h-screen flex items-center justify-end px-6 md:px-16"
+                style={{ pointerEvents: "none" }}
+              >
                 <div
-                  key={pillar.slug}
-                  className="flex flex-col justify-end p-3 md:p-4 border"
+                  className="border p-8 md:p-12 max-w-lg"
                   style={{
+                    pointerEvents: "auto",
                     background: "var(--glass-bg)",
                     backdropFilter: "blur(var(--glass-blur)) saturate(180%)",
                     WebkitBackdropFilter: "blur(var(--glass-blur)) saturate(180%)",
                     borderColor: "var(--glass-border)",
-                    borderRadius: "var(--radius-md)",
+                    borderRadius: "var(--radius-glass)",
+                    boxShadow: "var(--glass-shadow-full)",
                   }}
                 >
-                  <p className="text-kov-red font-mono text-[10px] md:text-xs">{pillar.number}</p>
-                  <p className="font-display text-kov-bone uppercase text-xs md:text-sm leading-tight">{pillar.title}</p>
+                  <p className="text-kov-red font-mono text-xs mb-4">{pillar.number}</p>
+                  <h3
+                    className="font-display text-kov-bone uppercase mb-4"
+                    style={{ fontSize: "clamp(24px, 3.5vw, 40px)", lineHeight: "var(--line-height-display)" }}
+                  >
+                    {pillar.title}
+                  </h3>
+                  <p className="text-kov-concrete text-sm md:text-base leading-relaxed">{pillar.body}</p>
                 </div>
-              ))}
+              </div>
             </div>
-          </div>
-
-          {/* Covers the whole panel (character + cards), not just one half —
-              the lens should be able to roam anywhere the cursor goes here. */}
-          {!reducedMotion && <FluidGlassCursor texture={EXPERTISE_PHOTO} className="absolute inset-0" />}
-        </div>
-      </Reveal>
-
-      <div className="py-32">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-12 border-t pt-10" style={{ borderColor: "var(--kov-border)" }}>
-          {PILLARS.map((pillar, index) => (
-            <Reveal key={pillar.slug} delay={0.1 + index * 0.06}>
-              <p className="text-kov-red font-mono text-xs mb-3">{pillar.number}</p>
-              <h3 className="font-display text-kov-bone uppercase text-xl mb-2">{pillar.title}</h3>
-              <p className="text-kov-concrete text-sm leading-relaxed">{pillar.body}</p>
-            </Reveal>
           ))}
         </div>
+      </div>
 
-        <Reveal delay={0.3}>
-          <Button href="/expertise" variant="secondary" className="mt-16">
+      <div className="py-32">
+        <Reveal>
+          <Button href="/expertise" variant="secondary">
             Voir l&apos;expertise →
           </Button>
         </Reveal>

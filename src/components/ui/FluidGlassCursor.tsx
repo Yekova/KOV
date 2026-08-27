@@ -1,7 +1,7 @@
 "use client";
 
 import * as THREE from "three";
-import { Suspense, useRef, useState, type RefObject } from "react";
+import { Suspense, useEffect, useRef, useState, type RefObject } from "react";
 import { Canvas, createPortal, useFrame, useThree } from "@react-three/fiber";
 import { useFBO, useTexture, MeshTransmissionMaterial } from "@react-three/drei";
 import { easing } from "maath";
@@ -13,8 +13,8 @@ interface FluidGlassCursorProps {
 
 // The same photo the real DOM panel shows, rendered again here purely so
 // the lens has something real to refract — a flat black portal scene
-// reads as an opaque dark disc, not glass. Never visible directly; it only
-// ever shows up warped, through the lens.
+// reads as an opaque dark disc, not glass. Never visible directly; it
+// only ever shows up warped, through the lens.
 function Backdrop({ textureUrl }: { textureUrl: string }) {
   const map = useTexture(textureUrl);
   const { viewport } = useThree();
@@ -28,22 +28,30 @@ function Backdrop({ textureUrl }: { textureUrl: string }) {
 
 // True to React Bits' original "lens" mode: a glass shape that chases the
 // pointer (`easing.damp3`, same call the source uses) instead of sitting
-// still. Visibility is driven by a DOM hover flag set on the wrapping div,
-// not 3D raycasting on the mesh itself — a mesh that's continuously
-// chasing the cursor makes an unreliable hover target, it can lag just
-// enough mid-movement to "lose" pointer-over and flicker.
-function Lens({ textureUrl, hoverRef }: { textureUrl: string; hoverRef: RefObject<boolean> }) {
+// still. Position/hover come from refs fed by a window-level listener in
+// the wrapper below, not R3F's own built-in pointer tracking — this
+// canvas sits behind real content (see ExpertiseTeaser.tsx's stacking
+// order) with pointer-events: none, so it never receives events itself.
+function Lens({
+  textureUrl,
+  pointerRef,
+  hoverRef,
+}: {
+  textureUrl: string;
+  pointerRef: RefObject<{ x: number; y: number }>;
+  hoverRef: RefObject<boolean>;
+}) {
   const meshRef = useRef<THREE.Mesh>(null);
   const buffer = useFBO();
   const { viewport } = useThree();
   const [portalScene] = useState(() => new THREE.Scene());
 
   useFrame((state, delta) => {
-    const { gl, pointer, camera } = state;
+    const { gl, camera } = state;
     const mesh = meshRef.current;
     if (mesh) {
-      const destX = (pointer.x * viewport.width) / 2;
-      const destY = (pointer.y * viewport.height) / 2;
+      const destX = (pointerRef.current.x * viewport.width) / 2;
+      const destY = (pointerRef.current.y * viewport.height) / 2;
       easing.damp3(mesh.position, [destX, destY, 0.4], 0.2, delta);
       const targetScale = hoverRef.current ? 1 : 0.001;
       easing.damp3(mesh.scale, [targetScale, targetScale, targetScale], 0.22, delta);
@@ -53,11 +61,10 @@ function Lens({ textureUrl, hoverRef }: { textureUrl: string; hoverRef: RefObjec
     gl.setClearColor("#050505", 1);
     gl.render(portalScene, camera);
     gl.setRenderTarget(null);
-    // `setClearColor` is a renderer-global setting, not scoped to the
-    // buffer render above — reset it to transparent before R3F's own
-    // automatic render of the main scene runs right after this callback,
-    // or the whole canvas paints opaque and hides the real DOM (photo,
-    // character, cards) behind it instead of just showing the lens.
+    // setClearColor is renderer-global, not scoped to the buffer render
+    // above — reset to transparent or it leaks into R3F's own automatic
+    // render of the main scene right after, painting the whole canvas
+    // opaque and hiding whatever's stacked behind/around the lens.
     gl.setClearColor(0x000000, 0);
   });
 
@@ -90,30 +97,40 @@ function Lens({ textureUrl, hoverRef }: { textureUrl: string; hoverRef: RefObjec
 }
 
 // A refractive glass lens that follows the cursor across whatever panel
-// it's dropped into, revealing a warped close-up of that panel's own
-// photo as it passes over the content — adapted from React Bits'
-// FluidGlass "lens" mode. `className` sizes/positions the wrapper,
-// typically `absolute inset-0` over the panel it belongs to; that wrapper
-// also owns pointer capture for the whole panel (a transparent canvas
-// still claims its full bounding box for pointer events), so this should
-// only be dropped over panels with no other interactive/selectable
-// content underneath.
+// it's dropped into. Always `pointer-events: none` and tracks the pointer
+// via a window listener + manual rect hit-testing (not DOM pointer events
+// targeting this element, not R3F's built-in tracking) — so it can sit
+// behind other stacked content (cards on top of it, say) without ever
+// blocking clicks, selection, or its own ability to track the cursor.
 export function FluidGlassCursor({ texture, className = "" }: FluidGlassCursorProps) {
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const pointerRef = useRef({ x: 0, y: 0 });
   const hoverRef = useRef(false);
 
+  useEffect(() => {
+    function handlePointerMove(event: PointerEvent) {
+      const el = wrapperRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const inside =
+        event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom;
+      hoverRef.current = inside;
+      if (inside) {
+        pointerRef.current = {
+          x: ((event.clientX - rect.left) / rect.width) * 2 - 1,
+          y: -(((event.clientY - rect.top) / rect.height) * 2 - 1),
+        };
+      }
+    }
+    window.addEventListener("pointermove", handlePointerMove);
+    return () => window.removeEventListener("pointermove", handlePointerMove);
+  }, []);
+
   return (
-    <div
-      className={className}
-      onPointerEnter={() => {
-        hoverRef.current = true;
-      }}
-      onPointerLeave={() => {
-        hoverRef.current = false;
-      }}
-    >
+    <div ref={wrapperRef} className={className} style={{ pointerEvents: "none" }}>
       <Canvas camera={{ position: [0, 0, 5], fov: 35 }} gl={{ alpha: true }} dpr={[1, 1.5]}>
         <Suspense fallback={null}>
-          <Lens textureUrl={texture} hoverRef={hoverRef} />
+          <Lens textureUrl={texture} pointerRef={pointerRef} hoverRef={hoverRef} />
         </Suspense>
       </Canvas>
     </div>
