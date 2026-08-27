@@ -13,11 +13,12 @@ export function PhilosophyStatement() {
           Le bon design n&apos;a pas besoin de crier<span className="text-kov-red">.</span>
         </h2>
         <p className="mt-6 max-w-xl text-kov-concrete text-sm leading-relaxed">
-          On construit des sites et des plateformes pour ceux qui ne veulent
-          pas ressembler à tout le monde. Pas de templates, pas de banques
-          d&apos;images, pas de discours d&apos;agence générique — chaque
-          projet part de ce qui le rend différent, pas de ce qui est facile à
-          livrer.
+          On construit des expériences numériques pour ceux qui ne veulent pas
+          ressembler à tout le monde. Pas de template choisi avant la
+          réflexion. Pas de banque d&apos;images pour remplir un espace. Pas
+          de discours d&apos;agence interchangeable. Chaque projet commence
+          par ce qui le rend différent — puis on construit autour de cette
+          différence.
         </p>
       </Reveal>
 

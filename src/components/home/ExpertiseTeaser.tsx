@@ -14,10 +14,11 @@ export function ExpertiseTeaser() {
           Six disciplines<span className="text-kov-red">.</span> Un seul système<span className="text-kov-red">.</span>
         </h2>
         <p className="mt-6 max-w-xl text-kov-concrete text-sm leading-relaxed">
-          Pas six prestataires empilés qui se renvoient la responsabilité —
-          une seule équipe qui pense stratégie, design, développement, motion,
-          systèmes et intégration comme un seul système, du premier brief à la
-          maintenance.
+          Stratégie, design, développement, motion, systèmes et intégration ne
+          sont pas six prestations séparées. Chez KOV, elles sont pensées
+          ensemble, de la première décision jusqu&apos;à la mise en ligne — puis à
+          l&apos;évolution du produit. Chaque discipline nourrit la suivante ;
+          aucune ne travaille en vase clos.
         </p>
       </Reveal>
 

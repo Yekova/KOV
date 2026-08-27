@@ -9,19 +9,24 @@ export function ClosingCta() {
           className="font-display text-kov-bone uppercase max-w-2xl"
           style={{ fontSize: "var(--heading-lg)", lineHeight: "var(--line-height-display)" }}
         >
-          Un projet en tête ?
-          <br />
-          <span className="text-kov-red">On le construit.</span>
+          Un projet en tête<span className="text-kov-red">?</span>
         </h2>
 
         <p className="mt-6 max-w-md text-kov-concrete text-sm leading-relaxed">
-          Un premier échange, une direction claire, un plan concret — sans
-          jargon, sans surprise sur la suite.
+          On commence par une conversation. Pas de brief interminable, pas de
+          jargon, pas de promesse inutile — un premier échange pour
+          comprendre le problème, définir une direction et savoir ce
+          qu&apos;il faut construire.
         </p>
 
-        <Button href="/contact" variant="primary" className="mt-10">
-          Démarrer un projet →
-        </Button>
+        <div className="mt-10 flex flex-wrap items-center gap-6">
+          <Button href="/contact" variant="primary">
+            Parler de mon projet →
+          </Button>
+          <Button href="/studio" variant="ghost">
+            Explorer KOV →
+          </Button>
+        </div>
       </Reveal>
     </section>
   );

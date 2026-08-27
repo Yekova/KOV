@@ -7,11 +7,16 @@ export function ProcessTimeline() {
       <Reveal>
         <p className="text-xs uppercase tracking-widest text-kov-steel mb-4">Processus</p>
         <h2
-          className="font-display text-kov-bone uppercase max-w-3xl mb-20"
+          className="font-display text-kov-bone uppercase max-w-3xl"
           style={{ fontSize: "var(--heading-lg)", lineHeight: "var(--line-height-display)" }}
         >
           Sept étapes<span className="text-kov-red">.</span> Pas de boîte noire<span className="text-kov-red">.</span>
         </h2>
+        <p className="mt-6 mb-20 max-w-xl text-kov-concrete text-sm leading-relaxed">
+          Un projet ne doit jamais disparaître derrière un écran jusqu&apos;à
+          sa livraison. Chaque étape est visible, discutée et construite avec
+          vous.
+        </p>
       </Reveal>
 
       <ol className="relative flex flex-col md:flex-row md:items-start justify-between gap-10 md:gap-6">
