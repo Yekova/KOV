@@ -3,7 +3,7 @@ import { PROCESS } from "@/data/processSteps";
 
 export function ProcessTimeline() {
   return (
-    <section className="px-6 py-32 max-w-[1600px] mx-auto">
+    <section id="process" className="px-6 py-32 max-w-[1600px] mx-auto scroll-mt-24">
       <Reveal>
         <p className="text-xs uppercase tracking-widest text-kov-steel mb-4">Processus</p>
         <h2

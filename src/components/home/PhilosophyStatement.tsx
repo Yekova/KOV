@@ -3,7 +3,7 @@ import { PRINCIPLES } from "@/data/studioPrinciples";
 
 export function PhilosophyStatement() {
   return (
-    <section className="px-6 py-32 max-w-[1600px] mx-auto">
+    <section id="philosophy" className="px-6 py-32 max-w-[1600px] mx-auto scroll-mt-24">
       <Reveal variant="blur">
         <p className="text-xs uppercase tracking-widest text-kov-steel mb-4">Philosophie</p>
         <h2

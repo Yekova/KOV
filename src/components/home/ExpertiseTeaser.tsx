@@ -4,7 +4,7 @@ import { PILLARS } from "@/data/expertisePillars";
 
 export function ExpertiseTeaser() {
   return (
-    <section className="px-6 py-32 max-w-[1600px] mx-auto">
+    <section id="expertise" className="px-6 py-32 max-w-[1600px] mx-auto scroll-mt-24">
       <Reveal>
         <p className="text-xs uppercase tracking-widest text-kov-steel mb-4">Expertise</p>
         <h2

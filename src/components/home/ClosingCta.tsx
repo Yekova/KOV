@@ -1,9 +1,10 @@
 import { Button } from "@/components/ui/Button";
+import { KovCTA } from "@/components/ui/KovCTA";
 import { Reveal } from "@/components/ui/Reveal";
 
 export function ClosingCta() {
   return (
-    <section className="px-6 pt-32 max-w-[1600px] mx-auto">
+    <section id="contact" className="px-6 pt-32 max-w-[1600px] mx-auto scroll-mt-24">
       <Reveal variant="blur" className="border-t pt-20 flex flex-col items-start" style={{ borderColor: "var(--kov-border)" }}>
         <h2
           className="font-display text-kov-bone uppercase max-w-2xl"
@@ -20,9 +21,7 @@ export function ClosingCta() {
         </p>
 
         <div className="mt-10 flex flex-wrap items-center gap-6">
-          <Button href="/contact" variant="primary">
-            Parler de mon projet →
-          </Button>
+          <KovCTA href="/contact">Parler de mon projet</KovCTA>
           <Button href="/studio" variant="ghost">
             Explorer KOV →
           </Button>

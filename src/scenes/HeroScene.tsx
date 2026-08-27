@@ -1,7 +1,6 @@
-import Link from "next/link";
 import Image from "next/image";
 import { Reveal } from "@/components/ui/Reveal";
-import ShapeBlur from "@/components/ui/ShapeBlur";
+import { KovCTA } from "@/components/ui/KovCTA";
 import { Nav } from "@/components/navigation/Nav";
 import { HeroGlobalMenuButton } from "@/components/layout/HeroGlobalMenuButton";
 
@@ -76,32 +75,9 @@ export function HeroScene() {
           </Reveal>
 
           <Reveal variant="fade" delay={0.45}>
-            {/* group + group-hover drives the halo's reveal: ShapeBlur's own
-                canvas already tracks the cursor continuously (see its file
-                for why — a global pointermove listener, not a hover check),
-                so the discrete "hover" requested here is layered on top as a
-                plain CSS opacity transition rather than touching the effect
-                itself. */}
-            <div className="group relative mt-10 inline-block">
-              <div className="absolute -inset-2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <ShapeBlur
-                  variation={0}
-                  shapeSize={1.6}
-                  roundness={1.55}
-                  borderSize={0.07}
-                  circleSize={0.55}
-                  circleEdge={1}
-                  color="#E31E24"
-                />
-              </div>
-              <Link
-                href="/contact"
-                className="relative inline-flex items-center gap-2 px-6 py-3 border text-kov-bone text-xs uppercase tracking-widest group-hover:text-kov-red transition-colors"
-                style={{ ...GLASS_PILL_STYLE, borderRadius: "var(--radius-pill)" }}
-              >
-                Démarrer un projet →
-              </Link>
-            </div>
+            <KovCTA href="/contact" className="mt-10">
+              Démarrer un projet
+            </KovCTA>
           </Reveal>
         </div>
       </div>
