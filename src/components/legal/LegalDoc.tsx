@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
 import { Reveal } from "@/components/ui/Reveal";
 import { LegalNav } from "@/components/legal/LegalNav";
-import { gsap, initGsap } from "@/lib/motion";
+import { GridParallaxBackdrop } from "@/components/ui/GridParallaxBackdrop";
 
 interface LegalSection {
   id: string;
@@ -36,7 +36,6 @@ interface LegalDocProps {
 // anywhere until now).
 export function LegalDoc({ title, updated, intro, sections }: LegalDocProps) {
   const mainRef = useRef<HTMLElement>(null);
-  const bgRef = useRef<HTMLDivElement>(null);
   const [activeId, setActiveId] = useState<string | null>(sections[0]?.id ?? null);
   const [reducedMotion] = useState(
     () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -58,39 +57,9 @@ export function LegalDoc({ title, updated, intro, sections }: LegalDocProps) {
     return () => observer.disconnect();
   }, [sections]);
 
-  useEffect(() => {
-    if (reducedMotion) return;
-    const main = mainRef.current;
-    const bg = bgRef.current;
-    if (!main || !bg) return;
-    initGsap();
-
-    const ctx = gsap.context(() => {
-      gsap.to(bg, {
-        yPercent: 12,
-        ease: "none",
-        scrollTrigger: { trigger: main, start: "top top", end: "bottom bottom", scrub: true },
-      });
-    }, main);
-
-    return () => ctx.revert();
-  }, [reducedMotion]);
-
   return (
     <main ref={mainRef} className="relative min-h-screen px-6 pt-40 pb-32 overflow-hidden">
-      {!reducedMotion && (
-        <div
-          ref={bgRef}
-          aria-hidden="true"
-          className="absolute -inset-x-0 -top-1/4 -bottom-1/4 pointer-events-none"
-          style={{
-            backgroundImage: `linear-gradient(var(--kov-grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--kov-grid-line) 1px, transparent 1px)`,
-            backgroundSize: "64px 64px",
-            maskImage: "radial-gradient(ellipse 60% 50% at 50% 20%, black 0%, transparent 70%)",
-            WebkitMaskImage: "radial-gradient(ellipse 60% 50% at 50% 20%, black 0%, transparent 70%)",
-          }}
-        />
-      )}
+      {!reducedMotion && <GridParallaxBackdrop containerRef={mainRef} />}
 
       <div className="relative max-w-5xl mx-auto">
         <LegalNav />
