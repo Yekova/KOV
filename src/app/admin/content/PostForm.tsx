@@ -4,6 +4,7 @@ import { useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { GlassCard } from "@/components/ui/GlassCard";
+import { Select } from "@/components/ui/Select";
 import { createPost, updatePost } from "./actions";
 
 const FIELD_CLASS =
@@ -115,19 +116,13 @@ export function PostForm({
         </label>
         <label className="block text-xs text-kov-steel">
           Projet lié (facultatif, usage interne uniquement)
-          <select
+          <Select
             name="project_id"
             defaultValue={post?.projectId ?? ""}
+            options={[{ value: "", label: "— Aucun —" }, ...projects.map((p) => ({ value: p.id, label: p.label }))]}
             className={`${FIELD_CLASS} mt-1`}
             style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
-          >
-            <option value="">— Aucun —</option>
-            {projects.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.label}
-              </option>
-            ))}
-          </select>
+          />
         </label>
         <label className="block text-xs text-kov-steel">
           Nom du client affiché publiquement (facultatif)
@@ -141,15 +136,16 @@ export function PostForm({
         </label>
         <label className="block text-xs text-kov-steel">
           Statut
-          <select
+          <Select
             name="status"
             defaultValue={post?.status ?? "draft"}
+            options={[
+              { value: "draft", label: "Brouillon" },
+              { value: "published", label: "Publié" },
+            ]}
             className={`${FIELD_CLASS} mt-1`}
             style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
-          >
-            <option value="draft">Brouillon</option>
-            <option value="published">Publié</option>
-          </select>
+          />
         </label>
       </GlassCard>
 

@@ -37,17 +37,17 @@ body {
   color: var(--kov-white);
 }
 
-/* Scrollbar — thin, dark track with a muted thumb that turns red on
-   hover, matching the "red is the interactive signal" convention used
-   everywhere else on the site (nav links, buttons). Unprefixed/on :root
-   so it applies to every scrollable element (page, modals, overflow
-   lists), not just the window scrollbar. Firefox uses the scrollbar-color
-   shorthand; WebKit/Blink use the pseudo-elements — the 2px border on the
-   thumb matches the track color, which is what creates the thin floating
-   bar look (it isn't a real border, it's padding via a color match). */
+/* Scrollbar — red thumb on a black track, always visible (not just on
+   hover) — a clear two-tone red/black signature rather than a restrained
+   grey-until-interaction one. Unprefixed/on :root so it applies to every
+   scrollable element (page, modals, overflow lists), not just the window
+   scrollbar. Firefox uses the scrollbar-color shorthand; WebKit/Blink use
+   the pseudo-elements — the 2px border on the thumb matches the track
+   color, which is what creates the thin floating bar look (it isn't a
+   real border, it's padding via a color match). */
 :root {
   scrollbar-width: thin;
-  scrollbar-color: var(--kov-muted) var(--kov-carbon);
+  scrollbar-color: var(--kov-red) var(--kov-black);
 }
 
 ::-webkit-scrollbar {
@@ -56,22 +56,22 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--kov-carbon);
+  background: var(--kov-black);
   border-left: 1px solid var(--kov-border);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--kov-muted);
+  background: var(--kov-red);
   border-radius: var(--radius-sm);
-  border: 2px solid var(--kov-carbon);
+  border: 2px solid var(--kov-black);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--kov-red);
+  background: var(--kov-red-signal);
 }
 
 ::-webkit-scrollbar-corner {
-  background: var(--kov-carbon);
+  background: var(--kov-black);
 }
 
 /* Custom cursor — class added by CustomCursor.tsx only on fine-pointer,

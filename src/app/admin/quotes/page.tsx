@@ -117,6 +117,7 @@ export default async function AdminQuotesPage(props: PageProps<"/admin/quotes">)
                     clientId={quote.client_id}
                     totalCents={quote.total_cents}
                     invoiceId={quote.invoice_id}
+                    clients={clientOptions}
                   />
                 </div>
               );

@@ -2,6 +2,9 @@
 
 import { useState, useTransition } from "react";
 import { assignLead } from "./actions";
+import { Select } from "@/components/ui/Select";
+
+const UNASSIGNED = "";
 
 export function AssignLeadSelect({
   leadId,
@@ -17,11 +20,10 @@ export function AssignLeadSelect({
 
   return (
     <div>
-      <select
-        defaultValue={assignedTo ?? ""}
+      <Select
+        value={assignedTo ?? UNASSIGNED}
         disabled={isPending}
-        onChange={(event) => {
-          const next = event.target.value;
+        onChange={(next) => {
           setError(null);
           startTransition(async () => {
             try {
@@ -33,18 +35,10 @@ export function AssignLeadSelect({
             }
           });
         }}
-        className="bg-transparent border text-kov-bone text-xs px-3 py-2 focus:outline-none focus:border-kov-red disabled:opacity-50"
+        options={[{ value: UNASSIGNED, label: "— Non assigné —" }, ...admins.map((a) => ({ value: a.id, label: a.label }))]}
+        className="bg-transparent border text-kov-bone text-xs px-3 py-2 focus:outline-none disabled:opacity-50"
         style={{ borderRadius: "var(--radius-sm)", borderColor: "var(--kov-border)" }}
-      >
-        <option value="" className="bg-kov-black">
-          — Non assigné —
-        </option>
-        {admins.map((a) => (
-          <option key={a.id} value={a.id} className="bg-kov-black">
-            {a.label}
-          </option>
-        ))}
-      </select>
+      />
       {error && <p className="text-kov-red text-xs mt-1">{error}</p>}
     </div>
   );

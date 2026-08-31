@@ -14,6 +14,7 @@ import {
   createInvoice,
   replyToRequestThread,
 } from "../actions";
+import { Select } from "@/components/ui/Select";
 import { InvoiceKindFields } from "@/components/admin/invoices/InvoiceKindFields";
 import { InvoiceLineItemsField } from "./InvoiceLineItemsField";
 import { InvoiceRowActions } from "@/components/admin/invoices/InvoiceRowActions";
@@ -111,20 +112,14 @@ export default async function AdminClientDetailPage(props: PageProps<"/admin/cli
       <section>
         <h2 className="text-xs uppercase tracking-widest text-kov-steel mb-4">Chef de projet</h2>
         <form action={setAccountManagerWithId} className="flex items-center gap-4">
-          <select
+          <Select
             key={client.account_manager_id ?? "none"}
             name="account_manager_id"
             defaultValue={client.account_manager_id ?? ""}
+            options={[{ value: "", label: "— Aucun —" }, ...(admins ?? []).map((a) => ({ value: a.id, label: a.full_name || a.email }))]}
             className={`${FIELD_CLASS} max-w-xs`}
             style={{ borderColor: "var(--kov-border)" }}
-          >
-            <option value="">— Aucun —</option>
-            {(admins ?? []).map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.full_name || a.email}
-              </option>
-            ))}
-          </select>
+          />
           <Button type="submit" variant="secondary">
             Attribuer
           </Button>
@@ -151,34 +146,33 @@ export default async function AdminClientDetailPage(props: PageProps<"/admin/cli
                 </div>
                 <label className="text-xs text-kov-steel">
                   Statut
-                  <select name="status" defaultValue={project.status} className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }}>
-                    {PROJECT_STATUSES.map((s) => (
-                      <option key={s} value={s}>
-                        {PROJECT_STATUS_LABELS[s]}
-                      </option>
-                    ))}
-                  </select>
+                  <Select
+                    name="status"
+                    defaultValue={project.status}
+                    options={PROJECT_STATUSES.map((s) => ({ value: s, label: PROJECT_STATUS_LABELS[s] }))}
+                    className={FIELD_CLASS}
+                    style={{ borderColor: "var(--kov-border)" }}
+                  />
                 </label>
                 <label className="text-xs text-kov-steel">
                   Étape pipeline
-                  <select name="pipeline_stage" defaultValue={project.pipeline_stage} className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }}>
-                    {PIPELINE_STAGES.map((s) => (
-                      <option key={s} value={s}>
-                        {PIPELINE_STAGE_LABELS[s]}
-                      </option>
-                    ))}
-                  </select>
+                  <Select
+                    name="pipeline_stage"
+                    defaultValue={project.pipeline_stage}
+                    options={PIPELINE_STAGES.map((s) => ({ value: s, label: PIPELINE_STAGE_LABELS[s] }))}
+                    className={FIELD_CLASS}
+                    style={{ borderColor: "var(--kov-border)" }}
+                  />
                 </label>
                 <label className="text-xs text-kov-steel">
                   Chef de projet
-                  <select name="project_manager_id" defaultValue={project.project_manager_id ?? ""} className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }}>
-                    <option value="">— Aucun —</option>
-                    {(admins ?? []).map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.full_name || a.email}
-                      </option>
-                    ))}
-                  </select>
+                  <Select
+                    name="project_manager_id"
+                    defaultValue={project.project_manager_id ?? ""}
+                    options={[{ value: "", label: "— Aucun —" }, ...(admins ?? []).map((a) => ({ value: a.id, label: a.full_name || a.email }))]}
+                    className={FIELD_CLASS}
+                    style={{ borderColor: "var(--kov-border)" }}
+                  />
                 </label>
                 <label className="text-xs text-kov-steel">
                   Budget (€)
@@ -192,14 +186,13 @@ export default async function AdminClientDetailPage(props: PageProps<"/admin/cli
                 </label>
                 <label className="text-xs text-kov-steel">
                   Priorité
-                  <select name="priority" defaultValue={project.priority ?? ""} className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }}>
-                    <option value="">—</option>
-                    {PRIORITIES.map((p) => (
-                      <option key={p} value={p}>
-                        {PRIORITY_LABELS[p]}
-                      </option>
-                    ))}
-                  </select>
+                  <Select
+                    name="priority"
+                    defaultValue={project.priority ?? ""}
+                    options={[{ value: "", label: "—" }, ...PRIORITIES.map((p) => ({ value: p, label: PRIORITY_LABELS[p] }))]}
+                    className={FIELD_CLASS}
+                    style={{ borderColor: "var(--kov-border)" }}
+                  />
                 </label>
                 <label className="text-xs text-kov-steel">
                   Avancement %
@@ -257,34 +250,33 @@ export default async function AdminClientDetailPage(props: PageProps<"/admin/cli
           </label>
           <label className="text-xs text-kov-steel">
             Statut
-            <select name="status" defaultValue="in_progress" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }}>
-              {PROJECT_STATUSES.map((s) => (
-                <option key={s} value={s}>
-                  {PROJECT_STATUS_LABELS[s]}
-                </option>
-              ))}
-            </select>
+            <Select
+              name="status"
+              defaultValue="in_progress"
+              options={PROJECT_STATUSES.map((s) => ({ value: s, label: PROJECT_STATUS_LABELS[s] }))}
+              className={FIELD_CLASS}
+              style={{ borderColor: "var(--kov-border)" }}
+            />
           </label>
           <label className="text-xs text-kov-steel">
             Étape pipeline
-            <select name="pipeline_stage" defaultValue="discovery" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }}>
-              {PIPELINE_STAGES.map((s) => (
-                <option key={s} value={s}>
-                  {PIPELINE_STAGE_LABELS[s]}
-                </option>
-              ))}
-            </select>
+            <Select
+              name="pipeline_stage"
+              defaultValue="discovery"
+              options={PIPELINE_STAGES.map((s) => ({ value: s, label: PIPELINE_STAGE_LABELS[s] }))}
+              className={FIELD_CLASS}
+              style={{ borderColor: "var(--kov-border)" }}
+            />
           </label>
           <label className="text-xs text-kov-steel">
             Chef de projet
-            <select name="project_manager_id" defaultValue="" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }}>
-              <option value="">— Aucun —</option>
-              {(admins ?? []).map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.full_name || a.email}
-                </option>
-              ))}
-            </select>
+            <Select
+              name="project_manager_id"
+              defaultValue=""
+              options={[{ value: "", label: "— Aucun —" }, ...(admins ?? []).map((a) => ({ value: a.id, label: a.full_name || a.email }))]}
+              className={FIELD_CLASS}
+              style={{ borderColor: "var(--kov-border)" }}
+            />
           </label>
           <label className="text-xs text-kov-steel">
             Budget (€)
@@ -292,14 +284,13 @@ export default async function AdminClientDetailPage(props: PageProps<"/admin/cli
           </label>
           <label className="text-xs text-kov-steel">
             Priorité
-            <select name="priority" defaultValue="" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }}>
-              <option value="">—</option>
-              {PRIORITIES.map((p) => (
-                <option key={p} value={p}>
-                  {PRIORITY_LABELS[p]}
-                </option>
-              ))}
-            </select>
+            <Select
+              name="priority"
+              defaultValue=""
+              options={[{ value: "", label: "—" }, ...PRIORITIES.map((p) => ({ value: p, label: PRIORITY_LABELS[p] }))]}
+              className={FIELD_CLASS}
+              style={{ borderColor: "var(--kov-border)" }}
+            />
           </label>
           <label className="text-xs text-kov-steel">
             Échéance
@@ -349,14 +340,13 @@ export default async function AdminClientDetailPage(props: PageProps<"/admin/cli
           <input type="hidden" name="client_id" value={clientId} />
           <label className="text-xs text-kov-steel">
             Projet (facultatif)
-            <select name="project_id" defaultValue="" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }}>
-              <option value="">— Aucun —</option>
-              {projectRows.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
+            <Select
+              name="project_id"
+              defaultValue=""
+              options={[{ value: "", label: "— Aucun —" }, ...projectRows.map((p) => ({ value: p.id, label: p.name }))]}
+              className={FIELD_CLASS}
+              style={{ borderColor: "var(--kov-border)" }}
+            />
           </label>
           <label className="text-xs text-kov-steel">
             Fichier

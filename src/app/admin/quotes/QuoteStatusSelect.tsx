@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { updateQuoteStatus } from "./actions";
 import { QUOTE_STATUSES, QUOTE_STATUS_LABELS } from "@/lib/portal/status";
+import { Select } from "@/components/ui/Select";
 
 export function QuoteStatusSelect({ quoteId, status }: { quoteId: string; status: string }) {
   const [isPending, startTransition] = useTransition();
@@ -10,11 +11,10 @@ export function QuoteStatusSelect({ quoteId, status }: { quoteId: string; status
 
   return (
     <div>
-      <select
-        defaultValue={status}
+      <Select
+        value={status}
         disabled={isPending}
-        onChange={(event) => {
-          const next = event.target.value;
+        onChange={(next) => {
           setError(null);
           startTransition(async () => {
             try {
@@ -24,15 +24,10 @@ export function QuoteStatusSelect({ quoteId, status }: { quoteId: string; status
             }
           });
         }}
-        className="bg-transparent border text-kov-bone text-xs uppercase tracking-widest px-3 py-2 focus:outline-none focus:border-kov-red disabled:opacity-50"
+        options={QUOTE_STATUSES.map((value) => ({ value, label: QUOTE_STATUS_LABELS[value] }))}
+        className="bg-transparent border text-kov-bone text-xs uppercase tracking-widest px-3 py-2 focus:outline-none disabled:opacity-50"
         style={{ borderRadius: "var(--radius-sm)", borderColor: "var(--kov-border)" }}
-      >
-        {QUOTE_STATUSES.map((value) => (
-          <option key={value} value={value} className="bg-kov-black">
-            {QUOTE_STATUS_LABELS[value]}
-          </option>
-        ))}
-      </select>
+      />
       {error && <p className="text-kov-red text-xs mt-1">{error}</p>}
     </div>
   );

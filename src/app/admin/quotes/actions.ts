@@ -139,6 +139,41 @@ export async function updateQuoteStatus(quoteId: string, status: string) {
   revalidatePath("/admin/quotes");
 }
 
+// A quote created against a lead only (no client account at creation time —
+// client_id is nullable specifically for that case, see quotes' own
+// migration comment) can never qualify for "Convertir en facture"
+// (invoices.client_id is NOT NULL) until it's linked to a real client.
+// This is the only way to set client_id after creation — there was none
+// before, a real gap the quote→invoice conversion feature exposed.
+export async function linkQuoteToClient(quoteId: string, clientId: string) {
+  const admin = await requireAdmin();
+
+  const { data: quote } = await supabaseAdmin.from("quotes").select("client_id, reference").eq("id", quoteId).maybeSingle();
+  if (!quote) throw new Error("Devis introuvable.");
+  if (quote.client_id) throw new Error("Ce devis est déjà lié à un client.");
+
+  const { data: client } = await supabaseAdmin.from("profiles").select("id").eq("id", clientId).eq("role", "client").maybeSingle();
+  if (!client) throw new Error("Client introuvable.");
+
+  const { error } = await supabaseAdmin
+    .from("quotes")
+    .update({ client_id: clientId, updated_at: new Date().toISOString() })
+    .eq("id", quoteId);
+  if (error) throw new Error("La liaison au client a échoué.");
+
+  const actorName = await getActorDisplayName(admin.id);
+  await logActivity({
+    clientId,
+    type: "quote",
+    title: "Devis lié à votre compte",
+    adminTitle: `${actorName} a lié le devis ${quote.reference} à un client`,
+    actorId: admin.id,
+    description: `Devis ${quote.reference}`,
+  });
+
+  revalidateClient(clientId);
+}
+
 export async function deleteQuote(quoteId: string) {
   const admin = await requireAdmin();
 

@@ -3,9 +3,7 @@
 import { useState, useTransition } from "react";
 import { updateInvoiceStatus } from "@/app/admin/clients/actions";
 import { INVOICE_STATUSES, INVOICE_STATUS_LABELS, type InvoiceStatus } from "@/lib/portal/status";
-
-const FIELD_CLASS =
-  "bg-transparent border px-3 py-2 text-kov-bone text-sm focus:outline-none focus:border-kov-red transition-colors disabled:opacity-50";
+import { Select } from "@/components/ui/Select";
 
 export function InvoiceStatusSelect({ invoiceId, status }: { invoiceId: string; status: string }) {
   const [isPending, startTransition] = useTransition();
@@ -13,31 +11,25 @@ export function InvoiceStatusSelect({ invoiceId, status }: { invoiceId: string; 
 
   return (
     <div>
-      <select
-        defaultValue={status}
+      <Select
+        value={status}
         disabled={isPending}
-        onChange={(event) => {
-          const next = event.target.value as InvoiceStatus;
+        onChange={(next) => {
           setError(null);
           startTransition(async () => {
             try {
               const formData = new FormData();
-              formData.set("status", next);
+              formData.set("status", next as InvoiceStatus);
               await updateInvoiceStatus(invoiceId, formData);
             } catch (err) {
               setError(err instanceof Error ? err.message : "La mise à jour a échoué.");
             }
           });
         }}
-        className={`${FIELD_CLASS} w-40`}
+        options={INVOICE_STATUSES.map((s) => ({ value: s, label: INVOICE_STATUS_LABELS[s] }))}
+        className="bg-transparent border px-3 py-2 text-kov-bone text-sm focus:outline-none disabled:opacity-50 w-40"
         style={{ borderColor: "var(--kov-border)" }}
-      >
-        {INVOICE_STATUSES.map((s) => (
-          <option key={s} value={s}>
-            {INVOICE_STATUS_LABELS[s]}
-          </option>
-        ))}
-      </select>
+      />
       {error && <p className="text-kov-red text-xs mt-1">{error}</p>}
     </div>
   );

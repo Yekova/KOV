@@ -2,8 +2,9 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { sendQuoteEmail, downloadQuotePdf, getQuotePdfUrl, deleteQuote, convertQuoteToInvoice } from "./actions";
+import { sendQuoteEmail, downloadQuotePdf, getQuotePdfUrl, deleteQuote, convertQuoteToInvoice, linkQuoteToClient } from "./actions";
 import { Button } from "@/components/ui/Button";
+import { Select } from "@/components/ui/Select";
 import { InvoiceKindFields } from "@/components/admin/invoices/InvoiceKindFields";
 
 const FIELD_CLASS = "bg-transparent border px-3 py-2 text-kov-bone text-sm focus:outline-none focus:border-kov-red transition-colors";
@@ -69,6 +70,44 @@ function ConvertToInvoiceForm({ quoteId, reference, totalCents, onDone }: { quot
   );
 }
 
+function LinkClientInline({ quoteId, clients }: { quoteId: string; clients: { id: string; label: string }[] }) {
+  const [clientId, setClientId] = useState("");
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  return (
+    <div className="flex items-center gap-2">
+      <Select
+        value={clientId}
+        onChange={setClientId}
+        placeholder="Lier un client…"
+        options={clients.map((c) => ({ value: c.id, label: c.label }))}
+        className="bg-transparent border text-kov-bone text-xs px-3 py-2 focus:outline-none disabled:opacity-50 w-44"
+        style={{ borderRadius: "var(--radius-sm)", borderColor: "var(--kov-border)" }}
+        disabled={isPending}
+      />
+      <Button
+        type="button"
+        variant="ghost"
+        disabled={isPending || !clientId}
+        onClick={() => {
+          setError(null);
+          startTransition(async () => {
+            try {
+              await linkQuoteToClient(quoteId, clientId);
+            } catch (err) {
+              setError(err instanceof Error ? err.message : "La liaison a échoué.");
+            }
+          });
+        }}
+      >
+        {isPending ? "…" : "Lier"}
+      </Button>
+      {error && <span className="text-kov-red text-xs">{error}</span>}
+    </div>
+  );
+}
+
 export function QuoteRowActions({
   quoteId,
   hasEmail,
@@ -77,6 +116,7 @@ export function QuoteRowActions({
   clientId,
   totalCents,
   invoiceId,
+  clients,
 }: {
   quoteId: string;
   hasEmail: boolean;
@@ -85,6 +125,7 @@ export function QuoteRowActions({
   clientId: string | null;
   totalCents: number;
   invoiceId: string | null;
+  clients: { id: string; label: string }[];
 }) {
   const [isSending, startSending] = useTransition();
   const [isViewing, startViewing] = useTransition();
@@ -138,8 +179,8 @@ export function QuoteRowActions({
         {isSending ? "Envoi…" : sent ? "Envoyé ✓" : "Envoyer par email"}
       </Button>
 
-      {status === "accepted" &&
-        (invoiceId ? (
+      {status === "accepted" ? (
+        invoiceId ? (
           clientId && (
             <Link href={`/admin/clients/${clientId}`} className="text-kov-red text-xs uppercase tracking-widest hover:text-kov-red-signal transition-colors">
               → Facture créée
@@ -150,8 +191,11 @@ export function QuoteRowActions({
             {converting ? "Annuler la conversion" : "Convertir en facture"}
           </Button>
         ) : (
-          <span className="text-kov-steel text-xs">Lier à un client pour facturer</span>
-        ))}
+          <LinkClientInline quoteId={quoteId} clients={clients} />
+        )
+      ) : (
+        <span className="text-kov-steel text-xs">Passez ce devis en « Accepté » pour pouvoir le facturer</span>
+      )}
 
       {status !== "accepted" && (
         <Button

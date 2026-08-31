@@ -4,6 +4,7 @@ import { useRef, useState, useTransition, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/Button";
 import { GlassCard } from "@/components/ui/GlassCard";
+import { Select } from "@/components/ui/Select";
 import { createLead } from "@/app/admin/leads/actions";
 import { createProject } from "@/app/admin/clients/actions";
 import { createTask } from "@/app/admin/projects/actions";
@@ -161,35 +162,33 @@ export function QuickActionMenu({ clients, projects, admins }: QuickActionMenuPr
             {activeModal === "project" && (
               <form onSubmit={handleSubmit} className="space-y-4">
                 <p className="font-display text-kov-bone text-lg uppercase mb-2">Nouveau projet</p>
-                <select name="client_id" required defaultValue="" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }}>
-                  <option value="" disabled>
-                    Choisir un client…
-                  </option>
-                  {clients.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.label}
-                    </option>
-                  ))}
-                </select>
+                <Select
+                  name="client_id"
+                  defaultValue=""
+                  placeholder="Choisir un client…"
+                  options={clients.map((c) => ({ value: c.id, label: c.label }))}
+                  className={FIELD_CLASS}
+                  style={{ borderColor: "var(--kov-border)" }}
+                />
                 <input name="name" placeholder="Nom du projet" required className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
                 <input name="category" placeholder="Catégorie" required className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
-                <select name="project_manager_id" defaultValue="" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }}>
-                  <option value="">Chef de projet (facultatif)</option>
-                  {admins.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.label}
-                    </option>
-                  ))}
-                </select>
+                <Select
+                  name="project_manager_id"
+                  defaultValue=""
+                  placeholder="Chef de projet (facultatif)"
+                  options={admins.map((a) => ({ value: a.id, label: a.label }))}
+                  className={FIELD_CLASS}
+                  style={{ borderColor: "var(--kov-border)" }}
+                />
                 <input name="budget_eur" placeholder="Budget € (facultatif)" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
-                <select name="priority" defaultValue="" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }}>
-                  <option value="">Priorité (facultatif)</option>
-                  {PRIORITIES.map((p) => (
-                    <option key={p} value={p}>
-                      {PRIORITY_LABELS[p]}
-                    </option>
-                  ))}
-                </select>
+                <Select
+                  name="priority"
+                  defaultValue=""
+                  placeholder="Priorité (facultatif)"
+                  options={PRIORITIES.map((p) => ({ value: p, label: PRIORITY_LABELS[p] }))}
+                  className={FIELD_CLASS}
+                  style={{ borderColor: "var(--kov-border)" }}
+                />
                 {error && <p className="text-kov-red text-xs">{error}</p>}
                 <Button type="submit" variant="primary" className="w-full justify-center" disabled={isPending}>
                   {isPending ? "Création…" : "Créer le projet"}
@@ -200,34 +199,32 @@ export function QuickActionMenu({ clients, projects, admins }: QuickActionMenuPr
             {activeModal === "task" && (
               <form onSubmit={handleSubmit} className="space-y-4">
                 <p className="font-display text-kov-bone text-lg uppercase mb-2">Nouvelle tâche</p>
-                <select name="project_id" required defaultValue="" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }}>
-                  <option value="" disabled>
-                    Choisir un projet…
-                  </option>
-                  {projects.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.label}
-                    </option>
-                  ))}
-                </select>
+                <Select
+                  name="project_id"
+                  defaultValue=""
+                  placeholder="Choisir un projet…"
+                  options={projects.map((p) => ({ value: p.id, label: p.label }))}
+                  className={FIELD_CLASS}
+                  style={{ borderColor: "var(--kov-border)" }}
+                />
                 <input name="title" placeholder="Titre de la tâche" required className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
                 <textarea name="description" placeholder="Description (facultatif)" rows={2} className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
-                <select name="assigned_to" defaultValue="" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }}>
-                  <option value="">Assigné à (facultatif)</option>
-                  {admins.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.label}
-                    </option>
-                  ))}
-                </select>
-                <select name="priority" defaultValue="" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }}>
-                  <option value="">Priorité (facultatif)</option>
-                  {PRIORITIES.map((p) => (
-                    <option key={p} value={p}>
-                      {PRIORITY_LABELS[p]}
-                    </option>
-                  ))}
-                </select>
+                <Select
+                  name="assigned_to"
+                  defaultValue=""
+                  placeholder="Assigné à (facultatif)"
+                  options={admins.map((a) => ({ value: a.id, label: a.label }))}
+                  className={FIELD_CLASS}
+                  style={{ borderColor: "var(--kov-border)" }}
+                />
+                <Select
+                  name="priority"
+                  defaultValue=""
+                  placeholder="Priorité (facultatif)"
+                  options={PRIORITIES.map((p) => ({ value: p, label: PRIORITY_LABELS[p] }))}
+                  className={FIELD_CLASS}
+                  style={{ borderColor: "var(--kov-border)" }}
+                />
                 <input name="due_date" type="date" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
                 {error && <p className="text-kov-red text-xs">{error}</p>}
                 <Button type="submit" variant="primary" className="w-full justify-center" disabled={isPending}>

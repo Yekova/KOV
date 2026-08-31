@@ -3,6 +3,7 @@
 import { useState, useTransition, type FormEvent } from "react";
 import { createQuote } from "./actions";
 import { Button } from "@/components/ui/Button";
+import { Select } from "@/components/ui/Select";
 
 const FIELD_CLASS =
   "w-full bg-transparent border px-3 py-2 text-kov-bone text-sm focus:outline-none focus:border-kov-red transition-colors";
@@ -75,25 +76,23 @@ export function NewQuoteForm({
         </label>
         <label className="text-xs text-kov-steel">
           Client existant (facultatif)
-          <select name="client_id" defaultValue="" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }}>
-            <option value="">— Aucun —</option>
-            {clients.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.label}
-              </option>
-            ))}
-          </select>
+          <Select
+            name="client_id"
+            defaultValue=""
+            options={[{ value: "", label: "— Aucun —" }, ...clients.map((c) => ({ value: c.id, label: c.label }))]}
+            className={FIELD_CLASS}
+            style={{ borderColor: "var(--kov-border)" }}
+          />
         </label>
         <label className="text-xs text-kov-steel">
           Lead (facultatif)
-          <select name="lead_id" defaultValue="" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }}>
-            <option value="">— Aucun —</option>
-            {leads.map((l) => (
-              <option key={l.id} value={l.id}>
-                {l.label}
-              </option>
-            ))}
-          </select>
+          <Select
+            name="lead_id"
+            defaultValue=""
+            options={[{ value: "", label: "— Aucun —" }, ...leads.map((l) => ({ value: l.id, label: l.label }))]}
+            className={FIELD_CLASS}
+            style={{ borderColor: "var(--kov-border)" }}
+          />
         </label>
         <label className="text-xs text-kov-steel">
           Valable jusqu&apos;au

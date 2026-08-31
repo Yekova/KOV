@@ -1,9 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import { Select } from "@/components/ui/Select";
 
 const FIELD_CLASS =
   "w-full bg-transparent border px-3 py-2 text-kov-bone text-sm focus:outline-none focus:border-kov-red transition-colors";
+
+const KIND_OPTIONS = [
+  { value: "full", label: "Facture unique" },
+  { value: "deposit", label: "Facture d'acompte" },
+  { value: "balance", label: "Facture de solde" },
+];
 
 export function InvoiceKindFields() {
   const [kind, setKind] = useState("full");
@@ -12,17 +19,7 @@ export function InvoiceKindFields() {
     <>
       <label className="text-xs text-kov-steel">
         Type
-        <select
-          name="kind"
-          value={kind}
-          onChange={(e) => setKind(e.target.value)}
-          className={FIELD_CLASS}
-          style={{ borderColor: "var(--kov-border)" }}
-        >
-          <option value="full">Facture unique</option>
-          <option value="deposit">Facture d&apos;acompte</option>
-          <option value="balance">Facture de solde</option>
-        </select>
+        <Select name="kind" value={kind} onChange={setKind} options={KIND_OPTIONS} className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
       </label>
       {kind !== "full" && (
         <>
