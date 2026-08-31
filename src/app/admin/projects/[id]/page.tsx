@@ -15,6 +15,15 @@ import {
   deleteProjectDocument,
 } from "./actions";
 import { FolderCard } from "./FolderCard";
+import { ProjectPhasesPanel } from "@/components/admin/projects/ProjectPhasesPanel";
+import { ProjectTasksPanel } from "@/components/admin/projects/ProjectTasksPanel";
+import type { PickerOption, TaskRow } from "@/components/admin/tasks/types";
+
+const TABS = [
+  { id: "documents", label: "Documents" },
+  { id: "tasks", label: "Tâches" },
+  { id: "phases", label: "Phases" },
+] as const;
 
 export const metadata: Metadata = {
   title: "Projet — Admin KOV",
@@ -45,6 +54,8 @@ export default async function AdminProjectDetailPage(props: PageProps<"/admin/pr
   const searchParams = await props.searchParams;
   const folderParam = searchParams.folder;
   const currentFolderId = typeof folderParam === "string" && folderParam ? folderParam : null;
+  const tabParam = searchParams.tab;
+  const tab = tabParam === "tasks" ? "tasks" : tabParam === "phases" ? "phases" : "documents";
 
   const { data: project } = await supabaseAdmin
     .from("projects")
@@ -86,6 +97,60 @@ export default async function AdminProjectDetailPage(props: PageProps<"/admin/pr
   const folderRows = folders ?? [];
   const documentRows = documents ?? [];
 
+  const [{ data: tasks }, { data: phases }, { data: admins }] = await Promise.all([
+    supabaseAdmin
+      .from("project_tasks")
+      .select(
+        "id, title, description, status, priority, due_date, project_id, assigned_to, phase_id, position, updated_at, validation_status"
+      )
+      .eq("project_id", projectId)
+      .order("position"),
+    supabaseAdmin.from("project_phases").select("id, project_id, name, status, position").eq("project_id", projectId).order("position"),
+    supabaseAdmin.from("profiles").select("id, full_name, email").eq("role", "admin").is("archived_at", null).order("full_name"),
+  ]);
+
+  const taskIds = (tasks ?? []).map((t) => t.id);
+  const { data: checklistItems } = taskIds.length
+    ? await supabaseAdmin.from("task_checklist_items").select("task_id, is_done").in("task_id", taskIds)
+    : { data: [] as { task_id: string; is_done: boolean }[] };
+
+  const adminNameById = new Map((admins ?? []).map((a) => [a.id, a.full_name || a.email]));
+  const phaseNameById = new Map((phases ?? []).map((p) => [p.id, p.name]));
+  const checklistByTask = new Map<string, { done: number; total: number }>();
+  for (const item of checklistItems ?? []) {
+    const entry = checklistByTask.get(item.task_id) ?? { done: 0, total: 0 };
+    entry.total += 1;
+    if (item.is_done) entry.done += 1;
+    checklistByTask.set(item.task_id, entry);
+  }
+
+  const taskRows: TaskRow[] = (tasks ?? []).map((t) => {
+    const checklist = checklistByTask.get(t.id);
+    return {
+      id: t.id,
+      title: t.title,
+      description: t.description,
+      status: t.status,
+      priority: t.priority,
+      dueDate: t.due_date,
+      projectId: t.project_id,
+      projectName: project.name,
+      assignedTo: t.assigned_to,
+      assigneeName: t.assigned_to ? adminNameById.get(t.assigned_to) ?? null : null,
+      phaseId: t.phase_id,
+      phaseName: t.phase_id ? phaseNameById.get(t.phase_id) ?? null : null,
+      position: t.position,
+      checklistDone: checklist?.done ?? 0,
+      checklistTotal: checklist?.total ?? 0,
+      updatedAt: t.updated_at,
+      validationStatus: t.validation_status,
+    };
+  });
+
+  const adminOptions: PickerOption[] = (admins ?? []).map((a) => ({ id: a.id, label: a.full_name || a.email }));
+  const phaseOptions: PickerOption[] = (phases ?? []).map((p) => ({ id: p.id, label: p.name }));
+  const phaseRows = (phases ?? []).map((p) => ({ id: p.id, name: p.name, status: p.status }));
+
   const gridItems: DocumentGridItem[] = await Promise.all(
     documentRows.map(async (doc) => {
       const isImage = doc.mime_type?.startsWith("image/") ?? false;
@@ -116,6 +181,36 @@ export default async function AdminProjectDetailPage(props: PageProps<"/admin/pr
         <p className="text-kov-steel text-sm mt-1">{project.category}</p>
       </div>
 
+      <div className="flex items-center gap-6 border-b" style={{ borderColor: "var(--kov-border)" }}>
+        {TABS.map((t) => (
+          <Link
+            key={t.id}
+            href={t.id === "documents" ? `/admin/projects/${projectId}` : `/admin/projects/${projectId}?tab=${t.id}`}
+            className="text-xs uppercase tracking-widest pb-3 transition-colors"
+            style={{
+              color: tab === t.id ? "var(--kov-red)" : "var(--kov-steel)",
+              borderBottom: tab === t.id ? "2px solid var(--kov-red)" : "2px solid transparent",
+              marginBottom: "-1px",
+            }}
+          >
+            {t.label}
+          </Link>
+        ))}
+      </div>
+
+      {tab === "tasks" && (
+        <section>
+          <ProjectTasksPanel projectId={projectId} tasks={taskRows} admins={adminOptions} phases={phaseOptions} />
+        </section>
+      )}
+
+      {tab === "phases" && (
+        <section>
+          <ProjectPhasesPanel projectId={projectId} phases={phaseRows} />
+        </section>
+      )}
+
+      {tab === "documents" && (
       <section>
         <h2 className="text-xs uppercase tracking-widest text-kov-steel mb-4">Documents (GED)</h2>
 
@@ -174,6 +269,7 @@ export default async function AdminProjectDetailPage(props: PageProps<"/admin/pr
           </form>
         </div>
       </section>
+      )}
     </main>
   );
 }

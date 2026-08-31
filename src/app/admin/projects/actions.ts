@@ -15,6 +15,7 @@ export async function createTask(formData: FormData) {
   const assignedTo = formData.get("assigned_to");
   const priority = formData.get("priority");
   const dueDate = formData.get("due_date");
+  const phaseId = formData.get("phase_id");
 
   if (typeof projectId !== "string" || !projectId) throw new Error("Projet requis.");
   if (typeof title !== "string" || !title.trim()) throw new Error("Titre requis.");
@@ -31,6 +32,8 @@ export async function createTask(formData: FormData) {
     assigned_to: typeof assignedTo === "string" && assignedTo ? assignedTo : null,
     priority: priorityValue,
     due_date: typeof dueDate === "string" && dueDate ? dueDate : null,
+    phase_id: typeof phaseId === "string" && phaseId ? phaseId : null,
+    created_by: admin.id,
   });
 
   if (error) throw new Error("La création de la tâche a échoué.");
@@ -39,7 +42,7 @@ export async function createTask(formData: FormData) {
   await logActivity({
     clientId: project.client_id,
     projectId,
-    type: "milestone",
+    type: "task",
     title: `Nouvelle tâche : ${title.trim()}`,
     adminTitle: `${actorName} a créé la tâche « ${title.trim()} » sur ${project.name}`,
     actorId: admin.id,
@@ -47,6 +50,7 @@ export async function createTask(formData: FormData) {
 
   revalidatePath("/admin");
   revalidatePath("/admin/projects");
+  revalidatePath("/admin/tasks");
 }
 
 export async function updateTaskStatus(taskId: string, status: string) {
@@ -78,7 +82,7 @@ export async function updateTaskStatus(taskId: string, status: string) {
     await logActivity({
       clientId: project.client_id,
       projectId: existing.project_id,
-      type: "milestone",
+      type: "task",
       title: `Tâche mise à jour : ${existing.title}`,
       adminTitle: `${actorName} a changé le statut de « ${existing.title} » sur ${project.name}`,
       actorId: admin.id,

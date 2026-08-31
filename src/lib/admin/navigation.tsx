@@ -44,6 +44,18 @@ export const adminNavigation: AdminNavItem[] = [
     icon: <path d="M4 6a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6z" />,
   },
   {
+    id: "tasks",
+    label: "Tâches",
+    href: "/admin/tasks",
+    icon: (
+      <>
+        <rect x="4" y="4" width="16" height="16" rx="2" />
+        <path d="M8.5 12.5l2.2 2.2 4.8-4.8" />
+      </>
+    ),
+    badgeSource: "tasks",
+  },
+  {
     id: "leads",
     label: "Leads",
     href: "/admin/leads",
@@ -94,7 +106,6 @@ export const adminNavigation: AdminNavItem[] = [
         <path d="M5 20c0-4 3-6.5 7-6.5s7 2.5 7 6.5" />
       </>
     ),
-    badgeSource: "tasks",
   },
   {
     id: "analytics",

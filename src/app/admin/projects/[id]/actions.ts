@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { uploadClientFile, createSignedDownloadUrl, deleteClientFile } from "@/lib/portal/storage";
 import { logActivity, getActorDisplayName } from "@/lib/activity";
+import { isProjectPhaseStatus } from "@/lib/admin/status";
 
 export async function createDocumentFolder(formData: FormData) {
   const admin = await requireAdmin();
@@ -172,4 +173,61 @@ export async function downloadProjectDocument(formData: FormData) {
   if (!url) throw new Error("Le téléchargement a échoué.");
 
   redirect(url);
+}
+
+export async function createPhase(projectId: string, name: string) {
+  await requireAdmin();
+  if (!name.trim()) throw new Error("Nom de phase requis.");
+
+  const { count } = await supabaseAdmin.from("project_phases").select("id", { count: "exact", head: true }).eq("project_id", projectId);
+  const { error } = await supabaseAdmin.from("project_phases").insert({ project_id: projectId, name: name.trim(), position: count ?? 0 });
+  if (error) throw new Error("La création de la phase a échoué.");
+
+  revalidatePath(`/admin/projects/${projectId}`);
+}
+
+// Convenience insert of KOV's own example phase set (see KOV_DEFAULT_PHASES)
+// — not an auto-seed, only fires when the admin clicks the button. Appends
+// after whatever phases already exist rather than replacing them.
+export async function addDefaultPhases(projectId: string, names: readonly string[]) {
+  await requireAdmin();
+
+  const { count } = await supabaseAdmin.from("project_phases").select("id", { count: "exact", head: true }).eq("project_id", projectId);
+  const startPosition = count ?? 0;
+
+  const { error } = await supabaseAdmin
+    .from("project_phases")
+    .insert(names.map((name, index) => ({ project_id: projectId, name, position: startPosition + index })));
+  if (error) throw new Error("L'ajout des phases a échoué.");
+
+  revalidatePath(`/admin/projects/${projectId}`);
+}
+
+export async function renamePhase(phaseId: string, projectId: string, name: string) {
+  await requireAdmin();
+  if (!name.trim()) throw new Error("Nom de phase requis.");
+
+  const { error } = await supabaseAdmin.from("project_phases").update({ name: name.trim(), updated_at: new Date().toISOString() }).eq("id", phaseId);
+  if (error) throw new Error("Le renommage a échoué.");
+
+  revalidatePath(`/admin/projects/${projectId}`);
+}
+
+export async function updatePhaseStatus(phaseId: string, projectId: string, status: string) {
+  await requireAdmin();
+  if (!isProjectPhaseStatus(status)) throw new Error("Statut invalide.");
+
+  const { error } = await supabaseAdmin.from("project_phases").update({ status, updated_at: new Date().toISOString() }).eq("id", phaseId);
+  if (error) throw new Error("La mise à jour a échoué.");
+
+  revalidatePath(`/admin/projects/${projectId}`);
+}
+
+export async function deletePhase(phaseId: string, projectId: string) {
+  await requireAdmin();
+
+  const { error } = await supabaseAdmin.from("project_phases").delete().eq("id", phaseId);
+  if (error) throw new Error("La suppression a échoué.");
+
+  revalidatePath(`/admin/projects/${projectId}`);
 }

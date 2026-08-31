@@ -5,6 +5,7 @@ import { SidebarBadges } from "@/components/admin/SidebarBadges";
 import { AdminTopbarData } from "@/components/admin/AdminTopbarData";
 import { AdminTopbarSkeleton } from "@/components/admin/AdminTopbarSkeleton";
 import { MobileNavProvider } from "@/components/ui/MobileNavContext";
+import { TaskPanelProvider } from "@/components/admin/tasks/TaskPanelContext";
 
 // requireAdmin() reads cookies(), which makes this whole layout dynamic —
 // per Next.js's own docs, a loading.tsx in a page below this layout cannot
@@ -27,7 +28,9 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
           <Suspense fallback={<AdminTopbarSkeleton />}>
             <AdminTopbarData userId={user.id} />
           </Suspense>
-          <div className="flex-1">{children}</div>
+          <div className="flex-1">
+            <TaskPanelProvider>{children}</TaskPanelProvider>
+          </div>
         </div>
       </div>
     </MobileNavProvider>
