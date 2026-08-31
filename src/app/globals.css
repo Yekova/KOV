@@ -37,6 +37,43 @@ body {
   color: var(--kov-white);
 }
 
+/* Scrollbar — thin, dark track with a muted thumb that turns red on
+   hover, matching the "red is the interactive signal" convention used
+   everywhere else on the site (nav links, buttons). Unprefixed/on :root
+   so it applies to every scrollable element (page, modals, overflow
+   lists), not just the window scrollbar. Firefox uses the scrollbar-color
+   shorthand; WebKit/Blink use the pseudo-elements — the 2px border on the
+   thumb matches the track color, which is what creates the thin floating
+   bar look (it isn't a real border, it's padding via a color match). */
+:root {
+  scrollbar-width: thin;
+  scrollbar-color: var(--kov-muted) var(--kov-carbon);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--kov-carbon);
+  border-left: 1px solid var(--kov-border);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--kov-muted);
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--kov-carbon);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--kov-red);
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--kov-carbon);
+}
+
 /* Custom cursor — class added by CustomCursor.tsx only on fine-pointer,
    motion-ok devices, so there's no hydration mismatch (server always
    renders without it) and no risk of hiding the cursor on touch. */
