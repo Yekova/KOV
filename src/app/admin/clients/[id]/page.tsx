@@ -14,7 +14,7 @@ import {
   createInvoice,
   replyToRequestThread,
 } from "../actions";
-import { InvoiceKindFields } from "./InvoiceKindFields";
+import { InvoiceKindFields } from "@/components/admin/invoices/InvoiceKindFields";
 import { InvoiceLineItemsField } from "./InvoiceLineItemsField";
 import { InvoiceRowActions } from "@/components/admin/invoices/InvoiceRowActions";
 import { InvoiceStatusSelect } from "@/components/admin/invoices/InvoiceStatusSelect";

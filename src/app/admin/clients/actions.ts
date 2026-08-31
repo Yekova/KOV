@@ -4,7 +4,14 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { isProjectStatus, isInvoiceStatus, PROJECT_STATUS_LABELS, type ProjectStatus } from "@/lib/portal/status";
+import {
+  isProjectStatus,
+  isInvoiceStatus,
+  isInvoiceKind,
+  PROJECT_STATUS_LABELS,
+  type ProjectStatus,
+  type InvoiceKind,
+} from "@/lib/portal/status";
 import { uploadClientFile, uploadClientFileBuffer, createSignedDownloadUrl, deleteClientFile } from "@/lib/portal/storage";
 import { logActivity, getActorDisplayName } from "@/lib/activity";
 import { isPipelineStage, isPriority } from "@/lib/admin/status";
@@ -12,23 +19,7 @@ import { generateInvoicePdfBuffer } from "@/lib/billing/generatePdf";
 import { sendEmail } from "@/lib/email/brevo";
 import { invoiceEmailHtml, invoiceEmailSubject } from "@/lib/email/invoiceEmail";
 import { toDbLineItems, fromDbLineItems, parseLineItemsFromForm } from "@/lib/billing/quoteLineItems";
-
-const INVOICE_KINDS = ["full", "deposit", "balance"] as const;
-type InvoiceKind = (typeof INVOICE_KINDS)[number];
-function isInvoiceKind(value: string): value is InvoiceKind {
-  return (INVOICE_KINDS as readonly string[]).includes(value);
-}
-
-function revalidateClient(clientId: string) {
-  revalidatePath(`/admin/clients/${clientId}`);
-  revalidatePath("/admin");
-  revalidatePath("/admin/projects");
-  revalidatePath("/client");
-  revalidatePath("/client/projects");
-  revalidatePath("/client/documents");
-  revalidatePath("/client/invoices");
-  revalidatePath("/client/requests");
-}
+import { revalidateClient } from "@/lib/revalidateClient";
 
 export async function archiveClient(clientId: string) {
   await requireAdmin();

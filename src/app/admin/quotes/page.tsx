@@ -114,6 +114,9 @@ export default async function AdminQuotesPage(props: PageProps<"/admin/quotes">)
                     hasEmail={Boolean(quote.recipient_email)}
                     status={quote.status}
                     reference={quote.reference}
+                    clientId={quote.client_id}
+                    totalCents={quote.total_cents}
+                    invoiceId={quote.invoice_id}
                   />
                 </div>
               );

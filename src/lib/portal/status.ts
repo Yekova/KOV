@@ -12,6 +12,13 @@ export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
   on_hold: "En attente",
 };
 
+export const INVOICE_KINDS = ["full", "deposit", "balance"] as const;
+export type InvoiceKind = (typeof INVOICE_KINDS)[number];
+
+export function isInvoiceKind(value: string): value is InvoiceKind {
+  return (INVOICE_KINDS as readonly string[]).includes(value);
+}
+
 export const INVOICE_STATUSES = ["draft", "sent", "paid", "overdue", "cancelled"] as const;
 export type InvoiceStatus = (typeof INVOICE_STATUSES)[number];
 

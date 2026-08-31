@@ -9,13 +9,24 @@ import { logActivity, getActorDisplayName } from "@/lib/activity";
 import { generateQuotePdfBuffer } from "@/lib/billing/generatePdf";
 import { sendEmail } from "@/lib/email/brevo";
 import { quoteEmailHtml, quoteEmailSubject } from "@/lib/email/quoteEmail";
-import { isQuoteStatus, QUOTE_STATUS_LABELS } from "@/lib/portal/status";
-import { toDbLineItems, parseLineItemsFromForm } from "@/lib/billing/quoteLineItems";
+import { isQuoteStatus, QUOTE_STATUS_LABELS, isInvoiceKind, type InvoiceKind } from "@/lib/portal/status";
+import { toDbLineItems, fromDbLineItems, parseLineItemsFromForm } from "@/lib/billing/quoteLineItems";
+import { generateInvoicePdfBuffer } from "@/lib/billing/generatePdf";
+import { revalidateClient } from "@/lib/revalidateClient";
 
 function parseEuroToCents(value: FormDataEntryValue | null): number {
   if (typeof value !== "string" || !value.trim()) return 0;
   const cents = Math.round(parseFloat(value.replace(",", ".")) * 100);
   return Number.isFinite(cents) && cents >= 0 ? cents : 0;
+}
+
+// Distinct from parseEuroToCents above: that one treats empty/invalid as 0
+// (fine for an optional discount), this treats it as invalid — the
+// conversion form's amount is required, same as the standalone invoice form.
+function parseRequiredEuroToCents(value: FormDataEntryValue | null): number | null {
+  if (typeof value !== "string" || !value.trim()) return null;
+  const cents = Math.round(parseFloat(value.replace(",", ".")) * 100);
+  return Number.isFinite(cents) && cents >= 0 ? cents : null;
 }
 
 export async function createQuote(formData: FormData) {
@@ -240,4 +251,104 @@ export async function getQuotePdfUrl(quoteId: string): Promise<string> {
   if (!url) throw new Error("Aperçu indisponible.");
 
   return url;
+}
+
+// Turns an accepted quote into a real invoice — a fresh PDF generated from
+// the quote's own line items, not a reuse of the devis PDF (different
+// document, different title). Requires the quote to already be linked to a
+// client account: invoices.client_id is NOT NULL, so a quote still only
+// addressed to a lead (recipient_name/email, no client_id) can't convert
+// until that lead becomes a real client.
+export async function convertQuoteToInvoice(quoteId: string, formData: FormData) {
+  const admin = await requireAdmin();
+
+  const { data: quote } = await supabaseAdmin
+    .from("quotes")
+    .select("client_id, project_id, reference, recipient_name, recipient_email, line_items, status, invoice_id")
+    .eq("id", quoteId)
+    .maybeSingle();
+  if (!quote) throw new Error("Devis introuvable.");
+  if (quote.invoice_id) throw new Error("Ce devis a déjà été converti en facture.");
+
+  const clientId = quote.client_id;
+  if (!clientId) throw new Error("Ce devis doit être lié à un client existant avant de pouvoir être converti en facture.");
+
+  const reference = formData.get("reference");
+  const amount = formData.get("amount_eur");
+  const dueAt = formData.get("due_at");
+  const kind = formData.get("kind");
+  const depositPercent = formData.get("deposit_percent");
+  const totalProject = formData.get("total_project_eur");
+
+  if (typeof reference !== "string" || !reference.trim()) throw new Error("Référence requise.");
+
+  const amountCents = parseRequiredEuroToCents(amount);
+  if (amountCents === null) throw new Error("Montant invalide.");
+
+  const kindValue: InvoiceKind = typeof kind === "string" && isInvoiceKind(kind) ? kind : "full";
+  const depositPercentValue =
+    kindValue === "deposit" && typeof depositPercent === "string" && depositPercent
+      ? Math.min(100, Math.max(1, parseInt(depositPercent, 10) || 0))
+      : null;
+  const totalProjectCents = kindValue !== "full" ? parseEuroToCents(totalProject) || null : null;
+  const dueAtValue = typeof dueAt === "string" && dueAt ? new Date(dueAt).toISOString() : null;
+  const lineItems = fromDbLineItems(quote.line_items);
+
+  const { data: client } = await supabaseAdmin.from("profiles").select("full_name, company, email").eq("id", clientId).maybeSingle();
+
+  const invoiceId = crypto.randomUUID();
+  const pdfPath = `${clientId}/invoices/${invoiceId}.pdf`;
+  const issuedAt = new Date().toISOString();
+
+  const pdfBuffer = await generateInvoicePdfBuffer({
+    reference: reference.trim(),
+    issuedAt,
+    dueAt: dueAtValue,
+    kind: kindValue,
+    depositPercent: depositPercentValue,
+    totalProjectCents,
+    amountCents,
+    clientName: client?.full_name || quote.recipient_name,
+    clientCompany: client?.company ?? null,
+    clientEmail: client?.email ?? quote.recipient_email,
+    projectName: null,
+    lineItems,
+  });
+  await uploadClientFileBuffer(pdfPath, pdfBuffer, "application/pdf");
+
+  const { error: invoiceError } = await supabaseAdmin.from("invoices").insert({
+    id: invoiceId,
+    client_id: clientId,
+    project_id: quote.project_id,
+    reference: reference.trim(),
+    amount_cents: amountCents,
+    status: "sent",
+    pdf_storage_path: pdfPath,
+    issued_at: issuedAt,
+    due_at: dueAtValue,
+    kind: kindValue,
+    deposit_percent: depositPercentValue,
+    total_project_cents: totalProjectCents,
+    line_items: toDbLineItems(lineItems),
+  });
+  if (invoiceError) throw new Error("La création de la facture a échoué (référence déjà utilisée ?).");
+
+  const { error: quoteError } = await supabaseAdmin
+    .from("quotes")
+    .update({ invoice_id: invoiceId, status: "accepted", updated_at: new Date().toISOString() })
+    .eq("id", quoteId);
+  if (quoteError) throw new Error("La liaison du devis à la facture a échoué.");
+
+  const actorName = await getActorDisplayName(admin.id);
+  await logActivity({
+    clientId,
+    projectId: quote.project_id,
+    type: "invoice",
+    title: "Facture émise",
+    adminTitle: `${actorName} a converti le devis ${quote.reference} en facture ${reference.trim()}`,
+    actorId: admin.id,
+    description: `Facture ${reference.trim()} (depuis le devis ${quote.reference})`,
+  });
+
+  revalidateClient(clientId);
 }

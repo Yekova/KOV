@@ -1,28 +1,100 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { sendQuoteEmail, downloadQuotePdf, getQuotePdfUrl, deleteQuote } from "./actions";
+import Link from "next/link";
+import { sendQuoteEmail, downloadQuotePdf, getQuotePdfUrl, deleteQuote, convertQuoteToInvoice } from "./actions";
 import { Button } from "@/components/ui/Button";
+import { InvoiceKindFields } from "@/components/admin/invoices/InvoiceKindFields";
+
+const FIELD_CLASS = "bg-transparent border px-3 py-2 text-kov-bone text-sm focus:outline-none focus:border-kov-red transition-colors";
+
+// A devis reference like "D-2026-01" suggests "F-2026-01" for the invoice —
+// just a starting point in the input, not enforced; anything else typed by
+// the admin is used as-is.
+function suggestInvoiceReference(quoteReference: string) {
+  return quoteReference.startsWith("D-") ? `F-${quoteReference.slice(2)}` : "";
+}
+
+function ConvertToInvoiceForm({ quoteId, reference, totalCents, onDone }: { quoteId: string; reference: string; totalCents: number; onDone: () => void }) {
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    const formData = new FormData(event.currentTarget);
+    startTransition(async () => {
+      try {
+        await convertQuoteToInvoice(quoteId, formData);
+        onDone();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "La conversion a échoué.");
+      }
+    });
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="w-full border p-4 mt-3 flex flex-wrap items-end gap-4" style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-md)" }}>
+      <label className="text-xs text-kov-steel">
+        Référence facture
+        <input
+          type="text"
+          name="reference"
+          required
+          defaultValue={suggestInvoiceReference(reference)}
+          placeholder="F-2026-01"
+          className={FIELD_CLASS}
+          style={{ borderColor: "var(--kov-border)" }}
+        />
+      </label>
+      <label className="text-xs text-kov-steel">
+        Montant (€)
+        <input type="text" name="amount_eur" required defaultValue={(totalCents / 100).toFixed(2)} className={`${FIELD_CLASS} w-32`} style={{ borderColor: "var(--kov-border)" }} />
+      </label>
+      <label className="text-xs text-kov-steel">
+        Échéance
+        <input type="date" name="due_at" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
+      </label>
+      <InvoiceKindFields />
+      {error && <p className="text-kov-red text-xs w-full">{error}</p>}
+      <div className="flex items-center gap-3">
+        <Button type="submit" variant="primary" disabled={isPending}>
+          {isPending ? "Création…" : "Créer la facture"}
+        </Button>
+        <Button type="button" variant="ghost" onClick={onDone} disabled={isPending}>
+          Annuler
+        </Button>
+      </div>
+    </form>
+  );
+}
 
 export function QuoteRowActions({
   quoteId,
   hasEmail,
   status,
   reference,
+  clientId,
+  totalCents,
+  invoiceId,
 }: {
   quoteId: string;
   hasEmail: boolean;
   status: string;
   reference: string;
+  clientId: string | null;
+  totalCents: number;
+  invoiceId: string | null;
 }) {
   const [isSending, startSending] = useTransition();
   const [isViewing, startViewing] = useTransition();
   const [isDeleting, startDeleting] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
+  const [converting, setConverting] = useState(false);
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="w-full flex flex-wrap items-center gap-3">
       <Button
         type="button"
         variant="ghost"
@@ -65,6 +137,22 @@ export function QuoteRowActions({
       >
         {isSending ? "Envoi…" : sent ? "Envoyé ✓" : "Envoyer par email"}
       </Button>
+
+      {status === "accepted" &&
+        (invoiceId ? (
+          clientId && (
+            <Link href={`/admin/clients/${clientId}`} className="text-kov-red text-xs uppercase tracking-widest hover:text-kov-red-signal transition-colors">
+              → Facture créée
+            </Link>
+          )
+        ) : clientId ? (
+          <Button type="button" variant="secondary" onClick={() => setConverting((v) => !v)}>
+            {converting ? "Annuler la conversion" : "Convertir en facture"}
+          </Button>
+        ) : (
+          <span className="text-kov-steel text-xs">Lier à un client pour facturer</span>
+        ))}
+
       {status !== "accepted" && (
         <Button
           type="button"
@@ -87,6 +175,10 @@ export function QuoteRowActions({
       )}
       {!hasEmail && <span className="text-kov-steel text-xs">Aucun email destinataire</span>}
       {error && <span className="text-kov-red text-xs">{error}</span>}
+
+      {converting && clientId && (
+        <ConvertToInvoiceForm quoteId={quoteId} reference={reference} totalCents={totalCents} onDone={() => setConverting(false)} />
+      )}
     </div>
   );
 }
