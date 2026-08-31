@@ -7,7 +7,7 @@ import { AdminSidebar } from "./AdminSidebar";
 export async function SidebarBadges() {
   const [{ count: newLeadsBadge }, { count: pendingTasksBadge }] = await Promise.all([
     supabaseAdmin.from("leads").select("id", { count: "exact", head: true }).eq("status", "new"),
-    supabaseAdmin.from("project_tasks").select("id", { count: "exact", head: true }).in("status", ["todo", "blocked"]),
+    supabaseAdmin.from("project_tasks").select("id", { count: "exact", head: true }).in("status", ["backlog", "todo", "blocked"]),
   ]);
 
   return <AdminSidebar badgeCounts={{ leads: newLeadsBadge ?? 0, tasks: pendingTasksBadge ?? 0 }} />;

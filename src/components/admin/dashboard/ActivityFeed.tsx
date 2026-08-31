@@ -33,6 +33,12 @@ const ICON_PATHS: Record<ActivityType, React.ReactNode> = {
       <path d="M9.5 13.5l2 2 4-4.5" />
     </>
   ),
+  task: (
+    <>
+      <rect x="4" y="4" width="16" height="16" rx="2" />
+      <path d="M8.5 12.5l2.2 2.2 4.8-4.8" />
+    </>
+  ),
 };
 
 function isKnownType(type: string): type is ActivityType {

@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { sendEmail } from "@/lib/email/brevo";
 import { requestReplyNotificationSubject, requestReplyNotificationHtml } from "@/lib/email/reminderEmail";
 
-export type ActivityLogType = "document" | "message" | "invoice" | "milestone" | "quote";
+export type ActivityLogType = "document" | "message" | "invoice" | "milestone" | "quote" | "task";
 
 // The single write path into activity_log, for both the client-facing feed
 // (title) and the agency-wide admin feed (admin_title) — these are two

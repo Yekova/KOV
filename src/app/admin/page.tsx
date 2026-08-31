@@ -43,11 +43,14 @@ export default async function AdminDashboardPage() {
       .order("created_at", { ascending: false })
       .limit(8),
     supabaseAdmin.from("profiles").select("id, full_name, email, display_title").eq("role", "admin").is("archived_at", null),
-    supabaseAdmin.from("project_tasks").select("assigned_to").in("status", ["todo", "in_progress", "blocked"]),
+    // Workload = everything not finished yet, not an explicit status
+    // allowlist — stays correct automatically if the task vocabulary
+    // ever widens again.
+    supabaseAdmin.from("project_tasks").select("assigned_to").neq("status", "done"),
     supabaseAdmin
       .from("project_tasks")
       .select("id, title, priority, assigned_to, project_id")
-      .in("status", ["todo", "blocked"])
+      .in("status", ["backlog", "todo", "blocked"])
       .order("created_at", { ascending: false })
       .limit(6),
   ]);

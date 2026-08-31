@@ -25,7 +25,7 @@ export default async function AdminTeamPage(props: PageProps<"/admin/team">) {
 
   const [{ data: adminProfiles }, { data: openTasks }] = await Promise.all([
     adminQuery.order("created_at"),
-    supabaseAdmin.from("project_tasks").select("assigned_to").in("status", ["todo", "in_progress", "blocked"]),
+    supabaseAdmin.from("project_tasks").select("assigned_to").neq("status", "done"),
   ]);
 
   const rows = adminProfiles ?? [];

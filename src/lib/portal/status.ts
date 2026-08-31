@@ -79,7 +79,7 @@ export function isQuoteExpired(status: string, validUntil: string | null): boole
   return status === "sent" && !!validUntil && new Date(validUntil).getTime() < Date.now();
 }
 
-export const ACTIVITY_TYPES = ["document", "message", "invoice", "milestone", "quote"] as const;
+export const ACTIVITY_TYPES = ["document", "message", "invoice", "milestone", "quote", "task"] as const;
 export type ActivityType = (typeof ACTIVITY_TYPES)[number];
 
 export function isActivityType(value: string): value is ActivityType {

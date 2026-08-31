@@ -111,7 +111,7 @@ export async function getPendingTasksKpi(): Promise<KpiResult> {
 
   const [{ count: pendingNow }, { count: createdToday }, { count: createdYesterday }, { data: recentTasks }] =
     await Promise.all([
-      supabaseAdmin.from("project_tasks").select("id", { count: "exact", head: true }).in("status", ["todo", "blocked"]),
+      supabaseAdmin.from("project_tasks").select("id", { count: "exact", head: true }).in("status", ["backlog", "todo", "blocked"]),
       supabaseAdmin
         .from("project_tasks")
         .select("id", { count: "exact", head: true })
