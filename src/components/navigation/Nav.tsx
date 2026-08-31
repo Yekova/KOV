@@ -38,28 +38,24 @@ export function Nav({ variant = "fixed" }: NavProps) {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const scrolled = useScrolled();
-  const [visible, setVisible] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const pillRef = useRef<HTMLDivElement>(null);
 
-  // Unfurl on every route change: the pill drops to scale-x-0/invisible then
-  // expands back out from the logo edge, rather than just sitting there
-  // static across navigations. The reset itself happens during render (React's
-  // documented "adjusting state when a prop changes" pattern) rather than in
-  // an effect, to avoid the extra render pass that would otherwise cause —
-  // only the timer-deferred re-reveal and the scroll reset are true side
-  // effects, so only those live in a useEffect.
+  // No per-navigation reveal/unfurl on the pill anymore — it just stays put
+  // across route changes now. Still closes the mobile menu on navigation, a
+  // real functional behavior rather than the visual transition that was
+  // removed — adjusted during render (React's documented "adjusting state
+  // when a prop changes" pattern) rather than in an effect, avoiding an
+  // extra render pass. window.scrollTo is a genuine side effect (an
+  // imperative browser API call), so that alone still lives in a real effect.
   const [prevPathname, setPrevPathname] = useState(pathname);
   if (pathname !== prevPathname) {
     setPrevPathname(pathname);
-    setVisible(false);
     setMobileOpen(false);
   }
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    const timer = setTimeout(() => setVisible(true), 220);
-    return () => clearTimeout(timer);
   }, [pathname]);
 
   // Always the glass pill now — the Hero itself supplies a glass strip for
@@ -79,11 +75,9 @@ export function Nav({ variant = "fixed" }: NavProps) {
   return (
     <>
       {/* Outer element owns centering only (a permanent, un-animated
-          translateX(-50%)); the inner element owns the route-change unfurl
-          (scaleX from its own center). Keeping the two transforms on
-          separate elements avoids composing "translate + scale" into one
-          transform string, which would need the unfurl to fight the
-          centering offset. */}
+          translateX(-50%)) — kept as its own element separate from the pill
+          below so the pill's own background/border/shadow transitions never
+          have to compose against a translate. */}
       <div
         className={`${isFixed ? "fixed" : "absolute"} top-4 md:top-6 left-1/2 -translate-x-1/2`}
         style={{ zIndex: "var(--z-nav)" }}
@@ -93,14 +87,9 @@ export function Nav({ variant = "fixed" }: NavProps) {
           className={`flex items-center justify-between gap-2 sm:gap-4 px-2.5 sm:px-3 ${padding} border`}
           style={{
             ...pillStyle,
-            transform: visible ? "scaleX(1)" : "scaleX(0)",
-            opacity: visible ? 1 : 0,
-            filter: visible ? "blur(0px)" : "blur(2px)",
-            transformOrigin: "center",
-            transitionProperty: "transform, opacity, filter, background, border-color, box-shadow, padding",
-            transitionDuration: "0.9s, 0.9s, 0.9s, 0.5s, 0.5s, 0.5s, 0.5s",
+            transitionProperty: "background, border-color, box-shadow, padding",
+            transitionDuration: "0.5s",
             transitionTimingFunction: REVEAL_EASE,
-            willChange: "transform",
           }}
         >
           <Link href="/" className="flex items-center px-3">
