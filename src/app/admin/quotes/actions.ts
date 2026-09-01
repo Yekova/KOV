@@ -294,7 +294,18 @@ export async function getQuotePdfUrl(quoteId: string): Promise<string> {
 // client account: invoices.client_id is NOT NULL, so a quote still only
 // addressed to a lead (recipient_name/email, no client_id) can't convert
 // until that lead becomes a real client.
-export async function convertQuoteToInvoice(quoteId: string, formData: FormData) {
+// Returns { error } instead of throwing for expected/validation failures.
+// Next.js 16 redacts thrown Server Action error messages in production
+// (replaced client-side with a generic "Minified React error #441" — see
+// the digest-only message in server logs for the real reason) unless the
+// error is one of Next's own recognized types (redirect/notFound/etc.) —
+// modeling expected errors as a return value is the framework's own
+// documented way around that, and is what actually gets the real message
+// (e.g. "Devis introuvable.") in front of the admin instead of a dead end.
+export async function convertQuoteToInvoice(
+  quoteId: string,
+  formData: FormData
+): Promise<{ error: string | null }> {
   const admin = await requireAdmin();
 
   const { data: quote } = await supabaseAdmin
@@ -302,11 +313,11 @@ export async function convertQuoteToInvoice(quoteId: string, formData: FormData)
     .select("client_id, project_id, reference, recipient_name, recipient_email, line_items, status, invoice_id")
     .eq("id", quoteId)
     .maybeSingle();
-  if (!quote) throw new Error("Devis introuvable.");
-  if (quote.invoice_id) throw new Error("Ce devis a déjà été converti en facture.");
+  if (!quote) return { error: "Devis introuvable." };
+  if (quote.invoice_id) return { error: "Ce devis a déjà été converti en facture." };
 
   const clientId = quote.client_id;
-  if (!clientId) throw new Error("Ce devis doit être lié à un client existant avant de pouvoir être converti en facture.");
+  if (!clientId) return { error: "Ce devis doit être lié à un client existant avant de pouvoir être converti en facture." };
 
   const reference = formData.get("reference");
   const amount = formData.get("amount_eur");
@@ -315,10 +326,10 @@ export async function convertQuoteToInvoice(quoteId: string, formData: FormData)
   const depositPercent = formData.get("deposit_percent");
   const totalProject = formData.get("total_project_eur");
 
-  if (typeof reference !== "string" || !reference.trim()) throw new Error("Référence requise.");
+  if (typeof reference !== "string" || !reference.trim()) return { error: "Référence requise." };
 
   const amountCents = parseRequiredEuroToCents(amount);
-  if (amountCents === null) throw new Error("Montant invalide.");
+  if (amountCents === null) return { error: "Montant invalide." };
 
   const kindValue: InvoiceKind = typeof kind === "string" && isInvoiceKind(kind) ? kind : "full";
   const depositPercentValue =
@@ -366,13 +377,13 @@ export async function convertQuoteToInvoice(quoteId: string, formData: FormData)
     total_project_cents: totalProjectCents,
     line_items: toDbLineItems(lineItems),
   });
-  if (invoiceError) throw new Error("La création de la facture a échoué (référence déjà utilisée ?).");
+  if (invoiceError) return { error: "La création de la facture a échoué (référence déjà utilisée ?)." };
 
   const { error: quoteError } = await supabaseAdmin
     .from("quotes")
     .update({ invoice_id: invoiceId, status: "accepted", updated_at: new Date().toISOString() })
     .eq("id", quoteId);
-  if (quoteError) throw new Error("La liaison du devis à la facture a échoué.");
+  if (quoteError) return { error: "La liaison du devis à la facture a échoué." };
 
   const actorName = await getActorDisplayName(admin.id);
   await logActivity({
@@ -386,4 +397,5 @@ export async function convertQuoteToInvoice(quoteId: string, formData: FormData)
   });
 
   revalidateClient(clientId);
+  return { error: null };
 }

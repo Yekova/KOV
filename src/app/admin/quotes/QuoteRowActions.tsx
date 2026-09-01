@@ -26,8 +26,12 @@ function ConvertToInvoiceForm({ quoteId, reference, totalCents, onDone }: { quot
     const formData = new FormData(event.currentTarget);
     startTransition(async () => {
       try {
-        await convertQuoteToInvoice(quoteId, formData);
-        onDone();
+        const result = await convertQuoteToInvoice(quoteId, formData);
+        if (result.error) {
+          setError(result.error);
+        } else {
+          onDone();
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : "La conversion a échoué.");
       }
