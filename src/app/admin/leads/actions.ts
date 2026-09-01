@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { isLeadStatus } from "@/lib/admin/status";
+import { isLeadStatus, isLeadSource } from "@/lib/admin/status";
 import { inviteUser } from "@/lib/auth/inviteUser";
 import { clientInviteEmailHtml, clientInviteEmailSubject } from "@/lib/email/inviteEmail";
 import { logActivity, getActorDisplayName } from "@/lib/activity";
@@ -30,6 +30,17 @@ export async function updateLeadStatus(leadId: string, status: string) {
   }
 
   revalidatePath("/admin");
+  revalidatePath("/admin/leads");
+}
+
+export async function updateLeadSource(leadId: string, source: string) {
+  await requireAdmin();
+
+  if (!isLeadSource(source)) throw new Error("Source invalide.");
+
+  const { error } = await supabaseAdmin.from("leads").update({ source, updated_at: new Date().toISOString() }).eq("id", leadId);
+  if (error) throw new Error("La mise à jour a échoué.");
+
   revalidatePath("/admin/leads");
 }
 
@@ -108,7 +119,10 @@ export async function convertLeadToClient(leadId: string) {
   revalidatePath("/admin/clients");
 }
 
-export async function createLead(formData: FormData) {
+// Returns { error } instead of throwing for expected/validation failures —
+// see convertQuoteToInvoice's comment (src/app/admin/quotes/actions.ts) for
+// why: Next.js 16 redacts thrown Server Action error messages in production.
+export async function createLead(formData: FormData): Promise<{ error: string | null }> {
   await requireAdmin();
 
   const name = formData.get("name");
@@ -119,9 +133,10 @@ export async function createLead(formData: FormData) {
   const timeline = formData.get("timeline");
   const budget = formData.get("budget_eur");
   const message = formData.get("message");
+  const source = formData.get("source");
 
-  if (typeof name !== "string" || !name.trim()) throw new Error("Nom requis.");
-  if (typeof email !== "string" || !email.trim()) throw new Error("Email requis.");
+  if (typeof name !== "string" || !name.trim()) return { error: "Nom requis." };
+  if (typeof email !== "string" || !email.trim()) return { error: "Email requis." };
 
   const budgetCents =
     typeof budget === "string" && budget.trim()
@@ -137,12 +152,13 @@ export async function createLead(formData: FormData) {
     timeline: typeof timeline === "string" && timeline.trim() ? timeline.trim() : null,
     budget_cents: Number.isFinite(budgetCents) ? budgetCents : null,
     message: typeof message === "string" && message.trim() ? message.trim() : null,
-    source: "admin-manuel",
+    source: typeof source === "string" && isLeadSource(source) ? source : "autre",
     status: "new",
   });
 
-  if (error) throw new Error("La création du lead a échoué.");
+  if (error) return { error: "La création du lead a échoué." };
 
   revalidatePath("/admin");
   revalidatePath("/admin/leads");
+  return { error: null };
 }

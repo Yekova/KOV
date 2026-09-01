@@ -8,7 +8,7 @@ import { Select } from "@/components/ui/Select";
 import { createLead } from "@/app/admin/leads/actions";
 import { createProject } from "@/app/admin/clients/actions";
 import { createTask } from "@/app/admin/projects/actions";
-import { PRIORITIES, PRIORITY_LABELS } from "@/lib/admin/status";
+import { PRIORITIES, PRIORITY_LABELS, LEAD_SOURCES, LEAD_SOURCE_LABELS } from "@/lib/admin/status";
 
 type PickerOption = { id: string; label: string };
 
@@ -58,7 +58,15 @@ export function QuickActionMenu({ clients, projects, admins }: QuickActionMenuPr
     setError(null);
     startTransition(async () => {
       try {
-        await action(formData);
+        const result = await action(formData);
+        // Some actions (e.g. createLead) return { error } instead of
+        // throwing for expected validation failures — Next.js 16 redacts
+        // thrown Server Action error messages in production, so this is
+        // the only way those actions' real message reaches the user.
+        if (result && typeof result === "object" && "error" in result && result.error) {
+          setError(result.error);
+          return;
+        }
         setActiveModal(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : "L'action a échoué.");
@@ -151,6 +159,14 @@ export function QuickActionMenu({ clients, projects, admins }: QuickActionMenuPr
                 <input name="company" placeholder="Entreprise (facultatif)" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
                 <input name="project_type" placeholder="Type de projet (facultatif)" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
                 <input name="budget_eur" placeholder="Budget estimé € (facultatif)" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
+                <Select
+                  name="source"
+                  defaultValue="autre"
+                  placeholder="Source"
+                  options={LEAD_SOURCES.map((s) => ({ value: s, label: LEAD_SOURCE_LABELS[s] }))}
+                  className={FIELD_CLASS}
+                  style={{ borderColor: "var(--kov-border)" }}
+                />
                 <textarea name="message" placeholder="Message (facultatif)" rows={3} className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
                 {error && <p className="text-kov-red text-xs">{error}</p>}
                 <Button type="submit" variant="primary" className="w-full justify-center" disabled={isPending}>

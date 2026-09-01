@@ -74,7 +74,7 @@ export async function POST(request: Request) {
     project_type: projectType || null,
     contact_method: contactMethod || null,
     timeline: timeline || null,
-    source: "contact-page",
+    source: "site_web",
   });
 
   if (error) {
