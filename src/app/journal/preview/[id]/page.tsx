@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { getPublicAssetUrl } from "@/lib/portal/storage";
+import { resolvePostImageUrl } from "@/lib/portal/storage";
 import { PostView } from "@/components/journal/PostView";
 
 export const metadata: Metadata = { title: "Aperçu — KOV" };
@@ -42,7 +42,7 @@ export default async function PreviewPostPage(props: PageProps<"/journal/preview
         post={{
           title: post.title,
           body: post.body,
-          coverUrl: getPublicAssetUrl(post.cover_image_path),
+          coverUrl: resolvePostImageUrl(post.cover_image_path),
           clientDisplayName: post.client_display_name,
           publishedAt: post.published_at,
         }}

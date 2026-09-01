@@ -12,8 +12,7 @@ export default async function NewPostPage() {
   const projectOptions = (projects ?? []).map((p) => ({ id: p.id, label: p.name }));
 
   return (
-    <main className="px-6 py-10 max-w-4xl mx-auto w-full space-y-8">
-      <h1 className="font-display text-kov-bone text-2xl uppercase">Nouvel article</h1>
+    <main className="px-6 py-10 max-w-6xl mx-auto w-full">
       <PostForm projects={projectOptions} />
     </main>
   );

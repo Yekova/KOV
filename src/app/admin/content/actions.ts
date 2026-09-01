@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { uploadPortalAsset } from "@/lib/portal/storage";
+import { getPublicAssetUrl, resolvePostImageUrl, uploadPortalAsset } from "@/lib/portal/storage";
+import { postInputSchema, relatedPostIdsSchema, type PostInput } from "./schema";
 
 function slugify(value: string): string {
   return value
@@ -14,108 +15,208 @@ function slugify(value: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-function readPostFields(formData: FormData) {
-  const title = formData.get("title");
-  const excerpt = formData.get("excerpt");
-  const body = formData.get("body");
-  const slugInput = formData.get("slug");
-  const projectId = formData.get("project_id");
-  const clientDisplayName = formData.get("client_display_name");
-  const status = formData.get("status");
+export type PostRow = {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  body: string;
+  image: string | null;
+  tag: string | null;
+  dateLabel: string | null;
+  readingTime: string | null;
+  featured: boolean;
+  status: "draft" | "published";
+  metaTitle: string | null;
+  metaDescription: string | null;
+  authorName: string | null;
+  audioUrl: string | null;
+  relatedPostIds: string[];
+  sortOrder: number | null;
+  views: number;
+  likes: number;
+  projectId: string | null;
+  clientDisplayName: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
 
-  if (typeof title !== "string" || !title.trim()) throw new Error("Titre requis.");
-  if (typeof body !== "string" || !body.trim()) throw new Error("Contenu requis.");
-
-  const slug = typeof slugInput === "string" && slugInput.trim() ? slugify(slugInput) : slugify(title);
-  if (!slug) throw new Error("Slug invalide.");
-
+function toPostRow(row: {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  body: string;
+  cover_image_path: string | null;
+  tag: string | null;
+  date_label: string | null;
+  reading_time: string | null;
+  featured: boolean;
+  status: string;
+  meta_title: string | null;
+  meta_description: string | null;
+  author_name: string | null;
+  audio_url: string | null;
+  related_post_ids: string[] | null;
+  sort_order: number | null;
+  views: number;
+  likes: number;
+  project_id: string | null;
+  client_display_name: string | null;
+  created_at: string;
+  updated_at: string;
+}): PostRow {
   return {
-    title: title.trim(),
-    excerpt: typeof excerpt === "string" && excerpt.trim() ? excerpt.trim() : null,
-    body: body.trim(),
-    slug,
-    projectId: typeof projectId === "string" && projectId ? projectId : null,
-    clientDisplayName: typeof clientDisplayName === "string" && clientDisplayName.trim() ? clientDisplayName.trim() : null,
-    status: status === "published" ? "published" : "draft",
+    id: row.id,
+    title: row.title,
+    slug: row.slug,
+    excerpt: row.excerpt,
+    body: row.body,
+    image: resolvePostImageUrl(row.cover_image_path),
+    tag: row.tag,
+    dateLabel: row.date_label,
+    readingTime: row.reading_time,
+    featured: row.featured,
+    status: row.status as "draft" | "published",
+    metaTitle: row.meta_title,
+    metaDescription: row.meta_description,
+    authorName: row.author_name,
+    audioUrl: row.audio_url,
+    relatedPostIds: row.related_post_ids ?? [],
+    sortOrder: row.sort_order,
+    views: row.views,
+    likes: row.likes,
+    projectId: row.project_id,
+    clientDisplayName: row.client_display_name,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
   };
 }
 
-export async function createPost(formData: FormData) {
+const POST_COLUMNS =
+  "id, title, slug, excerpt, body, cover_image_path, tag, date_label, reading_time, featured, status, meta_title, meta_description, author_name, audio_url, related_post_ids, sort_order, views, likes, project_id, client_display_name, created_at, updated_at";
+
+// Read functions used as TanStack Query queryFns from the client — still
+// gated by requireAdmin() and still going through supabaseAdmin server-side,
+// same security model as every other admin table in this codebase (RLS on
+// `posts` only grants public read of published rows — there is no
+// authenticated-write policy, so these reads/writes only ever happen
+// through this Server Action, never a direct client-side Supabase call).
+export async function getArticles(): Promise<PostRow[]> {
+  await requireAdmin();
+  const { data } = await supabaseAdmin
+    .from("posts")
+    .select(POST_COLUMNS)
+    .order("sort_order", { ascending: true, nullsFirst: false })
+    .order("created_at", { ascending: false });
+  return (data ?? []).map(toPostRow);
+}
+
+export async function getArticleById(id: string): Promise<PostRow | null> {
+  await requireAdmin();
+  const { data } = await supabaseAdmin.from("posts").select(POST_COLUMNS).eq("id", id).maybeSingle();
+  return data ? toPostRow(data) : null;
+}
+
+function toDbFields(input: PostInput, relatedPostIds: string[]) {
+  return {
+    title: input.title.trim(),
+    excerpt: input.excerpt.trim(),
+    body: input.body?.trim() || "",
+    tag: input.tag.trim(),
+    date_label: input.dateLabel.trim(),
+    reading_time: input.readingTime.trim(),
+    featured: input.featured,
+    status: input.status,
+    meta_title: input.metaTitle?.trim() || null,
+    meta_description: input.metaDescription?.trim() || null,
+    author_name: input.authorName?.trim() || null,
+    audio_url: input.audioUrl?.trim() || null,
+    related_post_ids: relatedPostIds,
+    project_id: input.projectId || null,
+    client_display_name: input.clientDisplayName?.trim() || null,
+  };
+}
+
+export async function createPost(
+  input: PostInput,
+  relatedPostIdsRaw: string[]
+): Promise<{ error: string | null; id?: string }> {
   const admin = await requireAdmin();
-  const fields = readPostFields(formData);
+
+  const parsed = postInputSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Formulaire invalide." };
+  const relatedResult = relatedPostIdsSchema.safeParse(relatedPostIdsRaw);
+  if (!relatedResult.success) return { error: relatedResult.error.issues[0]?.message ?? "Articles liés invalides." };
 
   const postId = crypto.randomUUID();
-  let coverImagePath: string | null = null;
-  const coverFile = formData.get("cover_image");
-  if (coverFile instanceof File && coverFile.size > 0) {
-    coverImagePath = `posts/${postId}-${coverFile.name}`;
-    await uploadPortalAsset(coverImagePath, coverFile);
-  }
+  const slug = parsed.data.slug?.trim() ? slugify(parsed.data.slug) : slugify(parsed.data.title);
+  if (!slug) return { error: "Slug invalide." };
 
+  // image is already a hosted public URL by the time it reaches here —
+  // ImagePicker uploads (with crop) immediately on confirm and hands back
+  // a public URL, it never travels through this action as a raw File.
   const { error } = await supabaseAdmin.from("posts").insert({
     id: postId,
-    slug: fields.slug,
-    title: fields.title,
-    excerpt: fields.excerpt,
-    body: fields.body,
-    cover_image_path: coverImagePath,
-    client_display_name: fields.clientDisplayName,
-    project_id: fields.projectId,
-    status: fields.status,
-    published_at: fields.status === "published" ? new Date().toISOString() : null,
+    slug,
+    ...toDbFields(parsed.data, relatedResult.data),
+    cover_image_path: parsed.data.image,
+    status: parsed.data.status,
+    published_at: parsed.data.status === "published" ? new Date().toISOString() : null,
     author_id: admin.id,
   });
 
   if (error) {
-    if (error.code === "23505") throw new Error("Ce slug est déjà utilisé par un autre article.");
-    throw new Error("La création de l'article a échoué.");
+    if (error.code === "23505") return { error: "Ce slug est déjà utilisé par un autre article." };
+    return { error: "La création de l'article a échoué." };
   }
 
   revalidatePath("/admin/content");
   revalidatePath("/journal");
+  return { error: null, id: postId };
 }
 
-export async function updatePost(postId: string, formData: FormData) {
+export async function updatePost(
+  postId: string,
+  input: PostInput,
+  relatedPostIdsRaw: string[]
+): Promise<{ error: string | null }> {
   await requireAdmin();
-  const fields = readPostFields(formData);
 
-  const { data: existing } = await supabaseAdmin.from("posts").select("status, published_at, cover_image_path, slug").eq("id", postId).maybeSingle();
-  if (!existing) throw new Error("Article introuvable.");
+  const parsed = postInputSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Formulaire invalide." };
+  const relatedResult = relatedPostIdsSchema.safeParse(relatedPostIdsRaw);
+  if (!relatedResult.success) return { error: relatedResult.error.issues[0]?.message ?? "Articles liés invalides." };
 
-  let coverImagePath = existing.cover_image_path;
-  const coverFile = formData.get("cover_image");
-  if (coverFile instanceof File && coverFile.size > 0) {
-    coverImagePath = `posts/${postId}-${coverFile.name}`;
-    await uploadPortalAsset(coverImagePath, coverFile);
-  }
+  const { data: existing } = await supabaseAdmin.from("posts").select("status, published_at, slug").eq("id", postId).maybeSingle();
+  if (!existing) return { error: "Article introuvable." };
 
-  const becamePublished = existing.status !== "published" && fields.status === "published";
+  const slug = parsed.data.slug?.trim() ? slugify(parsed.data.slug) : slugify(parsed.data.title);
+  if (!slug) return { error: "Slug invalide." };
+
+  const becamePublished = existing.status !== "published" && parsed.data.status === "published";
 
   const { error } = await supabaseAdmin
     .from("posts")
     .update({
-      slug: fields.slug,
-      title: fields.title,
-      excerpt: fields.excerpt,
-      body: fields.body,
-      cover_image_path: coverImagePath,
-      client_display_name: fields.clientDisplayName,
-      project_id: fields.projectId,
-      status: fields.status,
+      slug,
+      ...toDbFields(parsed.data, relatedResult.data),
+      cover_image_path: parsed.data.image,
       published_at: becamePublished ? new Date().toISOString() : existing.published_at,
       updated_at: new Date().toISOString(),
     })
     .eq("id", postId);
 
   if (error) {
-    if (error.code === "23505") throw new Error("Ce slug est déjà utilisé par un autre article.");
-    throw new Error("La mise à jour de l'article a échoué.");
+    if (error.code === "23505") return { error: "Ce slug est déjà utilisé par un autre article." };
+    return { error: "La mise à jour de l'article a échoué." };
   }
 
   revalidatePath("/admin/content");
   revalidatePath("/journal");
   revalidatePath(`/journal/${existing.slug}`);
-  if (fields.slug !== existing.slug) revalidatePath(`/journal/${fields.slug}`);
+  if (slug !== existing.slug) revalidatePath(`/journal/${slug}`);
+  return { error: null };
 }
 
 export async function deletePost(postId: string) {
@@ -130,4 +231,41 @@ export async function deletePost(postId: string) {
   revalidatePath("/admin/content");
   revalidatePath("/journal");
   revalidatePath(`/journal/${existing.slug}`);
+}
+
+export async function reorderPosts(updates: { id: string; sortOrder: number }[]) {
+  await requireAdmin();
+
+  await Promise.all(
+    updates.map((u) => supabaseAdmin.from("posts").update({ sort_order: u.sortOrder }).eq("id", u.id))
+  );
+
+  revalidatePath("/admin/content");
+}
+
+// Generic "upload an image, get a public URL back" action — used by both
+// the ImagePicker's crop-confirm step and RichEditor's inline image
+// insertion. Reuses the existing portal-assets bucket/helpers (already
+// public, already has upload/getPublicUrl plumbing) rather than the spec's
+// separate "article-images" bucket, which doesn't exist in this project
+// and this environment has no tooling to create.
+export async function uploadEditorImage(formData: FormData): Promise<{ url: string | null; error: string | null }> {
+  await requireAdmin();
+
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) return { url: null, error: "Fichier invalide." };
+  if (!file.type.startsWith("image/")) return { url: null, error: "Le fichier doit être une image." };
+
+  const ext = file.name.includes(".") ? file.name.split(".").pop() : "jpg";
+  const path = `posts/inline/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+  try {
+    await uploadPortalAsset(path, file);
+  } catch {
+    return { url: null, error: "Le téléversement a échoué." };
+  }
+
+  const url = getPublicAssetUrl(path);
+  if (!url) return { url: null, error: "Le téléversement a échoué." };
+  return { url, error: null };
 }

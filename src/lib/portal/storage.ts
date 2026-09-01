@@ -21,6 +21,18 @@ export function getPublicAssetUrl(path: string | null | undefined): string | nul
   return data.publicUrl;
 }
 
+// posts.cover_image_path (and any similar column storing an image
+// reference the admin picked via the ImagePicker component) can hold
+// either shape depending on when the row was last saved: older rows store
+// a raw Storage path (needs getPublicAssetUrl), rows saved through
+// ImagePicker store an already-public URL directly (it uploads then hands
+// back a full URL, never a bare path). This resolves either to a working
+// <img src>.
+export function resolvePostImageUrl(value: string | null | undefined): string | null {
+  if (!value) return null;
+  return value.startsWith("http") ? value : getPublicAssetUrl(value);
+}
+
 export async function uploadPortalAsset(path: string, file: File) {
   assertUploadable(file);
   const { error } = await supabaseAdmin.storage.from(PORTAL_ASSETS_BUCKET).upload(path, file, {
