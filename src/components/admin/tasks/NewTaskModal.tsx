@@ -38,7 +38,11 @@ export function NewTaskModal({
     setError(null);
     startTransition(async () => {
       try {
-        await createTask(formData);
+        const result = await createTask(formData);
+        if (result.error) {
+          setError(result.error);
+          return;
+        }
         setOpen(false);
         setProjectId(fixedProjectId ?? "");
       } catch (err) {

@@ -6,7 +6,12 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { isTaskStatus, isPriority } from "@/lib/admin/status";
 import { logActivity, getActorDisplayName } from "@/lib/activity";
 
-export async function createTask(formData: FormData) {
+// Returns { error } instead of throwing for expected/validation failures —
+// see convertQuoteToInvoice's comment (src/app/admin/quotes/actions.ts) for
+// why: Next.js 16 redacts thrown Server Action error messages in
+// production, replacing them client-side with a generic "Minified React
+// error #441" that hides the real reason.
+export async function createTask(formData: FormData): Promise<{ error: string | null }> {
   const admin = await requireAdmin();
 
   const projectId = formData.get("project_id");
@@ -17,13 +22,13 @@ export async function createTask(formData: FormData) {
   const dueDate = formData.get("due_date");
   const phaseId = formData.get("phase_id");
 
-  if (typeof projectId !== "string" || !projectId) throw new Error("Projet requis.");
-  if (typeof title !== "string" || !title.trim()) throw new Error("Titre requis.");
+  if (typeof projectId !== "string" || !projectId) return { error: "Projet requis." };
+  if (typeof title !== "string" || !title.trim()) return { error: "Titre requis." };
 
   const priorityValue = typeof priority === "string" && isPriority(priority) ? priority : null;
 
   const { data: project } = await supabaseAdmin.from("projects").select("client_id, name").eq("id", projectId).maybeSingle();
-  if (!project) throw new Error("Projet introuvable.");
+  if (!project) return { error: "Projet introuvable." };
 
   const { error } = await supabaseAdmin.from("project_tasks").insert({
     project_id: projectId,
@@ -36,7 +41,7 @@ export async function createTask(formData: FormData) {
     created_by: admin.id,
   });
 
-  if (error) throw new Error("La création de la tâche a échoué.");
+  if (error) return { error: "La création de la tâche a échoué." };
 
   const actorName = await getActorDisplayName(admin.id);
   await logActivity({
@@ -51,6 +56,7 @@ export async function createTask(formData: FormData) {
   revalidatePath("/admin");
   revalidatePath("/admin/projects");
   revalidatePath("/admin/tasks");
+  return { error: null };
 }
 
 export async function updateTaskStatus(taskId: string, status: string) {
