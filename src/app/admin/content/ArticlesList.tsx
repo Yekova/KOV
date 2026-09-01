@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Star, Pencil, Trash2, ArrowUp, ArrowDown, Loader2 } from "lucide-react";
+import { Star, Pencil, Trash2, ArrowUp, ArrowDown, Loader2, Send, Undo2 } from "lucide-react";
 import { EmptyState } from "@/components/admin/EmptyState";
-import { getArticles, deletePost, reorderPosts, type PostRow } from "./actions";
+import { getArticles, deletePost, reorderPosts, setPostStatus, type PostRow } from "./actions";
 
 function Skeleton() {
   return (
@@ -39,6 +39,38 @@ function DeleteButton({ article }: { article: PostRow }) {
       aria-label="Supprimer"
     >
       {mutation.isPending ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+    </button>
+  );
+}
+
+function PublishToggleButton({ article }: { article: PostRow }) {
+  const queryClient = useQueryClient();
+  const nextStatus = article.status === "published" ? "draft" : "published";
+  const mutation = useMutation({
+    mutationFn: () => setPostStatus(article.id, nextStatus),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["articles"] });
+      toast.success(nextStatus === "published" ? "Article publié" : "Article repassé en brouillon");
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Le changement de statut a échoué."),
+  });
+
+  return (
+    <button
+      type="button"
+      disabled={mutation.isPending}
+      onClick={() => mutation.mutate()}
+      className="text-kov-steel hover:text-kov-red transition-colors disabled:opacity-50"
+      aria-label={nextStatus === "published" ? "Publier" : "Repasser en brouillon"}
+      title={nextStatus === "published" ? "Publier" : "Repasser en brouillon"}
+    >
+      {mutation.isPending ? (
+        <Loader2 size={16} className="animate-spin" />
+      ) : nextStatus === "published" ? (
+        <Send size={16} />
+      ) : (
+        <Undo2 size={16} />
+      )}
     </button>
   );
 }
@@ -138,6 +170,7 @@ export function ArticlesList() {
                   <Link href={`/admin/content/${article.id}`} className="text-kov-steel hover:text-kov-red transition-colors" aria-label="Éditer">
                     <Pencil size={15} />
                   </Link>
+                  <PublishToggleButton article={article} />
                   <DeleteButton article={article} />
                 </div>
               </td>

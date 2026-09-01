@@ -219,6 +219,32 @@ export async function updatePost(
   return { error: null };
 }
 
+// Quick status toggle from the list row — doesn't require the full PostInput
+// payload updatePost() needs, same narrow-update shape as updateQuoteStatus/
+// updateLeadStatus elsewhere in admin.
+export async function setPostStatus(postId: string, status: "draft" | "published") {
+  await requireAdmin();
+
+  const { data: existing } = await supabaseAdmin.from("posts").select("status, published_at, slug").eq("id", postId).maybeSingle();
+  if (!existing) throw new Error("Article introuvable.");
+
+  const becamePublished = existing.status !== "published" && status === "published";
+
+  const { error } = await supabaseAdmin
+    .from("posts")
+    .update({
+      status,
+      published_at: becamePublished ? new Date().toISOString() : existing.published_at,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", postId);
+  if (error) throw new Error("Le changement de statut a échoué.");
+
+  revalidatePath("/admin/content");
+  revalidatePath("/journal");
+  revalidatePath(`/journal/${existing.slug}`);
+}
+
 export async function deletePost(postId: string) {
   await requireAdmin();
 
