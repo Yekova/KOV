@@ -7,6 +7,7 @@ import { LeadStatusSelect } from "../LeadStatusSelect";
 import { AssignLeadSelect } from "../AssignLeadSelect";
 import { LeadDetailActions } from "./LeadDetailActions";
 import { CONTACT_METHOD_LABELS, LEAD_TIMELINE_LABELS, isContactMethod, isLeadTimeline } from "@/lib/admin/status";
+import { getLeadStatuses } from "@/lib/leads/statuses";
 
 export const metadata: Metadata = { title: "Lead — Admin KOV" };
 
@@ -14,10 +15,13 @@ export default async function AdminLeadDetailPage(props: PageProps<"/admin/leads
   await requireAdmin();
   const { id: leadId } = await props.params;
 
-  const { data: lead } = await supabaseAdmin.from("leads").select("*").eq("id", leadId).maybeSingle();
+  const [{ data: lead }, { data: adminProfiles }, statuses] = await Promise.all([
+    supabaseAdmin.from("leads").select("*").eq("id", leadId).maybeSingle(),
+    supabaseAdmin.from("profiles").select("id, full_name, email").eq("role", "admin").is("archived_at", null).order("full_name"),
+    getLeadStatuses(),
+  ]);
   if (!lead) notFound();
 
-  const { data: adminProfiles } = await supabaseAdmin.from("profiles").select("id, full_name, email").eq("role", "admin").is("archived_at", null).order("full_name");
   const adminOptions = (adminProfiles ?? []).map((a) => ({ id: a.id, label: a.full_name || a.email }));
 
   return (
@@ -28,7 +32,7 @@ export default async function AdminLeadDetailPage(props: PageProps<"/admin/leads
         </Link>
         <div className="flex flex-wrap items-center gap-4 mt-4">
           <h1 className="font-display text-kov-bone text-2xl uppercase">{lead.name}</h1>
-          <LeadStatusSelect leadId={lead.id} status={lead.status} />
+          <LeadStatusSelect leadId={lead.id} status={lead.status} statuses={statuses} />
         </div>
         <p className="text-kov-steel text-sm mt-1">
           Reçu le {new Date(lead.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}

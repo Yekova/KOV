@@ -13,6 +13,7 @@ import { TaskFeed } from "@/components/admin/dashboard/TaskFeed";
 import { ActivityFeed } from "@/components/admin/dashboard/ActivityFeed";
 import { RevenueChart, type RevenuePoint } from "@/components/admin/dashboard/RevenueChart";
 import { Donut, type DonutSegment } from "@/components/admin/Donut";
+import { getLeadStatuses } from "@/lib/leads/statuses";
 
 export const metadata: Metadata = {
   title: "Dashboard — Admin KOV",
@@ -47,6 +48,7 @@ export default async function AdminDashboardPage() {
     { data: allLeads },
     { data: todayTimeEntries },
     { data: paidInvoices },
+    leadStatuses,
   ] = await Promise.all([
     supabaseAdmin
       .from("projects")
@@ -91,6 +93,7 @@ export default async function AdminDashboardPage() {
       .select("amount_cents, paid_at, project_id")
       .eq("status", "paid")
       .gte("paid_at", twelveMonthsAgo.toISOString()),
+    getLeadStatuses(),
   ]);
 
   const projectRows = projects ?? [];
@@ -294,7 +297,7 @@ export default async function AdminDashboardPage() {
           <div className="xl:col-span-2">
             <ProjectPipeline initialProjects={pipelineProjects} />
           </div>
-          <LeadFeed leads={leadFeedItems} />
+          <LeadFeed leads={leadFeedItems} statuses={leadStatuses} />
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">

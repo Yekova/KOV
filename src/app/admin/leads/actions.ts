@@ -3,22 +3,27 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { isLeadStatus, isLeadSource } from "@/lib/admin/status";
+import { isLeadSource } from "@/lib/admin/status";
 import { inviteUser } from "@/lib/auth/inviteUser";
 import { clientInviteEmailHtml, clientInviteEmailSubject } from "@/lib/email/inviteEmail";
 import { logActivity, getActorDisplayName } from "@/lib/activity";
+import { logLeadInteraction } from "@/lib/leads/interactions";
+import { recomputeLeadScore } from "@/lib/leads/recomputeScore";
 
 // Note: leads have no client_id (they're pre-signature prospects, not
 // linked to a profiles row), so lead events are never written to
-// activity_log — that table's client_id is NOT NULL. Leads get their own
-// "Leads récents" feed on the dashboard instead.
+// activity_log — that table's client_id is NOT NULL. Their own timeline
+// lives in lead_interactions instead (see logLeadInteraction).
 
 export async function updateLeadStatus(leadId: string, status: string) {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
-  if (!isLeadStatus(status)) {
-    throw new Error("Statut invalide.");
-  }
+  const { data: statusRow } = await supabaseAdmin.from("lead_statuses").select("key").eq("key", status).maybeSingle();
+  if (!statusRow) throw new Error("Statut invalide.");
+
+  const { data: existing } = await supabaseAdmin.from("leads").select("status").eq("id", leadId).maybeSingle();
+  if (!existing) throw new Error("Lead introuvable.");
+  if (existing.status === status) return;
 
   const { error } = await supabaseAdmin
     .from("leads")
@@ -29,8 +34,17 @@ export async function updateLeadStatus(leadId: string, status: string) {
     throw new Error("La mise à jour du statut a échoué.");
   }
 
+  await logLeadInteraction({
+    leadId,
+    type: "status_change",
+    actorId: admin.id,
+    metadata: { from_status: existing.status, to_status: status },
+  });
+  await recomputeLeadScore(leadId);
+
   revalidatePath("/admin");
   revalidatePath("/admin/leads");
+  revalidatePath(`/admin/leads/${leadId}`);
 }
 
 export async function updateLeadSource(leadId: string, source: string) {
@@ -61,6 +75,56 @@ export async function assignLead(leadId: string, formData: FormData) {
   revalidatePath("/admin/leads");
 }
 
+// Bulk equivalents for the list's multi-select action bar — same
+// validation as the single-lead versions, applied to every id at once.
+export async function bulkUpdateLeadStatus(leadIds: string[], status: string): Promise<{ error: string | null }> {
+  const admin = await requireAdmin();
+  if (leadIds.length === 0) return { error: null };
+
+  const { data: statusRow } = await supabaseAdmin.from("lead_statuses").select("key").eq("key", status).maybeSingle();
+  if (!statusRow) return { error: "Statut invalide." };
+
+  const { data: existingLeads } = await supabaseAdmin.from("leads").select("id, status").in("id", leadIds);
+
+  const { error } = await supabaseAdmin
+    .from("leads")
+    .update({ status, updated_at: new Date().toISOString() })
+    .in("id", leadIds);
+  if (error) return { error: "La mise à jour groupée a échoué." };
+
+  const changedLeads = (existingLeads ?? []).filter((l) => l.status !== status);
+  await Promise.all(
+    changedLeads.map((l) =>
+      logLeadInteraction({
+        leadId: l.id,
+        type: "status_change",
+        actorId: admin.id,
+        metadata: { from_status: l.status, to_status: status },
+      })
+    )
+  );
+  await Promise.all(changedLeads.map((l) => recomputeLeadScore(l.id)));
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/leads");
+  return { error: null };
+}
+
+export async function bulkAssignLead(leadIds: string[], assignedTo: string | null): Promise<{ error: string | null }> {
+  await requireAdmin();
+  if (leadIds.length === 0) return { error: null };
+
+  const { error } = await supabaseAdmin
+    .from("leads")
+    .update({ assigned_to: assignedTo, updated_at: new Date().toISOString() })
+    .in("id", leadIds);
+  if (error) return { error: "L'attribution groupée a échoué." };
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/leads");
+  return { error: null };
+}
+
 export async function updateLeadNotes(leadId: string, formData: FormData) {
   await requireAdmin();
 
@@ -81,7 +145,7 @@ export async function convertLeadToClient(leadId: string) {
 
   const { data: lead } = await supabaseAdmin
     .from("leads")
-    .select("name, email, company, converted_profile_id")
+    .select("name, email, company, status, converted_profile_id")
     .eq("id", leadId)
     .maybeSingle();
   if (!lead) throw new Error("Lead introuvable.");
@@ -113,6 +177,14 @@ export async function convertLeadToClient(leadId: string) {
     adminTitle: `${actorName} a converti le lead ${lead.name} en client`,
     actorId: admin.id,
   });
+  await logLeadInteraction({
+    leadId,
+    type: "status_change",
+    actorId: admin.id,
+    content: "Converti en client",
+    metadata: { from_status: lead.status, to_status: "won" },
+  });
+  await recomputeLeadScore(leadId);
 
   revalidatePath("/admin/leads");
   revalidatePath(`/admin/leads/${leadId}`);
@@ -123,7 +195,7 @@ export async function convertLeadToClient(leadId: string) {
 // see convertQuoteToInvoice's comment (src/app/admin/quotes/actions.ts) for
 // why: Next.js 16 redacts thrown Server Action error messages in production.
 export async function createLead(formData: FormData): Promise<{ error: string | null }> {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
   const name = formData.get("name");
   const email = formData.get("email");
@@ -143,20 +215,29 @@ export async function createLead(formData: FormData): Promise<{ error: string | 
       ? Math.round(parseFloat(budget.replace(",", ".")) * 100)
       : null;
 
-  const { error } = await supabaseAdmin.from("leads").insert({
-    name: name.trim(),
-    email: email.trim(),
-    phone: typeof phone === "string" && phone.trim() ? phone.trim() : null,
-    company: typeof company === "string" && company.trim() ? company.trim() : null,
-    project_type: typeof projectType === "string" && projectType.trim() ? projectType.trim() : null,
-    timeline: typeof timeline === "string" && timeline.trim() ? timeline.trim() : null,
-    budget_cents: Number.isFinite(budgetCents) ? budgetCents : null,
-    message: typeof message === "string" && message.trim() ? message.trim() : null,
-    source: typeof source === "string" && isLeadSource(source) ? source : "autre",
-    status: "new",
-  });
+  const resolvedSource = typeof source === "string" && isLeadSource(source) ? source : "autre";
 
-  if (error) return { error: "La création du lead a échoué." };
+  const { data: created, error } = await supabaseAdmin
+    .from("leads")
+    .insert({
+      name: name.trim(),
+      email: email.trim(),
+      phone: typeof phone === "string" && phone.trim() ? phone.trim() : null,
+      company: typeof company === "string" && company.trim() ? company.trim() : null,
+      project_type: typeof projectType === "string" && projectType.trim() ? projectType.trim() : null,
+      timeline: typeof timeline === "string" && timeline.trim() ? timeline.trim() : null,
+      budget_cents: Number.isFinite(budgetCents) ? budgetCents : null,
+      message: typeof message === "string" && message.trim() ? message.trim() : null,
+      source: resolvedSource,
+      status: "new",
+    })
+    .select("id")
+    .single();
+
+  if (error || !created) return { error: "La création du lead a échoué." };
+
+  await logLeadInteraction({ leadId: created.id, type: "form", actorId: admin.id, metadata: { source: resolvedSource } });
+  await recomputeLeadScore(created.id);
 
   revalidatePath("/admin");
   revalidatePath("/admin/leads");

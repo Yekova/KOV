@@ -2,7 +2,7 @@ import Link from "next/link";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { EmptyState } from "@/components/admin/EmptyState";
 import { formatRelativeTime } from "@/lib/formatRelativeTime";
-import { LEAD_STATUS_COLORS, LEAD_STATUS_LABELS, type LeadStatus } from "@/lib/admin/status";
+import type { LeadStatusRow } from "@/lib/leads/statuses";
 
 export type LeadFeedItem = {
   id: string;
@@ -14,7 +14,7 @@ export type LeadFeedItem = {
   budget_cents: number | null;
 };
 
-export function LeadFeed({ leads }: { leads: LeadFeedItem[] }) {
+export function LeadFeed({ leads, statuses }: { leads: LeadFeedItem[]; statuses: LeadStatusRow[] }) {
   return (
     <GlassCard className="p-5">
       <div className="flex items-center justify-between mb-4">
@@ -29,7 +29,8 @@ export function LeadFeed({ leads }: { leads: LeadFeedItem[] }) {
       ) : (
         <ul className="space-y-4">
           {leads.map((lead) => {
-            const color = LEAD_STATUS_COLORS[lead.status as LeadStatus] ?? "var(--kov-steel)";
+            const statusInfo = statuses.find((s) => s.key === lead.status);
+            const color = statusInfo?.color ?? "var(--kov-steel)";
             return (
               <li key={lead.id} className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
@@ -44,7 +45,7 @@ export function LeadFeed({ leads }: { leads: LeadFeedItem[] }) {
                 </div>
                 <div className="text-right shrink-0">
                   <p className="text-xs" style={{ color }}>
-                    {LEAD_STATUS_LABELS[lead.status as LeadStatus] ?? lead.status}
+                    {statusInfo?.label ?? lead.status}
                   </p>
                   <p className="text-kov-steel text-xs mt-0.5">{formatRelativeTime(lead.created_at)}</p>
                 </div>

@@ -1,41 +1,6 @@
-export const LEAD_STATUSES = ["new", "contacted", "qualified", "proposal", "negotiation", "won", "lost"] as const;
-export type LeadStatus = (typeof LEAD_STATUSES)[number];
-
-export function isLeadStatus(value: string): value is LeadStatus {
-  return (LEAD_STATUSES as readonly string[]).includes(value);
-}
-
-export const LEAD_STATUS_LABELS: Record<LeadStatus, string> = {
-  new: "Nouveau",
-  contacted: "Contacté",
-  qualified: "Qualifié",
-  proposal: "Proposition",
-  negotiation: "Négociation",
-  won: "Converti",
-  lost: "Perdu",
-};
-
-// The funnel's linear order — deliberately excludes 'lost', which is a
-// terminal exit reachable from any stage, not a step along the pipeline.
-export const LEAD_PIPELINE_STATUSES = ["new", "contacted", "qualified", "proposal", "negotiation", "won"] as const;
-
-// A small semantic palette scoped to the leads pipeline visualization
-// (funnel bars, source donut, status pill) — distinct from KOV's own
-// red-only accent system used everywhere else in the admin, because here
-// color carries real meaning (which stage a lead is at), the same
-// "semantic color is separate from your brand accent" case that justifies
-// stepping outside the brand palette. 'negotiation' reuses KOV red on
-// purpose — the hottest active stage naturally lines up with the brand's
-// one accent color.
-export const LEAD_STATUS_COLORS: Record<LeadStatus, string> = {
-  new: "var(--kov-steel)",
-  contacted: "#5B8DEF",
-  qualified: "#9B6DFF",
-  proposal: "#F5A524",
-  negotiation: "var(--kov-red)",
-  won: "#3FB27F",
-  lost: "var(--kov-steel)",
-};
+// Lead pipeline stages moved to a DB-backed, admin-configurable table —
+// see src/lib/leads/statuses.ts (getLeadStatuses) and
+// /admin/settings/lead-statuses. No more hardcoded LEAD_STATUSES here.
 
 // Free-text in the DB (no CHECK constraint) — this is the canonical,
 // selectable set going forward. Existing raw values ("contact-page" from
@@ -128,10 +93,10 @@ export const PRIORITY_LABELS: Record<Priority, string> = {
   urgent: "Urgente",
 };
 
-// Scoped to task cards/rows/badges — same "semantic color, separate from
-// KOV's red-only brand accent" case as LEAD_STATUS_COLORS. urgent reuses
-// the brand red on purpose (the one priority that should read as "same
-// urgency as the brand's own signal color").
+// Scoped to task cards/rows/badges — semantic color, separate from KOV's
+// red-only brand accent (same reasoning as lead_statuses.color). urgent
+// reuses the brand red on purpose (the one priority that should read as
+// "same urgency as the brand's own signal color").
 export const PRIORITY_COLORS: Record<Priority, string> = {
   low: "var(--kov-steel)",
   medium: "#F5A524",

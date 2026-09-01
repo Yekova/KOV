@@ -2,15 +2,15 @@
 
 import { useState, useTransition } from "react";
 import { updateLeadStatus } from "./actions";
-import { LEAD_STATUSES, LEAD_STATUS_LABELS, LEAD_STATUS_COLORS, type LeadStatus } from "@/lib/admin/status";
 import { Select } from "@/components/ui/Select";
+import type { LeadStatusRow } from "@/lib/leads/statuses";
 
 const TRIGGER_CLASS = "bg-transparent border text-xs uppercase tracking-widest px-3 py-2 focus:outline-none disabled:opacity-50";
 
-export function LeadStatusSelect({ leadId, status }: { leadId: string; status: string }) {
+export function LeadStatusSelect({ leadId, status, statuses }: { leadId: string; status: string; statuses: LeadStatusRow[] }) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const color = LEAD_STATUS_COLORS[status as LeadStatus] ?? "var(--kov-steel)";
+  const color = statuses.find((s) => s.key === status)?.color ?? "var(--kov-steel)";
 
   return (
     <div>
@@ -27,7 +27,7 @@ export function LeadStatusSelect({ leadId, status }: { leadId: string; status: s
             }
           });
         }}
-        options={LEAD_STATUSES.map((value) => ({ value, label: LEAD_STATUS_LABELS[value] }))}
+        options={statuses.filter((s) => s.isActive || s.key === status).map((s) => ({ value: s.key, label: s.label }))}
         className={TRIGGER_CLASS}
         style={{ borderRadius: "var(--radius-sm)", borderColor: color, color }}
       />

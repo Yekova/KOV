@@ -32,6 +32,16 @@ export default async function AdminSettingsPage() {
       </section>
 
       <section className="border-t pt-8" style={{ borderColor: "var(--kov-border)" }}>
+        <h2 className="text-xs uppercase tracking-widest text-kov-steel mb-2">Leads</h2>
+        <p className="text-kov-steel text-sm mb-4">
+          Statuts du pipeline commercial — ajoutez, renommez ou réordonnez les étapes.
+        </p>
+        <a href="/admin/settings/lead-statuses" className="text-kov-red text-sm hover:underline">
+          Gérer les statuts des leads →
+        </a>
+      </section>
+
+      <section className="border-t pt-8" style={{ borderColor: "var(--kov-border)" }}>
         <h2 className="text-xs uppercase tracking-widest text-kov-steel mb-2">À venir</h2>
         <p className="text-kov-steel text-sm">
           Intégrations et permissions granulaires arrivent dans une prochaine phase. La gestion d&apos;équipe se fait
