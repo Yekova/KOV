@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { addChecklistItem, toggleChecklistItem, deleteChecklistItem } from "@/app/admin/tasks/actions";
+import { ProgressBar } from "@/components/admin/ProgressBar";
 
 type ChecklistItem = { id: string; label: string; isDone: boolean; position: number };
 
@@ -37,7 +38,7 @@ export function ChecklistSection({
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-1">
         <p className="text-xs uppercase tracking-widest text-kov-steel">Checklist</p>
         {items.length > 0 && (
           <span className="text-kov-steel text-xs">
@@ -45,6 +46,7 @@ export function ChecklistSection({
           </span>
         )}
       </div>
+      {items.length > 0 && <ProgressBar percent={(done / items.length) * 100} className="mb-3" />}
 
       {items.length > 0 && (
         <ul className="space-y-2 mb-3">

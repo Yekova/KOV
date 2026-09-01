@@ -83,6 +83,17 @@ export function TaskManagerView({
               {option === "kanban" ? "Kanban" : "Liste"}
             </button>
           ))}
+          {["Calendrier", "Gantt", "Chrono"].map((label) => (
+            <button
+              key={label}
+              type="button"
+              disabled
+              title="Bientôt disponible"
+              className="px-3 py-1.5 text-xs uppercase tracking-widest text-kov-steel opacity-40 cursor-not-allowed"
+            >
+              {label}
+            </button>
+          ))}
         </div>
 
         <NewTaskModal projects={projects} admins={admins} phasesByProject={phasesByProject} />

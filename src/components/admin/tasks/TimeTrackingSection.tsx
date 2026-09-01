@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { startTimer, stopTimer, addManualTimeEntry, deleteTimeEntry } from "@/app/admin/tasks/actions";
 
 type TimeEntry = {
@@ -18,6 +18,30 @@ function formatMinutes(minutes: number) {
   const m = minutes % 60;
   if (h === 0) return `${m}min`;
   return m === 0 ? `${h}h` : `${h}h${String(m).padStart(2, "0")}`;
+}
+
+function formatElapsed(ms: number) {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+// Ticks once a second while a timer is running, purely for display — the
+// actual duration is computed server-side (from started_at) when the timer
+// stops, this is never what gets persisted.
+function useLiveElapsed(startedAt: string | null) {
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (!startedAt) return;
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, [startedAt]);
+
+  if (!startedAt) return null;
+  return formatElapsed(now - new Date(startedAt).getTime());
 }
 
 export function TimeTrackingSection({
@@ -39,6 +63,8 @@ export function TimeTrackingSection({
   const [manualNote, setManualNote] = useState("");
 
   const totalMinutes = entries.reduce((sum, e) => sum + (e.minutes ?? 0), 0);
+  const runningEntry = runningTimerId ? entries.find((e) => e.id === runningTimerId) : undefined;
+  const liveElapsed = useLiveElapsed(runningEntry?.startedAt ?? null);
 
   function run(action: () => Promise<void>) {
     setError(null);
@@ -62,19 +88,31 @@ export function TimeTrackingSection({
         </span>
       </div>
 
-      <button
-        type="button"
-        disabled={isPending}
-        onClick={() => run(() => (runningTimerId ? stopTimer(runningTimerId) : startTimer(taskId)))}
-        className="text-xs uppercase tracking-widest px-3 py-2 border mb-4 disabled:opacity-50"
-        style={{
-          borderColor: runningTimerId ? "var(--kov-red)" : "var(--kov-border)",
-          color: runningTimerId ? "var(--kov-red)" : "var(--kov-bone)",
-          borderRadius: "var(--radius-sm)",
-        }}
-      >
-        {runningTimerId ? "Arrêter le chronomètre" : "Démarrer le chronomètre"}
-      </button>
+      <div className="flex items-center gap-3 mb-4">
+        <button
+          type="button"
+          disabled={isPending}
+          aria-label={runningTimerId ? "Arrêter le chronomètre" : "Démarrer le chronomètre"}
+          onClick={() => run(() => (runningTimerId ? stopTimer(runningTimerId) : startTimer(taskId)))}
+          className="w-9 h-9 flex items-center justify-center shrink-0 transition-colors disabled:opacity-50"
+          style={{ background: runningTimerId ? "var(--kov-red)" : "var(--kov-graphite)", borderRadius: "var(--radius-pill)" }}
+        >
+          {runningTimerId ? (
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="var(--kov-white)">
+              <rect x="5" y="5" width="14" height="14" rx="2" />
+            </svg>
+          ) : (
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="var(--kov-bone)">
+              <polygon points="6,4 20,12 6,20" />
+            </svg>
+          )}
+        </button>
+        {liveElapsed ? (
+          <span className="font-display text-kov-bone text-lg tabular-nums">{liveElapsed}</span>
+        ) : (
+          <span className="text-kov-steel text-xs uppercase tracking-widest">Démarrer le chronomètre</span>
+        )}
+      </div>
 
       {error && <p className="text-kov-red text-xs mb-2">{error}</p>}
 

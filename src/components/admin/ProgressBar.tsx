@@ -1,4 +1,4 @@
-export function ProgressBar({ percent, className = "" }: { percent: number; className?: string }) {
+export function ProgressBar({ percent, className = "", color = "var(--kov-red)" }: { percent: number; className?: string; color?: string }) {
   return (
     <div
       className={`h-1.5 w-full overflow-hidden ${className}`}
@@ -6,7 +6,7 @@ export function ProgressBar({ percent, className = "" }: { percent: number; clas
     >
       <div
         className="h-full"
-        style={{ width: `${Math.max(0, Math.min(100, percent))}%`, background: "var(--kov-red)" }}
+        style={{ width: `${Math.max(0, Math.min(100, percent))}%`, background: color }}
       />
     </div>
   );

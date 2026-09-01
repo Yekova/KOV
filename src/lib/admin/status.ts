@@ -126,6 +126,28 @@ export const PRIORITY_LABELS: Record<Priority, string> = {
   urgent: "Urgente",
 };
 
+// Scoped to task cards/rows/badges — same "semantic color, separate from
+// KOV's red-only brand accent" case as LEAD_STATUS_COLORS. urgent reuses
+// the brand red on purpose (the one priority that should read as "same
+// urgency as the brand's own signal color").
+export const PRIORITY_COLORS: Record<Priority, string> = {
+  low: "var(--kov-steel)",
+  medium: "#F5A524",
+  high: "var(--kov-red-signal)",
+  urgent: "var(--kov-red)",
+};
+
+// Ordered forward path through the task workflow — used to offer a single
+// "next step" action in the task detail panel instead of making every
+// transition equally prominent. blocked/done have no default forward step.
+export const TASK_NEXT_STATUS: Partial<Record<TaskStatus, { status: TaskStatus; label: string }>> = {
+  backlog: { status: "todo", label: "Passer à faire" },
+  todo: { status: "in_progress", label: "Démarrer" },
+  in_progress: { status: "in_review", label: "Envoyer en review" },
+  in_review: { status: "done", label: "Marquer terminée" },
+  client_review: { status: "done", label: "Marquer terminée" },
+};
+
 export const VALIDATION_STATUSES = ["not_required", "internal_review", "client_review", "approved", "changes_requested"] as const;
 export type ValidationStatus = (typeof VALIDATION_STATUSES)[number];
 

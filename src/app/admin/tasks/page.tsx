@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { TaskManagerView } from "@/components/admin/tasks/TaskManagerView";
 import type { PickerOption, TaskRow } from "@/components/admin/tasks/types";
+import { StatCard } from "@/components/admin/StatCard";
 
 export const metadata: Metadata = {
   title: "Tâches — Admin KOV",
@@ -17,7 +18,7 @@ export default async function AdminTasksPage(props: PageProps<"/admin/tasks">) {
     supabaseAdmin
       .from("project_tasks")
       .select(
-        "id, title, description, status, priority, due_date, project_id, assigned_to, phase_id, position, updated_at, validation_status"
+        "id, title, description, status, priority, due_date, project_id, assigned_to, phase_id, position, created_at, updated_at, validation_status"
       )
       .order("position"),
     supabaseAdmin.from("projects").select("id, name").order("name"),
@@ -56,6 +57,7 @@ export default async function AdminTasksPage(props: PageProps<"/admin/tasks">) {
       position: t.position,
       checklistDone: checklist?.done ?? 0,
       checklistTotal: checklist?.total ?? 0,
+      createdAt: t.created_at,
       updatedAt: t.updated_at,
       validationStatus: t.validation_status,
     };
@@ -71,9 +73,27 @@ export default async function AdminTasksPage(props: PageProps<"/admin/tasks">) {
     phasesByProject[phase.project_id] = list;
   }
 
+  const totalCount = taskRows.length;
+  const doneCount = taskRows.filter((t) => t.status === "done").length;
+  const inProgressCount = taskRows.filter((t) => t.status === "in_progress").length;
+  const overdueCount = taskRows.filter((t) => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== "done").length;
+  const blockedCount = taskRows.filter((t) => t.status === "blocked").length;
+  const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  const createdThisMonth = taskRows.filter((t) => new Date(t.createdAt) >= startOfMonth).length;
+  const pct = (n: number) => (totalCount > 0 ? Math.round((n / totalCount) * 100) : 0);
+
   return (
-    <main className="px-6 py-10 max-w-[1800px] mx-auto w-full">
-      <h1 className="font-display text-kov-bone text-2xl uppercase mb-8">Tâches</h1>
+    <main className="px-6 py-10 max-w-[1800px] mx-auto w-full space-y-8">
+      <h1 className="font-display text-kov-bone text-2xl uppercase">Tâches</h1>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <StatCard label="Tâches totales" value={String(totalCount)} caption={`+${createdThisMonth} ce mois`} />
+        <StatCard label="Terminées" value={String(doneCount)} caption={`${pct(doneCount)}% du total`} progress={pct(doneCount)} progressColor="#3FB27F" />
+        <StatCard label="En cours" value={String(inProgressCount)} caption={`${pct(inProgressCount)}% du total`} progress={pct(inProgressCount)} progressColor="#F5A524" />
+        <StatCard label="En retard" value={String(overdueCount)} caption="Nécessite attention" progress={pct(overdueCount)} progressColor="var(--kov-red)" />
+        <StatCard label="Bloquées" value={String(blockedCount)} caption={`${pct(blockedCount)}% du total`} progress={pct(blockedCount)} progressColor="#9B6DFF" />
+      </div>
+
       <TaskManagerView
         initialTasks={taskRows}
         projects={projectOptions}

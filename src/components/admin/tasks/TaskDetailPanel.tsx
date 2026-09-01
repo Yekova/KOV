@@ -16,6 +16,8 @@ import {
   PRIORITY_LABELS,
   VALIDATION_STATUSES,
   VALIDATION_STATUS_LABELS,
+  TASK_NEXT_STATUS,
+  type TaskStatus,
 } from "@/lib/admin/status";
 import { ChecklistSection } from "./ChecklistSection";
 import { CommentsSection } from "./CommentsSection";
@@ -156,6 +158,21 @@ export function TaskDetailPanel({ taskId, onClose }: { taskId: string; onClose: 
             </div>
 
             {error && <p className="text-kov-red text-xs">{error}</p>}
+
+            {TASK_NEXT_STATUS[detail.status as TaskStatus] && (
+              <button
+                type="button"
+                disabled={isPending}
+                onClick={() => {
+                  const next = TASK_NEXT_STATUS[detail.status as TaskStatus];
+                  if (next) applyPatch({ status: next.status }, { status: next.status });
+                }}
+                className="w-full py-3 text-xs uppercase tracking-widest text-kov-white transition-colors disabled:opacity-50"
+                style={{ background: "var(--kov-red)", borderRadius: "var(--radius-sm)" }}
+              >
+                {TASK_NEXT_STATUS[detail.status as TaskStatus]!.label}
+              </button>
+            )}
 
             <div className="grid grid-cols-2 gap-3">
               <label className="text-xs text-kov-steel space-y-1">

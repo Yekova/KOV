@@ -19,6 +19,7 @@ export type TaskRow = {
   position: number;
   checklistDone: number;
   checklistTotal: number;
+  createdAt: string;
   updatedAt: string;
   validationStatus: string;
 };

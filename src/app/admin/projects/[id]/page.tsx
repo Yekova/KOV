@@ -101,7 +101,7 @@ export default async function AdminProjectDetailPage(props: PageProps<"/admin/pr
     supabaseAdmin
       .from("project_tasks")
       .select(
-        "id, title, description, status, priority, due_date, project_id, assigned_to, phase_id, position, updated_at, validation_status"
+        "id, title, description, status, priority, due_date, project_id, assigned_to, phase_id, position, created_at, updated_at, validation_status"
       )
       .eq("project_id", projectId)
       .order("position"),
@@ -142,6 +142,7 @@ export default async function AdminProjectDetailPage(props: PageProps<"/admin/pr
       position: t.position,
       checklistDone: checklist?.done ?? 0,
       checklistTotal: checklist?.total ?? 0,
+      createdAt: t.created_at,
       updatedAt: t.updated_at,
       validationStatus: t.validation_status,
     };

@@ -5,7 +5,8 @@ import { EmptyState } from "@/components/admin/EmptyState";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { DateBadge } from "@/components/admin/DateBadge";
 import { ProgressBar } from "@/components/admin/ProgressBar";
-import { TASK_STATUS_LABELS, PRIORITY_LABELS, type TaskStatus, type Priority } from "@/lib/admin/status";
+import { Avatar } from "@/components/admin/Avatar";
+import { TASK_STATUS_LABELS, PRIORITY_LABELS, PRIORITY_COLORS, type TaskStatus, type Priority } from "@/lib/admin/status";
 import { formatRelativeTime } from "@/lib/formatRelativeTime";
 import { useTaskPanel } from "./TaskPanelContext";
 import type { TaskRow } from "./types";
@@ -116,15 +117,28 @@ export function TaskListTable({ tasks, showProject = true }: { tasks: TaskRow[];
                       >
                         <td className="py-3 pr-4 text-kov-bone">{task.title}</td>
                         {showProject && <td className="py-3 pr-4 text-kov-steel">{task.projectName}</td>}
-                        <td className="py-3 pr-4 text-kov-steel">{task.assigneeName ?? "—"}</td>
+                        <td className="py-3 pr-4">
+                          {task.assigneeName ? (
+                            <span className="flex items-center gap-2 text-kov-steel">
+                              <Avatar name={task.assigneeName} />
+                              {task.assigneeName}
+                            </span>
+                          ) : (
+                            <span className="text-kov-steel">—</span>
+                          )}
+                        </td>
                         <td className="py-3 pr-4">
                           <StatusBadge
                             label={TASK_STATUS_LABELS[task.status as TaskStatus] ?? task.status}
                             tone={task.status === "done" ? "positive" : task.status === "blocked" ? "danger" : "neutral"}
                           />
                         </td>
-                        <td className="py-3 pr-4 text-kov-steel">
-                          {task.priority ? PRIORITY_LABELS[task.priority as Priority] : "—"}
+                        <td className="py-3 pr-4">
+                          {task.priority ? (
+                            <span style={{ color: PRIORITY_COLORS[task.priority as Priority] }}>{PRIORITY_LABELS[task.priority as Priority]}</span>
+                          ) : (
+                            <span className="text-kov-steel">—</span>
+                          )}
                         </td>
                         <td className="py-3 pr-4">{task.dueDate ? <DateBadge date={task.dueDate} isOverdue={isOverdue} /> : "—"}</td>
                         <td className="py-3 pr-4 w-28">
