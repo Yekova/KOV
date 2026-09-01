@@ -2,6 +2,7 @@ import Link from "next/link";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { EmptyState } from "@/components/admin/EmptyState";
 import { ProgressBar } from "@/components/admin/ProgressBar";
+import { Avatar } from "@/components/admin/Avatar";
 
 export type TeamMemberLoad = {
   id: string;
@@ -35,11 +36,14 @@ export function TeamWorkload({ members }: { members: TeamMemberLoad[] }) {
             return (
               <li key={member.id}>
                 <div className="flex items-center justify-between mb-1.5">
-                  <div>
-                    <p className="text-kov-bone text-sm">{member.name}</p>
-                    <p className="text-kov-steel text-xs">{member.title || "Équipe KOV"}</p>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Avatar name={member.name} />
+                    <div className="min-w-0">
+                      <p className="text-kov-bone text-sm truncate">{member.name}</p>
+                      <p className="text-kov-steel text-xs truncate">{member.title || "Équipe KOV"}</p>
+                    </div>
                   </div>
-                  <span className="text-kov-steel text-xs">{relativePercent}%</span>
+                  <span className="text-kov-steel text-xs shrink-0">{relativePercent}%</span>
                 </div>
                 <ProgressBar percent={relativePercent} />
               </li>

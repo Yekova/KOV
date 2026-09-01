@@ -12,6 +12,7 @@ export type ProjectTableRow = {
   clientId: string;
   clientName: string;
   managerName: string | null;
+  phaseName?: string | null;
   status: string;
   progressPercent: number;
   dueDate: string | null;
@@ -51,6 +52,7 @@ export function ProjectTable({
                 <th className="py-2 pr-4">Projet</th>
                 <th className="py-2 pr-4">Client</th>
                 <th className="py-2 pr-4">Chef de projet</th>
+                <th className="py-2 pr-4">Phase</th>
                 <th className="py-2 pr-4">Statut</th>
                 <th className="py-2 pr-4">Progression</th>
                 <th className="py-2 pr-4">Échéance</th>
@@ -68,6 +70,7 @@ export function ProjectTable({
                     </td>
                     <td className="py-3 pr-4 text-kov-steel">{project.clientName}</td>
                     <td className="py-3 pr-4 text-kov-steel">{project.managerName || "—"}</td>
+                    <td className="py-3 pr-4 text-kov-steel">{project.phaseName || "—"}</td>
                     <td className="py-3 pr-4">
                       <StatusBadge
                         label={PROJECT_STATUS_LABELS[project.status as ProjectStatus] ?? project.status}

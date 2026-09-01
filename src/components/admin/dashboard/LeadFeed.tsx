@@ -2,6 +2,7 @@ import Link from "next/link";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { EmptyState } from "@/components/admin/EmptyState";
 import { formatRelativeTime } from "@/lib/formatRelativeTime";
+import { LEAD_STATUS_COLORS, LEAD_STATUS_LABELS, type LeadStatus } from "@/lib/admin/status";
 
 export type LeadFeedItem = {
   id: string;
@@ -10,6 +11,7 @@ export type LeadFeedItem = {
   project_type: string | null;
   status: string;
   created_at: string;
+  budget_cents: number | null;
 };
 
 export function LeadFeed({ leads }: { leads: LeadFeedItem[] }) {
@@ -26,24 +28,29 @@ export function LeadFeed({ leads }: { leads: LeadFeedItem[] }) {
         <EmptyState message="Aucun lead pour l'instant." />
       ) : (
         <ul className="space-y-4">
-          {leads.map((lead) => (
-            <li key={lead.id} className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <span
-                  className="w-2 h-2 shrink-0"
-                  style={{
-                    background: lead.status === "new" ? "var(--kov-red)" : "var(--kov-steel)",
-                    borderRadius: "var(--radius-pill)",
-                  }}
-                />
-                <div className="min-w-0">
-                  <p className="text-kov-bone text-sm truncate">{lead.name}</p>
-                  <p className="text-kov-steel text-xs truncate">{lead.company || lead.project_type || "—"}</p>
+          {leads.map((lead) => {
+            const color = LEAD_STATUS_COLORS[lead.status as LeadStatus] ?? "var(--kov-steel)";
+            return (
+              <li key={lead.id} className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="w-2 h-2 shrink-0" style={{ background: color, borderRadius: "var(--radius-pill)" }} />
+                  <div className="min-w-0">
+                    <p className="text-kov-bone text-sm truncate">{lead.name}</p>
+                    <p className="text-kov-steel text-xs truncate">
+                      {lead.company || lead.project_type || "—"}
+                      {lead.budget_cents ? ` — ${(lead.budget_cents / 100).toLocaleString("fr-FR")} €` : ""}
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <span className="text-kov-steel text-xs shrink-0">{formatRelativeTime(lead.created_at)}</span>
-            </li>
-          ))}
+                <div className="text-right shrink-0">
+                  <p className="text-xs" style={{ color }}>
+                    {LEAD_STATUS_LABELS[lead.status as LeadStatus] ?? lead.status}
+                  </p>
+                  <p className="text-kov-steel text-xs mt-0.5">{formatRelativeTime(lead.created_at)}</p>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
     </GlassCard>
