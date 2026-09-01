@@ -6,7 +6,8 @@ import { usePathname } from "next/navigation";
 const PAGES = [
   { href: "/legal", label: "Mentions légales" },
   { href: "/privacy", label: "Confidentialité" },
-  { href: "/terms", label: "Conditions" },
+  { href: "/terms", label: "Conditions d'utilisation" },
+  { href: "/cgv", label: "CGV" },
 ];
 
 // A small switcher between the three legal docs — otherwise the only way

@@ -22,6 +22,7 @@ const LEGAL_LINKS = [
   { href: "/legal", label: "Mentions légales" },
   { href: "/privacy", label: "Confidentialité" },
   { href: "/terms", label: "Conditions d'utilisation" },
+  { href: "/cgv", label: "CGV" },
 ];
 
 // KOV has no real social profiles yet — these are the recognizable icons for

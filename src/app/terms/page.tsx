@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { LegalDoc } from "@/components/legal/LegalDoc";
 
 export const metadata: Metadata = {
@@ -14,7 +15,11 @@ const SECTIONS = [
     body: (
       <p>
         Ces conditions régissent uniquement l&apos;utilisation du site kov-agency.site. Elles ne constituent pas un
-        contrat de prestation — les engagements de projet avec KOV sont régis par un accord écrit distinct.
+        contrat de prestation — les engagements de projet avec KOV sont régis par un accord écrit distinct : les{" "}
+        <Link href="/cgv" className="text-kov-red hover:underline">
+          conditions générales de vente
+        </Link>
+        .
       </p>
     ),
   },
