@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { TagPill } from "@/components/ui/Chip";
-import { ParticleImage } from "@/components/home/ParticleImage";
+import { ParticleImage } from "@/components/home/ParticleImageLazy";
 import { PILLARS } from "@/data/expertisePillars";
 import { PROCESS } from "@/data/processSteps";
 import { SERVICES } from "@/data/services";

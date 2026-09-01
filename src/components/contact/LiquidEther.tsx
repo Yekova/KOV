@@ -11,7 +11,7 @@
 // used throughout the internal simulation classes for the same reason: fully
 // typing Three.js's dynamic uniform bags and this class hierarchy would be a
 // large, risky undertaking for code that isn't exported past this file.
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import "./LiquidEther.css";
 
@@ -66,8 +66,18 @@ export default function LiquidEther({
   const isVisibleRef = useRef(true);
   const resizeRafRef = useRef<number | null>(null);
 
+  // Lazy initializer, not a setState-in-effect call — same convention as
+  // ShapeBlur.tsx. Unlike the other WebGL effects in this codebase, this
+  // one was missing the reduced-motion gate entirely — a full fluid
+  // simulation (advection + viscosity diffusion + Poisson pressure solve)
+  // running continuously on /contact for every visitor, regardless of
+  // their OS-level motion preference.
+  const [reducedMotion] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+
   useEffect(() => {
-    if (!mountRef.current) return;
+    if (!mountRef.current || reducedMotion) return;
 
     function makePaletteTexture(stops: string[]) {
       let arr: string[];
@@ -1166,6 +1176,7 @@ export default function LiquidEther({
     takeoverDuration,
     autoResumeDelay,
     autoRampDuration,
+    reducedMotion,
   ]);
 
   useEffect(() => {

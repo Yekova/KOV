@@ -2,10 +2,16 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/Button";
 import { Reveal } from "@/components/ui/Reveal";
 import { PILLARS } from "@/data/expertisePillars";
-import { FluidGlassCursor } from "@/components/ui/FluidGlassCursor";
+
+// Defers @react-three/fiber+drei+maath+three out of the homepage's initial
+// bundle — already gated behind reducedMotion below, so most visits never
+// need this chunk at all, and the ones that do only need it once this
+// section scrolls into view.
+const FluidGlassCursor = dynamic(() => import("@/components/ui/FluidGlassCursor").then((m) => m.FluidGlassCursor), { ssr: false });
 
 const EXPERTISE_PHOTO = "/kov/menu/bureau-moderne.jpg";
 const CARD_SLOT_HEIGHT = "140vh";

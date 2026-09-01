@@ -4,9 +4,16 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { motion, LIQUID_EASE } from "@/lib/motion";
-import { InfiniteMenu, type InfiniteMenuItem } from "@/components/layout/InfiniteMenu";
+import type { InfiniteMenuItem } from "@/components/layout/InfiniteMenu";
 import { SITE_SECTIONS } from "@/data/siteSections";
+
+// This component (and its gl-matrix/WebGL cost) is statically imported
+// into SiteChrome, so it ships on every public page even though it only
+// ever mounts once the menu is opened — deferred out of the initial
+// bundle for exactly that reason.
+const InfiniteMenu = dynamic(() => import("@/components/layout/InfiniteMenu").then((m) => m.InfiniteMenu), { ssr: false });
 
 const MENU_ITEMS: InfiniteMenuItem[] = SITE_SECTIONS.map((section) => ({
   image: section.image,

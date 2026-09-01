@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { ContactWizard } from "@/components/contact/ContactWizard";
-import LiquidEther from "@/components/contact/LiquidEther";
+import LiquidEther from "@/components/contact/LiquidEtherLazy";
 
 export const metadata: Metadata = {
   title: "Contact — KOV",

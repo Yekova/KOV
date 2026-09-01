@@ -1,5 +1,5 @@
 import Link from "next/link";
-import ShapeBlur from "@/components/ui/ShapeBlur";
+import ShapeBlur from "@/components/ui/ShapeBlurLazy";
 
 const GLASS_PILL_STYLE = {
   background: "var(--glass-bg)",
