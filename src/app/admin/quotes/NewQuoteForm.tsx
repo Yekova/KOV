@@ -19,9 +19,11 @@ const EMPTY_ROW: LineItemRow = { description: "", quantity: "1", unitPriceEur: "
 export function NewQuoteForm({
   clients,
   leads,
+  onSuccess,
 }: {
   clients: { id: string; label: string }[];
   leads: { id: string; label: string; email: string }[];
+  onSuccess?: () => void;
 }) {
   const [rows, setRows] = useState<LineItemRow[]>([{ ...EMPTY_ROW }]);
   const [isPending, startTransition] = useTransition();
@@ -46,9 +48,14 @@ export function NewQuoteForm({
 
     startTransition(async () => {
       try {
-        await createQuote(formData);
+        const result = await createQuote(formData);
+        if (result.error) {
+          setError(result.error);
+          return;
+        }
         setRows([{ ...EMPTY_ROW }]);
         form.reset();
+        onSuccess?.();
       } catch (err) {
         setError(err instanceof Error ? err.message : "La création du devis a échoué.");
       }

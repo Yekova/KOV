@@ -29,7 +29,10 @@ function parseRequiredEuroToCents(value: FormDataEntryValue | null): number | nu
   return Number.isFinite(cents) && cents >= 0 ? cents : null;
 }
 
-export async function createQuote(formData: FormData) {
+// Returns { error } instead of throwing for expected/validation failures —
+// see the comment on convertQuoteToInvoice for why (Next.js 16 redacts
+// thrown Server Action error messages in production).
+export async function createQuote(formData: FormData): Promise<{ error: string | null }> {
   const admin = await requireAdmin();
 
   const reference = formData.get("reference");
@@ -40,11 +43,11 @@ export async function createQuote(formData: FormData) {
   const validUntil = formData.get("valid_until");
   const discountEur = formData.get("discount_eur");
 
-  if (typeof reference !== "string" || !reference.trim()) throw new Error("Référence requise.");
-  if (typeof recipientName !== "string" || !recipientName.trim()) throw new Error("Nom du destinataire requis.");
+  if (typeof reference !== "string" || !reference.trim()) return { error: "Référence requise." };
+  if (typeof recipientName !== "string" || !recipientName.trim()) return { error: "Nom du destinataire requis." };
 
   const lineItems = parseLineItemsFromForm(formData.get("line_items"));
-  if (lineItems.length === 0) throw new Error("Au moins une ligne de devis est requise.");
+  if (lineItems.length === 0) return { error: "Au moins une ligne de devis est requise." };
   const subtotalCents = lineItems.reduce((sum, item) => sum + item.quantity * item.unitPriceCents, 0);
   const discountCents = Math.min(subtotalCents, parseEuroToCents(discountEur));
   const totalCents = subtotalCents - discountCents;
@@ -62,7 +65,7 @@ export async function createQuote(formData: FormData) {
     // Admin supplied their own PDF (e.g. a custom-formatted devis) — use it
     // as-is instead of generating one from the template. The line items
     // above still drive the stored subtotal/total shown in the app and email.
-    if (pdfFile.type !== "application/pdf") throw new Error("Le fichier personnalisé doit être un PDF.");
+    if (pdfFile.type !== "application/pdf") return { error: "Le fichier personnalisé doit être un PDF." };
     await uploadClientFile(pdfPath, pdfFile);
   } else {
     const pdfBuffer = await generateQuotePdfBuffer({
@@ -94,7 +97,7 @@ export async function createQuote(formData: FormData) {
     pdf_storage_path: pdfPath,
   });
 
-  if (error) throw new Error("La création du devis a échoué (référence déjà utilisée ?).");
+  if (error) return { error: "La création du devis a échoué (référence déjà utilisée ?)." };
 
   if (clientIdValue) {
     const actorName = await getActorDisplayName(admin.id);
@@ -109,6 +112,7 @@ export async function createQuote(formData: FormData) {
   }
 
   revalidatePath("/admin/quotes");
+  return { error: null };
 }
 
 export async function updateQuoteStatus(quoteId: string, status: string) {
