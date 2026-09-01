@@ -41,7 +41,7 @@ export const LEAD_STATUS_COLORS: Record<LeadStatus, string> = {
 // selectable set going forward. Existing raw values ("contact-page" from
 // the public form, "admin-manuel" from quick-add) are grouped into these
 // via normalizeLeadSource for the source donut, never rewritten in place.
-export const LEAD_SOURCES = ["site_web", "reseaux_sociaux", "recommandation", "linkedin", "autre"] as const;
+export const LEAD_SOURCES = ["site_web", "reseaux_sociaux", "recommandation", "linkedin", "newsletter", "autre"] as const;
 export type LeadSource = (typeof LEAD_SOURCES)[number];
 
 export function isLeadSource(value: string): value is LeadSource {
@@ -53,6 +53,7 @@ export const LEAD_SOURCE_LABELS: Record<LeadSource, string> = {
   reseaux_sociaux: "Réseaux sociaux",
   recommandation: "Recommandation",
   linkedin: "LinkedIn",
+  newsletter: "Newsletter",
   autre: "Autre",
 };
 
@@ -61,6 +62,7 @@ export const LEAD_SOURCE_COLORS: Record<LeadSource, string> = {
   reseaux_sociaux: "#F5A524",
   recommandation: "#9B6DFF",
   linkedin: "#5B8DEF",
+  newsletter: "#3FB27F",
   autre: "var(--kov-steel)",
 };
 
