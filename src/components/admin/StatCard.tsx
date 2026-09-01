@@ -1,6 +1,6 @@
 import { GlassCard } from "@/components/ui/GlassCard";
 
-export function QuoteStatCard({ label, value, caption }: { label: string; value: string; caption: string }) {
+export function StatCard({ label, value, caption }: { label: string; value: string; caption: string }) {
   return (
     <GlassCard className="p-5">
       <p className="text-xs uppercase tracking-widest text-kov-steel mb-3">{label}</p>

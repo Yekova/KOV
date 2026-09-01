@@ -7,7 +7,7 @@ import { isQuoteExpired, isQuoteStatus, QUOTE_STATUSES, QUOTE_STATUS_LABELS, typ
 import { QuoteStatusSelect } from "./QuoteStatusSelect";
 import { QuoteRowActions } from "./QuoteRowActions";
 import { NewQuoteModal } from "./NewQuoteModal";
-import { QuoteStatCard } from "@/components/admin/quotes/QuoteStatCard";
+import { StatCard } from "@/components/admin/StatCard";
 import { EmptyState } from "@/components/admin/EmptyState";
 
 export const metadata: Metadata = {
@@ -92,10 +92,10 @@ export default async function AdminQuotesPage(props: PageProps<"/admin/quotes">)
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <QuoteStatCard label="Montant total" value={`${(totalActiveCents / 100).toLocaleString("fr-FR")} €`} caption="Devis en cours" />
-        <QuoteStatCard label="Devis en cours" value={String(activeQuotes.length)} caption={`+${activeThisMonth} ce mois`} />
-        <QuoteStatCard label="Expiration proche" value={String(expiringSoon)} caption="Dans les 7 prochains jours" />
-        <QuoteStatCard label="Taux de conversion" value={`${conversionRate}%`} caption="Sur les devis résolus" />
+        <StatCard label="Montant total" value={`${(totalActiveCents / 100).toLocaleString("fr-FR")} €`} caption="Devis en cours" />
+        <StatCard label="Devis en cours" value={String(activeQuotes.length)} caption={`+${activeThisMonth} ce mois`} />
+        <StatCard label="Expiration proche" value={String(expiringSoon)} caption="Dans les 7 prochains jours" />
+        <StatCard label="Taux de conversion" value={`${conversionRate}%`} caption="Sur les devis résolus" />
       </div>
 
       <div>

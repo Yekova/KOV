@@ -11,12 +11,10 @@ import {
   createProject,
   updateProject,
   uploadDocument,
-  createInvoice,
   replyToRequestThread,
 } from "../actions";
 import { Select } from "@/components/ui/Select";
-import { InvoiceKindFields } from "@/components/admin/invoices/InvoiceKindFields";
-import { InvoiceLineItemsField } from "./InvoiceLineItemsField";
+import { NewClientInvoiceForm } from "./NewClientInvoiceForm";
 import { InvoiceRowActions } from "@/components/admin/invoices/InvoiceRowActions";
 import { InvoiceStatusSelect } from "@/components/admin/invoices/InvoiceStatusSelect";
 import { DeleteDocumentButton } from "./DeleteDocumentButton";
@@ -406,34 +404,7 @@ export default async function AdminClientDetailPage(props: PageProps<"/admin/cli
           })}
         </div>
 
-        <form
-          action={createInvoice}
-          className="border p-4 flex flex-wrap items-end gap-4"
-          style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-md)" }}
-        >
-          <input type="hidden" name="client_id" value={clientId} />
-          <label className="text-xs text-kov-steel">
-            Référence
-            <input type="text" name="reference" required placeholder="F-2026-01" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
-          </label>
-          <label className="text-xs text-kov-steel">
-            Montant (€)
-            <input type="text" name="amount_eur" required placeholder="1200.00" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
-          </label>
-          <label className="text-xs text-kov-steel">
-            Échéance
-            <input type="date" name="due_at" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
-          </label>
-          <InvoiceKindFields />
-          <label className="text-xs text-kov-steel">
-            PDF personnalisé (facultatif — sinon généré automatiquement)
-            <input type="file" name="pdf_file" accept="application/pdf" className={`${FIELD_CLASS} py-1.5`} style={{ borderColor: "var(--kov-border)" }} />
-          </label>
-          <InvoiceLineItemsField />
-          <Button type="submit" variant="primary">
-            Créer la facture
-          </Button>
-        </form>
+        <NewClientInvoiceForm clientId={clientId} />
       </section>
 
       <section>

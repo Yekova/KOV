@@ -306,7 +306,13 @@ export async function deleteDocument(documentId: string) {
   revalidateClient(doc.client_id);
 }
 
-export async function createInvoice(formData: FormData) {
+// Returns { error } instead of throwing for expected/validation failures —
+// see convertQuoteToInvoice's own comment (src/app/admin/quotes/actions.ts)
+// for why: Next.js 16 redacts thrown Server Action error messages in
+// production. Has two callers with different shapes: NewClientInvoiceForm
+// (useActionState, client_id bound contextually) and the general billing
+// page's NewInvoiceForm (a client_id Select, no context to bind).
+export async function createInvoice(formData: FormData): Promise<{ error: string | null }> {
   const admin = await requireAdmin();
 
   const clientId = formData.get("client_id");
@@ -320,11 +326,11 @@ export async function createInvoice(formData: FormData) {
   const totalProject = formData.get("total_project_eur");
   const lineItems = parseLineItemsFromForm(formData.get("line_items"));
 
-  if (typeof clientId !== "string" || !clientId) throw new Error("Client invalide.");
-  if (typeof reference !== "string" || !reference.trim()) throw new Error("Référence requise.");
+  if (typeof clientId !== "string" || !clientId) return { error: "Client invalide." };
+  if (typeof reference !== "string" || !reference.trim()) return { error: "Référence requise." };
 
   const amountCents = parseEuroToCents(amount);
-  if (amountCents === null) throw new Error("Montant invalide.");
+  if (amountCents === null) return { error: "Montant invalide." };
 
   const kindValue: InvoiceKind = typeof kind === "string" && isInvoiceKind(kind) ? kind : "full";
   const depositPercentValue =
@@ -344,7 +350,7 @@ export async function createInvoice(formData: FormData) {
     // Admin supplied their own PDF (e.g. a custom-formatted invoice) — use it
     // as-is instead of generating one from the template. The <input accept>
     // is only a browser hint, so the real type is checked here too.
-    if (pdfFile.type !== "application/pdf") throw new Error("Le fichier personnalisé doit être un PDF.");
+    if (pdfFile.type !== "application/pdf") return { error: "Le fichier personnalisé doit être un PDF." };
     await uploadClientFile(pdfPath, pdfFile);
   } else {
     const { data: client } = await supabaseAdmin
@@ -389,7 +395,7 @@ export async function createInvoice(formData: FormData) {
     line_items: toDbLineItems(lineItems),
   });
 
-  if (error) throw new Error("La création de la facture a échoué.");
+  if (error) return { error: "La création de la facture a échoué." };
 
   const actorName = await getActorDisplayName(admin.id);
 
@@ -404,6 +410,7 @@ export async function createInvoice(formData: FormData) {
   });
 
   revalidateClient(clientId);
+  return { error: null };
 }
 
 export async function updateInvoiceStatus(invoiceId: string, formData: FormData) {
