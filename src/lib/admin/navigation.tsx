@@ -63,6 +63,17 @@ export const adminNavigation: AdminNavItem[] = [
     badgeSource: "leads",
   },
   {
+    id: "emails",
+    label: "Emails",
+    href: "/admin/emails",
+    icon: (
+      <>
+        <rect x="3" y="5" width="18" height="14" rx="2" />
+        <path d="M3 7l9 6 9-6" />
+      </>
+    ),
+  },
+  {
     id: "content",
     label: "Contenu",
     href: "/admin/content",

@@ -42,6 +42,21 @@ export default async function AdminSettingsPage() {
       </section>
 
       <section className="border-t pt-8" style={{ borderColor: "var(--kov-border)" }}>
+        <h2 className="text-xs uppercase tracking-widest text-kov-steel mb-2">Emails</h2>
+        <p className="text-kov-steel text-sm mb-4">
+          Modèles utilisés dans le composer, et vos signatures personnelles.
+        </p>
+        <div className="flex flex-wrap gap-x-6 gap-y-2">
+          <a href="/admin/settings/email-templates" className="text-kov-red text-sm hover:underline">
+            Gérer les modèles d&apos;emails →
+          </a>
+          <a href="/admin/settings/email-signatures" className="text-kov-red text-sm hover:underline">
+            Gérer mes signatures →
+          </a>
+        </div>
+      </section>
+
+      <section className="border-t pt-8" style={{ borderColor: "var(--kov-border)" }}>
         <h2 className="text-xs uppercase tracking-widest text-kov-steel mb-2">À venir</h2>
         <p className="text-kov-steel text-sm">
           Intégrations et permissions granulaires arrivent dans une prochaine phase. La gestion d&apos;équipe se fait

@@ -8,6 +8,7 @@ import { AssignLeadSelect } from "../AssignLeadSelect";
 import { LeadDetailActions } from "./LeadDetailActions";
 import { CONTACT_METHOD_LABELS, LEAD_TIMELINE_LABELS, isContactMethod, isLeadTimeline } from "@/lib/admin/status";
 import { getLeadStatuses } from "@/lib/leads/statuses";
+import { LeadEmailPanel } from "@/components/email/LeadEmailPanel";
 
 export const metadata: Metadata = { title: "Lead — Admin KOV" };
 
@@ -92,6 +93,8 @@ export default async function AdminLeadDetailPage(props: PageProps<"/admin/leads
           <p className="text-kov-bone text-sm whitespace-pre-wrap">{lead.message}</p>
         </div>
       )}
+
+      <LeadEmailPanel leadId={lead.id} />
 
       <LeadDetailActions leadId={lead.id} initialNotes={lead.notes} convertedProfileId={lead.converted_profile_id} />
     </main>

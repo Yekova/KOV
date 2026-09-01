@@ -2,6 +2,52 @@
 // see src/lib/leads/statuses.ts (getLeadStatuses) and
 // /admin/settings/lead-statuses. No more hardcoded LEAD_STATUSES here.
 
+export const EMAIL_STATUSES = ["draft", "queued", "sent", "delivered", "failed", "bounced"] as const;
+export type EmailStatus = (typeof EMAIL_STATUSES)[number];
+
+export function isEmailStatus(value: string): value is EmailStatus {
+  return (EMAIL_STATUSES as readonly string[]).includes(value);
+}
+
+export const EMAIL_STATUS_LABELS: Record<EmailStatus, string> = {
+  draft: "Brouillon",
+  queued: "Envoi en cours",
+  sent: "Envoyé",
+  delivered: "Délivré",
+  failed: "Échec",
+  bounced: "Rejeté",
+};
+
+// opened/clicked are deliberately NOT status values — an email can be
+// delivered AND opened AND clicked at once, they're not mutually exclusive
+// states, so they live as separate timestamps (email_logs.opened_at/
+// clicked_at) instead of overwriting `status`.
+export const EMAIL_STATUS_COLORS: Record<EmailStatus, string> = {
+  draft: "var(--kov-steel)",
+  queued: "#E39A2D",
+  sent: "#3F8CFF",
+  delivered: "#3FB27F",
+  failed: "var(--kov-red)",
+  bounced: "var(--kov-red)",
+};
+
+export const EMAIL_TEMPLATE_CATEGORIES = ["contact", "relance", "commercial", "rendez_vous", "projet", "fidelisation", "personnalise"] as const;
+export type EmailTemplateCategory = (typeof EMAIL_TEMPLATE_CATEGORIES)[number];
+
+export function isEmailTemplateCategory(value: string): value is EmailTemplateCategory {
+  return (EMAIL_TEMPLATE_CATEGORIES as readonly string[]).includes(value);
+}
+
+export const EMAIL_TEMPLATE_CATEGORY_LABELS: Record<EmailTemplateCategory, string> = {
+  contact: "Contact",
+  relance: "Relance",
+  commercial: "Commercial",
+  rendez_vous: "Rendez-vous",
+  projet: "Projet",
+  fidelisation: "Fidélisation",
+  personnalise: "Personnalisé",
+};
+
 // Free-text in the DB (no CHECK constraint) — this is the canonical,
 // selectable set going forward. Existing raw values ("contact-page" from
 // the public form, "admin-manuel" from quick-add) are grouped into these
