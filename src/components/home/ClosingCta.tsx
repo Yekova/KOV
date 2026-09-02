@@ -1,92 +1,43 @@
-"use client";
-
-import { useEffect, useRef, useState } from "react";
-import { Button } from "@/components/ui/Button";
+import Link from "next/link";
 import { KovCTA } from "@/components/ui/KovCTA";
-import { gsap, initGsap, GSAP_LIQUID_EASE } from "@/lib/motion";
+import { Reveal } from "@/components/ui/Reveal";
+import { CursorRevealWordmark } from "@/components/home/CursorRevealWordmark";
 
-// The homepage's closing statement — every other section now runs a
-// scrubbed GSAP scene of its own (converging pillars, settling words, a
-// growing progress line, a staged case-study reveal); this one was still a
-// plain Reveal fade, the one section left visibly flat by comparison. Same
-// staged-beat pattern as WorkSpotlight (eyebrow → headline → body → CTAs →
-// detail), not pinned — one composition, same reasoning WorkSpotlight and
-// ProcessTimeline already use for not needing a held scene.
-//
-// The headline also no longer just repeats /contact's own H1 ("Un projet
-// en tête ?") verbatim — this is the page saying it, not the form asking
-// it, so it gets its own line.
-export function ClosingCta() {
-  const sceneRef = useRef<HTMLDivElement>(null);
-  const [reducedMotion] = useState(
-    () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  );
+const TICK_CLASS = "absolute w-4 h-4 md:w-5 md:h-5 pointer-events-none";
 
-  useEffect(() => {
-    if (reducedMotion) return;
-    const scene = sceneRef.current;
-    if (!scene) return;
-    initGsap();
-
-    const eyebrow = scene.querySelector("[data-cta-eyebrow]");
-    const headline = scene.querySelector("[data-cta-headline]");
-    const body = scene.querySelector("[data-cta-body]");
-    const actions = scene.querySelector("[data-cta-actions]");
-    const detail = scene.querySelector("[data-cta-detail]");
-
-    const ctx = gsap.context(() => {
-      gsap.set([eyebrow, headline, body, actions, detail], { opacity: 0, y: 24 });
-
-      const tl = gsap.timeline({
-        scrollTrigger: { trigger: scene, start: "top 80%", end: "top 35%", scrub: 0.5 },
-      });
-
-      tl.to(eyebrow, { opacity: 1, y: 0, duration: 0.12, ease: GSAP_LIQUID_EASE }, 0)
-        .to(headline, { opacity: 1, y: 0, duration: 0.28, ease: GSAP_LIQUID_EASE }, 0.1)
-        .to(body, { opacity: 1, y: 0, duration: 0.18, ease: GSAP_LIQUID_EASE }, 0.45)
-        .to(actions, { opacity: 1, y: 0, duration: 0.15, ease: GSAP_LIQUID_EASE }, 0.68)
-        .to(detail, { opacity: 1, y: 0, duration: 0.12, ease: GSAP_LIQUID_EASE }, 0.85);
-    }, scene);
-
-    return () => ctx.revert();
-  }, [reducedMotion]);
-
+function CornerTicks() {
   return (
-    <section id="contact" className="px-6 pt-32 max-w-[1600px] mx-auto scroll-mt-24">
-      <div
-        ref={sceneRef}
-        className="border-t pt-20 flex flex-col items-start"
-        style={{ borderColor: "var(--kov-border)" }}
-      >
-        <p data-cta-eyebrow className="text-xs uppercase tracking-widest text-kov-steel mb-4">
-          Prochaine étape
-        </p>
+    <>
+      <span aria-hidden="true" className={`${TICK_CLASS} -top-px -left-px border-t border-l`} style={{ borderColor: "var(--kov-border)" }} />
+      <span aria-hidden="true" className={`${TICK_CLASS} -top-px -right-px border-t border-r`} style={{ borderColor: "var(--kov-border)" }} />
+      <span aria-hidden="true" className={`${TICK_CLASS} -bottom-px -left-px border-b border-l`} style={{ borderColor: "var(--kov-border)" }} />
+      <span aria-hidden="true" className={`${TICK_CLASS} -bottom-px -right-px border-b border-r`} style={{ borderColor: "var(--kov-border)" }} />
+    </>
+  );
+}
 
-        <h2
-          data-cta-headline
-          className="font-display text-kov-bone uppercase max-w-3xl"
-          style={{ fontSize: "var(--display-lg)", lineHeight: "var(--line-height-display)" }}
+// The homepage's closing statement — deliberately minimal now (CTA pill +
+// giant cursor-reveal wordmark, corner tick marks framing the block) rather
+// than the previous eyebrow/headline/body composition: the footer right
+// below already repeats the location/contact details, so this section's
+// only job is one last, unmissable nudge toward /contact.
+export function ClosingCta() {
+  return (
+    <section id="contact" className="px-6 pt-32 pb-8 max-w-[1600px] mx-auto scroll-mt-24">
+      <Reveal variant="fade">
+        <div
+          className="relative border-t pt-20 pb-16 flex flex-col items-center text-center"
+          style={{ borderColor: "var(--kov-border)" }}
         >
-          On commence quand vous voulez<span className="text-kov-red">.</span>
-        </h2>
+          <CornerTicks />
 
-        <p data-cta-body className="mt-6 max-w-md text-kov-concrete text-sm leading-relaxed">
-          Pas de brief interminable, pas de jargon, pas de promesse
-          inutile — un premier échange pour comprendre le problème,
-          définir une direction et savoir ce qu&apos;il faut construire.
-        </p>
+          <KovCTA href="/contact">Démarrer un projet</KovCTA>
 
-        <div data-cta-actions className="mt-10 flex flex-wrap items-center gap-6">
-          <KovCTA href="/contact">Parler de mon projet</KovCTA>
-          <Button href="/studio" variant="ghost">
-            Explorer KOV →
-          </Button>
+          <Link href="/studio" className="mt-8 block" aria-label="Découvrir le studio KOV">
+            <CursorRevealWordmark text="Studio" />
+          </Link>
         </div>
-
-        <p data-cta-detail className="mt-12 text-kov-steel text-xs uppercase tracking-widest">
-          Bordeaux, France
-        </p>
-      </div>
+      </Reveal>
     </section>
   );
 }
