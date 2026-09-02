@@ -80,7 +80,7 @@ Couleurs autorisées : blanc sur noir, rouge sur noir, noir sur blanc cassé.
 
 ## Typographie
 
-Une seule famille : **Space Grotesk** (Light/Regular/Medium/Bold), pour le display comme pour l'UI/body — remplace l'ancien duo Archivo Narrow + Geist (2026-08-18). Geist Mono reste utilisé ponctuellement pour les petits repères techniques (numéros d'étapes, indicateur de scène).
+**Deux familles distinctes (2026-09-02, remplace Space Grotesk partout)** : **Archivo Black** pour le display/titres (`font-display`), **Inter** pour l'UI/body (`font-sans`). Le brief initial demandait "Monument Extended" (PangramPangram, payante, pas sur Google Fonts, pas de fichier de licence disponible) — Archivo Black est le remplaçant gratuit choisi pour son impact bold/géométrique proche. Geist Mono reste utilisé ponctuellement pour les petits repères techniques (numéros d'étapes, indicateur de scène).
 
 ### Hiérarchie
 

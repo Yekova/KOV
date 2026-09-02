@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, Geist_Mono } from "next/font/google";
+import { Archivo_Black, Inter, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { SiteChrome } from "@/components/layout/SiteChrome";
@@ -9,8 +9,20 @@ import "./globals.css";
 
 const SITE_URL = "https://kov-agency.site";
 
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-space-grotesk",
+// "Monument Extended" (the brief's original ask) is a commercial
+// PangramPangram typeface — not on Google Fonts, no license file on hand.
+// Archivo Black is the free stand-in: same bold/blocky/geometric impact
+// for headings. Single weight (900) is fine here — grepped every
+// `font-display` usage sitewide and none pairs it with a weight utility
+// class, so there's no lighter cut anywhere relying on being overridden.
+const archivoBlack = Archivo_Black({
+  weight: "400",
+  variable: "--font-archivo-black",
+  subsets: ["latin"],
+});
+
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
@@ -36,7 +48,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="fr" className={`${spaceGrotesk.variable} ${geistMono.variable} h-full antialiased`}>
+    <html lang="fr" className={`${archivoBlack.variable} ${inter.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         <OrganizationJsonLd />
         <CustomCursor />
