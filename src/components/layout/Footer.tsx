@@ -59,7 +59,26 @@ const SOCIAL_LINKS = [
 
 export function Footer() {
   return (
-    <footer className="px-6 pt-24 pb-10 max-w-[1600px] mx-auto border-t" style={{ borderColor: "var(--kov-border)" }}>
+    // relative + z-content + a translucent blurred backdrop: on the
+    // homepage, a fixed animated background (LineWaves, see src/app/page.tsx)
+    // sits behind the whole page, and a plain non-positioned element would
+    // otherwise paint *behind* it regardless of z-index (positioned content
+    // always paints after non-positioned in-flow content) — meaning the
+    // footer's own text would render invisible under the moving pattern.
+    // Elevating it and giving it the site's usual Liquid Glass backdrop
+    // keeps the animated background technically visible (softened, not
+    // hidden) rather than fully opaque-ing it away. Harmless on every other
+    // page: there's nothing colorful behind a plain black background to blur.
+    <footer
+      className="relative px-6 pt-24 pb-10 max-w-[1600px] mx-auto border-t"
+      style={{
+        borderColor: "var(--kov-border)",
+        zIndex: "var(--z-content)",
+        background: "var(--glass-bg)",
+        backdropFilter: "blur(var(--glass-blur)) saturate(180%)",
+        WebkitBackdropFilter: "blur(var(--glass-blur)) saturate(180%)",
+      }}
+    >
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-10 lg:gap-8">
         <div className="sm:col-span-2 lg:col-span-2">
           <Link href="/" aria-label="KOV — Accueil" className="block">

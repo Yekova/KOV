@@ -19,20 +19,17 @@ import {
 } from "react";
 import { gsap } from "@/lib/motion";
 import BorderGlow from "@/components/ui/BorderGlow";
-import TiltedCard from "@/components/ui/TiltedCard";
 import "./DepthCarousel.css";
 
-// Each card nests two more React Bits effects: BorderGlow for the
-// hover-reactive red edge, TiltedCard for the 3D cursor tilt on the image
-// itself. These sit on their own inner elements (BorderGlow's card div,
-// TiltedCard's figure), independent of the outer .depth-carousel__card's
-// own GSAP-driven transform — nested transforms compose additively across
-// parent/child, they don't fight over the same element's style.transform
-// the way two effects on the *same* node would.
+// Each card nests one more React Bits effect: BorderGlow, for the
+// hover-reactive red edge. It sits on its own inner element (BorderGlow's
+// own card div), independent of the outer .depth-carousel__card's own
+// GSAP-driven transform — nested transforms compose additively across
+// parent/child. (A 3D cursor-tilt on the image itself, via TiltedCard, was
+// tried here too but dropped per feedback — didn't read well stacked on
+// top of the depth effect. TiltedCard.tsx is still in the repo, unused.)
 const GLOW_COLOR_HSL = "358 78 50"; // --kov-red as H S L
 const GLOW_COLORS = ["#E31E24", "#FF4D4D", "#E31E24"];
-const TILT_ROTATE_AMPLITUDE = 8;
-const TILT_SCALE_ON_HOVER = 1.03;
 
 export interface DepthCarouselItem {
   image: string;
@@ -462,18 +459,12 @@ export default function DepthCarousel({
               glowIntensity={0.9}
               coneSpread={28}
             >
-              <TiltedCard
-                imageSrc={item.image}
-                altText={item.alt || ""}
-                containerHeight="100%"
-                containerWidth="100%"
-                imageHeight="100%"
-                imageWidth="100%"
-                imageStyle={{ borderRadius: radius }}
-                rotateAmplitude={TILT_ROTATE_AMPLITUDE}
-                scaleOnHover={TILT_SCALE_ON_HOVER}
-                showMobileWarning={false}
-                showTooltip={false}
+              {/* eslint-disable-next-line @next/next/no-img-element -- imperatively transformed by the outer card's GSAP layout(), not React-managed like next/image expects */}
+              <img
+                src={item.image}
+                alt={item.alt || ""}
+                draggable={false}
+                style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: radius, display: "block" }}
               />
             </BorderGlow>
             <span
