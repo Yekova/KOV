@@ -62,7 +62,7 @@ export function Nav({ variant = "fixed" }: NavProps) {
   // Nav to visually sit inside (src/scenes/HeroScene.tsx), so an invisible
   // transparent-on-home variant would defeat that "enclosed" look.
   const pillStyle = GLASS_PILL_STYLE;
-  const padding = scrolled || !isHome ? "py-2.5" : "py-3";
+  const padding = scrolled || !isHome ? "py-2" : "py-2.5";
   // "contained" starts absolute (nested inside HeroScene's own frame) but
   // switches to fixed as soon as the page scrolls — otherwise it would
   // scroll away with the Hero section like any other absolutely-positioned
@@ -84,7 +84,7 @@ export function Nav({ variant = "fixed" }: NavProps) {
       >
         <div
           ref={pillRef}
-          className={`flex items-center justify-between gap-2 sm:gap-4 px-2.5 sm:px-3 ${padding} border`}
+          className={`flex items-center justify-between gap-2 sm:gap-3 px-2 sm:px-2.5 ${padding} border`}
           style={{
             ...pillStyle,
             transitionProperty: "background, border-color, box-shadow, padding",
@@ -92,18 +92,18 @@ export function Nav({ variant = "fixed" }: NavProps) {
             transitionTimingFunction: REVEAL_EASE,
           }}
         >
-          <Link href="/" className="flex items-center px-3">
+          <Link href="/" className="flex items-center px-2.5">
             <Image
               src="/kov/brand/kov-wordmark-bone.png"
               alt="KOV"
               width={1116}
               height={209}
-              className="h-5 w-auto"
+              className="h-4 w-auto"
               priority
             />
           </Link>
 
-          <nav className="hidden md:flex items-center gap-3 sm:gap-8 px-3 sm:px-4 text-xs uppercase tracking-widest text-kov-bone">
+          <nav className="hidden md:flex items-center gap-2.5 sm:gap-6 px-2.5 sm:px-3 text-xs uppercase tracking-widest text-kov-bone">
             <NavLinks links={LINKS} pillRef={pillRef} />
           </nav>
 
@@ -113,7 +113,7 @@ export function Nav({ variant = "fixed" }: NavProps) {
               href="/login"
               aria-label="Espace client"
               title="Espace client"
-              className="w-10 h-10 flex items-center justify-center text-kov-bone hover:text-kov-red transition-colors"
+              className="w-9 h-9 flex items-center justify-center text-kov-bone hover:text-kov-red transition-colors"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <rect x="5" y="11" width="14" height="9" rx="1.5" />

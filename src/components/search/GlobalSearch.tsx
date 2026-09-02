@@ -140,7 +140,7 @@ export function GlobalSearch() {
         type="button"
         onClick={(e) => openSearch(e.clientX, e.clientY)}
         aria-label="Rechercher"
-        className="w-10 h-10 flex items-center justify-center text-kov-bone hover:text-kov-red transition-colors"
+        className="w-9 h-9 flex items-center justify-center text-kov-bone hover:text-kov-red transition-colors"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <circle cx="11" cy="11" r="7" />

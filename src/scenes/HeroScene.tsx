@@ -49,7 +49,7 @@ export function HeroScene() {
         className="relative min-h-screen flex items-start px-6 md:px-16 pt-40 md:pt-48 pb-32"
         style={{ zIndex: "var(--z-content)" }}
       >
-        <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center w-full max-w-[1600px] mx-auto">
+        <div className="grid md:grid-cols-2 gap-6 md:gap-8 items-center w-full max-w-[1600px] mx-auto">
           <div>
             <h1
               className="font-display text-kov-bone uppercase"
@@ -86,15 +86,15 @@ export function HeroScene() {
               the carousel painted over the menu button entirely. Isolating
               here contains that range to just this box, so from the
               outside it's one auto-z-index unit like everything else. */}
-          <div className="w-full" style={{ height: "24rem", isolation: "isolate" }}>
+          <div className="w-full" style={{ height: "28rem", isolation: "isolate" }}>
             <DepthCarousel
               items={CAROUSEL_IMAGES}
-              cardWidth={460}
-              cardHeight={310}
+              cardWidth={640}
+              cardHeight={360}
               radius={18}
               tint="#0a0a0a"
-              depth={230}
-              spread={95}
+              depth={320}
+              spread={132}
               tilt={18}
               tiltDirection="right"
               perspective={1500}
