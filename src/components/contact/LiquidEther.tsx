@@ -130,7 +130,13 @@ export default function LiquidEther({
         this.container = container;
         this.pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
         this.resize();
-        this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        // antialias: false — this renders a single full-screen shader quad
+        // (the fluid's color pass), not polygon geometry with edges to
+        // smooth. MSAA here buys no visible quality and costs a real
+        // per-frame GPU tax that was dragging frame rate down, which in
+        // turn made the sim (stepped by a fixed dt per rendered frame, not
+        // real elapsed time) visibly lag behind the cursor.
+        this.renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
         this.renderer.autoClear = false;
         this.renderer.setClearColor(new THREE.Color(0x000000), 0);
         this.renderer.setPixelRatio(this.pixelRatio);

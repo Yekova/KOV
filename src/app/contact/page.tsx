@@ -16,6 +16,15 @@ export default function ContactPage() {
             purple/pink defaults — closest on-brand read of the color0/1/2
             values given (those props don't exist on the real component; it
             only takes a single `colors` array). */}
+        {/* iterationsPoisson: 20, not the default 32 — the pressure solve
+            is 1 full-screen ping-pong pass per iteration, by far the
+            biggest per-frame GPU cost in this sim. 20 is the pressure-
+            iteration count real-time WebGL fluid demos converge on (e.g.
+            Pavel Dobryakov's reference implementation defaults to 20), and
+            cutting ~12 passes/frame is what was causing the reported
+            latency/slow reaction — this sim's dt is fixed per rendered
+            frame, not tied to real elapsed time, so a lower frame rate
+            reads directly as the fluid lagging behind the cursor. */}
         <LiquidEther
           colors={["#f9f9f9", "#ff0000", "#fecccc"]}
           mouseForce={20}
@@ -23,7 +32,7 @@ export default function ContactPage() {
           isViscous={false}
           viscous={37}
           iterationsViscous={32}
-          iterationsPoisson={32}
+          iterationsPoisson={20}
           resolution={0.5}
           isBounce={false}
           autoDemo={true}
