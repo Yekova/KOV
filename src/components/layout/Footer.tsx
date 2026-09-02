@@ -59,21 +59,19 @@ const SOCIAL_LINKS = [
 
 export function Footer() {
   return (
-    // relative + z-content + a translucent blurred backdrop: on the
-    // homepage, a fixed animated background (LineWaves, see src/app/page.tsx)
-    // sits behind the whole page, and a plain non-positioned element would
-    // otherwise paint *behind* it regardless of z-index (positioned content
-    // always paints after non-positioned in-flow content) — meaning the
-    // footer's own text would render invisible under the moving pattern.
-    // Elevating it and giving it the site's usual Liquid Glass backdrop
-    // keeps the animated background technically visible (softened, not
-    // hidden) rather than fully opaque-ing it away. Harmless on every other
-    // page: there's nothing colorful behind a plain black background to blur.
+    // A translucent blurred backdrop: on the homepage, a fixed animated
+    // background (LineWaves, see src/app/page.tsx) sits behind the whole
+    // page (--z-canvas is negative, so it already paints behind this plain
+    // <footer> with no elevation needed here). The blur keeps that
+    // background technically visible through the footer — softened, not
+    // hidden — rather than either fully opaque-ing it away or leaving the
+    // pattern sharp and distracting behind the text. Harmless on every
+    // other page: there's nothing colorful behind a plain black background
+    // to blur.
     <footer
-      className="relative px-6 pt-24 pb-10 max-w-[1600px] mx-auto border-t"
+      className="px-6 pt-24 pb-10 max-w-[1600px] mx-auto border-t"
       style={{
         borderColor: "var(--kov-border)",
-        zIndex: "var(--z-content)",
         background: "var(--glass-bg)",
         backdropFilter: "blur(var(--glass-blur)) saturate(180%)",
         WebkitBackdropFilter: "blur(var(--glass-blur)) saturate(180%)",

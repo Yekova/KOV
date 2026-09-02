@@ -45,8 +45,15 @@
   --glass-shadow-full: inset 0 1px 0 var(--glass-highlight), inset 0 0 0 1px rgba(255, 255, 255, 0.03),
     0 8px 30px var(--glass-shadow);
 
-  /* Z-index scale — see /docs/KOV-MOTION.md, never improvise a z-index outside this scale */
-  --z-canvas: 0;
+  /* Z-index scale — see /docs/KOV-MOTION.md, never improvise a z-index outside this scale.
+     --z-canvas is deliberately negative, not 0: per CSS's own painting order, a
+     *positioned* element (anything using this scale) with a positive/auto z-index
+     always paints after — i.e. on top of — plain, non-positioned in-flow content,
+     no matter how low that number is. A fixed full-page background (LiquidEther,
+     LineWaves, MouseFrameBackdrop) needs to sit behind ordinary <section>/<footer>
+     markup that was never given a z-index of its own, and only a *negative*
+     z-index actually guarantees that placement by spec — 0 does not. */
+  --z-canvas: -1;
   --z-atmosphere: 10;
   --z-layer-secondary: 20;
   --z-content: 30;

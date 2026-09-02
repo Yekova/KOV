@@ -17,10 +17,12 @@ const CAROUSEL_IMAGES = [
 
 export function HeroScene() {
   return (
-    <section id="hero" className="relative min-h-screen overflow-hidden" style={{ background: "var(--kov-black)" }}>
-      {/* The animated background (LineWaves) now lives at the page level
-          (src/app/page.tsx) so it's visible behind every homepage section,
-          not just this one — Hero no longer renders its own copy. */}
+    <section id="hero" className="relative min-h-screen overflow-hidden">
+      {/* No background color here on purpose — the animated LineWaves
+          background now lives at the page level (src/app/page.tsx) so
+          it's visible behind every homepage section, not just this one.
+          An opaque background on this section would hide it completely
+          for this section's entire height (the whole first viewport). */}
 
       <Nav variant="contained" />
 

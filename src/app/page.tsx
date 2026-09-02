@@ -55,23 +55,27 @@ export default function Home() {
         />
       </div>
 
-      {/* Every section as one positioned unit (relative + z-content) so it
-          paints above the fixed canvas above — a plain, non-positioned
-          <section> would otherwise still sit *behind* a position:fixed
-          element regardless of z-index value (positioned content always
-          paints after non-positioned in-flow content in CSS's own stacking
-          order), letting the animated background paint over the text
-          instead of behind it. */}
-      <div className="relative" style={{ zIndex: "var(--z-content)" }}>
-        <HeroScene />
-        <ScreenShowcase />
-        <ExpertiseTeaser />
-        <WorkGallery />
-        <PhilosophyStatement />
-        <ProcessTimeline />
-        <WorkSpotlight />
-        <ClosingCta />
-      </div>
+      {/* No wrapping "content" div around the sections — --z-canvas is
+          negative (tokens.css), which per CSS's own painting order already
+          guarantees it sits behind plain, non-positioned content like
+          these sections with no need to explicitly elevate them. (An
+          earlier version wrapped everything in one `position:relative +
+          z-content` div instead — that also fixed the canvas-vs-text
+          problem, but it had a side effect: Nav lives inside HeroScene,
+          nested inside that wrapper, and once trapped inside an ancestor's
+          own stacking context a descendant's z-index can never "escape" to
+          compete against something *outside* that ancestor — so Nav's own
+          z-nav no longer counted against GradualBlur below, which sits
+          outside the wrapper. GradualBlur painted over Nav. Fixing the
+          canvas itself avoids needing this kind of wrapper at all.) */}
+      <HeroScene />
+      <ScreenShowcase />
+      <ExpertiseTeaser />
+      <WorkGallery />
+      <PhilosophyStatement />
+      <ProcessTimeline />
+      <WorkSpotlight />
+      <ClosingCta />
 
       <KovSectionIndicator sections={SECTIONS} />
       {/* A page-wide top blur, present through the whole scroll — content
