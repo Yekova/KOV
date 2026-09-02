@@ -13,6 +13,8 @@ Référence rapide non négociable. À relire avant toute session de travail (hu
 7. Chaque scène doit physiquement devenir la suivante.
 8. Performance, lisibilité et conversion restent prioritaires sur l'effet wow.
 
+**Exception documentée à la règle 3 (2026-09-02)** : le Hero de la homepage utilise une vidéo cinématique pré-rendue (un laptop filmé en studio noir, scrollée frame par frame via `video.currentTime`) plutôt qu'une scène 3D live — le photoréalisme visé n'est pas atteignable par une scène WebGL temps réel. `src/scenes/HeroScene.tsx`. Reste un cas isolé, pas un changement de doctrine pour le reste du site.
+
 ## Interdit
 
 - landing page SaaS classique
