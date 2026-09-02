@@ -10,7 +10,7 @@
 // directly to a native <img>, and these are small decorative carousel
 // visuals, not LCP-critical content, so Next's optimization pipeline isn't
 // worth fighting motion's simpler prop-forwarding for here.
-import { useRef, useState, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
+import { useRef, useState, type CSSProperties, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
 import { motion, useMotionValue, useSpring } from "framer-motion";
 import "./TiltedCard.css";
 
@@ -31,6 +31,10 @@ export interface TiltedCardProps {
   overlayContent?: ReactNode;
   displayOverlayContent?: boolean;
   imageClassName?: string;
+  /** Merged over the image's own inline width/height — for a caller-owned
+   * border-radius when this is nested somewhere that can't rely on an
+   * ancestor's overflow:hidden to clip it (see DepthCarousel.tsx). */
+  imageStyle?: CSSProperties;
 }
 
 export default function TiltedCard({
@@ -48,6 +52,7 @@ export default function TiltedCard({
   overlayContent = null,
   displayOverlayContent = false,
   imageClassName = "",
+  imageStyle,
 }: TiltedCardProps) {
   const ref = useRef<HTMLElement>(null);
 
@@ -116,7 +121,7 @@ export default function TiltedCard({
           src={imageSrc}
           alt={altText}
           className={`tilted-card-img ${imageClassName}`}
-          style={{ width: imageWidth, height: imageHeight }}
+          style={{ width: imageWidth, height: imageHeight, ...imageStyle }}
         />
 
         {displayOverlayContent && overlayContent && <motion.div className="tilted-card-overlay">{overlayContent}</motion.div>}

@@ -53,7 +53,7 @@ export function HeroScene() {
           <div>
             <h1
               className="font-display text-kov-bone uppercase"
-              style={{ fontSize: "clamp(32px, 5vw, 84px)", lineHeight: "var(--line-height-display)" }}
+              style={{ fontSize: "clamp(24px, 3.5vw, 56px)", lineHeight: "var(--line-height-display)" }}
             >
               DES SITES WEB
               <br />
@@ -75,19 +75,21 @@ export function HeroScene() {
               each card has its own shadow/rounding already, so this
               doesn't need the flat single-image bordered frame the
               previous carousel used. Arrows sit inside the component's
-              own bounds, right against the card stack. */}
-          <div className="w-full md:ml-auto max-w-xl" style={{ height: "26rem" }}>
+              own bounds, right against the card stack. Each card also
+              tilts toward the cursor and glows red near its edges on
+              hover (TiltedCard/BorderGlow, nested inside DepthCarousel.tsx). */}
+          <div className="w-full md:ml-auto max-w-3xl" style={{ height: "32rem" }}>
             <DepthCarousel
               items={CAROUSEL_IMAGES}
-              cardWidth={320}
-              cardHeight={220}
+              cardWidth={400}
+              cardHeight={270}
               radius={18}
               tint="#0a0a0a"
-              depth={160}
-              spread={70}
+              depth={200}
+              spread={85}
               tilt={18}
               tiltDirection="right"
-              perspective={1400}
+              perspective={1500}
               visibleCards={3}
               falloff={0.22}
               blur={5}
