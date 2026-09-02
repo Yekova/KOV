@@ -1,13 +1,24 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
-import { FAQ, FAQ_CATEGORIES, type FaqCategory } from "@/data/faq";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { FAQ, FAQ_CATEGORIES, type FaqCategory, type FaqItem } from "@/data/faq";
 import { FaqAccordionItem } from "@/components/faq/FaqAccordionItem";
 import { GridParallaxBackdrop } from "@/components/ui/GridParallaxBackdrop";
 import { Reveal } from "@/components/ui/Reveal";
+import { Select } from "@/components/ui/Select";
 
 const ALL = "Tout" as const;
 type CategoryFilter = FaqCategory | typeof ALL;
+
+type SortMode = "suggested" | "alpha";
+
+const SORT_OPTIONS = [
+  { value: "suggested", label: "Ordre suggéré" },
+  { value: "alpha", label: "Alphabétique (A → Z)" },
+];
+
+const SORT_TRIGGER_CLASS = "bg-transparent border text-xs uppercase tracking-widest px-3 py-1.5 focus:outline-none";
+const SORT_TRIGGER_STYLE = { borderRadius: "var(--radius-pill)", borderColor: "var(--kov-border)", color: "var(--kov-bone)" } as const;
 
 const GLASS_STYLE = {
   background: "var(--glass-bg)",
@@ -16,9 +27,14 @@ const GLASS_STYLE = {
   borderColor: "var(--glass-border)",
 } as const;
 
-// The real engine behind /faq: a search box + category filters over the
-// FAQ data, not just a static accordion. Three display modes depending on
-// filter state:
+function sortItems(items: FaqItem[], sort: SortMode) {
+  if (sort === "alpha") return [...items].sort((a, b) => a.question.localeCompare(b.question, "fr"));
+  return items; // "suggested" — the curated order already in data/faq.ts
+}
+
+// The real engine behind /faq: a search box + category filters + sort over
+// the FAQ data, not just a static accordion. Three display modes depending
+// on filter state:
 // - "Tout" + no query: grouped by category — the full picture, easiest
 //   to scan when you don't know exactly what you're looking for yet.
 // - a specific category selected: a flat list within that category.
@@ -27,8 +43,10 @@ const GLASS_STYLE = {
 //   standard search-result shape regardless of where the match lives.
 export function FaqEngine() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<CategoryFilter>(ALL);
+  const [sort, setSort] = useState<SortMode>("suggested");
   const [reducedMotion] = useState(
     () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
   );
@@ -51,23 +69,48 @@ export function FaqEngine() {
 
   const showGrouped = category === ALL && !q;
 
+  // "/" focuses the FAQ's own search box — the sitewide ⌘K/Ctrl+K search
+  // (GlobalSearch, mounted in the site chrome on every page) already owns
+  // that combo for its own overlay, so reusing it here would show a
+  // shortcut hint that doesn't actually do what it says on this page.
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey) return;
+      const target = event.target as HTMLElement | null;
+      const tag = target?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || target?.isContentEditable) return;
+      event.preventDefault();
+      inputRef.current?.focus();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
   return (
     <div ref={containerRef} className="relative overflow-hidden">
       {!reducedMotion && <GridParallaxBackdrop containerRef={containerRef} />}
 
       <div className="relative">
         <Reveal variant="blur" delay={0.15}>
-          <div className="flex items-center gap-3 border-b pb-4 px-5 py-4 max-w-xl" style={{ ...GLASS_STYLE, borderRadius: "var(--radius-glass)" }}>
+          <div className="flex items-center gap-3 border px-5 py-4" style={{ ...GLASS_STYLE, borderRadius: "var(--radius-glass)" }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-kov-steel shrink-0">
               <circle cx="11" cy="11" r="7" />
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
             <input
+              ref={inputRef}
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Chercher une question — délais, budget, technique…"
+              placeholder="Rechercher une question, un mot-clé, un sujet…"
               className="flex-1 bg-transparent text-kov-bone placeholder:text-kov-steel focus:outline-none text-sm"
             />
+            <kbd
+              aria-hidden="true"
+              className="hidden sm:inline-flex items-center justify-center w-6 h-6 text-[11px] text-kov-steel border shrink-0"
+              style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
+            >
+              /
+            </kbd>
           </div>
         </Reveal>
 
@@ -103,9 +146,21 @@ export function FaqEngine() {
           </div>
         </Reveal>
 
-        <p className="mt-8 text-kov-steel text-xs uppercase tracking-widest">
-          {filtered.length} question{filtered.length !== 1 ? "s" : ""}
-        </p>
+        <div className="flex items-center justify-between gap-4 flex-wrap mt-8">
+          <p className="text-kov-steel text-xs uppercase tracking-widest">
+            {filtered.length} question{filtered.length !== 1 ? "s" : ""}
+          </p>
+          <div className="flex items-center gap-3">
+            <span className="text-kov-steel text-xs uppercase tracking-widest">Trier par</span>
+            <Select
+              value={sort}
+              onChange={(next) => setSort(next as SortMode)}
+              options={SORT_OPTIONS}
+              className={SORT_TRIGGER_CLASS}
+              style={SORT_TRIGGER_STYLE}
+            />
+          </div>
+        </div>
 
         <div className="mt-4 max-w-3xl">
           {filtered.length === 0 && (
@@ -115,14 +170,17 @@ export function FaqEngine() {
           {filtered.length > 0 && showGrouped && (
             <div className="space-y-16">
               {FAQ_CATEGORIES.map((cat) => {
-                const items = FAQ.filter((item) => item.category === cat);
+                const items = sortItems(
+                  FAQ.filter((item) => item.category === cat),
+                  sort
+                );
                 return (
                   <Reveal key={cat} delay={0.05}>
                     <div>
                       <h2 className="text-kov-red font-mono text-xs uppercase tracking-widest mb-2">{cat}</h2>
                       <div className="border-t" style={{ borderColor: "var(--kov-border)" }}>
-                        {items.map((item) => (
-                          <FaqAccordionItem key={item.question} item={item} />
+                        {items.map((item, index) => (
+                          <FaqAccordionItem key={item.question} item={item} index={index + 1} />
                         ))}
                       </div>
                     </div>
@@ -135,8 +193,8 @@ export function FaqEngine() {
           {filtered.length > 0 && !showGrouped && (
             <Reveal>
               <div className="border-t" style={{ borderColor: "var(--kov-border)" }}>
-                {filtered.map((item) => (
-                  <FaqAccordionItem key={item.question} item={item} />
+                {sortItems(filtered, sort).map((item, index) => (
+                  <FaqAccordionItem key={item.question} item={item} index={index + 1} />
                 ))}
               </div>
             </Reveal>
