@@ -1,0 +1,15 @@
+.line-waves-container {
+  width: 100%;
+  height: 100%;
+  /* Background layer behind real, clickable content (Hero CTAs, the photo
+     box) — must never be a hit target. The mouse-reactive warp still works:
+     see LineWaves.tsx, which tracks pointer position on `window`, not on
+     this container/canvas. */
+  pointer-events: none;
+}
+
+.line-waves-container canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
