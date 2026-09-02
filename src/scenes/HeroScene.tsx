@@ -9,26 +9,20 @@ import { Nav } from "@/components/navigation/Nav";
 import { HeroGlobalMenuButton } from "@/components/layout/HeroGlobalMenuButton";
 import { gsap, initGsap, pinAndTrack } from "@/lib/motion";
 
-const GLASS_PILL_STYLE = {
-  background: "var(--glass-bg)",
-  backdropFilter: "blur(var(--glass-blur)) saturate(180%)",
-  WebkitBackdropFilter: "blur(var(--glass-blur)) saturate(180%)",
-  borderColor: "var(--glass-border)",
-} as const;
-
 // A cinematic clip generated for this Hero specifically to be scrubbed by
 // scroll position rather than played back in real time — the subject sits
-// right-of-frame with negative space on the left throughout most of the
-// clip, which is what the text column below is built to sit inside.
+// right-of-frame with negative space on the left through most of the clip,
+// which is what the text column below is built to sit inside.
 const VIDEO_SRC = "/kov/home/hero-cinematic.mp4";
 const POSTER_SRC = "/kov/home/hero-cinematic-poster.jpg";
 
-// 100vh sticky viewport + 160vh of scroll runway — same "+=160%" scroll
-// budget PhilosophyStatement.tsx already spends on its one pinned scene, so
-// this doesn't invent a new "how long is a deliberate cinematic beat on this
-// site" number.
-const SCRUB_HEIGHT_VH = 260;
-const SCRUB_END = "+=160%";
+// 100vh sticky viewport + 300vh of scroll runway. First pass used 160vh
+// (PhilosophyStatement's own budget) but the clip's 145 frames blew past in
+// too little scroll distance to read as a turn — tripling the runway gives
+// each frame roughly 2x the scroll-pixels, a clearly perceptible slowdown.
+// Tunable if it still needs adjusting once seen live.
+const SCRUB_HEIGHT_VH = 400;
+const SCRUB_END = "+=300%";
 
 // The back half of the scrub should read as a clean, uninterrupted visual
 // moment — text dissolves out over this scroll-progress window rather than
@@ -43,38 +37,26 @@ const TEXT_FADE_END = 0.55;
 // simpler and safer, same fallback tier as reduced-motion.
 const MOBILE_QUERY = "(max-width: 767px)";
 
-const HERO_FACTS = [
-  { value: "6", label: "Disciplines intégrées" },
-  { value: "1", label: "Interlocuteur unique" },
-  { value: "100%", label: "Code de production" },
-];
-
 // Darkest over the text column (left), fading toward transparent on the
 // right where the footage's own subject sits — legibility without washing
 // out the video itself.
 const LEFT_WEIGHTED_GRADIENT =
   "linear-gradient(90deg, rgba(10,10,10,0.85) 0%, rgba(10,10,10,0.55) 38%, rgba(10,10,10,0.1) 58%, rgba(10,10,10,0.05) 100%)";
 
-// Shared by both render branches (scrubbed + static) so the eyebrow/h1/
-// subhead/CTAs/bullets/facts JSX isn't duplicated between them. Left-aligned
-// (not centered) to sit in the video's own negative space on the left of
-// frame; `innerRef` is only used by the scrubbed branch, to drive the
-// scroll-tied fade in HeroScene's own effect below.
+// Shared by both render branches (scrubbed + static) so the h1/subhead/CTAs
+// JSX isn't duplicated between them. Left-aligned (not centered) to sit in
+// the video's own negative space on the left of frame. Deliberately just
+// three elements — headline, subhead, two CTAs, nothing else (no eyebrow
+// badge, no bullet tags, no stats row) — matching a reference the user
+// wants this text block to plainly look like. `innerRef` is only used by
+// the scrubbed branch, to drive the scroll-tied fade in HeroScene's own
+// effect below.
 function HeroContent({ innerRef }: { innerRef?: RefObject<HTMLDivElement | null> }) {
   return (
     <div ref={innerRef} className="max-w-lg md:max-w-[46%]">
-      <Reveal variant="fade">
-        <span
-          className="inline-flex items-center px-4 py-2 border text-xs uppercase tracking-widest text-kov-bone"
-          style={{ ...GLASS_PILL_STYLE, borderRadius: "var(--radius-pill)" }}
-        >
-          Studio digital — Bordeaux, France
-        </span>
-      </Reveal>
-
-      <Reveal variant="blur" delay={0.15}>
+      <Reveal variant="blur">
         <h1
-          className="mt-8 font-display text-kov-bone uppercase"
+          className="font-display text-kov-bone uppercase"
           style={{ fontSize: "clamp(32px, 6vw, 100px)", lineHeight: "var(--line-height-display)" }}
         >
           DES SITES WEB
@@ -83,43 +65,19 @@ function HeroContent({ innerRef }: { innerRef?: RefObject<HTMLDivElement | null>
         </h1>
       </Reveal>
 
-      <Reveal variant="fade" delay={0.3}>
+      <Reveal variant="fade" delay={0.15}>
         <p className="mt-8 text-kov-concrete text-sm leading-relaxed">
           Design, développement et motion pensés comme un seul système —
           pas trois prestataires qui se renvoient la responsabilité.
         </p>
       </Reveal>
 
-      <Reveal variant="fade" delay={0.45}>
+      <Reveal variant="fade" delay={0.3}>
         <div className="flex flex-wrap items-center gap-4 mt-10">
           <KovCTA href="/contact">Démarrer un projet</KovCTA>
           <Button href="/#work-gallery" variant="pill">
             Voir nos projets
           </Button>
-        </div>
-      </Reveal>
-
-      <Reveal variant="fade" delay={0.55}>
-        <div className="flex flex-col gap-2 mt-8 text-kov-steel text-[11px] uppercase tracking-widest">
-          <span className="inline-flex items-center gap-2">
-            <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-kov-red shrink-0" />
-            Sur-mesure, pas de template
-          </span>
-          <span className="inline-flex items-center gap-2">
-            <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-kov-red shrink-0" />
-            Code de production, pas de maquette
-          </span>
-        </div>
-      </Reveal>
-
-      <Reveal variant="fade" delay={0.65}>
-        <div className="mt-10 flex flex-col gap-4 border-t pt-6" style={{ borderColor: "var(--kov-border)" }}>
-          {HERO_FACTS.map((fact) => (
-            <div key={fact.label} className="flex items-baseline justify-between gap-4">
-              <p className="font-display text-kov-bone text-xl">{fact.value}</p>
-              <p className="text-kov-steel text-[11px] uppercase tracking-widest text-right">{fact.label}</p>
-            </div>
-          ))}
         </div>
       </Reveal>
     </div>
@@ -202,13 +160,9 @@ export function HeroScene() {
     // the actual pinning is CSS `position: sticky` on `stickyRef` (see JSX
     // below), not GSAP's `pin: true`. Reasoning: `pin:true` would still need
     // this same inner-100vh-trigger/outer-tall-wrapper split to make
-    // "+=160%" resolve correctly (PhilosophyStatement.tsx's own precedent),
-    // CSS sticky is compositor-only (no per-frame re-measurement, more
-    // robust on mobile Safari's dynamic viewport height — moot here since
-    // mobile gets the static branch, but true if that ever changes), and
-    // critically it never mutates the outer section that Nav's
-    // absolute→fixed hack depends on, so there's zero risk of the two
-    // mechanisms fighting.
+    // "+=300%" resolve correctly (PhilosophyStatement.tsx's own precedent),
+    // CSS sticky is compositor-only, and critically it never mutates the
+    // outer section that Nav's absolute→fixed hack depends on.
     const ctx = gsap.context(() => {
       pinAndTrack(
         sticky,
@@ -253,26 +207,40 @@ export function HeroScene() {
 
         <div className="absolute inset-0" style={{ zIndex: "var(--z-atmosphere)", background: LEFT_WEIGHTED_GRADIENT }} />
 
-        {/* Nav/menu button live inside the h-screen sticky box, not as
-            direct children of the outer 260vh section: Nav's own "contained"
-            variant anchors via `top-*`/`bottom-*` against its nearest
-            positioned ancestor (see Nav.tsx, GlobalMenuButton.tsx). Anchored
-            to the tall 260vh section, GlobalMenuButton's `bottom-4` would
-            sit near the bottom of the whole scroll runway — off-screen,
-            ~2.5 viewports down — instead of the bottom of the visible
-            viewport. `position: sticky` still makes this div a positioned
-            ancestor, so anchoring here keeps both exactly where they were
-            before this rework. */}
-        <Nav variant="contained" />
-
         <div
           className="relative h-full flex flex-col justify-center px-6 md:px-16"
           style={{ zIndex: "var(--z-content)" }}
         >
           <HeroContent innerRef={textRef} />
         </div>
+      </div>
 
-        <HeroGlobalMenuButton />
+      {/* Nav stays a direct child of this OUTER section, exactly like
+          before this rework — `top-4` resolves the same regardless of how
+          tall the ancestor is, so it doesn't need any special handling.
+          `position: sticky` (on `stickyRef` above) unconditionally creates
+          its own stacking context, even with no explicit z-index — nesting
+          Nav/the menu button inside it would trap their z-nav(50) so it
+          only competes *within* that local context, never against
+          GradualBlur's page-wide top blur (z-glass=40) which lives outside
+          HeroScene entirely: GradualBlur would then paint over both,
+          regardless of their own z-index, because the whole sticky box
+          (auto z-index) sits in a lower paint layer than GradualBlur's
+          explicit one. Keeping them outside `stickyRef` avoids that trap. */}
+      <Nav variant="contained" />
+
+      {/* HeroGlobalMenuButton's own `bottom-4` needs a 100vh containing
+          block to land at the bottom of the visible viewport — anchored
+          directly to this whole section (400vh) it would sit ~3 viewports
+          below the fold instead. This wrapper is `position: absolute` with
+          no z-index (auto), so — unlike a sticky/fixed wrapper — it does
+          NOT create a stacking context of its own, and the button's own
+          inline z-nav(50) still bubbles straight up to compete directly
+          against GradualBlur, same reasoning as the Nav comment above. */}
+      <div className="absolute inset-x-0 top-0 h-screen pointer-events-none">
+        <div className="pointer-events-auto">
+          <HeroGlobalMenuButton />
+        </div>
       </div>
     </section>
   );
