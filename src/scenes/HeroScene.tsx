@@ -1,17 +1,29 @@
-import Image from "next/image";
 import { KovCTA } from "@/components/ui/KovCTA";
 import { Nav } from "@/components/navigation/Nav";
 import { HeroGlobalMenuButton } from "@/components/layout/HeroGlobalMenuButton";
+import { KovCarousel } from "@/components/ui/KovCarousel";
+import TiltedCard from "@/components/ui/TiltedCard";
 import LineWaves from "@/components/home/LineWavesLazy";
-
-const PHOTO_SRC = "/kov/home/hero-character-studio.jpg";
-const PHOTO_ASPECT = "2048 / 1144";
 
 // KOV's own tokens, not the upstream demo's arbitrary reds — same "mostly
 // red, one muted channel" structure the demo's own defaults used.
 const WAVE_COLOR_1 = "#777774"; // --kov-steel
 const WAVE_COLOR_2 = "#E31E24"; // --kov-red
 const WAVE_COLOR_3 = "#FF4D4D"; // --kov-red-signal
+
+const CAROUSEL_HEIGHT = "20rem";
+
+// The character/Studio portrait plus real KOV studio photography already
+// shot for this site (used elsewhere — Expertise, the site-search panel,
+// the old Hero background) — no stock imagery, no placeholders.
+const CAROUSEL_IMAGES = [
+  { src: "/kov/home/hero-character-studio.jpg", alt: "KOV Studio" },
+  { src: "/kov/menu/atrium-brutaliste.jpg", alt: "Atrium — studio KOV" },
+  { src: "/kov/menu/bureau-moderne.jpg", alt: "Bureau — studio KOV" },
+  { src: "/kov/menu/couloir-brutaliste.jpg", alt: "Couloir — studio KOV" },
+  { src: "/kov/menu/galerie-futuriste.jpg", alt: "Galerie — studio KOV" },
+  { src: "/kov/menu/studio-industriel.jpg", alt: "Studio industriel — KOV" },
+];
 
 export function HeroScene() {
   return (
@@ -37,37 +49,60 @@ export function HeroScene() {
       <Nav variant="contained" />
 
       <div
-        className="relative min-h-screen flex items-center px-6 md:px-16"
+        className="relative min-h-screen flex items-start px-6 md:px-16 pt-40 md:pt-48 pb-32"
         style={{ zIndex: "var(--z-content)" }}
       >
-        <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center w-full max-w-[1600px] mx-auto">
-          {/* CTAs on the left */}
-          <div className="flex flex-wrap items-center gap-4">
-            <KovCTA href="/contact">Démarrer un projet</KovCTA>
-            <KovCTA href="/#work-gallery">Voir nos projets</KovCTA>
-            <KovCTA href="/studio">Découvrir le studio</KovCTA>
+        <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-start w-full max-w-[1600px] mx-auto">
+          <div>
+            <h1
+              className="font-display text-kov-bone uppercase"
+              style={{ fontSize: "clamp(32px, 5vw, 84px)", lineHeight: "var(--line-height-display)" }}
+            >
+              DES SITES WEB
+              <br />
+              QUI TIENNENT<span className="text-kov-red">.</span>
+            </h1>
+
+            <p className="mt-8 max-w-md text-kov-concrete text-sm leading-relaxed">
+              Design, développement et motion pensés comme un seul système —
+              pas trois prestataires qui se renvoient la responsabilité.
+            </p>
+
+            <div className="flex flex-wrap items-center gap-4 mt-10">
+              <KovCTA href="/contact">Démarrer un projet</KovCTA>
+              <KovCTA href="/#work-gallery">Voir nos projets</KovCTA>
+            </div>
           </div>
 
-          {/* The photo, in its own bordered box rather than a full-bleed
-              background — same "browser window" convention ScreenShowcase
-              uses (a real frame, not a floating cutout). */}
+          {/* Real KOV studio photography, cycled through a carousel, each
+              slide tilting toward the cursor (TiltedCard) — same bordered-
+              box convention ScreenShowcase's browser window uses. */}
           <div
-            className="relative w-full border overflow-hidden mx-auto md:mx-0 md:ml-auto max-w-xl"
+            className="w-full md:ml-auto max-w-xl border p-4"
             style={{
-              aspectRatio: PHOTO_ASPECT,
               borderColor: "var(--kov-border)",
               borderRadius: "var(--radius-lg)",
               boxShadow: "0 40px 90px rgba(0, 0, 0, 0.55)",
               background: "var(--kov-black)",
             }}
           >
-            <Image
-              src={PHOTO_SRC}
-              alt="KOV Studio"
-              fill
-              sizes="(min-width: 768px) 576px, 100vw"
-              className="object-cover"
-              priority
+            <KovCarousel
+              labels={CAROUSEL_IMAGES.map((image) => image.alt)}
+              items={CAROUSEL_IMAGES.map((image) => (
+                <TiltedCard
+                  key={image.src}
+                  imageSrc={image.src}
+                  altText={image.alt}
+                  containerHeight={CAROUSEL_HEIGHT}
+                  containerWidth="100%"
+                  imageHeight={CAROUSEL_HEIGHT}
+                  imageWidth="100%"
+                  rotateAmplitude={10}
+                  scaleOnHover={1.04}
+                  showMobileWarning={false}
+                  showTooltip={false}
+                />
+              ))}
             />
           </div>
         </div>
