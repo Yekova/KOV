@@ -1,0 +1,18 @@
+.cursor-grid {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  /* Background decoration, not a hit target — clicks/hover on the real
+     content sitting visually above it (search box, filter pills, accordion
+     rows) must pass straight through. Pointer tracking still works: the
+     component listens on `window`, not on this element, exactly like
+     LiquidEther.tsx does for the same reason (see that file's Mouse class). */
+  pointer-events: none;
+}
+
+.cursor-grid__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}

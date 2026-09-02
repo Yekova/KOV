@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FAQ, FAQ_CATEGORIES, type FaqCategory, type FaqItem } from "@/data/faq";
 import { FaqAccordionItem } from "@/components/faq/FaqAccordionItem";
-import { GridParallaxBackdrop } from "@/components/ui/GridParallaxBackdrop";
+import CursorGrid from "@/components/ui/CursorGrid";
 import { Reveal } from "@/components/ui/Reveal";
 import { Select } from "@/components/ui/Select";
 
@@ -27,6 +27,12 @@ const GLASS_STYLE = {
   borderColor: "var(--glass-border)",
 } as const;
 
+// CursorGrid's `color` prop is a raw hex string it feeds straight into a
+// canvas fillStyle/strokeStyle — it can't consume a CSS custom property,
+// so this mirrors --kov-red's literal value (same constant KovCTA.tsx's
+// default haloColor already uses for the same reason).
+const KOV_RED_HEX = "#E31E24";
+
 function sortItems(items: FaqItem[], sort: SortMode) {
   if (sort === "alpha") return [...items].sort((a, b) => a.question.localeCompare(b.question, "fr"));
   return items; // "suggested" — the curated order already in data/faq.ts
@@ -47,9 +53,6 @@ export function FaqEngine() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<CategoryFilter>(ALL);
   const [sort, setSort] = useState<SortMode>("suggested");
-  const [reducedMotion] = useState(
-    () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  );
 
   const q = query.trim().toLowerCase();
 
@@ -88,7 +91,30 @@ export function FaqEngine() {
 
   return (
     <div ref={containerRef} className="relative overflow-hidden">
-      {!reducedMotion && <GridParallaxBackdrop containerRef={containerRef} />}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0"
+        style={{
+          maskImage: "radial-gradient(ellipse 80% 70% at 50% 30%, black 0%, black 55%, transparent 100%)",
+          WebkitMaskImage: "radial-gradient(ellipse 80% 70% at 50% 30%, black 0%, black 55%, transparent 100%)",
+        }}
+      >
+        <CursorGrid
+          cellSize={48}
+          color={KOV_RED_HEX}
+          radius={160}
+          falloff="smooth"
+          holdTime={200}
+          fadeDuration={900}
+          lineWidth={1}
+          maxOpacity={0.5}
+          fillOpacity={0}
+          gridOpacity={0.04}
+          cellRadius={0}
+          clickPulse
+          pulseSpeed={600}
+        />
+      </div>
 
       <div className="relative">
         <Reveal variant="blur" delay={0.15}>
