@@ -1,8 +1,7 @@
 import { KovCTA } from "@/components/ui/KovCTA";
 import { Nav } from "@/components/navigation/Nav";
 import { HeroGlobalMenuButton } from "@/components/layout/HeroGlobalMenuButton";
-import { KovCarousel } from "@/components/ui/KovCarousel";
-import TiltedCard from "@/components/ui/TiltedCard";
+import DepthCarousel from "@/components/home/DepthCarousel";
 import LineWaves from "@/components/home/LineWavesLazy";
 
 // KOV's own tokens, not the upstream demo's arbitrary reds — same "mostly
@@ -11,18 +10,16 @@ const WAVE_COLOR_1 = "#777774"; // --kov-steel
 const WAVE_COLOR_2 = "#E31E24"; // --kov-red
 const WAVE_COLOR_3 = "#FF4D4D"; // --kov-red-signal
 
-const CAROUSEL_HEIGHT = "20rem";
-
 // The character/Studio portrait plus real KOV studio photography already
 // shot for this site (used elsewhere — Expertise, the site-search panel,
 // the old Hero background) — no stock imagery, no placeholders.
 const CAROUSEL_IMAGES = [
-  { src: "/kov/home/hero-character-studio.jpg", alt: "KOV Studio" },
-  { src: "/kov/menu/atrium-brutaliste.jpg", alt: "Atrium — studio KOV" },
-  { src: "/kov/menu/bureau-moderne.jpg", alt: "Bureau — studio KOV" },
-  { src: "/kov/menu/couloir-brutaliste.jpg", alt: "Couloir — studio KOV" },
-  { src: "/kov/menu/galerie-futuriste.jpg", alt: "Galerie — studio KOV" },
-  { src: "/kov/menu/studio-industriel.jpg", alt: "Studio industriel — KOV" },
+  { image: "/kov/home/hero-character-studio.jpg", alt: "KOV Studio" },
+  { image: "/kov/menu/atrium-brutaliste.jpg", alt: "Atrium — studio KOV" },
+  { image: "/kov/menu/bureau-moderne.jpg", alt: "Bureau — studio KOV" },
+  { image: "/kov/menu/couloir-brutaliste.jpg", alt: "Couloir — studio KOV" },
+  { image: "/kov/menu/galerie-futuriste.jpg", alt: "Galerie — studio KOV" },
+  { image: "/kov/menu/studio-industriel.jpg", alt: "Studio industriel — KOV" },
 ];
 
 export function HeroScene() {
@@ -74,35 +71,28 @@ export function HeroScene() {
             </div>
           </div>
 
-          {/* Real KOV studio photography, cycled through a carousel, each
-              slide tilting toward the cursor (TiltedCard) — same bordered-
-              box convention ScreenShowcase's browser window uses. */}
-          <div
-            className="w-full md:ml-auto max-w-xl border p-4"
-            style={{
-              borderColor: "var(--kov-border)",
-              borderRadius: "var(--radius-lg)",
-              boxShadow: "0 40px 90px rgba(0, 0, 0, 0.55)",
-              background: "var(--kov-black)",
-            }}
-          >
-            <KovCarousel
-              labels={CAROUSEL_IMAGES.map((image) => image.alt)}
-              items={CAROUSEL_IMAGES.map((image) => (
-                <TiltedCard
-                  key={image.src}
-                  imageSrc={image.src}
-                  altText={image.alt}
-                  containerHeight={CAROUSEL_HEIGHT}
-                  containerWidth="100%"
-                  imageHeight={CAROUSEL_HEIGHT}
-                  imageWidth="100%"
-                  rotateAmplitude={10}
-                  scaleOnHover={1.04}
-                  showMobileWarning={false}
-                  showTooltip={false}
-                />
-              ))}
+          {/* Real KOV studio photography, fanned into a depth stack —
+              each card has its own shadow/rounding already, so this
+              doesn't need the flat single-image bordered frame the
+              previous carousel used. Arrows sit inside the component's
+              own bounds, right against the card stack. */}
+          <div className="w-full md:ml-auto max-w-xl" style={{ height: "26rem" }}>
+            <DepthCarousel
+              items={CAROUSEL_IMAGES}
+              cardWidth={320}
+              cardHeight={220}
+              radius={18}
+              tint="#0a0a0a"
+              depth={160}
+              spread={70}
+              tilt={18}
+              tiltDirection="right"
+              perspective={1400}
+              visibleCards={3}
+              falloff={0.22}
+              blur={5}
+              autoplay={false}
+              loop
             />
           </div>
         </div>
