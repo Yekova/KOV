@@ -86,3 +86,36 @@ export async function requestReplyNotificationHtml(data: RequestReplyNotificatio
   `;
   return emailLayout({ preheader: `${data.clientDisplayName} a répondu — ${data.subject}`, body });
 }
+
+// The client-side counterpart of requestReplyNotification* above — until
+// this existed, a client had no way to learn an admin had answered their
+// request except by happening to open the portal (the admin→client
+// direction was a real gap: notifyAdminsOfClientMessage covers client→
+// admin, nothing covered the reverse).
+export interface AdminReplyNotificationData {
+  firstName: string;
+  subject: string;
+}
+
+export function adminReplyNotificationSubject(data: AdminReplyNotificationData) {
+  return `Réponse à votre demande « ${data.subject} » — KOV`;
+}
+
+export async function adminReplyNotificationHtml(data: AdminReplyNotificationData) {
+  const body = `
+    <p style="margin:0 0 16px; color:#0a0a0a; font-size:15px; line-height:1.6;">Bonjour ${data.firstName},</p>
+    <p style="margin:0 0 24px; color:#0a0a0a; font-size:15px; line-height:1.6;">
+      Vous avez une nouvelle réponse à votre demande « ${data.subject} ».
+    </p>
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:8px;">
+      <tr>
+        <td style="background-color:#e31e24; border-radius:6px;">
+          <a href="https://kov-agency.site/client/requests" style="display:inline-block; padding:14px 28px; color:#ffffff; font-size:14px; text-decoration:none; font-weight:bold;">
+            Voir la réponse →
+          </a>
+        </td>
+      </tr>
+    </table>
+  `;
+  return emailLayout({ preheader: `Réponse à votre demande — ${data.subject}`, body });
+}

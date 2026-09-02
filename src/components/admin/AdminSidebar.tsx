@@ -17,39 +17,48 @@ function NavLinks({
   onNavigate?: () => void;
 }) {
   return (
-    <nav className="space-y-1 flex-1">
-      {adminNavigation.map((item) => {
-        const isActive = item.href === "/admin" ? pathname === "/admin" : pathname?.startsWith(item.href);
-        const badge = item.badgeSource ? badgeCounts[item.badgeSource] : undefined;
+    <nav className="flex-1 space-y-5 overflow-y-auto">
+      {adminNavigation.map((section) => (
+        <div key={section.id}>
+          {section.label && (
+            <p className="px-3 mb-1.5 text-[10px] uppercase tracking-widest text-kov-steel/70">{section.label}</p>
+          )}
+          <div className="space-y-1">
+            {section.items.map((item) => {
+              const isActive = item.href === "/admin" ? pathname === "/admin" : pathname?.startsWith(item.href);
+              const badge = item.badgeSource ? badgeCounts[item.badgeSource] : undefined;
 
-        return (
-          <Link
-            key={item.id}
-            href={item.href}
-            onClick={onNavigate}
-            className="flex items-center gap-3 px-3 py-2.5 text-xs uppercase tracking-widest transition-colors"
-            style={{
-              borderRadius: "var(--radius-sm)",
-              color: isActive ? "var(--kov-bone)" : "var(--kov-steel)",
-              background: isActive ? "var(--glass-bg)" : "transparent",
-              border: isActive ? "1px solid var(--glass-border)" : "1px solid transparent",
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0">
-              {item.icon}
-            </svg>
-            <span className="flex-1">{item.label}</span>
-            {!!badge && badge > 0 && (
-              <span
-                className="w-5 h-5 flex items-center justify-center text-[10px] text-kov-white"
-                style={{ background: "var(--kov-red)", borderRadius: "var(--radius-pill)" }}
-              >
-                {badge}
-              </span>
-            )}
-          </Link>
-        );
-      })}
+              return (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  onClick={onNavigate}
+                  className="flex items-center gap-3 px-3 py-2.5 text-xs uppercase tracking-widest transition-colors"
+                  style={{
+                    borderRadius: "var(--radius-sm)",
+                    color: isActive ? "var(--kov-bone)" : "var(--kov-steel)",
+                    background: isActive ? "var(--glass-bg)" : "transparent",
+                    border: isActive ? "1px solid var(--glass-border)" : "1px solid transparent",
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0">
+                    {item.icon}
+                  </svg>
+                  <span className="flex-1">{item.label}</span>
+                  {!!badge && badge > 0 && (
+                    <span
+                      className="w-5 h-5 flex items-center justify-center text-[10px] text-kov-white"
+                      style={{ background: "var(--kov-red)", borderRadius: "var(--radius-pill)" }}
+                    >
+                      {badge}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      ))}
     </nav>
   );
 }

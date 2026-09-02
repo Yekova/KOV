@@ -58,11 +58,13 @@ export default async function ClientProjectDetailPage(props: PageProps<"/client/
         .select("id, filename, mime_type, size_bytes, created_at, storage_path")
         .eq("project_id", projectId)
         .eq("folder_id", currentFolderId)
+        .eq("visibility", "client")
     : supabaseAdmin
         .from("documents")
         .select("id, filename, mime_type, size_bytes, created_at, storage_path")
         .eq("project_id", projectId)
-        .is("folder_id", null);
+        .is("folder_id", null)
+        .eq("visibility", "client");
 
   const [{ data: folders }, { data: documents }] = await Promise.all([
     folderFilter.order("name"),

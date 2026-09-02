@@ -19,6 +19,7 @@ export default async function ClientDocumentsPage() {
       .from("documents")
       .select("id, filename, mime_type, size_bytes, created_at, storage_path, project_id")
       .eq("client_id", user.id)
+      .eq("visibility", "client")
       .order("created_at", { ascending: false }),
     supabaseAdmin.from("projects").select("id, name").eq("client_id", user.id),
   ]);

@@ -15,10 +15,10 @@ export async function getClientDocumentPreviewUrl(documentId: string): Promise<{
 
   const { data: doc } = await supabaseAdmin
     .from("documents")
-    .select("client_id, storage_path, mime_type")
+    .select("client_id, storage_path, mime_type, visibility")
     .eq("id", documentId)
     .maybeSingle();
-  if (!doc || doc.client_id !== user.id) throw new Error("Accès refusé.");
+  if (!doc || doc.client_id !== user.id || doc.visibility !== "client") throw new Error("Accès refusé.");
 
   const url = await createSignedDownloadUrl(doc.storage_path, 300);
   if (!url) throw new Error("Aperçu indisponible.");
@@ -34,11 +34,11 @@ export async function downloadDocument(formData: FormData) {
 
   const { data: doc } = await supabaseAdmin
     .from("documents")
-    .select("client_id, storage_path, filename")
+    .select("client_id, storage_path, filename, visibility")
     .eq("id", documentId)
     .maybeSingle();
 
-  if (!doc || doc.client_id !== user.id) throw new Error("Accès refusé.");
+  if (!doc || doc.client_id !== user.id || doc.visibility !== "client") throw new Error("Accès refusé.");
 
   const url = await createSignedDownloadUrl(doc.storage_path, 60, doc.filename);
   if (!url) throw new Error("Le téléchargement a échoué.");

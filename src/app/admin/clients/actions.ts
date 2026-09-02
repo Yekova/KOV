@@ -13,7 +13,7 @@ import {
   type InvoiceKind,
 } from "@/lib/portal/status";
 import { uploadClientFile, uploadClientFileBuffer, createSignedDownloadUrl, deleteClientFile } from "@/lib/portal/storage";
-import { logActivity, getActorDisplayName } from "@/lib/activity";
+import { logActivity, getActorDisplayName, notifyClientOfAdminReply } from "@/lib/activity";
 import { isPipelineStage, isPriority } from "@/lib/admin/status";
 import { generateInvoicePdfBuffer } from "@/lib/billing/generatePdf";
 import { sendEmail } from "@/lib/email/brevo";
@@ -638,6 +638,7 @@ export async function replyToRequestThread(threadId: string, formData: FormData)
     actorId: admin.id,
     description: body.trim().slice(0, 140),
   });
+  await notifyClientOfAdminReply({ clientId: thread.client_id, subject: thread.subject });
 
   revalidateClient(thread.client_id);
 }

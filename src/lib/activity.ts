@@ -1,7 +1,12 @@
 import "server-only";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { sendEmail } from "@/lib/email/brevo";
-import { requestReplyNotificationSubject, requestReplyNotificationHtml } from "@/lib/email/reminderEmail";
+import {
+  requestReplyNotificationSubject,
+  requestReplyNotificationHtml,
+  adminReplyNotificationSubject,
+  adminReplyNotificationHtml,
+} from "@/lib/email/reminderEmail";
 
 export type ActivityLogType = "document" | "message" | "invoice" | "milestone" | "quote" | "task";
 
@@ -62,6 +67,26 @@ export async function notifyAdminsOfClientMessage(params: {
     await Promise.allSettled(
       recipients.map((admin) => sendEmail({ to: admin.email, toName: admin.full_name ?? undefined, subject, html }))
     );
+  } catch {
+    // Swallowed deliberately — see comment above.
+  }
+}
+
+// The other direction — until this existed, a client had no way to learn an
+// admin had replied to their request except by happening to open the
+// portal. Same best-effort contract as notifyAdminsOfClientMessage: never
+// throws, a failed send must not break the admin's reply action itself.
+export async function notifyClientOfAdminReply(params: { clientId: string; subject: string }) {
+  try {
+    const { data: client } = await supabaseAdmin.from("profiles").select("email, full_name").eq("id", params.clientId).maybeSingle();
+    if (!client?.email) return;
+
+    const firstName = (client.full_name || "").split(" ")[0] || client.full_name || "";
+    const emailData = { firstName, subject: params.subject };
+    const html = await adminReplyNotificationHtml(emailData);
+    const subject = adminReplyNotificationSubject(emailData);
+
+    await sendEmail({ to: client.email, toName: client.full_name ?? undefined, subject, html });
   } catch {
     // Swallowed deliberately — see comment above.
   }
