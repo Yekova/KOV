@@ -48,11 +48,8 @@ export function ScreenShowcase({ screenshotSrc }: ScreenShowcaseProps) {
           // "top bottom" — the earliest possible onset (as soon as the
           // card's top edge is even reachable at the bottom of the
           // viewport) rather than waiting until it's mostly scrolled into
-          // view. This section's document-top sits exactly where the
-          // Hero's own sticky video unsticks (see HeroScene.tsx's
-          // SCRUB_HEIGHT_VH/SCRUB_END), so the earliest onset lines up with
-          // the tail of the video scrub — the card starts arriving while
-          // the video is still finishing, not after it's fully gone.
+          // view, so the card starts arriving as soon as it can rather
+          // than after a gap once the Hero above it has fully passed.
           scrollTrigger: { trigger: card, start: "top bottom", toggleActions: "play none none reverse" },
         }
       );
