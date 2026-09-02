@@ -49,20 +49,19 @@ export function HeroScene() {
         className="relative min-h-screen flex items-start px-6 md:px-16 pt-40 md:pt-48 pb-32"
         style={{ zIndex: "var(--z-content)" }}
       >
-        <div className="grid md:grid-cols-2 gap-6 md:gap-8 items-center w-full max-w-[1600px] mx-auto">
+        <div className="grid md:grid-cols-[0.8fr_1.2fr] gap-6 md:gap-8 items-center w-full max-w-[1600px] mx-auto">
           <div>
             <h1
               className="font-display text-kov-bone uppercase"
               style={{ fontSize: "clamp(24px, 3.5vw, 56px)", lineHeight: "var(--line-height-display)" }}
             >
-              DES SITES WEB
+              UNE VISION.
               <br />
-              QUI TIENNENT<span className="text-kov-red">.</span>
+              UNE EXÉCUTION<span className="text-kov-red">.</span>
             </h1>
 
             <p className="mt-8 max-w-md text-kov-concrete text-sm leading-relaxed">
-              Design, développement et motion pensés comme un seul système —
-              pas trois prestataires qui se renvoient la responsabilité.
+              De la conception au motion, un seul studio pour maîtriser l&apos;exigence de chaque pixel.
             </p>
 
             <div className="flex flex-wrap items-center gap-4 mt-10">
@@ -86,18 +85,18 @@ export function HeroScene() {
               the carousel painted over the menu button entirely. Isolating
               here contains that range to just this box, so from the
               outside it's one auto-z-index unit like everything else. */}
-          <div className="w-full" style={{ height: "28rem", isolation: "isolate" }}>
+          <div className="w-full" style={{ height: "34rem", isolation: "isolate" }}>
             <DepthCarousel
               items={CAROUSEL_IMAGES}
-              cardWidth={640}
-              cardHeight={360}
+              cardWidth={800}
+              cardHeight={450}
               radius={18}
               tint="#0a0a0a"
-              depth={320}
-              spread={132}
+              depth={400}
+              spread={165}
               tilt={18}
               tiltDirection="right"
-              perspective={1500}
+              perspective={1600}
               visibleCards={3}
               falloff={0.22}
               blur={5}
