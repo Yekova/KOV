@@ -9,6 +9,11 @@ const baseTextStyle: CSSProperties = {
   fontSize: WORDMARK_SIZE,
   lineHeight: 1,
   margin: 0,
+  // Space Grotesk (the site's display font, --font-display) is a variable
+  // font capped at 700 — no heavier "Black" cut exists, so 700 is the
+  // thickest this family gets without swapping the whole site's display
+  // typeface for one wordmark.
+  fontWeight: 700,
 };
 
 // Original interpretation of a described-but-not-provided React Bits Pro
@@ -62,7 +67,7 @@ export function CursorRevealWordmark({ text }: { text: string }) {
       <p
         aria-hidden="true"
         className="font-display uppercase"
-        style={{ ...baseTextStyle, color: "transparent", WebkitTextStroke: "1.5px var(--kov-border)" }}
+        style={{ ...baseTextStyle, color: "transparent", WebkitTextStroke: "2.5px var(--kov-border)" }}
       >
         {text}
       </p>
