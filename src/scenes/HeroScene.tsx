@@ -49,7 +49,7 @@ export function HeroScene() {
         className="relative min-h-screen flex items-start px-6 md:px-16 pt-40 md:pt-48 pb-32"
         style={{ zIndex: "var(--z-content)" }}
       >
-        <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-start w-full max-w-[1600px] mx-auto">
+        <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center w-full max-w-[1600px] mx-auto">
           <div>
             <h1
               className="font-display text-kov-bone uppercase"
@@ -77,16 +77,24 @@ export function HeroScene() {
               previous carousel used. Arrows sit inside the component's
               own bounds, right against the card stack. Each card also
               tilts toward the cursor and glows red near its edges on
-              hover (TiltedCard/BorderGlow, nested inside DepthCarousel.tsx). */}
-          <div className="w-full md:ml-auto max-w-3xl" style={{ height: "32rem" }}>
+              hover (TiltedCard/BorderGlow, nested inside DepthCarousel.tsx).
+              `isolation: isolate` is load-bearing, not decoration: each
+              card's z-index (ported from upstream, ~1900-2000, meant for a
+              page with nothing else on it) would otherwise leak out of
+              this box and compete directly against Nav/HeroGlobalMenuButton
+              (z-nav, 50) in the page's own stacking context — 2000 > 50, so
+              the carousel painted over the menu button entirely. Isolating
+              here contains that range to just this box, so from the
+              outside it's one auto-z-index unit like everything else. */}
+          <div className="w-full" style={{ height: "24rem", isolation: "isolate" }}>
             <DepthCarousel
               items={CAROUSEL_IMAGES}
-              cardWidth={400}
-              cardHeight={270}
+              cardWidth={460}
+              cardHeight={310}
               radius={18}
               tint="#0a0a0a"
-              depth={200}
-              spread={85}
+              depth={230}
+              spread={95}
               tilt={18}
               tiltDirection="right"
               perspective={1500}
@@ -95,6 +103,7 @@ export function HeroScene() {
               blur={5}
               autoplay={false}
               loop
+              showIndicators={false}
             />
           </div>
         </div>

@@ -80,6 +80,26 @@
     transform 0.2s ease;
 }
 
+/* Red halo behind each arrow — fades in on hover/focus rather than sitting
+   on permanently, so it reads as a hover cue for "this changes the photo",
+   not a decoration always competing for attention. */
+.depth-carousel__arrow::before {
+  content: "";
+  position: absolute;
+  inset: -14px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(227, 30, 36, 0.65) 0%, rgba(227, 30, 36, 0) 72%);
+  opacity: 0;
+  z-index: -1;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.depth-carousel__arrow:hover::before,
+.depth-carousel__arrow:focus-visible::before {
+  opacity: 1;
+}
+
 .depth-carousel__arrow:hover {
   background: rgba(28, 31, 40, 0.85);
   border-color: rgba(255, 255, 255, 0.4);
