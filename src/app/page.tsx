@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { HeroScene } from "@/scenes/HeroScene";
+import { ScreenShowcase } from "@/components/home/ScreenShowcase";
 import { ExpertiseTeaser } from "@/components/home/ExpertiseTeaser";
 import { WorkGallery } from "@/components/home/WorkGallery";
 import { PhilosophyStatement } from "@/components/home/PhilosophyStatement";
@@ -25,6 +26,7 @@ export default function Home() {
   return (
     <main className="relative">
       <HeroScene />
+      <ScreenShowcase />
       <ExpertiseTeaser />
       <WorkGallery />
       <PhilosophyStatement />
