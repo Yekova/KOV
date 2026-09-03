@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { useScrolled } from "@/hooks/useScrolled";
 import { useOnLightZone } from "@/hooks/useOnLightZone";
+import { GlassSurface } from "@/components/ui/GlassSurface";
 
 const DOT_POSITIONS = [4, 12, 20];
 
@@ -56,24 +57,29 @@ export function GlobalMenuButton({ open, onToggle, variant = "fixed" }: GlobalMe
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-label={open ? "Fermer l'aperçu du site" : "Voir tout le site"}
-        className="w-11 h-11 flex items-center justify-center border text-kov-bone hover:text-kov-red transition-all duration-300"
-        style={{
-          background: "var(--glass-bg)",
-          backdropFilter: "blur(var(--glass-blur)) saturate(180%)",
-          WebkitBackdropFilter: "blur(var(--glass-blur)) saturate(180%)",
-          borderColor: "var(--glass-border)",
-          borderRadius: "var(--radius-pill)",
-          transform: hovered ? "scale(1.08)" : "scale(1)",
-          boxShadow: hovered
-            ? "0 0 24px rgba(227, 30, 36, 0.45), var(--glass-shadow-full)"
-            : "var(--glass-shadow-full)",
-        }}
+        className="relative w-11 h-11 flex items-center justify-center text-kov-bone hover:text-kov-red transition-transform duration-300"
+        style={{ transform: hovered ? "scale(1.08)" : "scale(1)" }}
       >
+        {/* Glass backdrop layer — see Nav.tsx for the same GlassSurface
+            treatment; the icon below sits in its own z-10 layer since
+            GlassSurface paints as a positioned element regardless of DOM
+            order. */}
+        <GlassSurface
+          width="100%"
+          height="100%"
+          borderRadius={999}
+          style={{
+            position: "absolute",
+            inset: 0,
+            boxShadow: hovered ? "0 0 24px rgba(227, 30, 36, 0.45), var(--glass-shadow-full)" : undefined,
+          }}
+        />
         <svg
           width="14"
           height="14"
           viewBox="0 0 24 24"
           fill="currentColor"
+          className="relative z-10"
           style={{
             transform: hovered ? "rotate(12deg)" : "rotate(0deg)",
             transition: "transform 0.4s ease",
