@@ -1,12 +1,6 @@
 import Link from "next/link";
 import ShapeBlur from "@/components/ui/ShapeBlurLazy";
-
-const GLASS_PILL_STYLE = {
-  background: "var(--glass-bg)",
-  backdropFilter: "blur(var(--glass-blur)) saturate(180%)",
-  WebkitBackdropFilter: "blur(var(--glass-blur)) saturate(180%)",
-  borderColor: "var(--glass-border)",
-} as const;
+import { GlassSurface } from "@/components/ui/GlassSurface";
 
 interface KovCTAProps {
   href: string;
@@ -37,13 +31,16 @@ export function KovCTA({ href, children, dot = true, haloColor = "#E31E24", clas
       </div>
       <Link
         href={href}
-        className="relative inline-flex items-center gap-2 px-6 py-3 border text-kov-bone text-xs uppercase tracking-widest group-hover:text-kov-red transition-all duration-300 group-hover:scale-[1.02]"
-        style={{ ...GLASS_PILL_STYLE, borderRadius: "var(--radius-pill)" }}
+        className="relative inline-flex items-center overflow-hidden text-kov-bone text-xs uppercase tracking-widest group-hover:text-kov-red transition-all duration-300 group-hover:scale-[1.02]"
+        style={{ borderRadius: "var(--radius-pill)" }}
       >
-        {dot && <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-kov-red shrink-0" />}
-        <span>{children}</span>
-        <span aria-hidden="true" className="inline-block transition-transform duration-300 group-hover:translate-x-1">
-          →
+        <GlassSurface width="100%" height="100%" borderRadius={999} style={{ position: "absolute", inset: 0 }} />
+        <span className="relative z-10 inline-flex items-center gap-2 px-6 py-3">
+          {dot && <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-kov-red shrink-0" />}
+          <span>{children}</span>
+          <span aria-hidden="true" className="inline-block transition-transform duration-300 group-hover:translate-x-1">
+            →
+          </span>
         </span>
       </Link>
     </div>
