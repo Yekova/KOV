@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import { gsap } from "gsap";
 import { NavDropdownPanel } from "@/components/navigation/NavDropdownPanel";
 import { ExpertiseDropdown, StudioDropdown } from "@/components/navigation/NavDropdownContent";
-import { GlassSurface } from "@/components/ui/GlassSurface";
 
 export interface NavLinkItem {
   href: string;
@@ -39,7 +38,6 @@ export function NavLinks({ links, pillRef }: { links: NavLinkItem[]; pillRef: Re
 
   const itemRefs = useRef<(HTMLAnchorElement | null)[]>([]);
   const circleRefs = useRef<(HTMLSpanElement | null)[]>([]);
-  const glassRefs = useRef<(HTMLDivElement | null)[]>([]);
   const timelineRefs = useRef<(gsap.core.Timeline | null)[]>([]);
   const activeTweenRefs = useRef<(gsap.core.Tween | null)[]>([]);
 
@@ -71,22 +69,6 @@ export function NavLinks({ links, pillRef }: { links: NavLinkItem[]; pillRef: Re
         circle.style.bottom = `-${delta}px`;
         gsap.set(circle, { xPercent: -50, scale: 0, transformOrigin: `50% ${originY}px` });
 
-        // The glass bubble sits at the SAME spot/size as the fully-grown
-        // circle but is never itself scaled — GlassSurface measures its own
-        // box via getBoundingClientRect() to build its displacement map,
-        // and a CSS transform:scale(0) start state would report a near-zero
-        // rect at that moment, baking a broken map in before it ever grows
-        // back. Fading its opacity in instead (below) sidesteps that
-        // entirely: the box stays at its real D×D size throughout, only
-        // its visibility changes.
-        const glass = glassRefs.current[index];
-        if (glass) {
-          glass.style.width = `${D}px`;
-          glass.style.height = `${D}px`;
-          glass.style.bottom = `-${delta}px`;
-          gsap.set(glass, { xPercent: -50, opacity: 0 });
-        }
-
         const label = pill.querySelector<HTMLElement>(".pill-label");
         const hoverLabel = pill.querySelector<HTMLElement>(".pill-label-hover");
         if (label) gsap.set(label, { y: 0 });
@@ -95,12 +77,6 @@ export function NavLinks({ links, pillRef }: { links: NavLinkItem[]; pillRef: Re
         timelineRefs.current[index]?.kill();
         const tl = gsap.timeline({ paused: true });
         tl.to(circle, { scale: 1.2, xPercent: -50, duration: 2, ease: EASE, overwrite: "auto" }, 0);
-        // Starts at the 40%-progress mark, not 0 — fading the (fixed-size)
-        // glass bubble in from the very start would show a faint full-size
-        // ghost of it hovering behind the still-tiny growing circle. Waiting
-        // until the circle is substantially grown reads as the glass
-        // texture settling onto an already-forming red bubble instead.
-        if (glass) tl.to(glass, { opacity: 1, duration: 1.2, ease: EASE, overwrite: "auto" }, 0.8);
         if (label) tl.to(label, { y: -(h + 8), duration: 2, ease: EASE, overwrite: "auto" }, 0);
         if (hoverLabel) {
           gsap.set(hoverLabel, { y: Math.ceil(h + 40), opacity: 0 });
@@ -191,26 +167,14 @@ export function NavLinks({ links, pillRef }: { links: NavLinkItem[]; pillRef: Re
             className="absolute left-1/2 bottom-0 rounded-full pointer-events-none"
             style={{ background: "var(--kov-red)", zIndex: 1 }}
           />
-          {/* Liquid-glass texture over the red circle — refracts it rather
-              than tinting it, so the "red bubble" is real glass, not a flat
-              fill. borderRadius=999 makes GlassSurface's own box (and its
-              displacement map's geometry) a full circle to match. */}
-          <GlassSurface
-            ref={(el) => {
-              glassRefs.current[index] = el;
-            }}
-            borderRadius={999}
-            className="absolute left-1/2 bottom-0 pointer-events-none"
-            style={{ zIndex: 2 }}
-          />
-          <span className="relative inline-block" style={{ zIndex: 3 }}>
-            <span className="pill-label relative inline-block text-kov-bone transition-colors duration-300" style={{ zIndex: 3 }}>
+          <span className="relative inline-block" style={{ zIndex: 2 }}>
+            <span className="pill-label relative inline-block text-kov-bone transition-colors duration-300" style={{ zIndex: 2 }}>
               {link.label}
             </span>
             <span
               aria-hidden="true"
               className="pill-label-hover absolute left-0 top-0 inline-block text-kov-white"
-              style={{ zIndex: 4 }}
+              style={{ zIndex: 3 }}
             >
               {link.label}
             </span>
