@@ -6,6 +6,14 @@ import { GlassSurface } from "@/components/ui/GlassSurface";
 interface StudioIntroProps {
   onEnter: () => void;
   ready: boolean;
+  /** True during the "revealing" phase — fades this screen out in place
+   * (via `animate`, while still mounted) so it cross-fades with the canvas
+   * fading in underneath, rather than sitting opaque for the whole reveal
+   * and popping away the instant it unmounts. An `exit` prop alone does
+   * nothing here: this component was never wrapped in <AnimatePresence>,
+   * so exit animations never actually played. */
+  revealing: boolean;
+  revealDurationMs: number;
 }
 
 // The very first thing /studio shows — no marketing Hero, just KOV's own
@@ -14,13 +22,13 @@ interface StudioIntroProps {
 // this screen while it's still showing, so entering never reveals a half-
 // loaded sphere (studio spec §17) — the button just shows a quiet loading
 // state until the texture is actually in memory.
-export function StudioIntro({ onEnter, ready }: StudioIntroProps) {
+export function StudioIntro({ onEnter, ready, revealing, revealDurationMs }: StudioIntroProps) {
   return (
     <motion.div
       className="absolute inset-0 flex flex-col items-center justify-center gap-10"
       style={{ background: "#050505", zIndex: "var(--z-modal)" as unknown as number }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.5 }}
+      animate={{ opacity: revealing ? 0 : 1 }}
+      transition={{ duration: revealDurationMs / 1000, ease: "easeInOut" }}
     >
       <div className="text-center">
         <p className="font-display text-kov-bone uppercase tracking-widest text-sm">KOV</p>

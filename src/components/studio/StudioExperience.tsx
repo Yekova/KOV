@@ -178,7 +178,14 @@ function StudioExperienceInner() {
         </Canvas>
       </div>
 
-      {(phase === "intro" || phase === "revealing") && <StudioIntro onEnter={handleEnter} ready={textureReady} />}
+      {(phase === "intro" || phase === "revealing") && (
+        <StudioIntro
+          onEnter={handleEnter}
+          ready={textureReady}
+          revealing={phase === "revealing"}
+          revealDurationMs={REVEAL_DURATION_MS}
+        />
+      )}
 
       {(phase === "exploring" || phase === "transitioning") && (
         <StudioHUD node={currentNode} onToggleMenu={toggleMenu} menuOpen={menuOpen} />
