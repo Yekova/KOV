@@ -28,6 +28,7 @@
     "@types/three": "^0.185.4",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
+    "aos": "^2.3.4",
     "dompurify": "^3.4.14",
     "framer-motion": "^13.1.1",
     "gl-matrix": "^3.4.4",
@@ -48,6 +49,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/aos": "^3.0.8",
     "@types/dompurify": "^3.0.5",
     "@types/node": "^20",
     "@types/react": "^19",

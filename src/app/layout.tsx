@@ -4,6 +4,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { SiteChrome } from "@/components/layout/SiteChrome";
 import { CustomCursor } from "@/components/ui/CustomCursor";
+import { AosInit } from "@/components/ui/AosInit";
 import { OrganizationJsonLd } from "@/components/seo/OrganizationJsonLd";
 import "./globals.css";
 
@@ -52,6 +53,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <OrganizationJsonLd />
         <CustomCursor />
+        <AosInit />
         <SiteChrome>{children}</SiteChrome>
         <Analytics />
         <SpeedInsights />
