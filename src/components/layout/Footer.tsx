@@ -82,41 +82,44 @@ const FOOTER_BLUR_OVERSHOOT_PX = 260;
 // length stays consistent regardless of how tall the footer's content is.
 const FOOTER_BLUR_FADE_PX = 480;
 
-export function Footer() {
+export function Footer({ isHome = false }: { isHome?: boolean }) {
   return (
-    // relative + a full-bleed blur layer as a child (not the <footer>'s own
-    // background) — <footer> itself is max-w-[1600px] mx-auto for its real
-    // content, but the blur needs to cover the *entire* viewport width, not
-    // just that centered column, or the animated background (LineWaves,
-    // see src/app/page.tsx) would show through sharp in the side margins on
-    // wide screens. The `left: 50%; width: 100vw; translateX(-50%)` trick
-    // breaks the blur layer out of the max-width constraint without
-    // touching layout of the actual footer content. It's masked with a
-    // top-to-bottom gradient so the blur eases in gradually from the
-    // footer's own top edge instead of cutting on abruptly, and given a
-    // negative z-index so it paints behind the footer's own (non-
-    // positioned) content without needing to elevate that content.
-    // Harmless on every other page: nothing colorful sits behind a plain
-    // black background to blur.
-    <footer className="relative px-6 pt-24 pb-10 max-w-[1600px] mx-auto border-t" style={{ borderColor: "var(--kov-border)" }}>
-      <div
-        aria-hidden="true"
-        className="absolute pointer-events-none"
-        style={{
-          left: "50%",
-          width: "100vw",
-          top: -FOOTER_BLUR_OVERSHOOT_PX,
-          bottom: 0,
-          transform: "translateX(-50%)",
-          zIndex: -1,
-          background: "var(--glass-bg)",
-          backdropFilter: `blur(${FOOTER_BLUR_PX}px) saturate(180%)`,
-          WebkitBackdropFilter: `blur(${FOOTER_BLUR_PX}px) saturate(180%)`,
-          maskImage: `linear-gradient(to bottom, transparent 0px, black ${FOOTER_BLUR_FADE_PX}px)`,
-          WebkitMaskImage: `linear-gradient(to bottom, transparent 0px, black ${FOOTER_BLUR_FADE_PX}px)`,
-        }}
-      />
+    // Outer <footer> is full-width and position:relative, purely so the
+    // blur layer below can use `inset-x-0` to span it exactly — `inset-x-0`
+    // (left:0/right:0) resolves against this element's own real width,
+    // unlike the `width: 100vw` this used before: 100vw is the *viewport's*
+    // width including its scrollbar gutter, which is wider than the page's
+    // actual content area on any browser that reserves scrollbar space —
+    // centering a 100vw box via left:50%/translateX(-50%) pushed its right
+    // edge past the real content edge and produced a horizontal scrollbar.
+    // The actual max-width/padding for the footer's own content lives on
+    // the inner div below, unchanged from before.
+    <footer className="relative">
+      {isHome && (
+        // The animated homepage background (LineWaves, src/app/page.tsx)
+        // sits behind the whole page; this softens it through the footer
+        // instead of leaving it sharp or opaque-ing it away entirely. Only
+        // relevant on the homepage — every other page just has a flat
+        // black background behind the footer, nothing to blur, so this
+        // stays off there rather than applying a pointless translucent
+        // tint over it.
+        <div
+          aria-hidden="true"
+          className="absolute inset-x-0 pointer-events-none"
+          style={{
+            top: -FOOTER_BLUR_OVERSHOOT_PX,
+            bottom: 0,
+            zIndex: -1,
+            background: "var(--glass-bg)",
+            backdropFilter: `blur(${FOOTER_BLUR_PX}px) saturate(180%)`,
+            WebkitBackdropFilter: `blur(${FOOTER_BLUR_PX}px) saturate(180%)`,
+            maskImage: `linear-gradient(to bottom, transparent 0px, black ${FOOTER_BLUR_FADE_PX}px)`,
+            WebkitMaskImage: `linear-gradient(to bottom, transparent 0px, black ${FOOTER_BLUR_FADE_PX}px)`,
+          }}
+        />
+      )}
 
+      <div className="px-6 pt-24 pb-10 max-w-[1600px] mx-auto border-t" style={{ borderColor: "var(--kov-border)" }}>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-10 lg:gap-8">
         <div className="sm:col-span-2 lg:col-span-2">
           <Link href="/" aria-label="KOV — Accueil" className="block">
@@ -229,6 +232,7 @@ export function Footer() {
             </Link>
           ))}
         </div>
+      </div>
       </div>
     </footer>
   );

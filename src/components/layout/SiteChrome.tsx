@@ -44,7 +44,7 @@ function SiteChromeInner({ pathname, children }: { pathname: string | null; chil
     <>
       {!isHome && <Nav />}
       {children}
-      <Footer />
+      <Footer isHome={isHome} />
       {showGlobalMenu && (
         <>
           {!isHome && <GlobalMenuButton open={open} onToggle={toggle} />}

@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <main className="min-h-screen relative" style={{ background: "var(--kov-black)" }}>
+    <main className="min-h-screen relative">
       <div className="fixed inset-0" style={{ zIndex: "var(--z-canvas)", pointerEvents: "none" }}>
         {/* colors: KOV bone → red → soft red-tint, in place of the demo's
             purple/pink defaults — closest on-brand read of the color0/1/2
@@ -50,7 +50,7 @@ export default function ContactPage() {
           <p className="text-xs uppercase tracking-widest text-kov-steel mb-6">Contact</p>
           <h1
             className="font-display text-kov-bone uppercase"
-            style={{ fontSize: "var(--display-lg)", lineHeight: "var(--line-height-display)" }}
+            style={{ fontSize: "clamp(32px, 4.5vw, 72px)", lineHeight: "var(--line-height-display)" }}
           >
             Un projet en tête ?
             <br />
