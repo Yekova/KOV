@@ -7,21 +7,12 @@ import { PhilosophyStatement } from "@/components/home/PhilosophyStatement";
 import { ProcessTimeline } from "@/components/home/ProcessTimeline";
 import { WorkSpotlight } from "@/components/home/WorkSpotlight";
 import { ClosingCta } from "@/components/home/ClosingCta";
-import { KovSectionIndicator } from "@/components/ui/KovSectionIndicator";
 import GradualBlur from "@/components/home/GradualBlur";
 import LineWaves from "@/components/home/LineWavesLazy";
 
 export const metadata: Metadata = {
   alternates: { canonical: "https://kov-agency.site" },
 };
-
-const SECTIONS = [
-  { id: "expertise", label: "Expertise" },
-  { id: "work-gallery", label: "Projets" },
-  { id: "philosophy", label: "Philosophie" },
-  { id: "process", label: "Process" },
-  { id: "contact", label: "Contact" },
-];
 
 // KOV's own tokens, not the upstream demo's arbitrary reds — same "mostly
 // red, one muted channel" structure the demo's own defaults used.
@@ -77,7 +68,6 @@ export default function Home() {
       <WorkSpotlight />
       <ClosingCta />
 
-      <KovSectionIndicator sections={SECTIONS} />
       {/* A page-wide top blur, present through the whole scroll — content
           softens into it near the viewport edge instead of clipping hard
           against it. zIndex forced onto KOV's own scale (--z-glass, below
