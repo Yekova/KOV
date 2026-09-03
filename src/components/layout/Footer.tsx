@@ -60,17 +60,19 @@ const SOCIAL_LINKS = [
 // Stronger than the sitewide --glass-blur (20px, tuned for ordinary glass
 // panels sitting over largely static backgrounds) — the footer needs to
 // fully soften a busy, moving pattern behind it for its text to stay
-// legible, not just tint it.
-const FOOTER_BLUR_PX = 40;
+// legible, not just tint it. Raised again (was 40) so the pattern reads as
+// a soft, uniform glow rather than a still-distinct streak.
+const FOOTER_BLUR_PX = 64;
 
 // The blur layer's box starts this far *above* the footer's own top edge —
 // so the fade is already partway through by the time the footer's own
 // border line arrives, rather than starting from scratch exactly at that
-// line. Extends this far *past* the bottom too, as a deliberate overshoot:
-// inset-y-0 alone would exactly match the footer's own box, and depending
-// on how that height gets measured relative to this absolutely-positioned
-// child, a mismatch could leave a thin unblurred strip right at the
-// bottom edge — the overshoot makes that impossible regardless.
+// line. NOT applied to the bottom (see below): a previous version also
+// overshot the bottom edge by this same amount "just in case" of a
+// measurement mismatch — that mismatch never actually existed, and the
+// overshoot itself was the bug: the footer's real content doesn't fill the
+// whole viewport at max scroll, so it left a large blurred-but-empty gap
+// visible below the actual footer content.
 const FOOTER_BLUR_OVERSHOOT_PX = 260;
 
 // Length of the fade in pixels, measured from the (raised) top of the blur
@@ -78,7 +80,7 @@ const FOOTER_BLUR_OVERSHOOT_PX = 260;
 // FOOTER_BLUR_OVERSHOOT_PX into the footer's own actual content. Pixel-
 // based rather than a percentage of the box's own height, so the fade
 // length stays consistent regardless of how tall the footer's content is.
-const FOOTER_BLUR_FADE_PX = 420;
+const FOOTER_BLUR_FADE_PX = 480;
 
 export function Footer() {
   return (
@@ -104,7 +106,7 @@ export function Footer() {
           left: "50%",
           width: "100vw",
           top: -FOOTER_BLUR_OVERSHOOT_PX,
-          bottom: -FOOTER_BLUR_OVERSHOOT_PX,
+          bottom: 0,
           transform: "translateX(-50%)",
           zIndex: -1,
           background: "var(--glass-bg)",
