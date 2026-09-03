@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { motion, useMotionValue, useMotionValueEvent, useTransform, animate, AnimatePresence } from "framer-motion";
+import { GlassSurface } from "@/components/ui/GlassSurface";
 
 const HANDLE_SIZE = 76;
 const TRACK_INSET = 8;
@@ -214,7 +215,10 @@ export function ActivationSlider({ onActivate, reducedMotion }: ActivationSlider
             </>
           )}
 
-          {/* glass sphere body */}
+          {/* red color source — GlassSurface refracts whatever's behind
+              it, it doesn't tint on its own, so this stays as the actual
+              color; the sphere reads as "red glass" because of the layer
+              below, not because GlassSurface adds any red itself. */}
           <span
             aria-hidden="true"
             className="absolute inset-0 rounded-full"
@@ -224,6 +228,12 @@ export function ActivationSlider({ onActivate, reducedMotion }: ActivationSlider
                 "inset 0 2px 5px rgba(255,255,255,0.3), inset 0 -6px 10px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.12)",
             }}
           />
+
+          {/* liquid-glass refraction over the red sphere — explicit pixel
+              size (HANDLE_SIZE), never a percentage: the handle only ever
+              translates via drag (x), never resizes, so this measures
+              correctly once and stays correct for the life of the drag. */}
+          <GlassSurface width={HANDLE_SIZE} height={HANDLE_SIZE} borderRadius={999} style={{ position: "absolute", inset: 0 }} />
 
           {/* arrow → check */}
           <span className="absolute inset-0 flex items-center justify-center text-kov-white pointer-events-none">

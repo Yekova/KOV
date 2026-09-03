@@ -3,6 +3,9 @@
 import { useRef, useState } from "react";
 import { useScrolled } from "@/hooks/useScrolled";
 import { useOnLightZone } from "@/hooks/useOnLightZone";
+import { GlassSurface } from "@/components/ui/GlassSurface";
+
+const BUTTON_SIZE = 44; // matches w-11/h-11 (Tailwind's 11 * 4px)
 
 const DOT_POSITIONS = [4, 12, 20];
 
@@ -56,33 +59,37 @@ export function GlobalMenuButton({ open, onToggle, variant = "fixed" }: GlobalMe
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-label={open ? "Fermer l'aperçu du site" : "Voir tout le site"}
-        className="w-11 h-11 flex items-center justify-center border text-kov-bone hover:text-kov-red transition-all duration-300"
-        style={{
-          background: "var(--glass-bg)",
-          backdropFilter: "blur(var(--glass-blur)) saturate(180%)",
-          WebkitBackdropFilter: "blur(var(--glass-blur)) saturate(180%)",
-          borderColor: "var(--glass-border)",
-          borderRadius: "var(--radius-pill)",
-          transform: hovered ? "scale(1.08)" : "scale(1)",
-          boxShadow: hovered
-            ? "0 0 24px rgba(227, 30, 36, 0.45), var(--glass-shadow-full)"
-            : "var(--glass-shadow-full)",
-        }}
+        className="text-kov-bone hover:text-kov-red transition-transform duration-300"
+        style={{ transform: hovered ? "scale(1.08)" : "scale(1)" }}
       >
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="currentColor"
+        {/* Explicit pixel size (not "100%") — this button is a fixed
+            44x44px shape (w-11/h-11), so there's no auto-sized-container
+            ambiguity here the way there was on Nav's pill, but staying
+            explicit everywhere avoids relying on that distinction being
+            remembered correctly next time this is touched. */}
+        <GlassSurface
+          width={BUTTON_SIZE}
+          height={BUTTON_SIZE}
+          borderRadius={999}
           style={{
-            transform: hovered ? "rotate(12deg)" : "rotate(0deg)",
-            transition: "transform 0.4s ease",
+            boxShadow: hovered ? "0 0 24px rgba(227, 30, 36, 0.45), var(--glass-shadow-full)" : undefined,
           }}
         >
-          {DOT_POSITIONS.flatMap((cy) =>
-            DOT_POSITIONS.map((cx) => <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="1.6" />)
-          )}
-        </svg>
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            style={{
+              transform: hovered ? "rotate(12deg)" : "rotate(0deg)",
+              transition: "transform 0.4s ease",
+            }}
+          >
+            {DOT_POSITIONS.flatMap((cy) =>
+              DOT_POSITIONS.map((cx) => <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="1.6" />)
+            )}
+          </svg>
+        </GlassSurface>
       </button>
     </div>
   );
