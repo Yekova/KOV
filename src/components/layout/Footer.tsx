@@ -63,10 +63,22 @@ const SOCIAL_LINKS = [
 // legible, not just tint it.
 const FOOTER_BLUR_PX = 40;
 
-// How far into the footer's own height the blur ramps up to full strength
-// (as a % of the footer's total height) — a soft transition rather than a
-// hard on/off line right at the top border.
-const FOOTER_BLUR_FADE_PERCENT = 20;
+// The blur layer's box starts this far *above* the footer's own top edge —
+// so the fade is already partway through by the time the footer's own
+// border line arrives, rather than starting from scratch exactly at that
+// line. Extends this far *past* the bottom too, as a deliberate overshoot:
+// inset-y-0 alone would exactly match the footer's own box, and depending
+// on how that height gets measured relative to this absolutely-positioned
+// child, a mismatch could leave a thin unblurred strip right at the
+// bottom edge — the overshoot makes that impossible regardless.
+const FOOTER_BLUR_OVERSHOOT_PX = 260;
+
+// Length of the fade in pixels, measured from the (raised) top of the blur
+// box — reaches full strength roughly FOOTER_BLUR_FADE_PX -
+// FOOTER_BLUR_OVERSHOOT_PX into the footer's own actual content. Pixel-
+// based rather than a percentage of the box's own height, so the fade
+// length stays consistent regardless of how tall the footer's content is.
+const FOOTER_BLUR_FADE_PX = 420;
 
 export function Footer() {
   return (
@@ -87,17 +99,19 @@ export function Footer() {
     <footer className="relative px-6 pt-24 pb-10 max-w-[1600px] mx-auto border-t" style={{ borderColor: "var(--kov-border)" }}>
       <div
         aria-hidden="true"
-        className="absolute inset-y-0 pointer-events-none"
+        className="absolute pointer-events-none"
         style={{
           left: "50%",
           width: "100vw",
+          top: -FOOTER_BLUR_OVERSHOOT_PX,
+          bottom: -FOOTER_BLUR_OVERSHOOT_PX,
           transform: "translateX(-50%)",
           zIndex: -1,
           background: "var(--glass-bg)",
           backdropFilter: `blur(${FOOTER_BLUR_PX}px) saturate(180%)`,
           WebkitBackdropFilter: `blur(${FOOTER_BLUR_PX}px) saturate(180%)`,
-          maskImage: `linear-gradient(to bottom, transparent 0%, black ${FOOTER_BLUR_FADE_PERCENT}%)`,
-          WebkitMaskImage: `linear-gradient(to bottom, transparent 0%, black ${FOOTER_BLUR_FADE_PERCENT}%)`,
+          maskImage: `linear-gradient(to bottom, transparent 0px, black ${FOOTER_BLUR_FADE_PX}px)`,
+          WebkitMaskImage: `linear-gradient(to bottom, transparent 0px, black ${FOOTER_BLUR_FADE_PX}px)`,
         }}
       />
 
