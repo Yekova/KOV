@@ -57,26 +57,50 @@ const SOCIAL_LINKS = [
   },
 ];
 
+// Stronger than the sitewide --glass-blur (20px, tuned for ordinary glass
+// panels sitting over largely static backgrounds) — the footer needs to
+// fully soften a busy, moving pattern behind it for its text to stay
+// legible, not just tint it.
+const FOOTER_BLUR_PX = 40;
+
+// How far into the footer's own height the blur ramps up to full strength
+// (as a % of the footer's total height) — a soft transition rather than a
+// hard on/off line right at the top border.
+const FOOTER_BLUR_FADE_PERCENT = 20;
+
 export function Footer() {
   return (
-    // A translucent blurred backdrop: on the homepage, a fixed animated
-    // background (LineWaves, see src/app/page.tsx) sits behind the whole
-    // page (--z-canvas is negative, so it already paints behind this plain
-    // <footer> with no elevation needed here). The blur keeps that
-    // background technically visible through the footer — softened, not
-    // hidden — rather than either fully opaque-ing it away or leaving the
-    // pattern sharp and distracting behind the text. Harmless on every
-    // other page: there's nothing colorful behind a plain black background
-    // to blur.
-    <footer
-      className="px-6 pt-24 pb-10 max-w-[1600px] mx-auto border-t"
-      style={{
-        borderColor: "var(--kov-border)",
-        background: "var(--glass-bg)",
-        backdropFilter: "blur(var(--glass-blur)) saturate(180%)",
-        WebkitBackdropFilter: "blur(var(--glass-blur)) saturate(180%)",
-      }}
-    >
+    // relative + a full-bleed blur layer as a child (not the <footer>'s own
+    // background) — <footer> itself is max-w-[1600px] mx-auto for its real
+    // content, but the blur needs to cover the *entire* viewport width, not
+    // just that centered column, or the animated background (LineWaves,
+    // see src/app/page.tsx) would show through sharp in the side margins on
+    // wide screens. The `left: 50%; width: 100vw; translateX(-50%)` trick
+    // breaks the blur layer out of the max-width constraint without
+    // touching layout of the actual footer content. It's masked with a
+    // top-to-bottom gradient so the blur eases in gradually from the
+    // footer's own top edge instead of cutting on abruptly, and given a
+    // negative z-index so it paints behind the footer's own (non-
+    // positioned) content without needing to elevate that content.
+    // Harmless on every other page: nothing colorful sits behind a plain
+    // black background to blur.
+    <footer className="relative px-6 pt-24 pb-10 max-w-[1600px] mx-auto border-t" style={{ borderColor: "var(--kov-border)" }}>
+      <div
+        aria-hidden="true"
+        className="absolute inset-y-0 pointer-events-none"
+        style={{
+          left: "50%",
+          width: "100vw",
+          transform: "translateX(-50%)",
+          zIndex: -1,
+          background: "var(--glass-bg)",
+          backdropFilter: `blur(${FOOTER_BLUR_PX}px) saturate(180%)`,
+          WebkitBackdropFilter: `blur(${FOOTER_BLUR_PX}px) saturate(180%)`,
+          maskImage: `linear-gradient(to bottom, transparent 0%, black ${FOOTER_BLUR_FADE_PERCENT}%)`,
+          WebkitMaskImage: `linear-gradient(to bottom, transparent 0%, black ${FOOTER_BLUR_FADE_PERCENT}%)`,
+        }}
+      />
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-10 lg:gap-8">
         <div className="sm:col-span-2 lg:col-span-2">
           <Link href="/" aria-label="KOV — Accueil" className="block">
