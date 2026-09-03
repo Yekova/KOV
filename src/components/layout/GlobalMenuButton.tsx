@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useScrolled } from "@/hooks/useScrolled";
+import { useOnLightZone } from "@/hooks/useOnLightZone";
 
 const DOT_POSITIONS = [4, 12, 20];
 
@@ -26,14 +27,23 @@ export function GlobalMenuButton({ open, onToggle, variant = "fixed" }: GlobalMe
   // ties it to the section's own box, not the viewport.
   const scrolled = useScrolled();
   const isFixed = variant === "fixed" || scrolled;
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  // Same light-zone detection as Nav.tsx — this button is bottom-anchored
+  // rather than top, so it checks its own position against the registry
+  // independently rather than sharing Nav's result.
+  const onLight = useOnLightZone(wrapperRef);
 
   return (
     <div
+      ref={wrapperRef}
       className={`${isFixed ? "fixed" : "absolute"} bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2`}
-      style={{ zIndex: "var(--z-nav)" }}
+      style={{
+        zIndex: "var(--z-nav)",
+        ...(onLight ? ({ "--kov-bone": "var(--kov-black)" } as React.CSSProperties) : undefined),
+      }}
     >
       <span
-        className="text-[10px] uppercase tracking-widest text-kov-bone transition-opacity duration-300"
+        className="text-[10px] uppercase tracking-widest text-kov-bone transition-[opacity,color] duration-300"
         style={{ opacity: hovered ? 1 : 0 }}
       >
         Menu

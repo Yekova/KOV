@@ -10,6 +10,7 @@ import { NavLinks, type NavLinkItem } from "@/components/navigation/NavLinks";
 import { MobileNavMenu } from "@/components/navigation/MobileNavMenu";
 import { REVEAL_EASE } from "@/lib/motion";
 import { useScrolled } from "@/hooks/useScrolled";
+import { useOnLightZone } from "@/hooks/useOnLightZone";
 
 const LINKS: NavLinkItem[] = [
   { href: "/#work-gallery", label: "Projets" },
@@ -40,6 +41,14 @@ export function Nav({ variant = "fixed" }: NavProps) {
   const scrolled = useScrolled();
   const [mobileOpen, setMobileOpen] = useState(false);
   const pillRef = useRef<HTMLDivElement>(null);
+  // True whenever the pill is currently scrolled over a registered light
+  // zone (e.g. ScreenShowcase's dashboard screenshot) — the glass pill
+  // itself stays legible either way, but its bone-colored text/logo
+  // disappear against a light background behind it. Overriding --kov-bone
+  // locally flips every text-kov-bone/bg-kov-bone descendant (nav links,
+  // search/lock icons, the Contact CTA) to black in one place via the CSS
+  // cascade, instead of threading a color prop through each of them.
+  const onLight = useOnLightZone(pillRef);
 
   // No per-navigation reveal/unfurl on the pill anymore — it just stays put
   // across route changes now. Still closes the mobile menu on navigation, a
@@ -87,6 +96,7 @@ export function Nav({ variant = "fixed" }: NavProps) {
           className={`flex items-center justify-between gap-2 sm:gap-3 px-2 sm:px-2.5 ${padding} border`}
           style={{
             ...pillStyle,
+            ...(onLight ? ({ "--kov-bone": "var(--kov-black)" } as React.CSSProperties) : undefined),
             transitionProperty: "background, border-color, box-shadow, padding",
             transitionDuration: "0.5s",
             transitionTimingFunction: REVEAL_EASE,
@@ -94,7 +104,7 @@ export function Nav({ variant = "fixed" }: NavProps) {
         >
           <Link href="/" className="flex items-center px-2.5">
             <Image
-              src="/kov/brand/kov-wordmark-bone.png"
+              src={onLight ? "/kov/brand/kov-wordmark-black.png" : "/kov/brand/kov-wordmark-bone.png"}
               alt="KOV"
               width={1116}
               height={209}
@@ -103,7 +113,7 @@ export function Nav({ variant = "fixed" }: NavProps) {
             />
           </Link>
 
-          <nav className="hidden md:flex items-center gap-2.5 sm:gap-6 px-2.5 sm:px-3 text-xs uppercase tracking-widest text-kov-bone">
+          <nav className="hidden md:flex items-center gap-2.5 sm:gap-6 px-2.5 sm:px-3 text-xs uppercase tracking-widest text-kov-bone transition-colors duration-300">
             <NavLinks links={LINKS} pillRef={pillRef} />
           </nav>
 
@@ -132,15 +142,15 @@ export function Nav({ variant = "fixed" }: NavProps) {
             className="md:hidden flex flex-col justify-center items-end gap-1.5 w-11 h-11 px-3"
           >
             <span
-              className="block h-[1.5px] w-5 bg-kov-bone transition-transform duration-300"
+              className="block h-[1.5px] w-5 bg-kov-bone transition-[transform,background-color] duration-300"
               style={{ transform: mobileOpen ? "rotate(45deg) translateY(7px)" : "none" }}
             />
             <span
-              className="block h-[1.5px] w-5 bg-kov-bone transition-opacity duration-300"
+              className="block h-[1.5px] w-5 bg-kov-bone transition-[opacity,background-color] duration-300"
               style={{ opacity: mobileOpen ? 0 : 1 }}
             />
             <span
-              className="block h-[1.5px] w-5 bg-kov-bone transition-transform duration-300"
+              className="block h-[1.5px] w-5 bg-kov-bone transition-[transform,background-color] duration-300"
               style={{ transform: mobileOpen ? "rotate(-45deg) translateY(-7px)" : "none" }}
             />
           </button>

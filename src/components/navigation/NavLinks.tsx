@@ -168,7 +168,7 @@ export function NavLinks({ links, pillRef }: { links: NavLinkItem[]; pillRef: Re
             style={{ background: "var(--kov-red)", zIndex: 1 }}
           />
           <span className="relative inline-block" style={{ zIndex: 2 }}>
-            <span className="pill-label relative inline-block text-kov-bone" style={{ zIndex: 2 }}>
+            <span className="pill-label relative inline-block text-kov-bone transition-colors duration-300" style={{ zIndex: 2 }}>
               {link.label}
             </span>
             <span

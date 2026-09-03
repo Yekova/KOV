@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { gsap, initGsap, motion, GSAP_REVEAL_EASE } from "@/lib/motion";
 import { ScrollFloat } from "@/components/ui/ScrollFloat";
+import { BrowserChrome } from "@/components/ui/BrowserChrome";
+import { useLightZone } from "@/hooks/useLightZone";
 
 interface ScreenShowcaseProps {
   /** Not supplied yet — renders an honest placeholder until it is. When a
@@ -11,12 +13,6 @@ interface ScreenShowcaseProps {
    * needed; the frame/reveal around it stays the same. */
   screenshotSrc?: string;
 }
-
-// macOS-style traffic lights — a deliberate, scoped exception to this site's
-// usual anti-generic-SaaS restraint (confirmed with the user directly), not
-// a pattern to reuse elsewhere. Dimmed via opacity rather than full-saturation
-// so it still reads as KOV's own dark/quiet palette, not a loud UI chrome.
-const TRAFFIC_LIGHTS = ["#ff5f57", "#febc2e", "#28c840"];
 
 // Right after the Hero — a browser-window card that arrives from below on
 // scroll, empty for now (the user will drop a real site screenshot in via
@@ -26,9 +22,15 @@ const TRAFFIC_LIGHTS = ["#ff5f57", "#febc2e", "#28c840"];
 // fadeUpIn preset.
 export function ScreenShowcase({ screenshotSrc }: ScreenShowcaseProps) {
   const cardRef = useRef<HTMLDivElement>(null);
+  const screenRef = useRef<HTMLDivElement>(null);
   const [reducedMotion] = useState(
     () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
   );
+  // Registers the actual screenshot area (not the card's dark chrome bar)
+  // as a light zone — see Nav.tsx/GlobalMenuButton.tsx, which flip their
+  // text/logo to black whenever they scroll over this. Only while there's a
+  // real (light) screenshot to flag; the dark placeholder isn't one.
+  useLightZone(screenRef, Boolean(screenshotSrc));
 
   useEffect(() => {
     if (reducedMotion) return;
@@ -62,7 +64,7 @@ export function ScreenShowcase({ screenshotSrc }: ScreenShowcaseProps) {
   return (
     <section id="showcase" className="px-6 py-32 max-w-[1600px] mx-auto">
       <ScrollFloat
-        containerClassName="text-center mb-10 md:mb-14"
+        containerClassName="text-center mb-24 md:mb-36"
         textClassName="font-display text-kov-bone uppercase text-[clamp(28px,4vw,64px)] leading-[var(--line-height-display)]"
         stagger={0.02}
       >
@@ -78,20 +80,9 @@ export function ScreenShowcase({ screenshotSrc }: ScreenShowcaseProps) {
           boxShadow: "0 40px 90px rgba(0, 0, 0, 0.55)",
         }}
       >
-        <div
-          className="grid grid-cols-3 items-center px-4 py-3"
-          style={{ background: "var(--kov-graphite)", borderBottom: "1px solid var(--kov-border)" }}
-        >
-          <div className="flex items-center gap-2" aria-hidden="true">
-            {TRAFFIC_LIGHTS.map((color) => (
-              <span key={color} className="w-3 h-3 rounded-full" style={{ background: color, opacity: 0.8 }} />
-            ))}
-          </div>
-          <div aria-hidden="true" className="h-5 mx-auto w-1/3 min-w-24" style={{ background: "var(--kov-carbon)", borderRadius: "var(--radius-pill)" }} />
-          <div />
-        </div>
+        <BrowserChrome />
 
-        <div className="relative w-full" style={{ aspectRatio: "16 / 10", background: "var(--kov-carbon)" }}>
+        <div ref={screenRef} className="relative w-full" style={{ aspectRatio: "16 / 10", background: "var(--kov-carbon)" }}>
           {screenshotSrc ? (
             <Image
               src={screenshotSrc}
