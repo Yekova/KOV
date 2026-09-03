@@ -11,8 +11,16 @@ const TRAFFIC_LIGHTS = ["#ff5f57", "#febc2e", "#28c840"];
 // a second hand-copied version drifting out of sync. Forwards its ref so
 // callers that scroll-scrub the chrome's own opacity (fading it out as the
 // window zooms past it) can target it directly.
-export const BrowserChrome = forwardRef<HTMLDivElement, { className?: string }>(function BrowserChrome(
-  { className = "" },
+interface BrowserChromeProps {
+  className?: string;
+  /** false: no fake address-bar pill — for windows that are their own
+   * digital environment (ActivationWindow), not a mock browser. Default
+   * true preserves ScreenShowcase's existing look untouched. */
+  showUrlBar?: boolean;
+}
+
+export const BrowserChrome = forwardRef<HTMLDivElement, BrowserChromeProps>(function BrowserChrome(
+  { className = "", showUrlBar = true },
   ref
 ) {
   return (
@@ -26,11 +34,15 @@ export const BrowserChrome = forwardRef<HTMLDivElement, { className?: string }>(
           <span key={color} className="w-3 h-3 rounded-full" style={{ background: color, opacity: 0.8 }} />
         ))}
       </div>
-      <div
-        aria-hidden="true"
-        className="h-5 mx-auto w-1/3 min-w-24"
-        style={{ background: "var(--kov-carbon)", borderRadius: "var(--radius-pill)" }}
-      />
+      {showUrlBar ? (
+        <div
+          aria-hidden="true"
+          className="h-5 mx-auto w-1/3 min-w-24"
+          style={{ background: "var(--kov-carbon)", borderRadius: "var(--radius-pill)" }}
+        />
+      ) : (
+        <div />
+      )}
       <div />
     </div>
   );
