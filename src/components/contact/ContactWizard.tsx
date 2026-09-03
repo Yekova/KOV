@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { GlassCard } from "@/components/ui/GlassCard";
+import { GlassSurface } from "@/components/ui/GlassSurface";
 import { Button } from "@/components/ui/Button";
 import { REVEAL_EASE } from "@/lib/motion";
 
@@ -250,7 +250,16 @@ export function ContactWizard() {
   };
 
   return (
-    <GlassCard className="max-w-xl p-8 md:p-12">
+    // width/height "auto" — GlassSurface wraps its real content (the inner
+    // w-full div below) and sizes to fit it, rather than being a
+    // position:absolute overlay stretched via a percentage inside an
+    // auto-sized parent — that combination broke Nav's pill once already
+    // (see GlassSurface.tsx's own note). The inner div also exists so
+    // GlassSurface's own content wrapper (display:flex, centered by
+    // default — fine for a single-line pill, wrong for a stacked form)
+    // doesn't fight this multi-step form's vertical layout.
+    <GlassSurface width="auto" height="auto" borderRadius={8} className="max-w-xl">
+      <div className="w-full p-8 md:p-12">
       {/* Honeypot — invisible to real users, catches bots that fill every field. */}
       <input
         type="text"
@@ -445,6 +454,7 @@ export function ContactWizard() {
           </div>
         )}
       </div>
-    </GlassCard>
+      </div>
+    </GlassSurface>
   );
 }

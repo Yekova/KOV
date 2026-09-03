@@ -1,12 +1,6 @@
 import Link from "next/link";
 import ShapeBlur from "@/components/ui/ShapeBlurLazy";
-
-const GLASS_PILL_STYLE = {
-  background: "var(--glass-bg)",
-  backdropFilter: "blur(var(--glass-blur)) saturate(180%)",
-  WebkitBackdropFilter: "blur(var(--glass-blur)) saturate(180%)",
-  borderColor: "var(--glass-border)",
-} as const;
+import { GlassSurface } from "@/components/ui/GlassSurface";
 
 interface KovCTAProps {
   href: string;
@@ -35,16 +29,27 @@ export function KovCTA({ href, children, dot = true, haloColor = "#E31E24", clas
       <div className="absolute -inset-2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
         <ShapeBlur variation={0} shapeSize={1.6} roundness={1.55} borderSize={0.07} circleSize={0.55} circleEdge={1} color={haloColor} />
       </div>
-      <Link
-        href={href}
-        className="relative inline-flex items-center gap-2 px-6 py-3 border text-kov-bone text-xs uppercase tracking-widest group-hover:text-kov-red transition-all duration-300 group-hover:scale-[1.02]"
-        style={{ ...GLASS_PILL_STYLE, borderRadius: "var(--radius-pill)" }}
-      >
-        {dot && <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-kov-red shrink-0" />}
-        <span>{children}</span>
-        <span aria-hidden="true" className="inline-block transition-transform duration-300 group-hover:translate-x-1">
-          →
-        </span>
+      <Link href={href} className="relative block">
+        {/* width/height "auto" — GlassSurface wraps its real content and
+            sizes to fit it, rather than being a position:absolute overlay
+            stretched via a percentage inside this auto-sized Link. That
+            combination is exactly what broke Nav's pill once already (see
+            GlassSurface.tsx's own note) — wrapping content instead of
+            overlaying it sidesteps the problem entirely. */}
+        <GlassSurface
+          width="auto"
+          height="auto"
+          borderRadius={999}
+          className="inline-flex items-center text-kov-bone text-xs uppercase tracking-widest group-hover:text-kov-red transition-all duration-300 group-hover:scale-[1.02]"
+        >
+          <span className="inline-flex items-center gap-2 px-6 py-3">
+            {dot && <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-kov-red shrink-0" />}
+            <span>{children}</span>
+            <span aria-hidden="true" className="inline-block transition-transform duration-300 group-hover:translate-x-1">
+              →
+            </span>
+          </span>
+        </GlassSurface>
       </Link>
     </div>
   );
