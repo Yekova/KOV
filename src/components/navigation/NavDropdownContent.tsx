@@ -44,7 +44,7 @@ export function StudioDropdown({ onNavigate }: { onNavigate: () => void }) {
         {PRINCIPLES.map((principle) => (
           <Link
             key={principle.slug}
-            href={`/studio#${principle.slug}`}
+            href="/studio"
             onClick={onNavigate}
             className="text-kov-bone text-sm uppercase tracking-wide hover:text-kov-red transition-colors py-1"
           >

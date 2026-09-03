@@ -12,11 +12,14 @@ import { GlobalMenuProvider, useGlobalMenu } from "@/components/layout/GlobalMen
 // have their own sidebar+topbar shell (src/app/client/layout.tsx,
 // src/app/admin/layout.tsx) — neither should also get the floating
 // marketing nav pill and marketing footer. /login keeps today's
-// marketing chrome unchanged.
+// marketing chrome unchanged. /studio is a full-viewport 3D experience
+// with its own minimal HUD (StudioHUD.tsx) — the floating nav pill and a
+// scrollable footer would both fight the "the studio is the whole
+// viewport" requirement, so it gets the same bare passthrough.
 export function SiteChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  if (pathname?.startsWith("/client") || pathname?.startsWith("/admin")) {
+  if (pathname?.startsWith("/client") || pathname?.startsWith("/admin") || pathname?.startsWith("/studio")) {
     return <>{children}</>;
   }
 
