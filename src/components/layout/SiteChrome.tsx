@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { Nav } from "@/components/navigation/Nav";
 import { Footer } from "@/components/layout/Footer";
+import { SmoothScroll } from "@/components/layout/SmoothScroll";
 import { GlobalMenuButton } from "@/components/layout/GlobalMenuButton";
 import { GlobalOverviewMenu } from "@/components/layout/GlobalOverviewMenu";
 import { GlobalMenuProvider, useGlobalMenu } from "@/components/layout/GlobalMenuContext";
@@ -42,6 +43,7 @@ function SiteChromeInner({ pathname, children }: { pathname: string | null; chil
 
   return (
     <>
+      <SmoothScroll />
       {!isHome && <Nav />}
       {children}
       <Footer isHome={isHome} />

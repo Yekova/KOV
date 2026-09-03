@@ -60,7 +60,7 @@ export default function Home() {
           outside the wrapper. GradualBlur painted over Nav. Fixing the
           canvas itself avoids needing this kind of wrapper at all.) */}
       <HeroScene />
-      <ScreenShowcase />
+      <ScreenShowcase screenshotSrc="/kov/home/dashboard-showcase.png" />
       <ExpertiseTeaser />
       <WorkGallery />
       <PhilosophyStatement />

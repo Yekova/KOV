@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { gsap, initGsap, motion, GSAP_REVEAL_EASE } from "@/lib/motion";
+import { ScrollFloat } from "@/components/ui/ScrollFloat";
 
 interface ScreenShowcaseProps {
   /** Not supplied yet — renders an honest placeholder until it is. When a
@@ -60,6 +61,14 @@ export function ScreenShowcase({ screenshotSrc }: ScreenShowcaseProps) {
 
   return (
     <section id="showcase" className="px-6 py-32 max-w-[1600px] mx-auto">
+      <ScrollFloat
+        containerClassName="text-center mb-10 md:mb-14"
+        textClassName="font-display text-kov-bone uppercase text-[clamp(28px,4vw,64px)] leading-[var(--line-height-display)]"
+        stagger={0.02}
+      >
+        Votre système intégré
+      </ScrollFloat>
+
       <div
         ref={cardRef}
         className="max-w-[1200px] mx-auto border overflow-hidden"
@@ -86,7 +95,7 @@ export function ScreenShowcase({ screenshotSrc }: ScreenShowcaseProps) {
           {screenshotSrc ? (
             <Image
               src={screenshotSrc}
-              alt="Aperçu d'un site conçu par KOV"
+              alt="Aperçu du tableau de bord — système intégré KOV"
               fill
               sizes="(min-width: 1200px) 1200px, 100vw"
               className="object-cover"
