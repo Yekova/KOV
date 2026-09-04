@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState, type KeyboardEvent, type MouseEvent } from "react";
 import { motion, useMotionValue, AnimatePresence } from "framer-motion";
 
-export const BUDGET_MIN = 3000;
-export const BUDGET_MAX = 100000;
+export const BUDGET_MIN = 2000;
+export const BUDGET_MAX = 30000;
 const BUDGET_STEP = 500;
 const HANDLE_SIZE = 26;
 
