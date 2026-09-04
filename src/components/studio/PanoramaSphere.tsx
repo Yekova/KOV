@@ -1,6 +1,6 @@
 "use client";
 
-import type * as THREE from "three";
+import * as THREE from "three";
 
 const SPHERE_RADIUS = 500;
 
@@ -9,25 +9,28 @@ interface PanoramaSphereProps {
 }
 
 // The panorama projected onto the inside of a large sphere, camera at its
-// center (studio spec §05). scale={[-1,1,1]} — not side={THREE.BackSide}
-// — is the standard, correct technique for this (matches Three.js's own
-// equirectangular-panorama example): negating the mesh's X scale flips
-// face winding so the sphere's front face points inward toward the camera
-// AND simultaneously un-mirrors the texture, which BackSide alone would
-// leave flipped left-right.
-//
-// Takes an already-loaded texture rather than a URL + its own useTexture()
-// call — StudioExperience loads it once via a plain TextureLoader (needed
-// anyway to know when the intro button should go live) and hands the same
-// object down here. Two separate loaders hitting the same URL should
-// converge to the same result, but they're two different code paths with
-// two different completion signals — simpler and more robust to only ever
-// have one loader and one source of truth for "is the texture ready".
+// center (studio spec §05). scale={[-1,1,1]} un-mirrors the texture (the
+// standard technique — matches Three.js's own equirectangular-panorama
+// example) by flipping face winding so the sphere's front face points
+// inward. side={THREE.DoubleSide} is a deliberate safety net on top of
+// that: it was diagnosed live that the sphere wasn't rendering at all
+// (visible proof: a fallback scene background was showing through
+// instead) even though the texture had confirmed-loaded — consistent with
+// a winding/culling mismatch specific to this Three.js/R3F version rather
+// than the texture itself. DoubleSide makes the surface draw regardless
+// of which way winding resolves, at the cost of also rendering the outward
+// face — negligible for a single sphere, and worth it to guarantee
+// visibility over a "should be correct in theory" assumption that already
+// failed once in practice.
 export function PanoramaSphere({ texture }: PanoramaSphereProps) {
   return (
-    <mesh scale={[-1, 1, 1]}>
+    // frustumCulled=false — the camera sits exactly at this sphere's
+    // center, so it should always be well inside the view frustum
+    // regardless, but this removes even the theoretical possibility of a
+    // bounding-sphere/negative-scale edge case culling the whole mesh.
+    <mesh scale={[-1, 1, 1]} frustumCulled={false}>
       <sphereGeometry args={[SPHERE_RADIUS, 64, 40]} />
-      <meshBasicMaterial map={texture} toneMapped={false} />
+      <meshBasicMaterial map={texture} toneMapped={false} side={THREE.DoubleSide} />
     </mesh>
   );
 }
