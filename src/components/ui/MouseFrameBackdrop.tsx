@@ -68,7 +68,15 @@ export function MouseFrameBackdrop({ basePath, frameCount, poster }: MouseFrameB
   }, [basePath, frameCount]);
 
   return (
-    <div className="fixed inset-0" style={{ zIndex: "var(--z-canvas)", pointerEvents: "none" }}>
+    // absolute, not fixed — this needs to be confined to its own
+    // positioned ancestor (the hero <main>, min-h-screen), not pinned to
+    // the viewport for the entire page scroll. fixed was the actual bug
+    // behind "on ne voit plus le personnage": once scrolled past the hero
+    // into the footer, a fixed backdrop keeps rendering over whatever's
+    // now in the viewport — the character's lower half bleeding into the
+    // footer, reading as an unrecognizable dark shape against black
+    // rather than "no longer visible" being about size at all.
+    <div className="absolute inset-0" style={{ zIndex: "var(--z-canvas)", pointerEvents: "none" }}>
       {/* Imperative src swaps on every animation frame — next/image's lazy-load/
           optimization lifecycle fights this pattern, so a plain img is correct here.
           Frames are pre-composited (see docs/KOV-CHARACTER.md) so character size/
