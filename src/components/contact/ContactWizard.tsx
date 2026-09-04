@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import { GlassSurface } from "@/components/ui/GlassSurface";
 import { Button } from "@/components/ui/Button";
 import { REVEAL_EASE } from "@/lib/motion";
+import { BudgetSlider, formatBudget, BUDGET_MIN } from "@/components/contact/BudgetSlider";
 
 type ContactMethod = "phone" | "video" | "in_person";
 type Timeline = "today" | "week" | "month";
 
 interface Answers {
   focus: string;
+  budget: number;
   contact_method: ContactMethod | "";
   timeline: Timeline | "";
   name: string;
@@ -119,6 +121,7 @@ export function ContactWizard() {
   const [phase, setPhase] = useState<"idle" | "leaving" | "entering">("entering");
   const [answers, setAnswers] = useState<Answers>({
     focus: "",
+    budget: BUDGET_MIN,
     contact_method: "",
     timeline: "",
     name: "",
@@ -128,6 +131,11 @@ export function ContactWizard() {
     extraThemes: [],
     message: "",
   });
+  // The slider always has *some* value (there's no "empty" position), so
+  // "obligatoire" is enforced separately from `answers.budget` itself —
+  // the visitor must actually touch it at least once before the step's
+  // own Continuer button unlocks.
+  const [budgetTouched, setBudgetTouched] = useState(false);
   const [detailsError, setDetailsError] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<"idle" | "submitting" | "error">("idle");
@@ -210,7 +218,13 @@ export function ContactWizard() {
 
   async function handleSubmit() {
     setSubmitStatus("submitting");
-    const projectType = [answers.focus, ...answers.extraThemes].filter(Boolean).join(", ");
+    // The leads table has no dedicated budget column and adding one is a
+    // schema change beyond what this feature asked for — folded into the
+    // same project_type aggregate that already carries focus/extraThemes
+    // rather than introducing a migration.
+    const projectType = [answers.focus, ...answers.extraThemes, `Budget : ${formatBudget(answers.budget)}`]
+      .filter(Boolean)
+      .join(", ");
     try {
       const response = await fetch("/api/contact", {
         method: "POST",
@@ -276,12 +290,13 @@ export function ContactWizard() {
         {step > 0 && (
           <StepDone label="Besoin principal" value={answers.focus} onEdit={() => goToStep(0)} />
         )}
-        {step > 1 && (
-          <StepDone label="Contact souhaité" value={contactMethodLabel} onEdit={() => goToStep(1)} />
+        {step > 1 && <StepDone label="Budget" value={formatBudget(answers.budget)} onEdit={() => goToStep(1)} />}
+        {step > 2 && (
+          <StepDone label="Contact souhaité" value={contactMethodLabel} onEdit={() => goToStep(2)} />
         )}
-        {step > 2 && <StepDone label="Délai" value={timelineLabel} onEdit={() => goToStep(2)} />}
-        {step > 3 && (
-          <StepDone label="Coordonnées" value={coordinatesSummary || answers.email} onEdit={() => goToStep(3)} />
+        {step > 3 && <StepDone label="Délai" value={timelineLabel} onEdit={() => goToStep(3)} />}
+        {step > 4 && (
+          <StepDone label="Coordonnées" value={coordinatesSummary || answers.email} onEdit={() => goToStep(4)} />
         )}
       </div>
 
@@ -312,7 +327,23 @@ export function ContactWizard() {
 
         {step === 1 && (
           <div>
-            <StepHeader number={2}>Comment souhaitez-vous être recontacté ?</StepHeader>
+            <StepHeader number={2}>Quel budget envisagez-vous ?</StepHeader>
+            <BudgetSlider
+              value={answers.budget}
+              onChange={(budget) => setAnswers((a) => ({ ...a, budget }))}
+              onInteract={() => setBudgetTouched(true)}
+            />
+            <div className="flex justify-end mt-8">
+              <Button type="button" variant="primary" onClick={() => goToStep(2)} disabled={!budgetTouched}>
+                Continuer →
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {step === 2 && (
+          <div>
+            <StepHeader number={3}>Comment souhaitez-vous être recontacté ?</StepHeader>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {CONTACT_METHODS.map((method) => (
                 <button
@@ -337,9 +368,9 @@ export function ContactWizard() {
           </div>
         )}
 
-        {step === 2 && (
+        {step === 3 && (
           <div>
-            <StepHeader number={3}>Sous quel délai ?</StepHeader>
+            <StepHeader number={4}>Sous quel délai ?</StepHeader>
             <div className="grid grid-cols-2 gap-3">
               {TIMELINES.map((timeline) => (
                 <button
@@ -361,9 +392,9 @@ export function ContactWizard() {
           </div>
         )}
 
-        {step === 3 && (
+        {step === 4 && (
           <div>
-            <StepHeader number={4}>Vos coordonnées</StepHeader>
+            <StepHeader number={5}>Vos coordonnées</StepHeader>
             <div className="space-y-4">
               <input
                 autoFocus
@@ -408,9 +439,9 @@ export function ContactWizard() {
           </div>
         )}
 
-        {step === 4 && (
+        {step === 5 && (
           <div>
-            <StepHeader number={5}>Autre chose à ajouter ?</StepHeader>
+            <StepHeader number={6}>Autre chose à ajouter ?</StepHeader>
             {remainingThemes.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-6">
                 {remainingThemes.map((theme) => {
