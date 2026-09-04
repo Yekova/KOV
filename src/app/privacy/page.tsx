@@ -15,9 +15,11 @@ const SECTIONS = [
     body: (
       <p>
         Les seules données personnelles que KOV collecte sont celles que vous soumettez via le formulaire de
-        contact : nom, adresse email, numéro de téléphone (facultatif) et votre message. On n&apos;utilise ni
-        cookies ni traceurs analytiques sur ce site, au-delà de ce qui est strictement nécessaire à son
-        fonctionnement.
+        contact : nom, adresse email, numéro de téléphone (facultatif) et votre message. On utilise également des
+        cookies de mesure d&apos;audience (Vercel Analytics), mais uniquement avec votre consentement — vous pouvez
+        l&apos;accorder ou le refuser via le bandeau affiché à votre première visite, et revenir sur ce choix à tout
+        moment en effaçant les données de ce site dans votre navigateur. En dehors de ça, on n&apos;utilise aucun
+        autre traceur.
       </p>
     ),
   },
