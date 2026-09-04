@@ -36,6 +36,10 @@ interface CameraControllerProps {
   stateRef: RefObject<CameraState>;
   enabled: boolean;
   reducedMotion: boolean;
+  /** False locks FOV at whatever stateRef.current.fov already is — wheel
+   * and pinch gestures still get their default browser behavior prevented
+   * (no page scroll/zoom), they just stop changing the camera. */
+  zoomEnabled: boolean;
   onDragStateChange?: (dragging: boolean) => void;
 }
 
@@ -47,7 +51,14 @@ interface CameraControllerProps {
 // triggers a re-render. The caller's stateRef is also what
 // StudioDebugPanel polls and what navigateToNode's simulated camera-
 // orient-toward-hotspot step animates directly.
-export function CameraController({ domElement, stateRef, enabled, reducedMotion, onDragStateChange }: CameraControllerProps) {
+export function CameraController({
+  domElement,
+  stateRef,
+  enabled,
+  reducedMotion,
+  zoomEnabled,
+  onDragStateChange,
+}: CameraControllerProps) {
   const { camera } = useThree();
   const yawVelRef = useRef(0);
   const pitchVelRef = useRef(0);
@@ -123,6 +134,7 @@ export function CameraController({ domElement, stateRef, enabled, reducedMotion,
 
     function handleWheel(e: WheelEvent) {
       e.preventDefault();
+      if (!zoomEnabled) return;
       stateRef.current.fov = THREE.MathUtils.clamp(stateRef.current.fov + e.deltaY * 0.02, MIN_FOV, MAX_FOV);
     }
 
@@ -133,14 +145,14 @@ export function CameraController({ domElement, stateRef, enabled, reducedMotion,
     }
 
     function handleTouchStart(e: TouchEvent) {
-      if (e.touches.length === 2) {
+      if (zoomEnabled && e.touches.length === 2) {
         pinchStartDistRef.current = touchDistance(e.touches);
         pinchStartFovRef.current = stateRef.current.fov;
       }
     }
 
     function handleTouchMove(e: TouchEvent) {
-      if (e.touches.length === 2 && pinchStartDistRef.current) {
+      if (zoomEnabled && e.touches.length === 2 && pinchStartDistRef.current) {
         const scale = pinchStartDistRef.current / touchDistance(e.touches);
         stateRef.current.fov = THREE.MathUtils.clamp(pinchStartFovRef.current * scale, MIN_FOV, MAX_FOV);
       }
@@ -169,7 +181,7 @@ export function CameraController({ domElement, stateRef, enabled, reducedMotion,
       el.removeEventListener("touchmove", handleTouchMove);
       el.removeEventListener("touchend", handleTouchEnd);
     };
-  }, [domElement, enabled, reducedMotion, onDragStateChange, stateRef]);
+  }, [domElement, enabled, reducedMotion, zoomEnabled, onDragStateChange, stateRef]);
 
   /* eslint-disable react-hooks/immutability -- this rule doesn't know
      React Three Fiber's model: useFrame exists specifically to drive live

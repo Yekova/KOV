@@ -6,12 +6,12 @@ interface StudioNavigationOverlayProps {
   active: boolean;
 }
 
-// The red-halo + black-fade half of navigateToNode's simulated sequence
+// The red-halo + black-fade half of navigateToNode's transition sequence
 // (studio spec §27/§32) — the camera-orient step happens directly on
 // CameraController's shared stateRef in StudioExperience; this component
-// is purely the visual "something happened" beat layered on top. Built to
-// be reused as-is once a real target node exists — nothing here is P01/
-// P02-specific.
+// is purely the visual "something happened" beat layered on top, timed to
+// cover the moment the sphere's texture is actually swapped for the new
+// node's. Generic — nothing here is P01/P02-specific.
 export function StudioNavigationOverlay({ active }: StudioNavigationOverlayProps) {
   return (
     <AnimatePresence>

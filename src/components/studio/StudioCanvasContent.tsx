@@ -5,8 +5,9 @@ import type * as THREE from "three";
 import { PanoramaSphere } from "@/components/studio/PanoramaSphere";
 import { CameraController, type CameraState } from "@/components/studio/CameraController";
 import { HotspotLayer } from "@/components/studio/HotspotLayer";
+import { ArtworkHotspotLayer } from "@/components/studio/ArtworkHotspotLayer";
 import { StudioDebugPanel } from "@/components/studio/StudioDebugPanel";
-import type { StudioNode } from "@/config/studio/studioNodes";
+import type { StudioNode, StudioArtwork } from "@/config/studio/studioNodes";
 
 interface StudioCanvasContentProps {
   node: StudioNode;
@@ -18,6 +19,7 @@ interface StudioCanvasContentProps {
   debug: boolean;
   onDragStateChange: (dragging: boolean) => void;
   onSelectHotspot: (targetNodeId: string) => void;
+  onSelectArtwork: (artwork: StudioArtwork) => void;
 }
 
 // Everything that renders inside <Canvas> for the current node — kept
@@ -33,6 +35,7 @@ export function StudioCanvasContent({
   debug,
   onDragStateChange,
   onSelectHotspot,
+  onSelectArtwork,
 }: StudioCanvasContentProps) {
   return (
     <>
@@ -43,10 +46,13 @@ export function StudioCanvasContent({
         stateRef={cameraStateRef}
         enabled={controlsEnabled}
         reducedMotion={reducedMotion}
+        zoomEnabled={node.zoomEnabled}
         onDragStateChange={onDragStateChange}
       />
 
       <HotspotLayer connections={node.connections} disabled={!controlsEnabled} onSelect={onSelectHotspot} />
+
+      <ArtworkHotspotLayer artworks={node.artworks} disabled={!controlsEnabled} onSelect={onSelectArtwork} />
 
       {debug && <StudioDebugPanel stateRef={cameraStateRef} texture={texture} />}
     </>
