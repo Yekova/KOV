@@ -86,8 +86,14 @@ export function CameraController({ domElement, stateRef, enabled, reducedMotion,
         onDragStateChange?.(true);
       }
 
-      const dYaw = -dx * DRAG_SENSITIVITY;
-      const dPitch = -dy * DRAG_SENSITIVITY;
+      // Positive dx/dy (not negated) — "drag the scene", the Street View/
+      // photo-sphere convention: content follows your finger/cursor
+      // (drag right → the camera turns left, so what was on the right
+      // slides toward the center, same direction as the drag). The
+      // negated version felt like mouse-look instead (camera turns
+      // toward the drag direction), which read as backwards.
+      const dYaw = dx * DRAG_SENSITIVITY;
+      const dPitch = dy * DRAG_SENSITIVITY;
       const s = stateRef.current;
       s.yaw += dYaw;
       s.pitch = THREE.MathUtils.clamp(s.pitch + dPitch, MIN_PITCH, MAX_PITCH);
