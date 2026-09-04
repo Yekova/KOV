@@ -49,13 +49,13 @@ export function CookieConsent() {
 
       {consent === null && (
         <div
-          className="fixed bottom-4 left-4 right-4 sm:left-6 sm:right-auto sm:max-w-sm"
+          className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 sm:w-full sm:max-w-[22rem]"
           style={{ zIndex: "var(--z-modal)" }}
         >
           <GlassSurface width="auto" height="auto" borderRadius={12} className="block w-full">
-            <div className="p-6">
+            <div className="p-6 sm:p-7">
               <p className="text-xs uppercase tracking-widest text-kov-steel mb-3">Cookies</p>
-              <p className="text-kov-bone text-sm leading-relaxed mb-6">
+              <p className="text-kov-bone text-sm leading-relaxed mb-7">
                 On utilise des cookies de mesure d&apos;audience pour comprendre comment le site est utilisé —
                 uniquement avec votre accord.{" "}
                 <Link
@@ -65,11 +65,11 @@ export function CookieConsent() {
                   En savoir plus
                 </Link>
               </p>
-              <div className="flex items-center gap-3">
-                <Button type="button" variant="primary" onClick={() => decide("accepted")} className="flex-1 justify-center">
+              <div className="flex flex-col gap-2.5">
+                <Button type="button" variant="primary" onClick={() => decide("accepted")} className="w-full justify-center">
                   Accepter
                 </Button>
-                <Button type="button" variant="secondary" onClick={() => decide("rejected")} className="flex-1 justify-center">
+                <Button type="button" variant="secondary" onClick={() => decide("rejected")} className="w-full justify-center">
                   Refuser
                 </Button>
               </div>
