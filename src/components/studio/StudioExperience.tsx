@@ -72,8 +72,16 @@ function StudioExperienceInner() {
           loaded.dispose();
           return;
         }
+        // LinearMipmapLinearFilter + generateMipmaps — was plain
+        // LinearFilter with no mip chain, which also meant anisotropic
+        // filtering (set in PanoramaSphere.tsx, where the renderer's
+        // actual capability is queryable) had no mip levels to filter
+        // across and was doing nothing. magFilter is Three.js's own
+        // default (LinearFilter) — set explicitly here for the record.
         loaded.colorSpace = THREE.SRGBColorSpace;
-        loaded.minFilter = THREE.LinearFilter;
+        loaded.minFilter = THREE.LinearMipmapLinearFilter;
+        loaded.magFilter = THREE.LinearFilter;
+        loaded.generateMipmaps = true;
         loaded.needsUpdate = true;
         setTexture(loaded);
       },
@@ -168,7 +176,12 @@ function StudioExperienceInner() {
         }}
       >
         <Canvas
-          dpr={[1, 1.5]}
+          // [min,max] — R3F clamps to the device's actual devicePixelRatio
+          // within this range automatically (min(devicePixelRatio, 2), per
+          // the quality audit's request), rather than a fixed value. Was
+          // capped at 1.5, artificially softening the render on any
+          // standard 2x-DPR display regardless of the source texture.
+          dpr={[1, 2]}
           gl={{ antialias: true, toneMapping: THREE.NoToneMapping }}
           camera={{ fov: DEFAULT_FOV, near: 0.1, far: 1100, position: [0, 0, 0] }}
         >

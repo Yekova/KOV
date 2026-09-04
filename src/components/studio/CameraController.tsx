@@ -4,9 +4,15 @@ import { useEffect, useRef, type RefObject } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 
-export const MIN_FOV = 55;
-export const MAX_FOV = 80;
-export const DEFAULT_FOV = 68;
+// Narrowed per quality audit (was 55/80/68) — an architectural-photography
+// framing rather than a GoPro-wide default. Note the trade-off: a narrower
+// FOV shows a smaller angular slice of the panorama across the same
+// screen width, so it packs *fewer* source texels per screen pixel — this
+// reads as more magnified/soft against a fixed source resolution, not
+// less. Requested independently of the resolution fix below; both apply.
+export const MIN_FOV = 48;
+export const MAX_FOV = 75;
+export const DEFAULT_FOV = 62;
 const MAX_PITCH = THREE.MathUtils.degToRad(75);
 const MIN_PITCH = -MAX_PITCH;
 // Deliberately low — "lente, premium, physique, précise", explicitly not

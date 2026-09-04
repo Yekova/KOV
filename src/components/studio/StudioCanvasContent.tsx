@@ -48,7 +48,7 @@ export function StudioCanvasContent({
 
       <HotspotLayer connections={node.connections} disabled={!controlsEnabled} onSelect={onSelectHotspot} />
 
-      {debug && <StudioDebugPanel stateRef={cameraStateRef} />}
+      {debug && <StudioDebugPanel stateRef={cameraStateRef} texture={texture} />}
     </>
   );
 }

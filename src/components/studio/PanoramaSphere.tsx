@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
 
 const SPHERE_RADIUS = 500;
@@ -23,6 +25,22 @@ interface PanoramaSphereProps {
 // visibility over a "should be correct in theory" assumption that already
 // failed once in practice.
 export function PanoramaSphere({ texture }: PanoramaSphereProps) {
+  const { gl } = useThree();
+
+  useEffect(() => {
+    // The renderer's real max anisotropy (commonly 16 on desktop GPUs, can
+    // be lower on mobile/integrated) — was previously left at Three.js's
+    // default of 1 (no anisotropic filtering at all). Requires the
+    // mipmapped minFilter set in StudioExperience.tsx's loader; anisotropy
+    // has nothing to filter across without a mip chain.
+    // react-hooks/immutability doesn't know R3F's model — configuring a
+    // live Three.js texture imperatively is normal here (same reasoning
+    // as CameraController.tsx's camera mutations).
+    // eslint-disable-next-line react-hooks/immutability
+    texture.anisotropy = gl.capabilities.getMaxAnisotropy();
+    texture.needsUpdate = true;
+  }, [texture, gl]);
+
   return (
     // frustumCulled=false — the camera sits exactly at this sphere's
     // center, so it should always be well inside the view frustum
