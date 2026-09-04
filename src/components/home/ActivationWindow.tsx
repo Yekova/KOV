@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { gsap, pinAndTrack } from "@/lib/motion";
 import { BrowserChrome } from "@/components/ui/BrowserChrome";
 import { ActivationSlider } from "@/components/home/ActivationSlider";
 import PlasmaWave from "@/components/home/PlasmaWaveLazy";
@@ -10,6 +11,14 @@ import PlasmaWave from "@/components/home/PlasmaWaveLazy";
 // activated content (below) cross-fades in — in place, inside the same
 // window, rather than a separate page taking over the viewport.
 const PULSE_DURATION = 850;
+
+// Scroll distance (vh) dedicated to growing the window toward fullscreen —
+// independent of activation: scroll drives the window's size, the slider
+// drives its content, and neither gates the other.
+const DIVE_VH = 150;
+// Matches the card's own resting min-h-[640px] (md+) — the dive's 0%
+// starting point for the interpolated min-height below.
+const CARD_REST_HEIGHT = 640;
 
 type Phase = "idle" | "activating" | "activated";
 
@@ -52,14 +61,48 @@ const CARDS: { title: string; body: string; icon: ReactNode }[] = [
 // threshold: a brief pulse, then the SAME window's content swaps in place
 // to the result (heading + feature cards) — one continuous window and one
 // continuous background (PlasmaWave) throughout, no fullscreen takeover.
+// Independently, scrolling past the window pins it and grows it toward
+// fullscreen — a second, orthogonal mechanic: scroll drives size, the
+// slider drives content, neither gates the other.
 export function ActivationWindow() {
   const [phase, setPhase] = useState<Phase>("idle");
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const runwayRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
   const [reducedMotion] = useState(
     () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
   );
 
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
+
+  // Pins the window (via CSS position:sticky on its wrapper below — the
+  // sitewide convention for scroll-scrubbed sections, see @/lib/motion:
+  // pin:false here, scroll progress only drives values, GSAP itself never
+  // takes over positioning) and grows it from its resting size toward
+  // fullscreen as the runway scrolls by. min-height (not height) on
+  // purpose: the activated state's card grid can legitimately need more
+  // room than this floor on narrow screens, and a hard height would clip it.
+  useEffect(() => {
+    if (reducedMotion) return;
+    const runway = runwayRef.current;
+    const card = cardRef.current;
+    if (!runway || !card) return;
+
+    const trigger = pinAndTrack(
+      runway,
+      (progress) => {
+        gsap.set(card, {
+          width: `${92 + progress * 8}%`,
+          maxWidth: `calc(1440px + (100vw - 1440px) * ${progress})`,
+          minHeight: `calc(${CARD_REST_HEIGHT}px + (100vh - ${CARD_REST_HEIGHT}px) * ${progress})`,
+          borderRadius: `${28 * (1 - progress)}px`,
+        });
+      },
+      { pin: false, end: `+=${DIVE_VH}%` }
+    );
+
+    return () => trigger.kill();
+  }, [reducedMotion]);
 
   function handleActivate() {
     if (reducedMotion) {
@@ -71,127 +114,142 @@ export function ActivationWindow() {
   }
 
   return (
-    <div
-      className="relative w-[92vw] sm:w-[86vw] max-w-[1440px] mx-auto overflow-hidden min-h-[560px] md:min-h-[640px]"
-      style={{
-        borderRadius: 28,
-        border: "1px solid var(--glass-border)",
-        boxShadow: "var(--glass-shadow-full), 0 60px 120px -40px rgba(0,0,0,0.7)",
-      }}
-    >
-      {/* Solid dark base — PlasmaWave renders transparent everywhere except
-          its glowing wave shapes (see the shader's `discard` branch), so
-          without this the window would show whatever's behind the section
-          instead of reading as an opaque device. */}
+    <div ref={runwayRef} className="relative" style={{ height: `calc(100vh + ${DIVE_VH}vh)` }}>
+      {/* position:sticky, not GSAP's own pin:true — the established
+          sitewide convention for scroll-scrubbed sections (see
+          @/lib/motion). Negative-margin full-bleed so the sticky viewport
+          spans the true 100vw regardless of this section's own max-width/
+          padding, matching "prend toute la page" literally rather than
+          just the section's own content width. */}
       <div
-        aria-hidden="true"
-        className="absolute inset-0"
-        style={{ background: "radial-gradient(ellipse at 30% 15%, var(--kov-carbon), var(--kov-black) 65%)" }}
-      />
-
-      {/* The requested reactbits.dev PlasmaWave background — contained
-          inside the window at all times (idle and activated alike), so
-          there's one continuous backdrop instead of swapping to a
-          separate fullscreen page on activation. */}
-      <div aria-hidden="true" className="absolute inset-0">
-        <PlasmaWave colors={["#f75555", "#ff0000"]} speed1={0.05} speed2={0.05} dir2={1} focalLength={0.8} bend1={1} bend2={0.5} />
-      </div>
-
-      {/* Legibility scrim — a light, uniform dim so text stays readable
-          against the plasma regardless of where its glow currently sits. */}
-      <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: "rgba(5,5,5,0.3)" }} />
-      <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ boxShadow: "inset 0 1px 0 var(--glass-highlight)" }} />
-
-      <BrowserChrome className="relative" showUrlBar={false} />
-
-      <div className="relative flex flex-col items-center justify-center text-center px-8 md:px-16 py-14 min-h-[500px] md:min-h-[580px]">
-        <AnimatePresence mode="wait" initial={false}>
-          {phase !== "activated" ? (
-            <motion.div
-              key="idle"
-              animate={{ opacity: phase === "activating" ? 0.15 : 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.4 }}
-              className="flex flex-col items-center w-full"
-            >
-              <h3
-                className="font-display text-kov-bone uppercase max-w-xl"
-                style={{ fontSize: "clamp(28px, 3.6vw, 52px)", lineHeight: "var(--line-height-display)" }}
-              >
-                Activez votre site
-                <br />
-                en un geste.
-              </h3>
-              <div className="mt-12 w-full flex justify-center">
-                <ActivationSlider onActivate={handleActivate} reducedMotion={reducedMotion} />
-              </div>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="activated"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
-              className="flex flex-col items-center w-full"
-            >
-              <p className="text-xs uppercase tracking-widest text-kov-steel mb-4">Système activé</p>
-              <h3
-                className="font-display text-kov-bone uppercase max-w-2xl"
-                style={{ fontSize: "clamp(26px, 3.2vw, 46px)", lineHeight: "var(--line-height-display)" }}
-              >
-                Un site ne devrait pas simplement exister.
-                <br />
-                <span className="text-kov-red">Il devrait réagir.</span>
-              </h3>
-              <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-5xl">
-                {CARDS.map((card, i) => (
-                  <motion.div
-                    key={card.title}
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: reducedMotion ? 0 : 0.15 + i * 0.08 }}
-                    className="p-5 text-left"
-                    style={{
-                      background: "rgba(255,255,255,0.03)",
-                      backdropFilter: "blur(12px)",
-                      border: "1px solid var(--glass-border)",
-                      borderRadius: "var(--radius-md)",
-                    }}
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--kov-red)" strokeWidth="1.6" className="mb-3">
-                      {card.icon}
-                    </svg>
-                    <p className="text-kov-bone text-sm uppercase tracking-wide mb-1">{card.title}</p>
-                    <p className="text-kov-steel text-xs leading-relaxed">{card.body}</p>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Activation wash — radiates from roughly where the slider sits
-          (now centered), propagating out across the window rather than
-          flashing everywhere at once. */}
-      {phase === "activating" && !reducedMotion && (
-        <motion.div
-          aria-hidden="true"
-          className="absolute pointer-events-none"
+        className="sticky top-0 h-screen flex items-center justify-center overflow-hidden"
+        style={{ marginLeft: "calc(50% - 50vw)", marginRight: "calc(50% - 50vw)", width: "100vw" }}
+      >
+        <div
+          ref={cardRef}
+          className="relative w-[92vw] overflow-hidden min-h-[560px] md:min-h-[640px]"
           style={{
-            left: "50%",
-            bottom: "18%",
-            width: 60,
-            height: 60,
-            marginLeft: -30,
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(255,77,77,0.9), rgba(227,30,36,0.3) 45%, transparent 70%)",
+            maxWidth: 1440,
+            borderRadius: 28,
+            border: "1px solid var(--glass-border)",
+            boxShadow: "var(--glass-shadow-full), 0 60px 120px -40px rgba(0,0,0,0.7)",
           }}
-          initial={{ scale: 0, opacity: 0.9 }}
-          animate={{ scale: 22, opacity: 0 }}
-          transition={{ duration: PULSE_DURATION / 1000, ease: "easeOut" }}
-        />
-      )}
+        >
+          {/* Solid dark base — PlasmaWave renders transparent everywhere
+              except its glowing wave shapes (see the shader's `discard`
+              branch), so without this the window would show whatever's
+              behind the section instead of reading as an opaque device. */}
+          <div
+            aria-hidden="true"
+            className="absolute inset-0"
+            style={{ background: "radial-gradient(ellipse at 30% 15%, var(--kov-carbon), var(--kov-black) 65%)" }}
+          />
+
+          {/* The requested reactbits.dev PlasmaWave background — contained
+              inside the window at all times (idle and activated alike), so
+              there's one continuous backdrop instead of swapping to a
+              separate fullscreen page on activation. */}
+          <div aria-hidden="true" className="absolute inset-0">
+            <PlasmaWave colors={["#f75555", "#ff0000"]} speed1={0.05} speed2={0.05} dir2={1} focalLength={0.8} bend1={1} bend2={0.5} />
+          </div>
+
+          {/* Legibility scrim — a light, uniform dim so text stays readable
+              against the plasma regardless of where its glow currently sits. */}
+          <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: "rgba(5,5,5,0.3)" }} />
+          <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ boxShadow: "inset 0 1px 0 var(--glass-highlight)" }} />
+
+          <BrowserChrome className="relative" showUrlBar={false} />
+
+          <div className="relative flex flex-col items-center justify-center text-center px-8 md:px-16 py-14 min-h-[500px] md:min-h-[580px]">
+            <AnimatePresence mode="wait" initial={false}>
+              {phase !== "activated" ? (
+                <motion.div
+                  key="idle"
+                  animate={{ opacity: phase === "activating" ? 0.15 : 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.4 }}
+                  className="flex flex-col items-center w-full"
+                >
+                  <h3
+                    className="font-display text-kov-bone uppercase max-w-xl"
+                    style={{ fontSize: "clamp(28px, 3.6vw, 52px)", lineHeight: "var(--line-height-display)" }}
+                  >
+                    Activez votre site
+                    <br />
+                    en un geste.
+                  </h3>
+                  <div className="mt-12 w-full flex justify-center">
+                    <ActivationSlider onActivate={handleActivate} reducedMotion={reducedMotion} />
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="activated"
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                  className="flex flex-col items-center w-full"
+                >
+                  <p className="text-xs uppercase tracking-widest text-kov-steel mb-4">Système activé</p>
+                  <h3
+                    className="font-display text-kov-bone uppercase max-w-2xl"
+                    style={{ fontSize: "clamp(26px, 3.2vw, 46px)", lineHeight: "var(--line-height-display)" }}
+                  >
+                    Un site ne devrait pas simplement exister.
+                    <br />
+                    <span className="text-kov-red">Il devrait réagir.</span>
+                  </h3>
+                  <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-5xl">
+                    {CARDS.map((card, i) => (
+                      <motion.div
+                        key={card.title}
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, delay: reducedMotion ? 0 : 0.15 + i * 0.08 }}
+                        className="p-5 text-left"
+                        style={{
+                          background: "rgba(255,255,255,0.03)",
+                          backdropFilter: "blur(12px)",
+                          border: "1px solid var(--glass-border)",
+                          borderRadius: "var(--radius-md)",
+                        }}
+                      >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--kov-red)" strokeWidth="1.6" className="mb-3">
+                          {card.icon}
+                        </svg>
+                        <p className="text-kov-bone text-sm uppercase tracking-wide mb-1">{card.title}</p>
+                        <p className="text-kov-steel text-xs leading-relaxed">{card.body}</p>
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Activation wash — radiates from roughly where the slider sits
+              (now centered), propagating out across the window rather than
+              flashing everywhere at once. */}
+          {phase === "activating" && !reducedMotion && (
+            <motion.div
+              aria-hidden="true"
+              className="absolute pointer-events-none"
+              style={{
+                left: "50%",
+                bottom: "18%",
+                width: 60,
+                height: 60,
+                marginLeft: -30,
+                borderRadius: "50%",
+                background: "radial-gradient(circle, rgba(255,77,77,0.9), rgba(227,30,36,0.3) 45%, transparent 70%)",
+              }}
+              initial={{ scale: 0, opacity: 0.9 }}
+              animate={{ scale: 22, opacity: 0 }}
+              transition={{ duration: PULSE_DURATION / 1000, ease: "easeOut" }}
+            />
+          )}
+        </div>
+      </div>
     </div>
   );
 }

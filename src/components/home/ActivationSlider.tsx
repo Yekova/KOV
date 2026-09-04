@@ -87,14 +87,19 @@ export function ActivationSlider({ onActivate, reducedMotion }: ActivationSlider
       <div
         ref={trackRef}
         className="relative w-full overflow-hidden"
-        style={{
-          height: 96,
-          borderRadius: "var(--radius-pill)",
-          background: "var(--glass-bg)",
-          border: "1px solid var(--glass-border)",
-          boxShadow: "var(--glass-shadow-full)",
-        }}
+        style={{ height: 96, borderRadius: "var(--radius-pill)" }}
       >
+        {/* Liquid-glass refraction now lives on the track (was on the
+            handle) — explicit pixel width from the same ResizeObserver
+            measurement `maxTravel` already uses, not a percentage: this
+            is a position:relative parent whose own width is measured, not
+            ambiguous, but staying explicit avoids re-deriving that
+            reasoning next time this is touched. Only rendered once a real
+            measurement exists, so it never mounts at a momentary 0px. */}
+        {trackWidth > 0 && (
+          <GlassSurface width={trackWidth} height={96} borderRadius={999} style={{ position: "absolute", inset: 0 }} />
+        )}
+
         {/* reflection sheen */}
         <div
           aria-hidden="true"
@@ -215,10 +220,10 @@ export function ActivationSlider({ onActivate, reducedMotion }: ActivationSlider
             </>
           )}
 
-          {/* red color source — GlassSurface refracts whatever's behind
-              it, it doesn't tint on its own, so this stays as the actual
-              color; the sphere reads as "red glass" because of the layer
-              below, not because GlassSurface adds any red itself. */}
+          {/* red color source — solid now (no GlassSurface refraction on
+              top; that effect moved to the track, see above). The glossy
+              read still comes through via these inset highlight/shadow
+              layers alone. */}
           <span
             aria-hidden="true"
             className="absolute inset-0 rounded-full"
@@ -228,12 +233,6 @@ export function ActivationSlider({ onActivate, reducedMotion }: ActivationSlider
                 "inset 0 2px 5px rgba(255,255,255,0.3), inset 0 -6px 10px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.12)",
             }}
           />
-
-          {/* liquid-glass refraction over the red sphere — explicit pixel
-              size (HANDLE_SIZE), never a percentage: the handle only ever
-              translates via drag (x), never resizes, so this measures
-              correctly once and stays correct for the life of the drag. */}
-          <GlassSurface width={HANDLE_SIZE} height={HANDLE_SIZE} borderRadius={999} style={{ position: "absolute", inset: 0 }} />
 
           {/* arrow → check */}
           <span className="absolute inset-0 flex items-center justify-center text-kov-white pointer-events-none">
