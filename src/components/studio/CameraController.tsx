@@ -84,6 +84,15 @@ export function CameraController({
 
     function handlePointerDown(e: PointerEvent) {
       if (e.pointerType === "mouse" && e.button !== 0) return;
+      // Hotspot/ArtworkHotspot render real <button>s via drei's <Html>,
+      // which portals into this same element's DOM subtree (Html targets
+      // gl.domElement.parentNode, itself inside `el`) — without this
+      // guard, every pointerdown here (including ones that start on a
+      // hotspot) called setPointerCapture on `el` below, which retargets
+      // the resulting pointerup/click at `el` instead of the button per
+      // the Pointer Events spec, so the button's own onClick never fired.
+      // A plain click landed no differently than clicking empty space.
+      if ((e.target as HTMLElement | null)?.closest("button, a")) return;
       draggingRef.current = true;
       movedRef.current = false;
       lastPointerRef.current = { x: e.clientX, y: e.clientY };
