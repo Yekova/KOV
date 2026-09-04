@@ -1,6 +1,7 @@
 "use client";
 
-import { Suspense, type RefObject } from "react";
+import type { RefObject } from "react";
+import type * as THREE from "three";
 import { PanoramaSphere } from "@/components/studio/PanoramaSphere";
 import { CameraController, type CameraState } from "@/components/studio/CameraController";
 import { HotspotLayer } from "@/components/studio/HotspotLayer";
@@ -9,6 +10,7 @@ import type { StudioNode } from "@/config/studio/studioNodes";
 
 interface StudioCanvasContentProps {
   node: StudioNode;
+  texture: THREE.Texture | null;
   domElement: HTMLElement | null;
   cameraStateRef: RefObject<CameraState>;
   controlsEnabled: boolean;
@@ -23,6 +25,7 @@ interface StudioCanvasContentProps {
 // P02 later is a prop change, not a new component (studio spec §28).
 export function StudioCanvasContent({
   node,
+  texture,
   domElement,
   cameraStateRef,
   controlsEnabled,
@@ -33,9 +36,7 @@ export function StudioCanvasContent({
 }: StudioCanvasContentProps) {
   return (
     <>
-      <Suspense fallback={null}>
-        <PanoramaSphere textureUrl={node.panorama} />
-      </Suspense>
+      {texture && <PanoramaSphere texture={texture} />}
 
       <CameraController
         domElement={domElement}

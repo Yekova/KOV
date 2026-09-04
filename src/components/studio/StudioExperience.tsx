@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
-import { useTexture } from "@react-three/drei";
 import { animate } from "framer-motion";
 import * as THREE from "three";
 import { StudioIntro } from "@/components/studio/StudioIntro";
@@ -39,7 +38,7 @@ export function StudioExperience() {
 function StudioExperienceInner() {
   const { open: menuOpen, toggle: toggleMenu, close: closeMenu } = useGlobalMenu();
   const [phase, setPhase] = useState<EnginePhase>("intro");
-  const [textureReady, setTextureReady] = useState(false);
+  const [texture, setTexture] = useState<THREE.Texture | null>(null);
   const [navOverlayActive, setNavOverlayActive] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [canvasEl, setCanvasEl] = useState<HTMLDivElement | null>(null);
@@ -58,25 +57,30 @@ function StudioExperienceInner() {
 
   useEffect(() => () => timersRef.current.forEach(clearTimeout), []);
 
-  // A manual load (in parallel with drei's own useTexture cache inside the
-  // Canvas) purely to know when the texture is actually ready for the
-  // intro button and to catch a real network/decode failure — drei's
-  // Suspense path resolves near-instantly once this has already primed
-  // the browser's HTTP cache for the same URL.
+  // Single loader, single source of truth: the same texture object used
+  // for "is it ready" (the intro button) is the one actually handed to
+  // PanoramaSphere — no separate drei/useTexture load racing this one
+  // against a different completion signal for the same URL.
   useEffect(() => {
     let cancelled = false;
     const loader = new THREE.TextureLoader();
     loader.load(
       currentNode.panorama,
-      () => {
-        if (!cancelled) setTextureReady(true);
+      (loaded) => {
+        if (cancelled) {
+          loaded.dispose();
+          return;
+        }
+        loaded.colorSpace = THREE.SRGBColorSpace;
+        loaded.minFilter = THREE.LinearFilter;
+        loaded.needsUpdate = true;
+        setTexture(loaded);
       },
       undefined,
       () => {
         if (!cancelled) setPhase("error");
       }
     );
-    useTexture.preload(currentNode.panorama);
     return () => {
       cancelled = true;
     };
@@ -84,14 +88,16 @@ function StudioExperienceInner() {
     // handleRetry re-run this load after a failure.
   }, [currentNode.panorama, retryKey]);
 
+  useEffect(() => () => texture?.dispose(), [texture]);
+
   function handleEnter() {
-    if (!textureReady) return;
+    if (!texture) return;
     setPhase("revealing");
     timersRef.current.push(setTimeout(() => setPhase("exploring"), REVEAL_DURATION_MS));
   }
 
   function handleRetry() {
-    setTextureReady(false);
+    setTexture(null);
     setRetryKey((k) => k + 1);
     setPhase("intro");
   }
@@ -167,6 +173,7 @@ function StudioExperienceInner() {
         >
           <StudioCanvasContent
             node={currentNode}
+            texture={texture}
             domElement={canvasEl}
             cameraStateRef={cameraStateRef}
             controlsEnabled={controlsEnabled}
@@ -181,7 +188,7 @@ function StudioExperienceInner() {
       {(phase === "intro" || phase === "revealing") && (
         <StudioIntro
           onEnter={handleEnter}
-          ready={textureReady}
+          ready={texture !== null}
           revealing={phase === "revealing"}
           revealDurationMs={REVEAL_DURATION_MS}
         />

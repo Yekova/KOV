@@ -1,13 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
-import * as THREE from "three";
-import { useTexture } from "@react-three/drei";
+import type * as THREE from "three";
 
 const SPHERE_RADIUS = 500;
 
 interface PanoramaSphereProps {
-  textureUrl: string;
+  texture: THREE.Texture;
 }
 
 // The panorama projected onto the inside of a large sphere, camera at its
@@ -16,29 +14,16 @@ interface PanoramaSphereProps {
 // equirectangular-panorama example): negating the mesh's X scale flips
 // face winding so the sphere's front face points inward toward the camera
 // AND simultaneously un-mirrors the texture, which BackSide alone would
-// leave flipped left-right. Suspends via drei's useTexture — the parent
-// wraps this in <Suspense> so "loading" state is handled once, above the
-// scene, not per-mesh.
-export function PanoramaSphere({ textureUrl }: PanoramaSphereProps) {
-  const texture = useTexture(textureUrl);
-
-  useEffect(() => {
-    // react-hooks/immutability doesn't know R3F's model — a Three.js
-    // texture is a live imperative object, mutating its own properties is
-    // the normal way to configure it (same reasoning as
-    // CameraController.tsx's camera mutations).
-    // eslint-disable-next-line react-hooks/immutability
-    texture.colorSpace = THREE.SRGBColorSpace;
-    texture.minFilter = THREE.LinearFilter;
-    texture.needsUpdate = true;
-    return () => {
-      // Only this node's own texture — useTexture's internal cache is
-      // keyed by URL, so disposing here doesn't affect other nodes still
-      // holding their own texture instances (studio spec §34).
-      texture.dispose();
-    };
-  }, [texture]);
-
+// leave flipped left-right.
+//
+// Takes an already-loaded texture rather than a URL + its own useTexture()
+// call — StudioExperience loads it once via a plain TextureLoader (needed
+// anyway to know when the intro button should go live) and hands the same
+// object down here. Two separate loaders hitting the same URL should
+// converge to the same result, but they're two different code paths with
+// two different completion signals — simpler and more robust to only ever
+// have one loader and one source of truth for "is the texture ready".
+export function PanoramaSphere({ texture }: PanoramaSphereProps) {
   return (
     <mesh scale={[-1, 1, 1]}>
       <sphereGeometry args={[SPHERE_RADIUS, 64, 40]} />
