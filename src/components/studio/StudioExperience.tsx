@@ -9,6 +9,7 @@ import { StudioHUD } from "@/components/studio/StudioHUD";
 import { StudioCanvasContent } from "@/components/studio/StudioCanvasContent";
 import { StudioNavigationOverlay } from "@/components/studio/StudioNavigationOverlay";
 import { StudioErrorScreen } from "@/components/studio/StudioErrorScreen";
+import { StudioErrorBoundary } from "@/components/studio/StudioErrorBoundary";
 import { DEFAULT_FOV, type CameraState } from "@/components/studio/CameraController";
 import { GlobalMenuProvider, useGlobalMenu } from "@/components/layout/GlobalMenuContext";
 import { GlobalOverviewMenu } from "@/components/layout/GlobalOverviewMenu";
@@ -168,20 +169,27 @@ function StudioExperienceInner() {
       >
         <Canvas
           dpr={[1, 1.5]}
-          gl={{ antialias: true }}
+          gl={{ antialias: true, toneMapping: THREE.NoToneMapping }}
           camera={{ fov: DEFAULT_FOV, near: 0.1, far: 1100, position: [0, 0, 0] }}
         >
-          <StudioCanvasContent
-            node={currentNode}
-            texture={texture}
-            domElement={canvasEl}
-            cameraStateRef={cameraStateRef}
-            controlsEnabled={controlsEnabled}
-            reducedMotion={reducedMotion}
-            debug={DEBUG}
-            onDragStateChange={setDragging}
-            onSelectHotspot={navigateToNode}
-          />
+          {/* Visible, non-black fallback — if the sphere ever fails to
+              render for any reason, this reads as "something's off" (dark
+              gray) rather than being indistinguishable from a total
+              failure (pure black, same as the page's own backdrop). */}
+          <color attach="background" args={["#111315"]} />
+          <StudioErrorBoundary onError={() => setPhase("error")}>
+            <StudioCanvasContent
+              node={currentNode}
+              texture={texture}
+              domElement={canvasEl}
+              cameraStateRef={cameraStateRef}
+              controlsEnabled={controlsEnabled}
+              reducedMotion={reducedMotion}
+              debug={DEBUG}
+              onDragStateChange={setDragging}
+              onSelectHotspot={navigateToNode}
+            />
+          </StudioErrorBoundary>
         </Canvas>
       </div>
 
