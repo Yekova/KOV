@@ -226,7 +226,24 @@ export default function PlasmaWave(props: PlasmaWaveProps) {
       gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
     }
 
-    const ro = new ResizeObserver(resize);
+    // Debounced: renderer.setSize resizes the actual <canvas> element,
+    // which the browser clears immediately on every change — a container
+    // that resizes continuously (e.g. ActivationWindow's scroll-driven
+    // grow-to-fullscreen) was calling this every observed frame, clearing
+    // the buffer faster than the render loop below could repaint it,
+    // which read as the background flickering/glitching during that
+    // scroll. The canvas's own CSS (width/height: 100%, see
+    // PlasmaWave.css) keeps it visually filling the container via ordinary
+    // scaling in between debounced ticks, so it stays visible (just
+    // slightly soft) mid-resize instead of strobing, then snaps sharp once
+    // the container settles.
+    let resizeTimeout: ReturnType<typeof setTimeout> | undefined;
+    function handleResize() {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(resize, 120);
+    }
+
+    const ro = new ResizeObserver(handleResize);
     ro.observe(ctn);
     resize();
 
@@ -270,6 +287,7 @@ export default function PlasmaWave(props: PlasmaWaveProps) {
 
     return () => {
       cancelAnimationFrame(animateId);
+      clearTimeout(resizeTimeout);
       ro.disconnect();
       if (ctn && gl.canvas.parentNode === ctn) {
         ctn.removeChild(gl.canvas);

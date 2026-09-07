@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ComponentType, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { gsap, pinAndTrack } from "@/lib/motion";
 import { BrowserChrome } from "@/components/ui/BrowserChrome";
 import { ActivationSlider } from "@/components/home/ActivationSlider";
+import { ActivationCard } from "@/components/home/ActivationCard";
+import { RadarChart, PerformanceBars, ResponsiveBars, SecurityGauge } from "@/components/home/ActivationCharts";
 import PlasmaWave from "@/components/home/PlasmaWaveLazy";
 
 // Once the drag completes, a brief pulse plays inside the window, then the
@@ -22,11 +24,19 @@ const CARD_REST_HEIGHT = 640;
 
 type Phase = "idle" | "activating" | "activated";
 
-const CARDS: { title: string; body: string; icon: ReactNode }[] = [
+interface ActivationCardData {
+  title: string;
+  body: string;
+  icon: ReactNode;
+  Chart: ComponentType<{ reducedMotion: boolean }>;
+}
+
+const CARDS: ActivationCardData[] = [
   {
     title: "Expérience unique",
     body: "Un design sur-mesure qui reflète votre identité.",
     icon: <path d="M12 2l1.8 5.6L19 9l-5.2 1.4L12 16l-1.8-5.6L5 9l5.2-1.4z" />,
+    Chart: RadarChart,
   },
   {
     title: "Performances",
@@ -37,6 +47,7 @@ const CARDS: { title: string; body: string; icon: ReactNode }[] = [
         <path d="M3 13l9 5 9-5" />
       </>
     ),
+    Chart: PerformanceBars,
   },
   {
     title: "Responsive",
@@ -47,11 +58,13 @@ const CARDS: { title: string; body: string; icon: ReactNode }[] = [
         <line x1="11" y1="18" x2="13" y2="18" />
       </>
     ),
+    Chart: ResponsiveBars,
   },
   {
     title: "Sécurité",
     body: "Technologies modernes et protection avancée.",
     icon: <path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z" />,
+    Chart: SecurityGauge,
   },
 ];
 
@@ -199,27 +212,17 @@ export function ActivationWindow() {
                     <br />
                     <span className="text-kov-red">Il devrait réagir.</span>
                   </h3>
-                  <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-5xl">
+                  <div className="mt-10 grid grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-4xl">
                     {CARDS.map((card, i) => (
-                      <motion.div
+                      <ActivationCard
                         key={card.title}
-                        initial={{ opacity: 0, y: 16 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4, delay: reducedMotion ? 0 : 0.15 + i * 0.08 }}
-                        className="p-5 text-left"
-                        style={{
-                          background: "rgba(255,255,255,0.03)",
-                          backdropFilter: "blur(12px)",
-                          border: "1px solid var(--glass-border)",
-                          borderRadius: "var(--radius-md)",
-                        }}
-                      >
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--kov-red)" strokeWidth="1.6" className="mb-3">
-                          {card.icon}
-                        </svg>
-                        <p className="text-kov-bone text-sm uppercase tracking-wide mb-1">{card.title}</p>
-                        <p className="text-kov-steel text-xs leading-relaxed">{card.body}</p>
-                      </motion.div>
+                        title={card.title}
+                        body={card.body}
+                        icon={card.icon}
+                        chart={<card.Chart reducedMotion={reducedMotion} />}
+                        index={i}
+                        reducedMotion={reducedMotion}
+                      />
                     ))}
                   </div>
                 </motion.div>
