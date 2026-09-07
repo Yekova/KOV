@@ -12,39 +12,18 @@ interface ActivationCardProps {
   features: string[];
   icon: ReactNode;
   chart: ReactNode;
+  media: ReactNode;
   index: number;
   reducedMotion: boolean;
-  /** True once this card's scroll-scrubbed reveal has actually started —
-   * gates mounting `chart` so its own entrance animation plays in sync
-   * with the card becoming visible, instead of finishing invisibly before
-   * the card ever fades in. Always true under reducedMotion (no scroll
-   * scrub there, cards just appear). */
-  revealed: boolean;
-  /** Forwards the card's root DOM node to ActivationWindow's scroll
-   * effect, which drives opacity/position via gsap.set — see the split
-   * between reducedMotion (framer owns the mount transition) and normal
-   * motion (framer is inert, external imperative styles own it) below. */
-  onElementRef?: (el: HTMLDivElement | null) => void;
 }
 
-// 9:16 portrait card — measures its own rendered pixel size (ResizeObserver,
-// same pattern as ActivationSlider's track) so GlassSurface gets an
-// explicit width/height instead of a percentage: this is a CSS Grid cell
-// with a definite computed size, not the auto-sized/ambiguous case
-// GlassSurface's own docs warn about, but staying with the
-// already-proven-safe explicit-pixel pattern removes any doubt.
-export function ActivationCard({
-  tag,
-  title,
-  body,
-  features,
-  icon,
-  chart,
-  index,
-  reducedMotion,
-  revealed,
-  onElementRef,
-}: ActivationCardProps) {
+// A wide "feature row" card — image/video panel on one side, content on
+// the other (stacked on mobile) — in a vertical list of these (see
+// ActivationWindow), rather than the previous compact 9:16 cards side by
+// side. Still measures its own rendered pixel size (ResizeObserver, same
+// pattern as ActivationSlider's track) so GlassSurface gets an explicit
+// width/height instead of a percentage.
+export function ActivationCard({ tag, title, body, features, icon, chart, media, index, reducedMotion }: ActivationCardProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
 
@@ -61,41 +40,36 @@ export function ActivationCard({
 
   return (
     <motion.div
-      ref={(el) => {
-        wrapperRef.current = el;
-        onElementRef?.(el);
-      }}
-      // reducedMotion: framer owns a simple mount fade-in (no scroll scrub
-      // happens at all in that mode). Otherwise: framer is inert
-      // (initial=false, no animate) and the plain `style.opacity`/`y`
-      // below is what ActivationWindow's scroll effect overrides via
-      // gsap.set — two systems fighting the same properties would jank.
-      initial={reducedMotion ? { opacity: 0, y: 16 } : false}
-      animate={reducedMotion ? { opacity: 1, y: 0 } : undefined}
-      transition={{ duration: 0.4, delay: reducedMotion ? 0 : 0.15 + index * 0.08 }}
-      className="relative w-full overflow-hidden"
-      style={{ aspectRatio: "9 / 16", borderRadius: 18, opacity: reducedMotion ? undefined : 0 }}
+      ref={wrapperRef}
+      initial={reducedMotion ? undefined : { opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: reducedMotion ? 0 : 0.1 + index * 0.1, ease: [0.22, 1, 0.36, 1] }}
+      className="relative w-full overflow-hidden shrink-0"
+      style={{ minHeight: 360, borderRadius: 20 }}
     >
       {size.width > 0 && (
-        <GlassSurface width={size.width} height={size.height} borderRadius={18} style={{ position: "absolute", inset: 0 }} />
+        <GlassSurface width={size.width} height={size.height} borderRadius={20} style={{ position: "absolute", inset: 0 }} />
       )}
-      <div className="relative h-full flex flex-col p-5">
-        <TagPill>{tag}</TagPill>
+      <div className="relative h-full flex flex-col md:flex-row">
+        <div className="relative w-full md:w-[38%] shrink-0 aspect-video md:aspect-auto overflow-hidden">{media}</div>
 
-        <div className="flex-1 flex items-center justify-center py-4">
-          {revealed && chart}
-        </div>
+        <div className="flex-1 flex flex-col justify-center p-6 md:p-8 text-left min-w-0">
+          <div className="flex items-start justify-between gap-4 mb-4">
+            <TagPill>{tag}</TagPill>
+            <div aria-hidden="true" className="shrink-0" style={{ transform: "scale(0.6)", transformOrigin: "top right" }}>
+              {chart}
+            </div>
+          </div>
 
-        <div>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--kov-red)" strokeWidth="1.6" className="mb-3">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--kov-red)" strokeWidth="1.6" className="mb-3">
             {icon}
           </svg>
-          <p className="text-kov-bone text-sm uppercase tracking-wide mb-1">{title}</p>
-          <p className="text-kov-steel text-xs leading-relaxed mb-4">{body}</p>
+          <p className="text-kov-bone text-base uppercase tracking-wide mb-2">{title}</p>
+          <p className="text-kov-steel text-sm leading-relaxed mb-4">{body}</p>
 
-          <ul className="space-y-1.5 pt-3" style={{ borderTop: "1px solid var(--glass-border)" }}>
+          <ul className="space-y-1.5 pt-4" style={{ borderTop: "1px solid var(--glass-border)" }}>
             {features.map((feature) => (
-              <li key={feature} className="flex items-center gap-2 text-[11px] text-kov-concrete">
+              <li key={feature} className="flex items-center gap-2 text-xs text-kov-concrete">
                 <span aria-hidden="true" className="w-1 h-1 rounded-full shrink-0" style={{ background: "var(--kov-red)" }} />
                 {feature}
               </li>

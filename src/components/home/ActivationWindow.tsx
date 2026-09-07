@@ -8,6 +8,7 @@ import { BrowserChrome } from "@/components/ui/BrowserChrome";
 import { ActivationSlider } from "@/components/home/ActivationSlider";
 import { ActivationCard } from "@/components/home/ActivationCard";
 import { RadarChart, PerformanceBars, ResponsiveBars, SecurityGauge } from "@/components/home/ActivationCharts";
+import { PhotoPlaceholder, ResponsiveMedia } from "@/components/home/ActivationMedia";
 
 // Once the drag completes, a brief pulse plays inside the window, then the
 // activated content (below) cross-fades in — in place, inside the same
@@ -15,10 +16,10 @@ import { RadarChart, PerformanceBars, ResponsiveBars, SecurityGauge } from "@/co
 const PULSE_DURATION = 850;
 
 // Scroll distance (vh), split into three consecutive phases within one
-// pinned runway: grow the window to fullscreen, reveal the cards one by
-// one, then fade to black before releasing back to normal page flow.
+// pinned runway: grow the window to fullscreen, scroll through the card
+// list, then fade to black before releasing back to normal page flow.
 const DIVE_VH = 150;
-const CARDS_VH = 120;
+const CARDS_VH = 150;
 const FADE_VH = 80;
 const RUNWAY_VH = DIVE_VH + CARDS_VH + FADE_VH;
 const DIVE_SPLIT = DIVE_VH / RUNWAY_VH;
@@ -27,11 +28,6 @@ const CARDS_SPLIT = (DIVE_VH + CARDS_VH) / RUNWAY_VH;
 // Matches the card's own resting min-h-[640px] (md+) — the dive's 0%
 // starting point for the interpolated min-height below.
 const CARD_REST_HEIGHT = 640;
-// Each card's reveal window starts CARD_STAGGER later than the previous
-// one and spans CARD_REVEAL_SPAN of the cards phase — same shape as the
-// deleted ActivationFullscreen's own card-stagger math.
-const CARD_STAGGER = 0.2;
-const CARD_REVEAL_SPAN = 0.35;
 
 type Phase = "idle" | "activating" | "activated";
 
@@ -42,6 +38,7 @@ interface ActivationCardData {
   features: string[];
   icon: ReactNode;
   Chart: ComponentType<{ reducedMotion: boolean }>;
+  Media: ComponentType<{ reducedMotion: boolean }>;
 }
 
 const CARDS: ActivationCardData[] = [
@@ -52,6 +49,7 @@ const CARDS: ActivationCardData[] = [
     features: ["Interfaces sur-mesure", "Direction artistique", "Motion design"],
     icon: <path d="M12 2l1.8 5.6L19 9l-5.2 1.4L12 16l-1.8-5.6L5 9l5.2-1.4z" />,
     Chart: RadarChart,
+    Media: PhotoPlaceholder,
   },
   {
     tag: "Technique",
@@ -65,6 +63,7 @@ const CARDS: ActivationCardData[] = [
       </>
     ),
     Chart: PerformanceBars,
+    Media: PhotoPlaceholder,
   },
   {
     tag: "Adaptatif",
@@ -78,6 +77,7 @@ const CARDS: ActivationCardData[] = [
       </>
     ),
     Chart: ResponsiveBars,
+    Media: ResponsiveMedia,
   },
   {
     tag: "Protection",
@@ -86,6 +86,7 @@ const CARDS: ActivationCardData[] = [
     features: ["Chiffrement des données", "Hébergement sécurisé", "Mises à jour continues"],
     icon: <path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z" />,
     Chart: SecurityGauge,
+    Media: PhotoPlaceholder,
   },
 ];
 
@@ -93,20 +94,24 @@ const CARDS: ActivationCardData[] = [
 // bar — this isn't a browser mock, it's KOV's own digital environment)
 // holding a centered heading + the ActivationSlider. Once dragged past
 // threshold: a brief pulse, then the SAME window's content swaps in place
-// to the result (heading + feature cards) — one continuous window and one
-// continuous background throughout, no fullscreen takeover.
+// to the result (heading + a vertical list of feature cards) — one
+// continuous window and one continuous background throughout, no
+// fullscreen takeover.
 // Independently, scrolling past the window pins it and runs it through
-// three phases: grow to fullscreen, reveal the cards one by one, fade to
-// black — all gated on scroll position alone except the cards, which also
-// need the slider activated first (there's nothing to reveal otherwise).
+// three phases: grow to fullscreen, scroll through the card list (a
+// translateY driven by progress, clipped to the space below the heading —
+// the cards are now big enough that only one or two fit on screen at
+// once), fade to black — all gated on scroll position alone except the
+// cards, which also need the slider activated first (there's nothing to
+// scroll through otherwise).
 export function ActivationWindow() {
   const [phase, setPhase] = useState<Phase>("idle");
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const runwayRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const fadeRef = useRef<HTMLDivElement>(null);
-  const cardElsRef = useRef<(HTMLDivElement | null)[]>([]);
-  const [revealedCards, setRevealedCards] = useState<boolean[]>(() => CARDS.map(() => false));
+  const cardsViewportRef = useRef<HTMLDivElement>(null);
+  const cardsListRef = useRef<HTMLDivElement>(null);
   const [reducedMotion] = useState(
     () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
   );
@@ -118,8 +123,10 @@ export function ActivationWindow() {
   // pin:false here, scroll progress only drives values, GSAP itself never
   // takes over positioning) and runs the three phases described above.
   // min-height (not height) on the card on purpose: the activated state's
-  // card grid can legitimately need more room than this floor on narrow
-  // screens, and a hard height would clip it.
+  // card list can legitimately need more room than this floor, and a hard
+  // height would clip it — the list itself is clipped deliberately
+  // (cardsViewportRef, overflow-hidden) and scrolled via translateY
+  // instead, so its real height never affects the window's own size.
   useEffect(() => {
     if (reducedMotion) return;
     const runway = runwayRef.current;
@@ -137,16 +144,13 @@ export function ActivationWindow() {
           borderRadius: `${28 * (1 - diveProgress)}px`,
         });
 
-        const cardsProgress = gsap.utils.clamp(0, 1, (progress - DIVE_SPLIT) / (CARDS_SPLIT - DIVE_SPLIT));
-        cardElsRef.current.forEach((el, i) => {
-          if (!el) return;
-          const start = i * CARD_STAGGER;
-          const t = gsap.utils.clamp(0, 1, (cardsProgress - start) / CARD_REVEAL_SPAN);
-          gsap.set(el, { opacity: t, y: 20 * (1 - t) });
-          if (t > 0.05) {
-            setRevealedCards((prev) => (prev[i] ? prev : prev.map((v, vi) => (vi === i ? true : v))));
-          }
-        });
+        const viewport = cardsViewportRef.current;
+        const list = cardsListRef.current;
+        if (viewport && list) {
+          const cardsProgress = gsap.utils.clamp(0, 1, (progress - DIVE_SPLIT) / (CARDS_SPLIT - DIVE_SPLIT));
+          const maxTranslate = Math.max(0, list.scrollHeight - viewport.clientHeight);
+          gsap.set(list, { y: -maxTranslate * cardsProgress });
+        }
 
         const fadeProgress = gsap.utils.clamp(0, 1, (progress - CARDS_SPLIT) / (1 - CARDS_SPLIT));
         if (fadeRef.current) fadeRef.current.style.opacity = String(fadeProgress);
@@ -166,11 +170,11 @@ export function ActivationWindow() {
     timers.current.push(
       setTimeout(() => {
         setPhase("activated");
-        // The visitor may have already scrolled past where the cards'
-        // reveal window sits before ever dragging the slider — cards only
-        // just mounted, so force ScrollTrigger to re-evaluate against the
+        // The visitor may have already scrolled past where the cards
+        // viewport sits before ever dragging the slider — it only just
+        // mounted, so force ScrollTrigger to re-evaluate against the
         // current scroll position instead of waiting for the next scroll
-        // event to move them off their default (invisible) state.
+        // event to move the list off its default (untranslated) state.
         requestAnimationFrame(() => ScrollTrigger.update());
       }, PULSE_DURATION)
     );
@@ -190,7 +194,7 @@ export function ActivationWindow() {
       >
         <div
           ref={cardRef}
-          className="relative w-[92vw] overflow-hidden min-h-[560px] md:min-h-[640px]"
+          className="relative w-[92vw] overflow-hidden min-h-[560px] md:min-h-[640px] flex flex-col"
           style={{
             maxWidth: 1440,
             borderRadius: 28,
@@ -205,9 +209,9 @@ export function ActivationWindow() {
           <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: "rgba(5,5,5,0.35)" }} />
           <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ boxShadow: "inset 0 1px 0 var(--glass-highlight)" }} />
 
-          <BrowserChrome className="relative" showUrlBar={false} />
+          <BrowserChrome className="relative shrink-0" showUrlBar={false} />
 
-          <div className="relative flex flex-col items-center justify-center text-center px-8 md:px-16 py-14 min-h-[500px] md:min-h-[580px]">
+          <div className="relative flex-1 overflow-hidden">
             <AnimatePresence mode="wait" initial={false}>
               {phase !== "activated" ? (
                 <motion.div
@@ -215,7 +219,7 @@ export function ActivationWindow() {
                   animate={{ opacity: phase === "activating" ? 0.15 : 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.4 }}
-                  className="flex flex-col items-center w-full"
+                  className="absolute inset-0 flex flex-col items-center justify-center text-center px-8 md:px-16"
                 >
                   <h3
                     className="font-display text-kov-bone uppercase max-w-xl"
@@ -235,35 +239,40 @@ export function ActivationWindow() {
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, ease: "easeOut" }}
-                  className="flex flex-col items-center w-full"
+                  className="absolute inset-0 flex flex-col items-center px-8 md:px-16 py-10 text-center"
                 >
-                  <p className="text-xs uppercase tracking-widest text-kov-steel mb-4">Système activé</p>
+                  <p className="text-xs uppercase tracking-widest text-kov-steel mb-4 shrink-0">Système activé</p>
                   <h3
-                    className="font-display text-kov-bone uppercase max-w-2xl"
+                    className="font-display text-kov-bone uppercase max-w-2xl shrink-0"
                     style={{ fontSize: "clamp(26px, 3.2vw, 46px)", lineHeight: "var(--line-height-display)" }}
                   >
                     Un site ne devrait pas simplement exister.
                     <br />
                     <span className="text-kov-red">Il devrait réagir.</span>
                   </h3>
-                  <div className="mt-10 grid grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-4xl">
-                    {CARDS.map((card, i) => (
-                      <ActivationCard
-                        key={card.title}
-                        tag={card.tag}
-                        title={card.title}
-                        body={card.body}
-                        features={card.features}
-                        icon={card.icon}
-                        chart={<card.Chart reducedMotion={reducedMotion} />}
-                        index={i}
-                        reducedMotion={reducedMotion}
-                        revealed={reducedMotion || revealedCards[i]}
-                        onElementRef={(el) => {
-                          cardElsRef.current[i] = el;
-                        }}
-                      />
-                    ))}
+
+                  {/* Clipped viewport onto the card list below — the list
+                      itself is translated via scroll progress (see the
+                      effect above) rather than each card fading in place,
+                      since the cards are now big enough that stacking all
+                      four in view at once wouldn't fit one screen. */}
+                  <div ref={cardsViewportRef} className="relative w-full flex-1 overflow-hidden mt-8">
+                    <div ref={cardsListRef} className="absolute inset-x-0 top-0 flex flex-col gap-6 max-w-3xl mx-auto">
+                      {CARDS.map((card, i) => (
+                        <ActivationCard
+                          key={card.title}
+                          tag={card.tag}
+                          title={card.title}
+                          body={card.body}
+                          features={card.features}
+                          icon={card.icon}
+                          chart={<card.Chart reducedMotion={reducedMotion} />}
+                          media={<card.Media reducedMotion={reducedMotion} />}
+                          index={i}
+                          reducedMotion={reducedMotion}
+                        />
+                      ))}
+                    </div>
                   </div>
                 </motion.div>
               )}
