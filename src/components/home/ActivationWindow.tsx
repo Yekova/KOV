@@ -16,10 +16,11 @@ import { PhotoPlaceholder, ResponsiveMedia } from "@/components/home/ActivationM
 const PULSE_DURATION = 850;
 
 // Scroll distance (vh), split into three consecutive phases within one
-// pinned runway: grow the window to fullscreen, scroll through the card
-// list, then fade to black before releasing back to normal page flow.
+// pinned runway: grow the window to fullscreen, wipe through the cards
+// one at a time, then fade to black before releasing back to normal page
+// flow.
 const DIVE_VH = 150;
-const CARDS_VH = 150;
+const CARDS_VH = 200;
 const FADE_VH = 80;
 const RUNWAY_VH = DIVE_VH + CARDS_VH + FADE_VH;
 const DIVE_SPLIT = DIVE_VH / RUNWAY_VH;
@@ -28,6 +29,16 @@ const CARDS_SPLIT = (DIVE_VH + CARDS_VH) / RUNWAY_VH;
 // Matches the card's own resting min-h-[640px] (md+) — the dive's 0%
 // starting point for the interpolated min-height below.
 const CARD_REST_HEIGHT = 640;
+
+// Each card gets an equal-length "slot" within the cards phase (1 /
+// CARDS.length, computed where CARDS is in scope below); within each slot
+// (after the first) the previous card holds, then a diagonal wipe reveals
+// this one over CARD_REVEAL_SPAN of the timeline, then it holds until the
+// next slot's wipe begins.
+const CARD_REVEAL_SPAN = 0.12;
+// Percent-of-width horizontal offset between the wipe's top and bottom
+// edge — what makes the cut diagonal instead of a plain vertical line.
+const WIPE_SKEW = 16;
 
 type Phase = "idle" | "activating" | "activated";
 
@@ -94,24 +105,24 @@ const CARDS: ActivationCardData[] = [
 // bar — this isn't a browser mock, it's KOV's own digital environment)
 // holding a centered heading + the ActivationSlider. Once dragged past
 // threshold: a brief pulse, then the SAME window's content swaps in place
-// to the result (heading + a vertical list of feature cards) — one
-// continuous window and one continuous background throughout, no
-// fullscreen takeover.
+// to the result (heading + the card sequence below) — one continuous
+// window and one continuous background throughout, no fullscreen
+// takeover.
 // Independently, scrolling past the window pins it and runs it through
-// three phases: grow to fullscreen, scroll through the card list (a
-// translateY driven by progress, clipped to the space below the heading —
-// the cards are now big enough that only one or two fit on screen at
-// once), fade to black — all gated on scroll position alone except the
-// cards, which also need the slider activated first (there's nothing to
-// scroll through otherwise).
+// three phases: grow to fullscreen, wipe through the cards one at a time
+// (a diagonal reveal with a glowing red leading edge — user-chosen
+// direction, see ActivationCard's sibling wipe layers below), fade to
+// black — all gated on scroll position alone except the cards, which
+// also need the slider activated first (there's nothing to wipe through
+// otherwise).
 export function ActivationWindow() {
   const [phase, setPhase] = useState<Phase>("idle");
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const runwayRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const fadeRef = useRef<HTMLDivElement>(null);
-  const cardsViewportRef = useRef<HTMLDivElement>(null);
-  const cardsListRef = useRef<HTMLDivElement>(null);
+  const wipeRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const edgeRefs = useRef<(SVGLineElement | null)[]>([]);
   const [reducedMotion] = useState(
     () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
   );
@@ -122,16 +133,16 @@ export function ActivationWindow() {
   // sitewide convention for scroll-scrubbed sections, see @/lib/motion:
   // pin:false here, scroll progress only drives values, GSAP itself never
   // takes over positioning) and runs the three phases described above.
-  // min-height (not height) on the card on purpose: the activated state's
-  // card list can legitimately need more room than this floor, and a hard
-  // height would clip it — the list itself is clipped deliberately
-  // (cardsViewportRef, overflow-hidden) and scrolled via translateY
-  // instead, so its real height never affects the window's own size.
+  // min-height (not height) on the card on purpose: it only ever needs to
+  // grow toward fullscreen during the dive — the card sequence itself is
+  // clipped and wiped in place, so it never pushes the window taller.
   useEffect(() => {
     if (reducedMotion) return;
     const runway = runwayRef.current;
     const card = cardRef.current;
     if (!runway || !card) return;
+
+    const cardStagger = 1 / CARDS.length;
 
     const trigger = pinAndTrack(
       runway,
@@ -144,12 +155,26 @@ export function ActivationWindow() {
           borderRadius: `${28 * (1 - diveProgress)}px`,
         });
 
-        const viewport = cardsViewportRef.current;
-        const list = cardsListRef.current;
-        if (viewport && list) {
-          const cardsProgress = gsap.utils.clamp(0, 1, (progress - DIVE_SPLIT) / (CARDS_SPLIT - DIVE_SPLIT));
-          const maxTranslate = Math.max(0, list.scrollHeight - viewport.clientHeight);
-          gsap.set(list, { y: -maxTranslate * cardsProgress });
+        const cardsProgress = gsap.utils.clamp(0, 1, (progress - DIVE_SPLIT) / (CARDS_SPLIT - DIVE_SPLIT));
+        // i=0 has no wipe layer (it's the base, always fully visible
+        // underneath); i=1..N-1 each wipe in over whatever came before,
+        // one slot per card.
+        for (let i = 1; i < CARDS.length; i++) {
+          const wipeStart = i * cardStagger;
+          const t = gsap.utils.clamp(0, 1, (cardsProgress - wipeStart) / CARD_REVEAL_SPAN);
+          const center = t * (100 + WIPE_SKEW) - WIPE_SKEW;
+          const topX = gsap.utils.clamp(0, 100, center + WIPE_SKEW / 2);
+          const bottomX = gsap.utils.clamp(0, 100, center - WIPE_SKEW / 2);
+
+          const wipe = wipeRefs.current[i];
+          if (wipe) wipe.style.clipPath = `polygon(0% 0%, ${topX}% 0%, ${bottomX}% 100%, 0% 100%)`;
+
+          const edge = edgeRefs.current[i];
+          if (edge) {
+            edge.setAttribute("x1", String(topX));
+            edge.setAttribute("x2", String(bottomX));
+            edge.style.opacity = t > 0.02 && t < 0.98 ? "1" : "0";
+          }
         }
 
         const fadeProgress = gsap.utils.clamp(0, 1, (progress - CARDS_SPLIT) / (1 - CARDS_SPLIT));
@@ -170,11 +195,11 @@ export function ActivationWindow() {
     timers.current.push(
       setTimeout(() => {
         setPhase("activated");
-        // The visitor may have already scrolled past where the cards
-        // viewport sits before ever dragging the slider — it only just
+        // The visitor may have already scrolled past where the card wipes
+        // sit before ever dragging the slider — those layers only just
         // mounted, so force ScrollTrigger to re-evaluate against the
         // current scroll position instead of waiting for the next scroll
-        // event to move the list off its default (untranslated) state.
+        // event to move them off their default (fully clipped) state.
         requestAnimationFrame(() => ScrollTrigger.update());
       }, PULSE_DURATION)
     );
@@ -251,27 +276,68 @@ export function ActivationWindow() {
                     <span className="text-kov-red">Il devrait réagir.</span>
                   </h3>
 
-                  {/* Clipped viewport onto the card list below — the list
-                      itself is translated via scroll progress (see the
-                      effect above) rather than each card fading in place,
-                      since the cards are now big enough that stacking all
-                      four in view at once wouldn't fit one screen. */}
-                  <div ref={cardsViewportRef} className="relative w-full flex-1 overflow-hidden mt-8">
-                    <div ref={cardsListRef} className="absolute inset-x-0 top-0 flex flex-col gap-6 max-w-3xl mx-auto">
-                      {CARDS.map((card, i) => (
-                        <ActivationCard
-                          key={card.title}
-                          tag={card.tag}
-                          title={card.title}
-                          body={card.body}
-                          features={card.features}
-                          icon={card.icon}
-                          chart={<card.Chart reducedMotion={reducedMotion} />}
-                          media={<card.Media reducedMotion={reducedMotion} />}
-                          index={i}
-                          reducedMotion={reducedMotion}
-                        />
-                      ))}
+                  {/* One card at a time, big — later ones diagonally wipe
+                      over earlier ones (clip-path, driven by the scroll
+                      effect above) with a glowing red leading edge (the
+                      <line>, half-clipped by the same polygon so it sits
+                      exactly on the cut) rather than all four fading in
+                      simultaneously or occupying a scrolling list. */}
+                  <div className="relative w-full flex-1 overflow-hidden mt-8">
+                    <div className="absolute inset-0 max-w-4xl mx-auto">
+                      {CARDS.map((card, i) => {
+                        const content = (
+                          <ActivationCard
+                            tag={card.tag}
+                            title={card.title}
+                            body={card.body}
+                            features={card.features}
+                            icon={card.icon}
+                            chart={<card.Chart reducedMotion={reducedMotion} />}
+                            media={<card.Media reducedMotion={reducedMotion} />}
+                            reducedMotion={reducedMotion}
+                          />
+                        );
+                        if (i === 0) {
+                          return (
+                            <div key={card.title} className="absolute inset-0" style={{ zIndex: 0 }}>
+                              {content}
+                            </div>
+                          );
+                        }
+                        return (
+                          <div
+                            key={card.title}
+                            ref={(el) => {
+                              wipeRefs.current[i] = el;
+                            }}
+                            className="absolute inset-0"
+                            style={{ zIndex: i, clipPath: "polygon(0% 0%, 0% 0%, 0% 100%, 0% 100%)" }}
+                          >
+                            {content}
+                            <svg
+                              viewBox="0 0 100 100"
+                              preserveAspectRatio="none"
+                              className="absolute inset-0 pointer-events-none"
+                              style={{ overflow: "visible" }}
+                              aria-hidden="true"
+                            >
+                              <line
+                                ref={(el) => {
+                                  edgeRefs.current[i] = el;
+                                }}
+                                x1="0"
+                                y1="0"
+                                x2="0"
+                                y2="100"
+                                stroke="var(--kov-red-signal)"
+                                strokeWidth="0.5"
+                                vectorEffect="non-scaling-stroke"
+                                style={{ filter: "drop-shadow(0 0 8px var(--kov-red))", opacity: 0 }}
+                              />
+                            </svg>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </motion.div>

@@ -13,17 +13,17 @@ interface ActivationCardProps {
   icon: ReactNode;
   chart: ReactNode;
   media: ReactNode;
-  index: number;
   reducedMotion: boolean;
 }
 
 // A wide "feature row" card — image/video panel on one side, content on
-// the other (stacked on mobile) — in a vertical list of these (see
-// ActivationWindow), rather than the previous compact 9:16 cards side by
-// side. Still measures its own rendered pixel size (ResizeObserver, same
-// pattern as ActivationSlider's track) so GlassSurface gets an explicit
-// width/height instead of a percentage.
-export function ActivationCard({ tag, title, body, features, icon, chart, media, index, reducedMotion }: ActivationCardProps) {
+// the other (stacked on mobile). Fills whatever box its caller gives it
+// (ActivationWindow wraps each one in its own clip-path'd wipe layer) — so
+// h-full, not a fixed/minimum height of its own. Still measures its own
+// rendered pixel size (ResizeObserver, same pattern as ActivationSlider's
+// track) so GlassSurface gets an explicit width/height instead of a
+// percentage.
+export function ActivationCard({ tag, title, body, features, icon, chart, media, reducedMotion }: ActivationCardProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
 
@@ -41,11 +41,11 @@ export function ActivationCard({ tag, title, body, features, icon, chart, media,
   return (
     <motion.div
       ref={wrapperRef}
-      initial={reducedMotion ? undefined : { opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: reducedMotion ? 0 : 0.1 + index * 0.1, ease: [0.22, 1, 0.36, 1] }}
-      className="relative w-full overflow-hidden shrink-0"
-      style={{ minHeight: 360, borderRadius: 20 }}
+      initial={reducedMotion ? undefined : { opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
+      className="relative w-full h-full overflow-hidden"
+      style={{ borderRadius: 20 }}
     >
       {size.width > 0 && (
         <GlassSurface width={size.width} height={size.height} borderRadius={20} style={{ position: "absolute", inset: 0 }} />
