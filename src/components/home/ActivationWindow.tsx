@@ -52,7 +52,24 @@ interface ActivationCardData {
   Media: ComponentType<{ reducedMotion: boolean }>;
 }
 
+// Responsive leads — it's the card with real footage (the others are
+// honest placeholders), so it gets first billing rather than being
+// buried third.
 const CARDS: ActivationCardData[] = [
+  {
+    tag: "Adaptatif",
+    title: "Responsive",
+    body: "Parfait sur tous les écrans, partout, tout le temps.",
+    features: ["Fluide sur tous les écrans", "Testé sur chaque appareil", "Une expérience cohérente"],
+    icon: (
+      <>
+        <rect x="7" y="2" width="10" height="20" rx="2" />
+        <line x1="11" y1="18" x2="13" y2="18" />
+      </>
+    ),
+    Chart: ResponsiveBars,
+    Media: ResponsiveMedia,
+  },
   {
     tag: "Design",
     title: "Expérience unique",
@@ -75,20 +92,6 @@ const CARDS: ActivationCardData[] = [
     ),
     Chart: PerformanceBars,
     Media: PhotoPlaceholder,
-  },
-  {
-    tag: "Adaptatif",
-    title: "Responsive",
-    body: "Parfait sur tous les écrans, partout, tout le temps.",
-    features: ["Fluide sur tous les écrans", "Testé sur chaque appareil", "Une expérience cohérente"],
-    icon: (
-      <>
-        <rect x="7" y="2" width="10" height="20" rx="2" />
-        <line x1="11" y1="18" x2="13" y2="18" />
-      </>
-    ),
-    Chart: ResponsiveBars,
-    Media: ResponsiveMedia,
   },
   {
     tag: "Protection",
@@ -148,12 +151,20 @@ export function ActivationWindow() {
       runway,
       (progress) => {
         const diveProgress = gsap.utils.clamp(0, 1, progress / DIVE_SPLIT);
+        // Eased (not linear) — accelerates into black rather than a flat
+        // ramp, and the window recedes slightly (scale 1 → 0.94) as it
+        // goes, so the ending reads as the window *closing* rather than
+        // just a color change happening to it.
+        const rawFade = gsap.utils.clamp(0, 1, (progress - CARDS_SPLIT) / (1 - CARDS_SPLIT));
+        const fadeProgress = rawFade * rawFade;
         gsap.set(card, {
           width: `${92 + diveProgress * 8}%`,
           maxWidth: `calc(1440px + (100vw - 1440px) * ${diveProgress})`,
           minHeight: `calc(${CARD_REST_HEIGHT}px + (100vh - ${CARD_REST_HEIGHT}px) * ${diveProgress})`,
           borderRadius: `${28 * (1 - diveProgress)}px`,
+          scale: 1 - fadeProgress * 0.06,
         });
+        if (fadeRef.current) fadeRef.current.style.opacity = String(fadeProgress);
 
         const cardsProgress = gsap.utils.clamp(0, 1, (progress - DIVE_SPLIT) / (CARDS_SPLIT - DIVE_SPLIT));
         // i=0 has no wipe layer (it's the base, always fully visible
@@ -176,9 +187,6 @@ export function ActivationWindow() {
             edge.style.opacity = t > 0.02 && t < 0.98 ? "1" : "0";
           }
         }
-
-        const fadeProgress = gsap.utils.clamp(0, 1, (progress - CARDS_SPLIT) / (1 - CARDS_SPLIT));
-        if (fadeRef.current) fadeRef.current.style.opacity = String(fadeProgress);
       },
       { pin: false, end: `+=${RUNWAY_VH}%` }
     );
@@ -367,13 +375,17 @@ export function ActivationWindow() {
             />
           )}
 
-          {/* Exit fade-to-black — the card is already fullscreen by the
-              time this phase starts (dive always completes first), so
-              covering its own bounds is equivalent to covering the whole
-              viewport. Hands off to the page's own base background once
-              the runway finishes scrolling and the sticky wrapper above
-              releases — nothing else needed, that's just normal document
-              flow resuming underneath. */}
+          {/* Exit fade-to-black — paired with the card's own scale-down
+              (see the effect above) so the ending reads as the window
+              closing, not just a color change. The card is already
+              fullscreen by the time this phase starts (dive always
+              completes first), so covering its own bounds is equivalent
+              to covering the whole viewport. Hands off to the page's own
+              base background (the fixed LineWaves canvas behind every
+              homepage section, see page.tsx) once the runway finishes
+              scrolling and the sticky wrapper above releases — nothing
+              else needed, that's just normal document flow resuming
+              underneath. */}
           <div
             ref={fadeRef}
             aria-hidden="true"

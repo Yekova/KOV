@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
-import { GlassSurface } from "@/components/ui/GlassSurface";
+import type { ReactNode } from "react";
 import { TagPill } from "@/components/ui/Chip";
 
 interface ActivationCardProps {
@@ -19,37 +18,29 @@ interface ActivationCardProps {
 // A wide "feature row" card — image/video panel on one side, content on
 // the other (stacked on mobile). Fills whatever box its caller gives it
 // (ActivationWindow wraps each one in its own clip-path'd wipe layer) — so
-// h-full, not a fixed/minimum height of its own. Still measures its own
-// rendered pixel size (ResizeObserver, same pattern as ActivationSlider's
-// track) so GlassSurface gets an explicit width/height instead of a
-// percentage.
+// h-full, not a fixed/minimum height of its own.
+// Flat glass background (background/blur/border, no SVG feDisplacementMap
+// refraction) rather than GlassSurface — up to three of these mount at
+// once (the base plus whichever cards are mid-wipe), and real-time
+// backdrop refraction on that many simultaneous instances was the
+// smoothness cost the user asked to cut; a flat panel behind a scroll-
+// wiped card reads almost the same but costs nothing to render.
 export function ActivationCard({ tag, title, body, features, icon, chart, media, reducedMotion }: ActivationCardProps) {
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const [size, setSize] = useState({ width: 0, height: 0 });
-
-  useEffect(() => {
-    const el = wrapperRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver((entries) => {
-      const { width, height } = entries[0].contentRect;
-      setSize({ width, height });
-    });
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
   return (
     <motion.div
-      ref={wrapperRef}
       initial={reducedMotion ? undefined : { opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4 }}
       className="relative w-full h-full overflow-hidden"
-      style={{ borderRadius: 20 }}
+      style={{
+        borderRadius: 20,
+        background: "var(--glass-bg)",
+        backdropFilter: "blur(var(--glass-blur)) saturate(180%)",
+        WebkitBackdropFilter: "blur(var(--glass-blur)) saturate(180%)",
+        border: "1px solid var(--glass-border)",
+        boxShadow: "var(--glass-shadow-full)",
+      }}
     >
-      {size.width > 0 && (
-        <GlassSurface width={size.width} height={size.height} borderRadius={20} style={{ position: "absolute", inset: 0 }} />
-      )}
       <div className="relative h-full flex flex-col md:flex-row">
         <div className="relative w-full md:w-[38%] shrink-0 aspect-video md:aspect-auto overflow-hidden">{media}</div>
 
