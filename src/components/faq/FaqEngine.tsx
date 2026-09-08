@@ -190,7 +190,7 @@ export function FaqEngine() {
 
         <div className="mt-4 max-w-3xl">
           {filtered.length === 0 && (
-            <p className="text-kov-steel text-sm py-12">Aucun résultat pour cette recherche — essayez un autre mot, ou contactez-nous directement.</p>
+            <p className="text-kov-steel text-sm py-12">Aucun résultat pour cette recherche. Essayez un autre mot, ou contactez-nous directement.</p>
           )}
 
           {filtered.length > 0 && showGrouped && (

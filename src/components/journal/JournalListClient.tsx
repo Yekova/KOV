@@ -72,7 +72,7 @@ export function JournalListClient({ posts }: { posts: JournalPostSummary[] }) {
         <h1 className="font-display text-kov-bone uppercase max-w-4xl" style={{ fontSize: "var(--display-lg)" }}>
           Études de cas et notes de studio<span className="text-kov-red">.</span>
         </h1>
-        <p className="mt-16 text-kov-concrete text-sm">Rien à lire pour l&apos;instant — revenez bientôt.</p>
+        <p className="mt-16 text-kov-concrete text-sm">Rien à lire pour l&apos;instant. Revenez bientôt.</p>
       </main>
     );
   }
@@ -114,7 +114,7 @@ export function JournalListClient({ posts }: { posts: JournalPostSummary[] }) {
               Études de cas et notes de studio<span className="text-kov-red">.</span>
             </motion.h1>
             <p className="text-kov-concrete text-sm leading-relaxed mt-6 max-w-sm">
-              Ce qu&apos;on apprend en construisant — méthode, choix techniques et retours d&apos;expérience, sans filtre marketing.
+              Ce qu&apos;on apprend en construisant : méthode, choix techniques et retours d&apos;expérience, sans filtre marketing.
             </p>
 
             <div className="grid grid-cols-2 gap-6 mt-10">
@@ -266,7 +266,7 @@ function FeaturedHeroCard({ post }: { post: JournalPostSummary }) {
         <div className="flex items-center gap-4">
           <span className="text-white/50 text-xs uppercase tracking-widest">
             {formatDate(post.publishedAt)}
-            {post.readingTime && ` — ${post.readingTime}`}
+            {post.readingTime && ` · ${post.readingTime}`}
           </span>
           <span className="inline-flex items-center gap-1.5 text-kov-white text-xs uppercase tracking-widest group-hover:text-kov-red-signal transition-colors">
             Lire l&apos;article <ArrowRight size={13} />
@@ -303,7 +303,7 @@ function LargeCard({ post }: { post: JournalPostSummary }) {
       </div>
       <p className="text-kov-steel text-xs uppercase tracking-widest mb-2">
         {formatDate(post.publishedAt)}
-        {post.readingTime && ` — ${post.readingTime}`}
+        {post.readingTime && ` · ${post.readingTime}`}
       </p>
       <h3 className="font-display text-kov-bone uppercase text-xl mb-2 group-hover:text-kov-red transition-colors">{post.title}</h3>
       {post.excerpt && (
@@ -330,7 +330,7 @@ function CompactCard({ post }: { post: JournalPostSummary }) {
       </div>
       <div className="min-w-0">
         <p className="text-kov-steel text-[11px] uppercase tracking-widest mb-1.5">
-          {post.tag && `${post.tag} — `}
+          {post.tag && `${post.tag} · `}
           {post.readingTime}
         </p>
         <h4
@@ -377,7 +377,7 @@ function GridCard({ post, index }: { post: JournalPostSummary; index: number }) 
         <div className="p-5">
           <p className="text-kov-steel text-[11px] uppercase tracking-widest mb-2">
             {formatDate(post.publishedAt)}
-            {post.readingTime && ` — ${post.readingTime}`}
+            {post.readingTime && ` · ${post.readingTime}`}
           </p>
           <h4 className="text-kov-bone text-base mb-2 truncate group-hover:text-kov-red transition-colors">{post.title}</h4>
           {post.excerpt && (

@@ -16,9 +16,9 @@ export async function generateMetadata(props: PageProps<"/journal/[slug]">): Pro
     .eq("status", "published")
     .maybeSingle();
 
-  if (!post) return { title: "Journal — KOV" };
+  if (!post) return { title: "Journal | KOV" };
 
-  const title = post.meta_title || `${post.title} — KOV`;
+  const title = post.meta_title || `${post.title} | KOV`;
   const description = post.meta_description || post.excerpt || undefined;
   const image = resolvePostImageUrl(post.cover_image_path);
 

@@ -204,7 +204,7 @@ export function ContactWizard() {
       });
       const result = await response.json();
       if (!result.valid) {
-        setDetailsError("Cette adresse email semble introuvable — vérifiez qu'il n'y a pas de faute de frappe.");
+        setDetailsError("Cette adresse email semble introuvable, vérifiez qu'il n'y a pas de faute de frappe.");
         setVerifying(false);
         return;
       }
@@ -251,7 +251,7 @@ export function ContactWizard() {
 
   const contactMethodLabel = CONTACT_METHODS.find((m) => m.value === answers.contact_method)?.label ?? "";
   const timelineLabel = TIMELINES.find((t) => t.value === answers.timeline)?.label ?? "";
-  const coordinatesSummary = [answers.name, answers.company].filter(Boolean).join(" — ");
+  const coordinatesSummary = [answers.name, answers.company].filter(Boolean).join(" · ");
   const remainingThemes = THEMES.filter((t) => t !== answers.focus);
 
   const transitionStyle = {

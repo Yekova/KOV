@@ -235,7 +235,7 @@ function RelatedCard({ post }: { post: JournalPostSummary }) {
       <div className="p-5">
         <p className="text-kov-steel text-[11px] uppercase tracking-widest mb-2">
           {formatDate(post.publishedAt)}
-          {post.readingTime && ` — ${post.readingTime}`}
+          {post.readingTime && ` · ${post.readingTime}`}
         </p>
         <h4
           className="text-kov-bone text-base mb-2 group-hover:text-kov-red transition-colors"

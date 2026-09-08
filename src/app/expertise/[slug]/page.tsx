@@ -18,9 +18,9 @@ function getService(slug: string) {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const service = getService(slug);
-  if (!service) return { title: "Expertise — KOV" };
+  if (!service) return { title: "Expertise | KOV" };
   return {
-    title: `${service.title} — KOV`,
+    title: `${service.title} | KOV`,
     description: service.description,
     alternates: { canonical: `${SITE_URL}/expertise/${service.slug}` },
   };

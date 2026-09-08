@@ -5,7 +5,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { resolvePostImageUrl } from "@/lib/portal/storage";
 import { PostView } from "@/components/journal/PostView";
 
-export const metadata: Metadata = { title: "Aperçu — KOV" };
+export const metadata: Metadata = { title: "Aperçu | KOV" };
 
 // Deliberately outside /admin — that prefix gets the admin sidebar/topbar
 // shell (src/app/admin/layout.tsx), which would make this look nothing like
@@ -33,7 +33,7 @@ export default async function PreviewPostPage(props: PageProps<"/journal/preview
           className="fixed top-0 inset-x-0 py-2 text-center text-xs uppercase tracking-widest text-kov-white"
           style={{ background: "var(--kov-red)", zIndex: "var(--z-modal)" }}
         >
-          Aperçu — brouillon non publié
+          Aperçu : brouillon non publié
         </div>
       )}
       <PostView

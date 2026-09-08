@@ -61,7 +61,7 @@ export function CookieConsent() {
             <div className="px-6 py-5 md:py-6 max-w-[1600px] mx-auto flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
               <p className="text-kov-bone text-sm leading-relaxed flex-1">
                 <span className="text-kov-steel uppercase tracking-widest text-xs mr-2">Cookies</span>
-                On utilise des cookies de mesure d&apos;audience pour comprendre comment le site est utilisé —
+                On utilise des cookies de mesure d&apos;audience pour comprendre comment le site est utilisé,
                 uniquement avec votre accord.{" "}
                 <Link
                   href="/privacy"

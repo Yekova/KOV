@@ -18,7 +18,7 @@ export const searchIndex: SearchItem[] = [
     title: "Stratégie",
     category: "Expertise",
     href: "/expertise",
-    description: "Positionnement, structure et parcours utilisateurs — décidés avant de designer quoi que ce soit.",
+    description: "Positionnement, structure et parcours utilisateurs, décidés avant de designer quoi que ce soit.",
   },
   {
     title: "Design",
@@ -75,11 +75,11 @@ export const searchIndex: SearchItem[] = [
     title: "FAQ",
     category: "Contact",
     href: "/faq",
-    description: "Délais, processus, budget, maintenance — les réponses aux questions fréquentes.",
+    description: "Délais, processus, budget, maintenance : les réponses aux questions fréquentes.",
     keywords: ["questions", "faq", "combien ça coûte", "combien de temps"],
   },
   {
-    title: "Kanti — Gestion de patrimoine",
+    title: "Kanti · Gestion de patrimoine",
     category: "Projets",
     href: "/#work-gallery",
     description: "Stratégie, design et développement pour une expérience numérique de gestion de patrimoine.",
@@ -95,7 +95,7 @@ export const searchIndex: SearchItem[] = [
     title: "Petit par choix",
     category: "Studio",
     href: "/studio",
-    description: "Moins de niveaux hiérarchiques, plus d'implication, un meilleur travail — qui est KOV.",
+    description: "Moins de niveaux hiérarchiques, plus d'implication, un meilleur travail : c'est KOV.",
     keywords: ["à propos", "équipe", "qui êtes-vous"],
   },
   {

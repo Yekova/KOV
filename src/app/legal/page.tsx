@@ -3,7 +3,7 @@ import { LegalDoc } from "@/components/legal/LegalDoc";
 import { getBusinessInfo } from "@/lib/billing/businessInfo";
 
 export const metadata: Metadata = {
-  title: "Mentions légales — KOV",
+  title: "Mentions légales | KOV",
   description: "Mentions légales du site KOV.",
   alternates: { canonical: "https://kov-agency.site/legal" },
 };
@@ -58,7 +58,7 @@ export default async function LegalNoticePage() {
     <LegalDoc
       title="Mentions légales"
       updated="Septembre 2026"
-      intro="Les informations qu'un site est tenu d'afficher légalement — sans le jargon qui va généralement avec."
+      intro="Les informations qu'un site est tenu d'afficher légalement, sans le jargon qui va généralement avec."
       sections={SECTIONS}
     />
   );

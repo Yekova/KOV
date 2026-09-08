@@ -114,7 +114,7 @@ export function ExpertiseTeaser() {
       >
         <div className="sticky top-0 h-screen flex items-center overflow-hidden px-6">
           <div className="w-full max-w-[1600px] mx-auto flex gap-12">
-            <div className="w-[30%] shrink-0 flex flex-col justify-center">{LEFT_COLUMN}</div>
+            <div className="w-[30%] shrink-0 sticky top-24 flex flex-col justify-center">{LEFT_COLUMN}</div>
 
             <div
               className="flex-1 grid gap-4"

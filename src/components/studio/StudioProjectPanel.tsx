@@ -65,7 +65,7 @@ export function StudioProjectPanel({ artwork, onClose }: StudioProjectPanelProps
               <div className="p-8">
                 <div className="flex items-start justify-between gap-4 mb-6">
                   <p className="font-mono text-xs text-kov-steel">
-                    {artwork.project.id} — {STATUS_LABEL[artwork.project.status]}
+                    {artwork.project.id} · {STATUS_LABEL[artwork.project.status]}
                   </p>
                   <button
                     type="button"

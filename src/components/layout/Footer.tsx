@@ -122,7 +122,7 @@ export function Footer({ isHome = false }: { isHome?: boolean }) {
       <div className="px-6 pt-24 pb-10 max-w-[1600px] mx-auto border-t" style={{ borderColor: "var(--kov-border)" }}>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-10 lg:gap-8">
         <div className="sm:col-span-2 lg:col-span-2">
-          <Link href="/" aria-label="KOV — Accueil" className="block">
+          <Link href="/" aria-label="KOV · Accueil" className="block">
             <Image src="/kov/brand/kov-wordmark-bone.png" alt="KOV" width={1116} height={209} className="h-9 w-auto" />
           </Link>
           <p className="mt-4 max-w-xs text-kov-concrete text-sm leading-relaxed">

@@ -10,7 +10,7 @@ import { SERVICES } from "@/data/services";
 const SITE_URL = "https://kov-agency.site";
 
 export const metadata: Metadata = {
-  title: "Expertise — KOV",
+  title: "Expertise | KOV",
   description: "Stratégie, design, développement, motion, systèmes et intégration, construits comme un seul système.",
   alternates: { canonical: `${SITE_URL}/expertise` },
 };

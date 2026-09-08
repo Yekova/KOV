@@ -9,8 +9,8 @@ import { FaqEngine } from "@/components/faq/FaqEngine";
 const SITE_URL = "https://kov-agency.site";
 
 export const metadata: Metadata = {
-  title: "FAQ — KOV",
-  description: "Délais, processus, budget, technique — les réponses aux questions les plus fréquentes avant de démarrer un projet avec KOV.",
+  title: "FAQ | KOV",
+  description: "Délais, processus, budget, technique : les réponses aux questions les plus fréquentes avant de démarrer un projet avec KOV.",
   alternates: { canonical: `${SITE_URL}/faq` },
 };
 
@@ -43,7 +43,7 @@ export default function FaqPage() {
             Les questions qu&apos;on nous pose<span className="text-kov-red">.</span>
           </h1>
           <p className="mt-6 max-w-xl text-kov-concrete text-sm leading-relaxed">
-            Le projet, le budget, la technique, le suivi après la mise en ligne — ce qu&apos;on répond le plus souvent
+            Le projet, le budget, la technique, le suivi après la mise en ligne : ce qu&apos;on répond le plus souvent
             avant qu&apos;un projet démarre. Cherchez un mot, ou parcourez par sujet.
           </p>
         </Reveal>

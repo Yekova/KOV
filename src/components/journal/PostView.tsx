@@ -46,7 +46,7 @@ export function PostView({ post, backHref, backLabel }: { post: PostViewData; ba
               {new Date(post.publishedAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
             </p>
           )}
-          {post.readingTime && <p className="text-kov-steel text-xs uppercase tracking-widest">— {post.readingTime}</p>}
+          {post.readingTime && <p className="text-kov-steel text-xs uppercase tracking-widest">· {post.readingTime}</p>}
         </div>
 
         {post.coverUrl && (

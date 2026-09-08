@@ -42,7 +42,7 @@ export function NewsletterSection() {
         <p className="text-kov-steel text-sm mb-8">Un email de temps en temps, quand on a vraiment quelque chose à dire.</p>
 
         {sent ? (
-          <p className="text-kov-red text-sm uppercase tracking-widest">Merci — à bientôt dans votre boîte mail.</p>
+          <p className="text-kov-red text-sm uppercase tracking-widest">Merci, à bientôt dans votre boîte mail.</p>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row items-center gap-3 justify-center">
             <input

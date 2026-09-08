@@ -86,7 +86,7 @@ export function ScreenShowcase({ screenshotSrc }: ScreenShowcaseProps) {
           {screenshotSrc ? (
             <Image
               src={screenshotSrc}
-              alt="Aperçu du tableau de bord — système intégré KOV"
+              alt="Aperçu du tableau de bord, système intégré KOV"
               fill
               sizes="(min-width: 1200px) 1200px, 100vw"
               className="object-cover"

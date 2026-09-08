@@ -3,7 +3,7 @@ import { LegalDoc } from "@/components/legal/LegalDoc";
 import { getBusinessInfo } from "@/lib/billing/businessInfo";
 
 export const metadata: Metadata = {
-  title: "Conditions générales de vente — KOV",
+  title: "Conditions générales de vente | KOV",
   description: "Conditions générales de vente applicables aux prestations KOV : création de sites, applications et systèmes numériques.",
   alternates: { canonical: "https://kov-agency.site/cgv" },
 };
@@ -277,7 +277,7 @@ export default async function CgvPage() {
     <LegalDoc
       title="Conditions générales de vente"
       updated="Septembre 2026"
-      intro="Ce qui encadre chaque prestation KOV, du devis à la livraison — le fameux « accord écrit à part » évoqué dans nos conditions d'utilisation."
+      intro="Ce qui encadre chaque prestation KOV, du devis à la livraison : le fameux « accord écrit à part » évoqué dans nos conditions d'utilisation."
       sections={SECTIONS}
     />
   );

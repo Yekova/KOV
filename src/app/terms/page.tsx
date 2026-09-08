@@ -3,7 +3,7 @@ import Link from "next/link";
 import { LegalDoc } from "@/components/legal/LegalDoc";
 
 export const metadata: Metadata = {
-  title: "Conditions d'utilisation — KOV",
+  title: "Conditions d'utilisation | KOV",
   description: "Conditions d'utilisation du site KOV.",
   alternates: { canonical: "https://kov-agency.site/terms" },
 };
@@ -15,7 +15,7 @@ const SECTIONS = [
     body: (
       <p>
         Ces conditions régissent uniquement l&apos;utilisation du site kov-agency.site. Elles ne constituent pas un
-        contrat de prestation — les engagements de projet avec KOV sont régis par un accord écrit distinct : les{" "}
+        contrat de prestation. Les engagements de projet avec KOV sont régis par un accord écrit distinct : les{" "}
         <Link href="/cgv" className="text-kov-red hover:underline">
           conditions générales de vente
         </Link>
@@ -50,7 +50,7 @@ export default function TermsPage() {
     <LegalDoc
       title="Conditions d'utilisation"
       updated="Août 2026"
-      intro="Ce qui régit l'utilisation de ce site. Pas votre projet avec KOV — ça, c'est un accord écrit à part."
+      intro="Ce qui régit l'utilisation de ce site. Pas votre projet avec KOV : ça, c'est un accord écrit à part."
       sections={SECTIONS}
     />
   );

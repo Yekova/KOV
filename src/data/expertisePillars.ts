@@ -13,7 +13,7 @@ export const PILLARS = [
     slug: "design",
     title: "Design",
     tagline: "Donner forme aux idées",
-    body: "On conçoit des interfaces comme on construit une architecture — la structure vient avant le style. Le design clarifie et guide ; il ne masque jamais un problème de fond.",
+    body: "On conçoit des interfaces comme on construit une architecture : la structure vient avant le style. Le design clarifie et guide ; il ne masque jamais un problème de fond.",
   },
   {
     number: "03",
@@ -27,7 +27,7 @@ export const PILLARS = [
     slug: "motion",
     title: "Motion",
     tagline: "Faire mouvement",
-    body: "Le mouvement a une fonction. Une transition guide, explique, révèle ou crée une émotion — si elle n'apporte rien, elle disparaît.",
+    body: "Le mouvement a une fonction. Une transition guide, explique, révèle ou crée une émotion. Si elle n'apporte rien, elle disparaît.",
   },
   {
     number: "05",

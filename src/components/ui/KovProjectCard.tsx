@@ -27,7 +27,7 @@ export function KovProjectCard({ project, index, total }: KovProjectCardProps) {
       </span>
 
       <p className="font-mono text-xs text-kov-steel mb-4">
-        {project.id} — {project.status === "live" ? "visuel à venir" : "en préparation"}
+        {project.id} · {project.status === "live" ? "visuel à venir" : "en préparation"}
       </p>
 
       <p

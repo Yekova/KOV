@@ -137,7 +137,7 @@ export function StudioRoomPanel({
             Voir l&apos;introduction · 2 min
           </button>
         ) : (
-          <p className="text-kov-steel text-[10px] uppercase tracking-widest">Vidéo d&apos;introduction — bientôt disponible</p>
+          <p className="text-kov-steel text-[10px] uppercase tracking-widest">Vidéo d&apos;introduction · bientôt disponible</p>
         )}
       </div>
 
