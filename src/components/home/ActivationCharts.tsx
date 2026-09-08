@@ -6,14 +6,14 @@ interface ChartProps {
   reducedMotion: boolean;
 }
 
-// Four small, self-contained SVG visualizations — illustrative/conceptual
+// Small, self-contained SVG visualizations — illustrative/conceptual
 // (shape, motion, relative fill), not dashboards reporting a specific
-// audited statistic. Printing a precise invented percentage here (e.g. a
-// bare "98%") would read as a real, checkable claim about KOV's own work,
-// which isn't something to fabricate — these mirror the same honest
-// framing the rest of the site already uses. Each self-animates on mount
-// via framer-motion (they're only ever mounted once the activated state
-// is showing), no external trigger prop needed.
+// audited statistic. Printing a precise invented percentage or score here
+// would read as a real, checkable claim about KOV's own work, which isn't
+// something to fabricate — these mirror the same honest framing the rest
+// of the site already uses. Each self-animates on mount via framer-motion
+// (they're only ever mounted once the activated state is showing), no
+// external trigger prop needed.
 
 const RADAR_LABELS = ["Design", "UX", "Motion", "Marque", "Détail"];
 
@@ -64,33 +64,33 @@ export function RadarChart({ reducedMotion }: ChartProps) {
   );
 }
 
-const PERFORMANCE_BARS = [
-  { label: "Vitesse", fill: 0.92 },
-  { label: "SEO", fill: 0.85 },
-  { label: "Conversion", fill: 0.78 },
-];
+// A growth trend, not three independent metrics — monotonically
+// increasing bar heights read as "things get better over time", the
+// shape "Des résultats concrets" is actually claiming, without attaching
+// a specific invented number to any one bar.
+const GROWTH_BAR_HEIGHTS = [0.32, 0.48, 0.62, 0.8, 1];
 
-export function PerformanceBars({ reducedMotion }: ChartProps) {
-  const barWidth = 22;
-  const gap = 14;
+export function GrowthBars({ reducedMotion }: ChartProps) {
+  const barWidth = 16;
+  const gap = 10;
   const trackHeight = 88;
   return (
-    <svg width={PERFORMANCE_BARS.length * (barWidth + gap)} height={trackHeight + 20} aria-hidden="true">
-      {PERFORMANCE_BARS.map((bar, i) => {
+    <svg width={GROWTH_BAR_HEIGHTS.length * (barWidth + gap)} height={trackHeight + 8} aria-hidden="true">
+      {GROWTH_BAR_HEIGHTS.map((fill, i) => {
         const x = i * (barWidth + gap);
-        const h = trackHeight * bar.fill;
+        const h = trackHeight * fill;
         return (
-          <g key={bar.label}>
-            <rect x={x} y={0} width={barWidth} height={trackHeight} rx={4} fill="var(--glass-border)" opacity={0.4} />
+          <g key={i}>
+            <rect x={x} y={0} width={barWidth} height={trackHeight} rx={3} fill="var(--glass-border)" opacity={0.4} />
             <motion.rect
               x={x}
               width={barWidth}
               height={h}
-              rx={4}
+              rx={3}
               fill="var(--kov-red)"
               initial={reducedMotion ? undefined : { y: trackHeight, height: 0 }}
               animate={{ y: trackHeight - h, height: h }}
-              transition={{ duration: 0.6, delay: reducedMotion ? 0 : i * 0.12, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.5, delay: reducedMotion ? 0 : i * 0.08, ease: [0.22, 1, 0.36, 1] }}
             />
           </g>
         );
@@ -99,36 +99,12 @@ export function PerformanceBars({ reducedMotion }: ChartProps) {
   );
 }
 
-const RESPONSIVE_BARS = ["Mobile", "Tablette", "Desktop"];
-
-export function ResponsiveBars({ reducedMotion }: ChartProps) {
-  const trackWidth = 120;
-  const barHeight = 10;
-  const gap = 14;
-  return (
-    <svg width={trackWidth} height={RESPONSIVE_BARS.length * (barHeight + gap)} aria-hidden="true">
-      {RESPONSIVE_BARS.map((label, i) => {
-        const y = i * (barHeight + gap);
-        return (
-          <g key={label}>
-            <rect x={0} y={y} width={trackWidth} height={barHeight} rx={barHeight / 2} fill="var(--glass-border)" opacity={0.4} />
-            <motion.rect
-              y={y}
-              height={barHeight}
-              rx={barHeight / 2}
-              fill="var(--kov-red)"
-              initial={reducedMotion ? undefined : { width: 0 }}
-              animate={{ width: trackWidth }}
-              transition={{ duration: 0.5, delay: reducedMotion ? 0 : i * 0.12, ease: [0.22, 1, 0.36, 1] }}
-            />
-          </g>
-        );
-      })}
-    </svg>
-  );
-}
-
-export function SecurityGauge({ reducedMotion }: ChartProps) {
+// A completing ring, not a printed score — "100 Performance" in the
+// reference spec would read as a specific, checkable claim (the same
+// concern already reasoned through for the previous Sécurité card's own
+// ring): the ring fills all the way as an illustration of thoroughness,
+// with a qualitative word once it settles instead of an invented number.
+export function PerformanceGauge({ reducedMotion }: ChartProps) {
   const size = 110;
   const strokeWidth = 10;
   const radius = (size - strokeWidth) / 2;
@@ -153,19 +129,14 @@ export function SecurityGauge({ reducedMotion }: ChartProps) {
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <motion.svg
-          width="28"
-          height="28"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="var(--kov-bone)"
-          strokeWidth="2"
-          initial={reducedMotion ? undefined : { opacity: 0, scale: 0.6 }}
+        <motion.span
+          className="text-kov-bone text-[10px] uppercase tracking-widest"
+          initial={reducedMotion ? undefined : { opacity: 0, scale: 0.85 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4, delay: reducedMotion ? 0 : 0.6 }}
         >
-          <path d="M5 13l4 4L19 7" />
-        </motion.svg>
+          Optimisé
+        </motion.span>
       </div>
     </div>
   );

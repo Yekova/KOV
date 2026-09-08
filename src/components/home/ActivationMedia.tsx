@@ -1,11 +1,17 @@
 interface MediaProps {
   reducedMotion: boolean;
+  /** Real photo path, supplied per-card once the user provides one. Falls
+   * back to the honest "Photo à venir" placeholder when absent — matches
+   * the convention already used elsewhere (ScreenShowcase, KovProjectCard)
+   * rather than a stock photo standing in for a real one. */
+  src?: string;
 }
 
-// Honest placeholder — matches the "aperçu à venir" convention already
-// used elsewhere (ScreenShowcase, KovProjectCard) rather than a stock
-// photo standing in for a real one.
-export function PhotoPlaceholder() {
+export function PhotoPlaceholder({ src }: MediaProps) {
+  if (src) {
+    // eslint-disable-next-line @next/next/no-img-element -- these live inside a scroll-driven coverflow whose size/visibility is driven by imperative transforms every frame; next/image's lazy-load lifecycle fights that pattern, same reasoning as MouseFrameBackdrop.tsx.
+    return <img src={src} alt="" className="w-full h-full object-cover" />;
+  }
   return (
     <div className="w-full h-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.03)" }}>
       <div className="flex flex-col items-center gap-2 text-kov-steel">
