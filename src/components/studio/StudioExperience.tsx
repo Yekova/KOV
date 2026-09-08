@@ -9,12 +9,23 @@ import { StudioHUD } from "@/components/studio/StudioHUD";
 import { StudioCanvasContent } from "@/components/studio/StudioCanvasContent";
 import { StudioNavigationOverlay } from "@/components/studio/StudioNavigationOverlay";
 import { StudioProjectPanel } from "@/components/studio/StudioProjectPanel";
+import { StudioInfoPanel } from "@/components/studio/StudioInfoPanel";
+import { StudioRoomPanel } from "@/components/studio/StudioRoomPanel";
+import { StudioRoomCarousel } from "@/components/studio/StudioRoomCarousel";
+import { StudioFooter } from "@/components/studio/StudioFooter";
 import { StudioErrorScreen } from "@/components/studio/StudioErrorScreen";
 import { StudioErrorBoundary } from "@/components/studio/StudioErrorBoundary";
+import { Nav } from "@/components/navigation/Nav";
 import { DEFAULT_FOV, type CameraState } from "@/components/studio/CameraController";
 import { GlobalMenuProvider, useGlobalMenu } from "@/components/layout/GlobalMenuContext";
 import { GlobalOverviewMenu } from "@/components/layout/GlobalOverviewMenu";
-import { STUDIO_NODES, STUDIO_ENTRY_NODE_ID, type StudioArtwork } from "@/config/studio/studioNodes";
+import {
+  STUDIO_NODES,
+  STUDIO_NODE_ORDER,
+  STUDIO_ENTRY_NODE_ID,
+  type StudioArtwork,
+  type StudioInfoHotspot,
+} from "@/config/studio/studioNodes";
 
 // idle/loading collapse into "intro" (the intro screen itself carries a
 // `textureReady` sub-state for its button) — a smaller state set than the
@@ -74,6 +85,7 @@ function StudioExperienceInner() {
   const [canvasEl, setCanvasEl] = useState<HTMLDivElement | null>(null);
   const [retryKey, setRetryKey] = useState(0);
   const [selectedArtwork, setSelectedArtwork] = useState<StudioArtwork | null>(null);
+  const [selectedInfo, setSelectedInfo] = useState<StudioInfoHotspot | null>(null);
   const [reducedMotion] = useState(
     () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
   );
@@ -152,10 +164,11 @@ function StudioExperienceInner() {
     (targetId: string) => {
       if (phase !== "exploring") return;
       const targetNode = STUDIO_NODES[targetId];
-      if (!targetNode) return;
+      if (!targetNode || !targetNode.available) return;
 
       setPhase("transitioning");
       setSelectedArtwork(null);
+      setSelectedInfo(null);
 
       if (DEBUG) {
         console.info(`Navigation target: ${targetId}`);
@@ -217,6 +230,22 @@ function StudioExperienceInner() {
 
   const handleCloseArtworkPanel = useCallback(() => setSelectedArtwork(null), []);
 
+  const handleSelectInfo = useCallback((hotspot: StudioInfoHotspot) => {
+    setSelectedInfo(hotspot);
+  }, []);
+
+  const handleCloseInfoPanel = useCallback(() => setSelectedInfo(null), []);
+
+  // StudioRoomPanel's prev/next follow STUDIO_NODE_ORDER (the board's own
+  // "N/6" sequence) rather than the connections graph directly — but an
+  // arrow only enables when a real connection to that neighbor exists, so
+  // it never silently jumps to an unreachable/unavailable room.
+  const roomIndex = STUDIO_NODE_ORDER.indexOf(currentNodeId);
+  const prevNodeId = roomIndex > 0 ? STUDIO_NODE_ORDER[roomIndex - 1] : undefined;
+  const nextNodeId = roomIndex < STUDIO_NODE_ORDER.length - 1 ? STUDIO_NODE_ORDER[roomIndex + 1] : undefined;
+  const canGoPrev = Boolean(prevNodeId && currentNode.connections.some((c) => c.targetNodeId === prevNodeId));
+  const canGoNext = Boolean(nextNodeId && currentNode.connections.some((c) => c.targetNodeId === nextNodeId));
+
   if (phase === "error") {
     return <StudioErrorScreen onRetry={handleRetry} />;
   }
@@ -266,6 +295,7 @@ function StudioExperienceInner() {
               onDragStateChange={setDragging}
               onSelectHotspot={navigateToNode}
               onSelectArtwork={handleSelectArtwork}
+              onSelectInfo={handleSelectInfo}
             />
           </StudioErrorBoundary>
         </Canvas>
@@ -281,12 +311,36 @@ function StudioExperienceInner() {
       )}
 
       {(phase === "exploring" || phase === "transitioning") && (
-        <StudioHUD node={currentNode} onToggleMenu={toggleMenu} menuOpen={menuOpen} />
+        <>
+          {/* The site's own real nav (Projets/Expertise/Journal/Studio +
+              search) — self-positioning/fixed, safe to drop in directly
+              without touching SiteChrome's per-route exclusion (which
+              also governs /client and /admin). */}
+          <Nav variant="fixed" />
+          <StudioHUD totalRooms={STUDIO_NODE_ORDER.length} onToggleMenu={toggleMenu} menuOpen={menuOpen} />
+          <StudioRoomPanel
+            node={currentNode}
+            roomIndex={roomIndex}
+            totalRooms={STUDIO_NODE_ORDER.length}
+            onPrev={() => prevNodeId && navigateToNode(prevNodeId)}
+            onNext={() => nextNodeId && navigateToNode(nextNodeId)}
+            prevDisabled={!canGoPrev}
+            nextDisabled={!canGoNext}
+          />
+          <StudioRoomCarousel
+            nodes={STUDIO_NODE_ORDER.map((id) => STUDIO_NODES[id])}
+            activeId={currentNodeId}
+            onSelectRoom={navigateToNode}
+          />
+          <StudioFooter />
+        </>
       )}
 
       <StudioNavigationOverlay active={navOverlayActive} />
 
       <StudioProjectPanel artwork={selectedArtwork} onClose={handleCloseArtworkPanel} />
+
+      <StudioInfoPanel hotspot={selectedInfo} onClose={handleCloseInfoPanel} />
 
       <GlobalOverviewMenu open={menuOpen} onClose={closeMenu} />
     </div>

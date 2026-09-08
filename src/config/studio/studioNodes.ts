@@ -23,12 +23,27 @@ export interface StudioArtwork {
   project: (typeof PROJECTS)[number];
 }
 
+export interface StudioInfoHotspot {
+  /** 3D position anchor, same convention as StudioConnection.position. */
+  position: [number, number, number];
+  label: string;
+  title: string;
+  body: string;
+}
+
 export interface StudioNode {
   id: string;
   name: string;
   /** Short room code shown in the HUD ("P01"). */
   room: string;
-  /** Path under /public to this node's equirectangular panorama texture. */
+  /** Short line shown under the title in StudioRoomPanel. */
+  subtitle: string;
+  /** A couple of sentences describing the room, shown in StudioRoomPanel —
+   * distinct from `name`/`room`, which are just the compact HUD label. */
+  description: string;
+  /** Path under /public to this node's equirectangular panorama texture —
+   * empty string for nodes that aren't `available` yet (nothing tries to
+   * load it in that case). */
   panorama: string;
   /** Camera orientation on arrival — tuned per-node so the visitor lands
    * facing the room's main passage, not a wall or the panorama's seam. */
@@ -38,8 +53,13 @@ export interface StudioNode {
    * (CameraController.tsx) — used on P02, where the framed project visuals
    * are AI-upscaled and read worse the closer the camera "zooms" into them. */
   zoomEnabled: boolean;
+  /** False for rooms scaffolded in StudioRoomCarousel/StudioRoomPanel's
+   * room count but with no real panorama yet — shown as "Bientôt
+   * disponible", never enterable, no connection ever targets one. */
+  available: boolean;
   connections: StudioConnection[];
   artworks: StudioArtwork[];
+  infoHotspots: StudioInfoHotspot[];
 }
 
 export const STUDIO_CAMERA_HEIGHT_M = 1.65;
@@ -51,6 +71,8 @@ export const STUDIO_NODES: Record<string, StudioNode> = {
     id: "p01",
     name: "Portal",
     room: "P01",
+    subtitle: "Entrée du studio",
+    description: "Un seuil entre les idées et le réel. Le Portal vous accueille dans l'univers KOV, une expérience immersive au cœur de la création digitale.",
     panorama: "/studio/panoramas/p01.webp",
     // The texture's horizontal center already frames the lit passage/arch
     // — the natural "face forward" direction — so yaw 0 needs no offset.
@@ -60,6 +82,7 @@ export const STUDIO_NODES: Record<string, StudioNode> = {
     initialYaw: 0,
     initialPitch: 0,
     zoomEnabled: true,
+    available: true,
     connections: [
       {
         targetNodeId: "p02",
@@ -76,11 +99,32 @@ export const STUDIO_NODES: Record<string, StudioNode> = {
       },
     ],
     artworks: [],
+    // Copy adapted from the homepage/expertise intro copy — not an
+    // invented company history/founding date. "La philosophie KOV"
+    // reuses the Design pillar's own real positioning line verbatim
+    // (src/data/expertisePillars.ts) rather than writing a second,
+    // divergent version of the same claim.
+    infoHotspots: [
+      {
+        position: [-280, -20, -200],
+        label: "Notre histoire",
+        title: "Notre histoire",
+        body: "KOV est né d'un constat simple : la plupart des sites ne construisent rien qui compte vraiment. On a choisi de faire différemment — un studio qui privilégie la structure à l'esthétique de façade, et le résultat à la promesse.",
+      },
+      {
+        position: [280, -20, -200],
+        label: "La philosophie KOV",
+        title: "La philosophie KOV",
+        body: "On conçoit des interfaces comme on construit une architecture — la structure vient avant le style. Le design clarifie et guide ; il ne masque jamais un problème de fond.",
+      },
+    ],
   },
   p02: {
     id: "p02",
     name: "Design Studio",
     room: "P02",
+    subtitle: "Concevoir demain",
+    description: "L'atelier où les idées prennent forme. Chaque projet affiché ici est une conversation entre stratégie, design et développement.",
     panorama: "/studio/panoramas/p02.webp",
     // The reception desk / glass facade sits at the texture's horizontal
     // center, symmetric portrait walls to either side — the natural
@@ -94,6 +138,7 @@ export const STUDIO_NODES: Record<string, StudioNode> = {
     // framed pieces, so FOV is locked to DEFAULT_FOV instead of pretending
     // this holds up to a closer look.
     zoomEnabled: false,
+    available: true,
     connections: [
       {
         targetNodeId: "p01",
@@ -118,5 +163,77 @@ export const STUDIO_NODES: Record<string, StudioNode> = {
       { position: [-350, 80, -314], project: PROJECTS[2] },
       { position: [456, 80, 114], project: PROJECTS[3] },
     ],
+    infoHotspots: [],
+  },
+  // Scaffolded so StudioRoomPanel/StudioRoomCarousel have all 6 real
+  // entries to render a room count and a "Bientôt disponible" tile
+  // against — not enterable (available: false, no panorama, nothing
+  // connects to them). Names/subtitles match the reference concept
+  // board; swap `available: true` + fill in the rest once each has a
+  // real panorama.
+  p03: {
+    id: "p03",
+    name: "Galerie Projets",
+    room: "P03",
+    subtitle: "Nos réalisations",
+    description: "Bientôt disponible.",
+    panorama: "",
+    initialYaw: 0,
+    initialPitch: 0,
+    zoomEnabled: true,
+    available: false,
+    connections: [],
+    artworks: [],
+    infoHotspots: [],
+  },
+  p04: {
+    id: "p04",
+    name: "Motion Room",
+    room: "P04",
+    subtitle: "Donner vie aux idées",
+    description: "Bientôt disponible.",
+    panorama: "",
+    initialYaw: 0,
+    initialPitch: 0,
+    zoomEnabled: true,
+    available: false,
+    connections: [],
+    artworks: [],
+    infoHotspots: [],
+  },
+  p05: {
+    id: "p05",
+    name: "Dev Lab",
+    room: "P05",
+    subtitle: "Builder l'impossible",
+    description: "Bientôt disponible.",
+    panorama: "",
+    initialYaw: 0,
+    initialPitch: 0,
+    zoomEnabled: true,
+    available: false,
+    connections: [],
+    artworks: [],
+    infoHotspots: [],
+  },
+  p06: {
+    id: "p06",
+    name: "Salle Immersive",
+    room: "P06",
+    subtitle: "Expériences sans limites",
+    description: "Bientôt disponible.",
+    panorama: "",
+    initialYaw: 0,
+    initialPitch: 0,
+    zoomEnabled: true,
+    available: false,
+    connections: [],
+    artworks: [],
+    infoHotspots: [],
   },
 };
+
+// Ordered room list (StudioRoomPanel's "N/6", StudioRoomCarousel's strip)
+// — Object.values on STUDIO_NODES isn't guaranteed to preserve this exact
+// order across engines, so it's declared explicitly here instead.
+export const STUDIO_NODE_ORDER = ["p01", "p02", "p03", "p04", "p05", "p06"];

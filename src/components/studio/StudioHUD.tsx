@@ -1,26 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import type { StudioNode } from "@/config/studio/studioNodes";
 
 const FIRST_VISIT_HINT_MS = 3500;
 
 interface StudioHUDProps {
-  node: StudioNode;
+  totalRooms: number;
   onToggleMenu: () => void;
   menuOpen: boolean;
 }
 
-// Deliberately minimal — this replaces the sitewide floating nav pill for
-// this one page (SiteChrome excludes /studio, same as /admin and /client),
-// since the full toolbar would compete with the panorama itself (studio
-// spec §19: "ne surcharge pas"). KOV mark + a single menu toggle is enough
-// to get back to the rest of the site.
-export function StudioHUD({ node, onToggleMenu, menuOpen }: StudioHUDProps) {
-  // Lazy initializer reads sessionStorage directly for the first render —
-  // avoids setting state synchronously inside an effect (same pattern as
-  // Reveal.tsx/ContactWizard.tsx elsewhere in this codebase).
+// Deliberately minimal beyond the hamburger + mode badge — the room's own
+// identity now lives in StudioRoomPanel (richer than the old bottom-left
+// room-code text this replaced), the site-wide KOV mark/search/nav links
+// come from the real <Nav/> (rendered by StudioExperience.tsx, not this
+// component), and "Drag 360°" is superseded by StudioRoomPanel's own
+// interaction-hints list. This just owns: the hamburger toggle for
+// GlobalOverviewMenu (a distinct "whole-site overview" experience, not
+// what Nav's own mobile menu does) + the first-visit drag hint.
+export function StudioHUD({ totalRooms, onToggleMenu, menuOpen }: StudioHUDProps) {
   const [showHint, setShowHint] = useState(
     () => typeof window !== "undefined" && !sessionStorage.getItem("kov-studio-hint-seen")
   );
@@ -36,10 +34,22 @@ export function StudioHUD({ node, onToggleMenu, menuOpen }: StudioHUDProps) {
 
   return (
     <div className="absolute inset-0 pointer-events-none" style={{ zIndex: "var(--z-nav)" }}>
-      <div className="flex items-start justify-between p-6 md:p-8 pointer-events-none">
-        <Link href="/" className="pointer-events-auto font-display text-kov-bone text-sm tracking-widest">
-          KOV
-        </Link>
+      <div className="flex items-start justify-end gap-3 p-6 md:p-8 pointer-events-none">
+        <div
+          className="pointer-events-auto flex items-center gap-2 px-3 py-1.5"
+          style={{
+            borderRadius: "var(--radius-pill)",
+            background: "var(--glass-bg)",
+            backdropFilter: "blur(var(--glass-blur)) saturate(180%)",
+            WebkitBackdropFilter: "blur(var(--glass-blur)) saturate(180%)",
+            border: "1px solid var(--glass-border)",
+          }}
+        >
+          <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--kov-red)" }} />
+          <span className="text-kov-bone text-[10px] uppercase tracking-widest whitespace-nowrap">
+            Mode exploration · {totalRooms} salles
+          </span>
+        </div>
         <button
           type="button"
           onClick={onToggleMenu}
@@ -49,15 +59,6 @@ export function StudioHUD({ node, onToggleMenu, menuOpen }: StudioHUDProps) {
         >
           {menuOpen ? "× Fermer" : "Menu"}
         </button>
-      </div>
-
-      <div className="absolute bottom-0 inset-x-0 flex items-end justify-between p-6 md:p-8 pointer-events-none">
-        <div>
-          <p className="text-kov-red text-[10px] uppercase tracking-widest font-mono">
-            {node.room} / {node.name}
-          </p>
-        </div>
-        <p className="text-kov-steel text-[10px] uppercase tracking-widest hidden sm:block">Drag 360°</p>
       </div>
 
       {showHint && (
