@@ -8,7 +8,6 @@ import { BrowserChrome } from "@/components/ui/BrowserChrome";
 import { Button } from "@/components/ui/Button";
 import { ActivationSlider } from "@/components/home/ActivationSlider";
 import { ActivationCard } from "@/components/home/ActivationCard";
-import { ApproachStepper } from "@/components/home/ApproachStepper";
 import { RadarChart, GrowthBars, PerformanceGauge } from "@/components/home/ActivationCharts";
 import { PhotoPlaceholder, ResponsiveMedia } from "@/components/home/ActivationMedia";
 
@@ -35,9 +34,9 @@ const CARD_REST_HEIGHT = 640;
 // it CARD_SPACING px sideways; scale/opacity/blur fall off with distance,
 // clamped at 1 (i.e. cards 2+ away from active look the same as cards
 // exactly 1 away don't get scaled/blurred further past that point).
-const CARD_WIDTH = 200;
-const CARD_HEIGHT = 356; // 9:16
-const CARD_SPACING = 190;
+const CARD_WIDTH = 250;
+const CARD_HEIGHT = 445; // 9:16
+const CARD_SPACING = 300;
 
 type Phase = "idle" | "activating" | "activated";
 
@@ -47,55 +46,46 @@ interface ApproachCardData {
   features?: string[];
   Visual: ComponentType<{ reducedMotion: boolean; src?: string }>;
   mediaSrc?: string;
-  stepLabel: string;
 }
 
-// Responsive stays 3rd per the reference spec's own stepper order
-// (Introduction → Design → Responsive → Performance → Accompagnement →
-// Résultats) — noting this overrides an earlier request this session to
-// lead with Responsive specifically, since this newer, more detailed spec
-// is the most recent instruction.
+// Responsive stays 3rd per the reference spec's own order (Introduction →
+// Design → Responsive → Performance → Accompagnement → Résultats) —
+// noting this overrides an earlier request this session to lead with
+// Responsive specifically, since this newer, more detailed spec is the
+// most recent instruction.
 const CARDS: ApproachCardData[] = [
   {
     title: "Une base solide",
     body: "Une stratégie claire pour un site qui a du sens.",
     Visual: PhotoPlaceholder, // mountain-peak photo — user-supplied later
-    stepLabel: "Introduction",
   },
   {
     title: "Design sur mesure",
     body: "Une identité unique qui vous ressemble vraiment.",
     Visual: RadarChart,
-    stepLabel: "Design sur mesure",
   },
   {
     title: "Responsive par nature",
     body: "Une expérience parfaite sur tous les écrans, mobile, tablette, desktop.",
     Visual: ResponsiveMedia,
-    stepLabel: "Responsive",
   },
   {
     title: "Performance durable",
     body: "Des sites rapides, optimisés et pensés pour la croissance.",
     features: ["Core Web Vitals", "SEO technique", "Chargement ultra-rapide", "Infrastructure fiable"],
     Visual: PerformanceGauge,
-    stepLabel: "Performance",
   },
   {
     title: "Un vrai accompagnement",
     body: "À vos côtés, de l'idée aux résultats, et bien au-delà.",
     Visual: PhotoPlaceholder, // two facing silhouettes — user-supplied later
-    stepLabel: "Accompagnement",
   },
   {
     title: "Des résultats concrets",
     body: "Plus de visibilité. Plus d'engagement. Plus d'opportunités.",
     Visual: GrowthBars,
-    stepLabel: "Résultats",
   },
 ];
-
-const STEPS = CARDS.map((card, i) => ({ number: String(i + 1).padStart(2, "0"), label: card.stepLabel }));
 
 // The section's own object: a premium macOS-style window (no fake address
 // bar — this isn't a browser mock, it's KOV's own digital environment)
@@ -112,7 +102,6 @@ const STEPS = CARDS.map((card, i) => ({ number: String(i + 1).padStart(2, "0"), 
 // otherwise).
 export function ActivationWindow() {
   const [phase, setPhase] = useState<Phase>("idle");
-  const [activeStep, setActiveStep] = useState(0);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const runwayRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -169,9 +158,6 @@ export function ActivationWindow() {
           el.style.filter = blurPx > 0.05 ? `blur(${blurPx}px)` : "none";
           el.style.zIndex = String(Math.round(100 - Math.abs(distance) * 10));
         });
-
-        const rounded = Math.round(segment);
-        setActiveStep((prev) => (prev === rounded ? prev : rounded));
       },
       { pin: false, end: `+=${RUNWAY_VH}%` }
     );
@@ -266,7 +252,7 @@ export function ActivationWindow() {
                       <p className="text-xs uppercase tracking-widest text-kov-steel">Notre approche</p>
                     </div>
                     <h3
-                      className="font-display text-kov-bone uppercase"
+                      className="font-display text-kov-bone uppercase mt-3"
                       style={{ fontSize: "clamp(24px, 2.4vw, 38px)", lineHeight: "var(--line-height-display)" }}
                     >
                       Un site qui
@@ -294,13 +280,12 @@ export function ActivationWindow() {
                     </div>
                   </div>
 
-                  {/* Right side — the coverflow + its stepper. Under
-                      reducedMotion the scroll effect above never runs (it
-                      bails out at the top), so the absolute-positioned
-                      coverflow would never get its transforms set at
-                      all — a plain wrapping grid instead, every card
-                      simply visible, no scroll-driven motion needed to
-                      see any of them. */}
+                  {/* Right side — the coverflow. Under reducedMotion the
+                      scroll effect above never runs (it bails out at the
+                      top), so the absolute-positioned coverflow would
+                      never get its transforms set at all — a plain
+                      wrapping grid instead, every card simply visible, no
+                      scroll-driven motion needed to see any of them. */}
                   {reducedMotion ? (
                     <div className="flex-1 min-w-0 overflow-y-auto">
                       <div className="grid grid-cols-2 gap-4">
@@ -318,28 +303,25 @@ export function ActivationWindow() {
                       </div>
                     </div>
                   ) : (
-                    <div className="flex-1 min-w-0 flex items-center gap-8">
-                      <div className="relative flex-1 h-full min-w-0">
-                        {CARDS.map((card, i) => (
-                          <div
-                            key={card.title}
-                            ref={(el) => {
-                              coverflowRefs.current[i] = el;
-                            }}
-                            className="absolute"
-                            style={{ left: "50%", top: "50%", width: CARD_WIDTH, height: CARD_HEIGHT }}
-                          >
-                            <ActivationCard
-                              number={String(i + 1).padStart(2, "0")}
-                              title={card.title}
-                              body={card.body}
-                              features={card.features}
-                              visual={<card.Visual reducedMotion={reducedMotion} src={card.mediaSrc} />}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                      <ApproachStepper steps={STEPS} activeProgress={activeStep} />
+                    <div className="relative flex-1 h-full min-w-0">
+                      {CARDS.map((card, i) => (
+                        <div
+                          key={card.title}
+                          ref={(el) => {
+                            coverflowRefs.current[i] = el;
+                          }}
+                          className="absolute"
+                          style={{ left: "50%", top: "50%", width: CARD_WIDTH, height: CARD_HEIGHT }}
+                        >
+                          <ActivationCard
+                            number={String(i + 1).padStart(2, "0")}
+                            title={card.title}
+                            body={card.body}
+                            features={card.features}
+                            visual={<card.Visual reducedMotion={reducedMotion} src={card.mediaSrc} />}
+                          />
+                        </div>
+                      ))}
                     </div>
                   )}
                 </motion.div>
