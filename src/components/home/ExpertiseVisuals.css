@@ -1,0 +1,44 @@
+@keyframes expertise-orb-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+
+.motion-orb {
+  animation: expertise-orb-pulse 5s ease-in-out infinite;
+}
+
+@keyframes expertise-lines-drift {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(6px);
+  }
+}
+
+.integration-lines path {
+  animation: expertise-lines-drift 8s ease-in-out infinite;
+}
+.integration-lines path:nth-child(2) {
+  animation-duration: 10s;
+  animation-delay: -2s;
+}
+.integration-lines path:nth-child(3) {
+  animation-duration: 7s;
+  animation-delay: -4s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-orb,
+  .integration-lines path {
+    animation: none;
+  }
+}
