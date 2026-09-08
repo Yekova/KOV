@@ -49,7 +49,7 @@ const DEBUG = process.env.NODE_ENV !== "production";
 // used both for the entry node's load and every real inter-node navigation,
 // so a node's panorama always ends up configured identically regardless of
 // which of the two call sites loaded it.
-function loadTexture(url: string, onProgress?: (pct: number) => void): Promise<THREE.Texture> {
+function loadTexture(url: string): Promise<THREE.Texture> {
   return new Promise((resolve, reject) => {
     new THREE.TextureLoader().load(
       url,
@@ -61,16 +61,81 @@ function loadTexture(url: string, onProgress?: (pct: number) => void): Promise<T
         loaded.needsUpdate = true;
         resolve(loaded);
       },
-      onProgress
-        ? (event) => {
-            if (event.lengthComputable && event.total > 0) {
-              onProgress(Math.min(100, (event.loaded / event.total) * 100));
-            }
-          }
-        : undefined,
+      undefined,
       reject
     );
   });
+}
+
+// A single panorama fetch has no meaningful multi-stage "progress" of its
+// own, and on a warm cache it resolves near-instantly — neither reads as a
+// deliberate loading moment. This plays a randomized fast/slow/fast curve
+// up to 92% regardless of how fast the real texture actually loads (the
+// intro always gets its full moment), then holds at 92% for however long
+// the real load still needs (rare — only a cold, slow connection), and
+// only ramps to 100% once the texture is genuinely in memory — it never
+// claims completion before that's true.
+function runIntroLoadingCurve(setProgress: (pct: number) => void, onDone: () => void, isCancelled: () => boolean) {
+  const controls: ReturnType<typeof animate>[] = [];
+  let current = 0;
+  let curveDone = false;
+  let textureDone = false;
+
+  function update(v: number) {
+    current = v;
+    setProgress(v);
+  }
+
+  function finishIfReady() {
+    if (isCancelled() || !curveDone || !textureDone) return;
+    controls.push(animate(current, 100, { duration: 0.3, ease: "easeOut", onUpdate: update, onComplete: onDone }));
+  }
+
+  const fastStart = 35 + Math.random() * 15; // 35-50, quick initial burst
+  const slowMid = 70 + Math.random() * 15; // 70-85, deliberately drags
+  const fastEnd = 92; // held here until the real texture is actually ready
+
+  controls.push(
+    animate(0, fastStart, {
+      duration: (300 + Math.random() * 200) / 1000,
+      ease: "easeOut",
+      onUpdate: update,
+      onComplete: () => {
+        if (isCancelled()) return;
+        controls.push(
+          animate(fastStart, slowMid, {
+            duration: (900 + Math.random() * 500) / 1000,
+            ease: "linear",
+            onUpdate: update,
+            onComplete: () => {
+              if (isCancelled()) return;
+              controls.push(
+                animate(slowMid, fastEnd, {
+                  duration: (300 + Math.random() * 200) / 1000,
+                  ease: "easeOut",
+                  onUpdate: update,
+                  onComplete: () => {
+                    curveDone = true;
+                    finishIfReady();
+                  },
+                })
+              );
+            },
+          })
+        );
+      },
+    })
+  );
+
+  return {
+    notifyTextureReady() {
+      textureDone = true;
+      finishIfReady();
+    },
+    stop() {
+      controls.forEach((c) => c.stop());
+    },
+  };
 }
 
 export function StudioExperience() {
@@ -87,6 +152,7 @@ function StudioExperienceInner() {
   const [currentNodeId, setCurrentNodeId] = useState(STUDIO_ENTRY_NODE_ID);
   const [texture, setTexture] = useState<THREE.Texture | null>(null);
   const [loadProgress, setLoadProgress] = useState(0);
+  const [introReady, setIntroReady] = useState(false);
   const [navOverlayActive, setNavOverlayActive] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [canvasEl, setCanvasEl] = useState<HTMLDivElement | null>(null);
@@ -119,22 +185,27 @@ function StudioExperienceInner() {
   useEffect(() => {
     if (currentNodeId !== STUDIO_ENTRY_NODE_ID) return;
     let cancelled = false;
-    loadTexture(STUDIO_NODES[STUDIO_ENTRY_NODE_ID].panorama, (pct) => {
-      if (!cancelled) setLoadProgress(pct);
-    })
+    const curve = runIntroLoadingCurve(
+      setLoadProgress,
+      () => setIntroReady(true),
+      () => cancelled
+    );
+
+    loadTexture(STUDIO_NODES[STUDIO_ENTRY_NODE_ID].panorama)
       .then((loaded) => {
         if (cancelled) {
           loaded.dispose();
           return;
         }
-        setLoadProgress(100);
         setTexture(loaded);
+        curve.notifyTextureReady();
       })
       .catch(() => {
         if (!cancelled) setPhase("error");
       });
     return () => {
       cancelled = true;
+      curve.stop();
     };
     // retryKey is otherwise inert — bumping it is purely what makes
     // handleRetry re-run this load after a failure.
@@ -167,6 +238,7 @@ function StudioExperienceInner() {
   function handleRetry() {
     setTexture(null);
     setLoadProgress(0);
+    setIntroReady(false);
     setRetryKey((k) => k + 1);
     setPhase("intro");
   }
@@ -315,7 +387,7 @@ function StudioExperienceInner() {
       {(phase === "intro" || phase === "revealing") && (
         <StudioIntro
           onEnter={handleEnter}
-          ready={texture !== null}
+          ready={introReady}
           loadProgress={loadProgress}
           totalRooms={STUDIO_NODE_ORDER.length}
           backdropSrc={`/studio/thumbnails/${STUDIO_ENTRY_NODE_ID}.webp`}
