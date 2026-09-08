@@ -49,7 +49,7 @@ const DEBUG = process.env.NODE_ENV !== "production";
 // used both for the entry node's load and every real inter-node navigation,
 // so a node's panorama always ends up configured identically regardless of
 // which of the two call sites loaded it.
-function loadTexture(url: string): Promise<THREE.Texture> {
+function loadTexture(url: string, onProgress?: (pct: number) => void): Promise<THREE.Texture> {
   return new Promise((resolve, reject) => {
     new THREE.TextureLoader().load(
       url,
@@ -61,7 +61,13 @@ function loadTexture(url: string): Promise<THREE.Texture> {
         loaded.needsUpdate = true;
         resolve(loaded);
       },
-      undefined,
+      onProgress
+        ? (event) => {
+            if (event.lengthComputable && event.total > 0) {
+              onProgress(Math.min(100, (event.loaded / event.total) * 100));
+            }
+          }
+        : undefined,
       reject
     );
   });
@@ -80,6 +86,7 @@ function StudioExperienceInner() {
   const [phase, setPhase] = useState<EnginePhase>("intro");
   const [currentNodeId, setCurrentNodeId] = useState(STUDIO_ENTRY_NODE_ID);
   const [texture, setTexture] = useState<THREE.Texture | null>(null);
+  const [loadProgress, setLoadProgress] = useState(0);
   const [navOverlayActive, setNavOverlayActive] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [canvasEl, setCanvasEl] = useState<HTMLDivElement | null>(null);
@@ -112,12 +119,15 @@ function StudioExperienceInner() {
   useEffect(() => {
     if (currentNodeId !== STUDIO_ENTRY_NODE_ID) return;
     let cancelled = false;
-    loadTexture(STUDIO_NODES[STUDIO_ENTRY_NODE_ID].panorama)
+    loadTexture(STUDIO_NODES[STUDIO_ENTRY_NODE_ID].panorama, (pct) => {
+      if (!cancelled) setLoadProgress(pct);
+    })
       .then((loaded) => {
         if (cancelled) {
           loaded.dispose();
           return;
         }
+        setLoadProgress(100);
         setTexture(loaded);
       })
       .catch(() => {
@@ -156,6 +166,7 @@ function StudioExperienceInner() {
 
   function handleRetry() {
     setTexture(null);
+    setLoadProgress(0);
     setRetryKey((k) => k + 1);
     setPhase("intro");
   }
@@ -305,6 +316,9 @@ function StudioExperienceInner() {
         <StudioIntro
           onEnter={handleEnter}
           ready={texture !== null}
+          loadProgress={loadProgress}
+          totalRooms={STUDIO_NODE_ORDER.length}
+          backdropSrc={`/studio/thumbnails/${STUDIO_ENTRY_NODE_ID}.webp`}
           revealing={phase === "revealing"}
           revealDurationMs={REVEAL_DURATION_MS}
         />
