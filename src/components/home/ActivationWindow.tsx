@@ -187,7 +187,7 @@ export function ActivationWindow() {
         className="sticky top-0 h-screen flex items-center justify-center overflow-hidden"
         style={{ marginLeft: "calc(50% - 50vw)", marginRight: "calc(50% - 50vw)", width: "100vw" }}
       >
-        <div ref={entranceRef}>
+        <div ref={entranceRef} className="w-full flex justify-center">
           <div
             ref={cardRef}
             className="relative w-[92vw] overflow-hidden min-h-[560px] md:min-h-[640px] flex flex-col"
