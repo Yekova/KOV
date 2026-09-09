@@ -8,12 +8,22 @@ interface StudioMiniMapProps {
   onSelectRoom: (id: string) => void;
 }
 
-// A room selector presented as a map, not a literal floor plan — only two
-// rooms have a real spatial relationship to each other today (see their
-// own `connections` in studioNodes.ts), so this never invents a layout
-// for the four still waiting on a real panorama; it just groups every
-// room as a dot, red/available or dim/"bientôt", same room set and order
-// as StudioRoomCarousel below.
+// Invented floor-plan geometry, by explicit request — not a survey of the
+// real studio. Indexed to STUDIO_NODE_ORDER: P01/P02 sit stacked on the
+// spine (they're the one real, connected pair today), P03-P06 branch off
+// it two-by-two — a placeholder layout to swap for real coordinates once
+// those rooms exist for real.
+const VIEWBOX_W = 200;
+const VIEWBOX_H = 260;
+const ROOM_LAYOUT = [
+  { x: 65, y: 205, w: 70, h: 45 }, // p01
+  { x: 65, y: 150, w: 70, h: 45 }, // p02
+  { x: 15, y: 95, w: 55, h: 40 }, // p03
+  { x: 130, y: 95, w: 55, h: 40 }, // p04
+  { x: 15, y: 40, w: 55, h: 40 }, // p05
+  { x: 130, y: 40, w: 55, h: 40 }, // p06
+];
+
 export function StudioMiniMap({ nodes, activeId, onSelectRoom }: StudioMiniMapProps) {
   return (
     <div
@@ -28,42 +38,63 @@ export function StudioMiniMap({ nodes, activeId, onSelectRoom }: StudioMiniMapPr
       }}
     >
       <p className="text-[9px] uppercase tracking-widest text-kov-steel mb-3">Carte du studio</p>
-      <div className="grid grid-cols-3 gap-x-5 gap-y-3 w-[168px]">
-        {nodes.map((node) => {
+      <svg width={180} height={234} viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}>
+        <line x1="100" y1="150" x2="100" y2="40" stroke="var(--glass-border)" strokeWidth="2" />
+        <line x1="70" y1="115" x2="130" y2="115" stroke="var(--glass-border)" strokeWidth="2" />
+        <line x1="70" y1="60" x2="130" y2="60" stroke="var(--glass-border)" strokeWidth="2" />
+
+        {nodes.map((node, i) => {
+          const layout = ROOM_LAYOUT[i];
+          if (!layout) return null;
           const isActive = node.id === activeId;
+          const cx = layout.x + layout.w / 2;
+          const cy = layout.y + layout.h / 2;
+
           return (
-            <div key={node.id} className="flex flex-col items-center gap-1.5">
-              <button
-                type="button"
-                disabled={!node.available}
-                onClick={() => onSelectRoom(node.id)}
+            <g key={node.id}>
+              <rect
+                x={layout.x}
+                y={layout.y}
+                width={layout.w}
+                height={layout.h}
+                rx={4}
+                role="button"
+                tabIndex={node.available ? 0 : -1}
                 aria-label={node.name}
-                aria-current={isActive}
-                className="relative w-3.5 h-3.5 rounded-full transition-transform disabled:cursor-default enabled:hover:scale-125"
-                style={{
-                  background: isActive ? "var(--kov-red)" : "transparent",
-                  border: node.available ? "1.5px solid var(--kov-red)" : "1px solid var(--glass-border)",
-                  opacity: node.available ? 1 : 0.4,
+                aria-current={isActive || undefined}
+                onClick={() => node.available && onSelectRoom(node.id)}
+                onKeyDown={(e) => {
+                  if (node.available && (e.key === "Enter" || e.key === " ")) {
+                    e.preventDefault();
+                    onSelectRoom(node.id);
+                  }
                 }}
-              >
-                {isActive && (
-                  <span
-                    aria-hidden="true"
-                    className="absolute inset-0 rounded-full animate-ping motion-reduce:animate-none"
-                    style={{ background: "var(--kov-red)", opacity: 0.5 }}
-                  />
-                )}
-              </button>
-              <span
-                className="text-[8px] uppercase tracking-widest"
-                style={{ color: isActive ? "var(--kov-bone)" : "var(--kov-steel)" }}
+                style={{
+                  fill: isActive
+                    ? "rgba(227,30,36,0.25)"
+                    : node.available
+                      ? "rgba(227,30,36,0.08)"
+                      : "rgba(255,255,255,0.03)",
+                  stroke: node.available ? "var(--kov-red)" : "var(--glass-border)",
+                  strokeWidth: isActive ? 2 : 1.5,
+                  cursor: node.available ? "pointer" : "default",
+                  outline: "none",
+                }}
+              />
+              <text
+                x={cx}
+                y={cy + 3}
+                fontSize="9"
+                textAnchor="middle"
+                fill={node.available ? "var(--kov-bone)" : "var(--kov-steel)"}
+                style={{ pointerEvents: "none" }}
               >
                 {node.room}
-              </span>
-            </div>
+              </text>
+            </g>
           );
         })}
-      </div>
+      </svg>
     </div>
   );
 }

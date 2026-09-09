@@ -25,9 +25,15 @@ interface NavProps {
    * HeroScene, which nests Nav inside its own frame) instead of fixed to the
    * viewport. Same pill, same offsets from its container's edge either way. */
   variant?: "fixed" | "contained";
+  /** true: skip GlassSurface's real SVG feDisplacementMap refraction (a
+   * filter regenerated on every resize) for the site's own flat
+   * --glass-bg/--glass-border recipe instead — used inside /studio, where
+   * the pill sits over a live WebGL 360° canvas competing for every frame
+   * and the liquid refraction isn't worth its cost there. */
+  flat?: boolean;
 }
 
-export function Nav({ variant = "fixed" }: NavProps) {
+export function Nav({ variant = "fixed", flat = false }: NavProps) {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const scrolled = useScrolled();
@@ -68,6 +74,71 @@ export function Nav({ variant = "fixed" }: NavProps) {
   // already adopts its compact padding, so the two changes read as one
   // adaptation rather than two independent thresholds.
   const isFixed = variant === "fixed" || scrolled;
+  const lightOverride = onLight ? ({ "--kov-bone": "var(--kov-black)" } as React.CSSProperties) : undefined;
+
+  const pillContent = (
+    <div
+      className={`flex items-center justify-between gap-2 sm:gap-3 px-2 sm:px-2.5 ${padding}`}
+      style={{
+        transitionProperty: "padding",
+        transitionDuration: "0.5s",
+        transitionTimingFunction: REVEAL_EASE,
+      }}
+    >
+      <Link href="/" className="flex items-center px-2.5">
+        <Image
+          src={onLight ? "/kov/brand/kov-wordmark-black.png" : "/kov/brand/kov-wordmark-bone.png"}
+          alt="KOV"
+          width={1116}
+          height={209}
+          className="h-4 w-auto"
+          priority
+        />
+      </Link>
+
+      <nav className="hidden md:flex items-center gap-2.5 sm:gap-6 px-2.5 sm:px-3 text-xs uppercase tracking-widest text-kov-bone transition-colors duration-300">
+        <NavLinks links={LINKS} pillRef={pillRef} />
+      </nav>
+
+      <div className="hidden md:flex items-center gap-1 pr-1">
+        <GlobalSearch />
+        <Link
+          href="/login"
+          aria-label="Espace client"
+          title="Espace client"
+          className="w-9 h-9 flex items-center justify-center text-kov-bone hover:text-kov-red transition-colors"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="5" y="11" width="14" height="9" rx="1.5" />
+            <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+          </svg>
+        </Link>
+        <Button href="/contact" variant="pill">
+          Contact
+        </Button>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => setMobileOpen((v) => !v)}
+        aria-label={mobileOpen ? "Fermer le menu" : "Ouvrir le menu"}
+        className="md:hidden flex flex-col justify-center items-end gap-1.5 w-11 h-11 px-3"
+      >
+        <span
+          className="block h-[1.5px] w-5 bg-kov-bone transition-[transform,background-color] duration-300"
+          style={{ transform: mobileOpen ? "rotate(45deg) translateY(7px)" : "none" }}
+        />
+        <span
+          className="block h-[1.5px] w-5 bg-kov-bone transition-[opacity,background-color] duration-300"
+          style={{ opacity: mobileOpen ? 0 : 1 }}
+        />
+        <span
+          className="block h-[1.5px] w-5 bg-kov-bone transition-[transform,background-color] duration-300"
+          style={{ transform: mobileOpen ? "rotate(-45deg) translateY(-7px)" : "none" }}
+        />
+      </button>
+    </div>
+  );
 
   return (
     <>
@@ -79,85 +150,36 @@ export function Nav({ variant = "fixed" }: NavProps) {
         className={`${isFixed ? "fixed" : "absolute"} top-4 md:top-6 left-1/2 -translate-x-1/2`}
         style={{ zIndex: "var(--z-nav)" }}
       >
-        {/* width/height "auto" — GlassSurface sizes itself around its real
-            children instead of being an absolute overlay stretched via a
-            percentage. A percentage width on a position:absolute
-            GlassSurface inside this auto-sized wrapper has nothing stable
-            to resolve against and can blow up to whatever ancestor DOES
-            have a definite size (broke this exact pill once — see
-            GlassSurface.tsx's own note). Wrapping real content instead
-            sidesteps the whole problem: the box is sized the normal way,
-            content-first, and GlassSurface just measures whatever that
-            turns out to be. */}
-        <GlassSurface
-          ref={pillRef}
-          width="auto"
-          height="auto"
-          borderRadius={999}
-          style={onLight ? ({ "--kov-bone": "var(--kov-black)" } as React.CSSProperties) : undefined}
-        >
+        {flat ? (
           <div
-            className={`flex items-center justify-between gap-2 sm:gap-3 px-2 sm:px-2.5 ${padding}`}
+            ref={pillRef}
             style={{
-              transitionProperty: "padding",
-              transitionDuration: "0.5s",
-              transitionTimingFunction: REVEAL_EASE,
+              borderRadius: 999,
+              background: "var(--glass-bg)",
+              backdropFilter: "blur(var(--glass-blur)) saturate(180%)",
+              WebkitBackdropFilter: "blur(var(--glass-blur)) saturate(180%)",
+              border: "1px solid var(--glass-border)",
+              boxShadow: "var(--glass-shadow-full)",
+              ...lightOverride,
             }}
           >
-            <Link href="/" className="flex items-center px-2.5">
-              <Image
-                src={onLight ? "/kov/brand/kov-wordmark-black.png" : "/kov/brand/kov-wordmark-bone.png"}
-                alt="KOV"
-                width={1116}
-                height={209}
-                className="h-4 w-auto"
-                priority
-              />
-            </Link>
-
-            <nav className="hidden md:flex items-center gap-2.5 sm:gap-6 px-2.5 sm:px-3 text-xs uppercase tracking-widest text-kov-bone transition-colors duration-300">
-              <NavLinks links={LINKS} pillRef={pillRef} />
-            </nav>
-
-            <div className="hidden md:flex items-center gap-1 pr-1">
-              <GlobalSearch />
-              <Link
-                href="/login"
-                aria-label="Espace client"
-                title="Espace client"
-                className="w-9 h-9 flex items-center justify-center text-kov-bone hover:text-kov-red transition-colors"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="5" y="11" width="14" height="9" rx="1.5" />
-                  <path d="M8 11V7a4 4 0 0 1 8 0v4" />
-                </svg>
-              </Link>
-              <Button href="/contact" variant="pill">
-                Contact
-              </Button>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setMobileOpen((v) => !v)}
-              aria-label={mobileOpen ? "Fermer le menu" : "Ouvrir le menu"}
-              className="md:hidden flex flex-col justify-center items-end gap-1.5 w-11 h-11 px-3"
-            >
-              <span
-                className="block h-[1.5px] w-5 bg-kov-bone transition-[transform,background-color] duration-300"
-                style={{ transform: mobileOpen ? "rotate(45deg) translateY(7px)" : "none" }}
-              />
-              <span
-                className="block h-[1.5px] w-5 bg-kov-bone transition-[opacity,background-color] duration-300"
-                style={{ opacity: mobileOpen ? 0 : 1 }}
-              />
-              <span
-                className="block h-[1.5px] w-5 bg-kov-bone transition-[transform,background-color] duration-300"
-                style={{ transform: mobileOpen ? "rotate(-45deg) translateY(-7px)" : "none" }}
-              />
-            </button>
+            {pillContent}
           </div>
-        </GlassSurface>
+        ) : (
+          // width/height "auto" — GlassSurface sizes itself around its real
+          // children instead of being an absolute overlay stretched via a
+          // percentage. A percentage width on a position:absolute
+          // GlassSurface inside this auto-sized wrapper has nothing stable
+          // to resolve against and can blow up to whatever ancestor DOES
+          // have a definite size (broke this exact pill once — see
+          // GlassSurface.tsx's own note). Wrapping real content instead
+          // sidesteps the whole problem: the box is sized the normal way,
+          // content-first, and GlassSurface just measures whatever that
+          // turns out to be.
+          <GlassSurface ref={pillRef} width="auto" height="auto" borderRadius={999} style={lightOverride}>
+            {pillContent}
+          </GlassSurface>
+        )}
       </div>
 
       <MobileNavMenu open={mobileOpen} onClose={() => setMobileOpen(false)} links={LINKS} />

@@ -41,7 +41,7 @@ export function StudioCompass({ stateRef }: StudioCompassProps) {
   return (
     <div
       aria-hidden="true"
-      className="relative w-10 h-10 shrink-0 rounded-full flex items-center justify-center"
+      className="relative w-16 h-16 shrink-0 rounded-full flex items-center justify-center"
       style={{
         background: "var(--glass-bg)",
         backdropFilter: "blur(var(--glass-blur)) saturate(180%)",
@@ -49,10 +49,28 @@ export function StudioCompass({ stateRef }: StudioCompassProps) {
         border: "1px solid var(--glass-border)",
       }}
     >
-      <div ref={dialRef} className="absolute inset-0 flex items-start justify-center pt-1.5">
-        <span className="text-kov-red text-[9px] font-bold leading-none">N</span>
+      <div ref={dialRef} className="absolute inset-0">
+        <span
+          className="absolute top-2 left-1/2 -translate-x-1/2 w-0.5 h-2.5 rounded-full"
+          style={{ background: "var(--kov-red)" }}
+        />
+        <span
+          className="absolute bottom-2 left-1/2 -translate-x-1/2 w-0.5 h-2 rounded-full"
+          style={{ background: "var(--kov-steel)" }}
+        />
+        <span
+          className="absolute left-2 top-1/2 -translate-y-1/2 w-2 h-0.5 rounded-full"
+          style={{ background: "var(--kov-steel)" }}
+        />
+        <span
+          className="absolute right-2 top-1/2 -translate-y-1/2 w-2 h-0.5 rounded-full"
+          style={{ background: "var(--kov-steel)" }}
+        />
+        <span className="absolute top-4 left-1/2 -translate-x-1/2 text-kov-red text-[11px] font-bold leading-none">
+          N
+        </span>
       </div>
-      <span className="w-1 h-1 rounded-full" style={{ background: "var(--kov-steel)" }} />
+      <span className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--kov-steel)" }} />
     </div>
   );
 }

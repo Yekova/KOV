@@ -28,6 +28,19 @@ export function StudioNavigationOverlay({ active }: StudioNavigationOverlayProps
             animate={{ opacity: [0, 0, 1, 1, 0] }}
             transition={{ duration: 1.1, times: [0, 0.25, 0.55, 0.8, 1], ease: "easeInOut" }}
           />
+          {/* Only visible during the black window above (0.25-0.8 of the
+              1.1s), timed a little inside it on both ends so it never
+              appears to float over the still-transparent/still-fading
+              moments. */}
+          <motion.div
+            className="text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 0, 1, 1, 0, 0] }}
+            transition={{ duration: 1.1, times: [0, 0.3, 0.42, 0.63, 0.75, 1], ease: "easeInOut" }}
+          >
+            <p className="font-display text-kov-bone uppercase tracking-widest text-sm">KOV</p>
+            <p className="text-kov-steel uppercase tracking-widest text-[10px] mt-2">Virtual Studio</p>
+          </motion.div>
           <motion.div
             className="absolute rounded-full"
             style={{

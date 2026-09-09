@@ -403,7 +403,7 @@ function StudioExperienceInner() {
               search) — self-positioning/fixed, safe to drop in directly
               without touching SiteChrome's per-route exclusion (which
               also governs /client and /admin). */}
-          <Nav variant="fixed" />
+          <Nav variant="fixed" flat />
           <StudioHUD
             totalRooms={STUDIO_NODE_ORDER.length}
             onToggleMenu={toggleMenu}
