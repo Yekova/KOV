@@ -1,60 +1,30 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { Reveal } from "@/components/ui/Reveal";
-import { gsap, initGsap, pinAndTrack, motion, GSAP_REVEAL_EASE } from "@/lib/motion";
+import { gsap, initGsap, pinAndTrack, GSAP_REVEAL_EASE } from "@/lib/motion";
 
 // Extra scroll distance (vh) for the desktop pinned runway — the video
 // scrubs across the first VIDEO_SPLIT share of it (the portal also grows
 // very slightly over this same stretch), then holds on the last frame
-// while the outro (black + KOV mark + spark) fades in over the rest.
+// while the outro (black + KOV mark + spark) fades in over the rest —
+// alongside the text column and photo strip, which recede with it rather
+// than sitting frozen next to a faded-out video.
 const RUNWAY_VH = 180;
 const VIDEO_SPLIT = 0.85;
 const GROWTH_SCALE = 0.04; // 1.00 -> 1.04 across the runway
 const MAX_TILT_DEG = 1.4;
+const PORTAL_MAX_WIDTH = 600;
 
-const BADGES = [
-  {
-    label: "Navigation 360°",
-    className: "-top-5 -left-5 md:-top-6 md:-left-8",
-    icon: (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-        <path d="M12 2v20M2 12h20" />
-        <path d="M5 9l-3 3 3 3M19 9l3 3-3 3M9 5l3-3 3 3M9 19l3 3 3-3" />
-      </svg>
-    ),
-  },
-  {
-    label: "Hotspots",
-    className: "-top-3 -right-6 md:-top-4 md:-right-10",
-    icon: (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-        <circle cx="12" cy="12" r="9" />
-        <circle cx="12" cy="12" r="2.5" fill="currentColor" stroke="none" />
-      </svg>
-    ),
-  },
-  {
-    label: "Multi-device",
-    className: "-bottom-6 -left-4 md:-bottom-8 md:-left-6",
-    icon: (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-        <rect x="2.5" y="4" width="13" height="10" rx="1.3" />
-        <rect x="14.5" y="9" width="7" height="11" rx="1.3" />
-      </svg>
-    ),
-  },
-  {
-    label: "WebGL",
-    className: "-bottom-4 -right-5 md:-bottom-6 md:-right-9",
-    icon: (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-        <path d="M12 2.5l8.5 4.9v9.2L12 21.5l-8.5-4.9V7.4z" />
-        <path d="M3.5 7.4l8.5 4.9 8.5-4.9M12 12.3v9.2" />
-      </svg>
-    ),
-  },
+// Real crops of the two real Studio rooms (public/studio/panoramas/p01,
+// p02.webp), different angles than the ones already used for the room
+// thumbnails/carousel — not the video, which is a mood/atmosphere clip,
+// not footage of an actual KOV room.
+const STUDIO_PHOTOS = [
+  { src: "/studio/covers/studio-detail-01.webp", alt: "KOV, accueil du Portal", caption: "Portal — Accueil" },
+  { src: "/studio/covers/studio-detail-02.webp", alt: "Corridor du Portal, salle P01", caption: "Portal — Corridor" },
+  { src: "/studio/covers/studio-detail-03.webp", alt: "Espace lounge, Design Studio, salle P02", caption: "Design Studio" },
 ];
 
 const TEXT = {
@@ -111,71 +81,44 @@ function StudioCTA() {
   );
 }
 
-function PortalBadge({ label, icon, className }: { label: string; icon: React.ReactNode; className: string }) {
+function PhotoStrip({ stripRef }: { stripRef: React.RefObject<HTMLDivElement | null> }) {
   return (
-    <div
-      className={`group/badge absolute hidden lg:flex items-center gap-2 px-3 py-2 transition-transform duration-300 hover:-translate-y-0.5 ${className}`}
-      style={{
-        borderRadius: "var(--radius-pill)",
-        background: "var(--glass-bg)",
-        backdropFilter: "blur(var(--glass-blur)) saturate(180%)",
-        WebkitBackdropFilter: "blur(var(--glass-blur)) saturate(180%)",
-        border: "1px solid var(--glass-border)",
-      }}
-    >
-      <span className="text-kov-bone" aria-hidden="true">
-        {icon}
-      </span>
-      <span className="text-kov-bone text-[10px] uppercase tracking-widest whitespace-nowrap">{label}</span>
-      <span
-        aria-hidden="true"
-        className="w-1.5 h-1.5 rounded-full bg-kov-red transition-shadow duration-300 group-hover/badge:shadow-[0_0_8px_2px_rgba(227,30,36,0.7)]"
-      />
-    </div>
-  );
-}
-
-function CenterControl() {
-  return (
-    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-      <div
-        className="relative w-24 h-24 md:w-28 md:h-28 rounded-full flex flex-col items-center justify-center transition-transform duration-500 group-hover:scale-105"
-        style={{ background: "rgba(8,6,6,0.35)", backdropFilter: "blur(6px)", border: "1px solid rgba(255,255,255,0.14)" }}
-      >
-        <span
-          aria-hidden="true"
-          className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-          style={{ boxShadow: "0 0 36px rgba(227,30,36,0.4)" }}
-        />
-        <span
-          aria-hidden="true"
-          className="absolute inset-0 rounded-full animate-spin motion-reduce:animate-none"
-          style={{ animationDuration: "18s", border: "1px solid rgba(227,30,36,0.2)", borderTopColor: "rgba(227,30,36,0.65)" }}
-        />
-        <p className="font-display text-kov-bone text-sm tracking-widest">360°</p>
-        <p className="text-kov-steel text-[9px] uppercase tracking-widest mt-1 hidden md:block">Drag</p>
-        <p className="text-kov-steel text-[9px] uppercase tracking-widest mt-1 md:hidden">Touch</p>
-      </div>
+    <div ref={stripRef} className="mt-5 grid grid-cols-3 gap-3">
+      {STUDIO_PHOTOS.map((photo) => (
+        <div key={photo.src} className="relative overflow-hidden" style={{ borderRadius: 14, aspectRatio: "4 / 3" }}>
+          <Image src={photo.src} alt={photo.alt} fill sizes="200px" className="object-cover" />
+          <div
+            className="absolute inset-0"
+            style={{ background: "linear-gradient(180deg, transparent 60%, rgba(5,5,5,0.65))" }}
+          />
+          <p className="absolute bottom-2 left-2.5 right-2 text-kov-bone text-[9px] uppercase tracking-widest">
+            {photo.caption}
+          </p>
+        </div>
+      ))}
     </div>
   );
 }
 
 // Right after Expertise — the KOV Virtual Studio (src/app/studio) is real,
 // already built and live, not a mockup. The video is the section's own
-// centerpiece (a "portal", not a screenshot card): a liquid-glass object
-// with real depth (cursor tilt + parallax), floating capability badges,
-// a live 360°/drag hint, and a scroll-scrubbed cinematic pass through the
-// Portal room. The full Three.js engine stays on /studio — this is a
-// lightweight preview, per its own weight budget.
+// centerpiece: a liquid-glass portal with real depth (cursor tilt +
+// parallax) and a scroll-scrubbed cinematic clip, deliberately free of
+// any overlay chrome so nothing competes with it. Real photos of the two
+// actual rooms sit below it as supporting proof. The full Three.js engine
+// stays on /studio — this is a lightweight preview, per its own weight
+// budget.
 export function StudioShowcase() {
   const runwayRef = useRef<HTMLDivElement>(null);
+  const headingRef = useRef<HTMLDivElement>(null);
+  const ctaRef = useRef<HTMLDivElement>(null);
+  const textColRef = useRef<HTMLDivElement>(null);
   const entranceRef = useRef<HTMLDivElement>(null);
   const shellRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const reflectionRef = useRef<HTMLDivElement>(null);
-  const chromeRef = useRef<HTMLDivElement>(null);
-  const chromeOuterRef = useRef<HTMLDivElement>(null);
   const outroRef = useRef<HTMLDivElement>(null);
+  const filmstripRef = useRef<HTMLDivElement>(null);
   const scrollScaleRef = useRef(1);
   const tiltRef = useRef({ x: 0, y: 0 });
   const [reducedMotion] = useState(
@@ -189,9 +132,10 @@ export function StudioShowcase() {
     shell.style.transform = `perspective(1000px) scale(${scrollScaleRef.current}) rotateX(${x}deg) rotateY(${y}deg)`;
   }
 
-  // Scroll-scrub (video frame + portal growth + outro fade) — same
-  // pinAndTrack pattern as every other scroll-driven section, `pin:false`
-  // since CSS `sticky` (below) does the actual pinning.
+  // Scroll-scrub: video frame + portal growth, then the outro (video fades
+  // to black/KOV/spark) while the text column and photo strip recede with
+  // it (fade, rise, soften) instead of sitting frozen next to a blacked-
+  // out video.
   useEffect(() => {
     if (reducedMotion) return;
     const runway = runwayRef.current;
@@ -210,8 +154,16 @@ export function StudioShowcase() {
 
         const outroT = gsap.utils.clamp(0, 1, (progress - VIDEO_SPLIT) / (1 - VIDEO_SPLIT));
         if (outroRef.current) outroRef.current.style.opacity = String(outroT);
-        if (chromeRef.current) chromeRef.current.style.opacity = String(1 - outroT);
-        if (chromeOuterRef.current) chromeOuterRef.current.style.opacity = String(1 - outroT);
+
+        if (textColRef.current) {
+          textColRef.current.style.opacity = String(1 - outroT);
+          textColRef.current.style.transform = `translateY(${(-outroT * 20).toFixed(1)}px)`;
+          textColRef.current.style.filter = outroT > 0.01 ? `blur(${(outroT * 5).toFixed(1)}px)` : "";
+        }
+        if (filmstripRef.current) {
+          filmstripRef.current.style.opacity = String(1 - outroT);
+          filmstripRef.current.style.transform = `scale(${(1 - outroT * 0.08).toFixed(3)}) translateY(${(outroT * 14).toFixed(1)}px)`;
+        }
       },
       { pin: false, end: `+=${RUNWAY_VH}%` }
     );
@@ -219,31 +171,50 @@ export function StudioShowcase() {
     return () => trigger.kill();
   }, [reducedMotion]);
 
-  // One-time arrival (opacity/blur/scale/translateX) as the portal first
-  // scrolls into view — a separate GSAP tween on a separate element
-  // (entranceRef, not shellRef) so it never fights the continuous
-  // scroll-growth/tilt transform above, which owns shellRef exclusively.
+  // One coordinated entrance timeline: heading, then CTA, then the video
+  // portal (a clip-path wipe alongside blur/scale/translateX — a curtain
+  // opening, not a fade), then the photos one by one. Runs on entranceRef
+  // + headingRef/ctaRef/filmstripRef only — shellRef (continuous scroll-
+  // growth/tilt transform) is never touched here, so the two mechanisms
+  // never fight over the same inline style.
   useEffect(() => {
     if (reducedMotion) return;
-    const el = entranceRef.current;
-    if (!el) return;
+    const heading = headingRef.current;
+    const cta = ctaRef.current;
+    const portal = entranceRef.current;
+    const filmstrip = filmstripRef.current;
+    const runway = runwayRef.current;
+    if (!heading || !cta || !portal || !filmstrip || !runway) return;
     initGsap();
 
     const ctx = gsap.context(() => {
-      gsap.fromTo(
-        el,
-        { opacity: 0, x: 80, scale: 0.96, filter: "blur(12px)" },
-        {
-          opacity: 1,
-          x: 0,
-          scale: 1,
-          filter: "blur(0px)",
-          duration: motion.slow,
-          ease: GSAP_REVEAL_EASE,
-          scrollTrigger: { trigger: el, start: "top 85%", toggleActions: "play none none reverse" },
-        }
-      );
-    }, el);
+      const tl = gsap.timeline({
+        scrollTrigger: { trigger: runway, start: "top 75%", toggleActions: "play none none reverse" },
+      });
+
+      tl.fromTo(heading, { opacity: 0, y: 44 }, { opacity: 1, y: 0, duration: 0.75, ease: GSAP_REVEAL_EASE })
+        .fromTo(cta, { opacity: 0, y: 32 }, { opacity: 1, y: 0, duration: 0.6, ease: GSAP_REVEAL_EASE }, "-=0.4")
+        .fromTo(
+          portal,
+          { opacity: 0, x: 120, scale: 0.9, filter: "blur(18px)", clipPath: "inset(0% 100% 0% 0%)" },
+          {
+            opacity: 1,
+            x: 0,
+            scale: 1,
+            filter: "blur(0px)",
+            clipPath: "inset(0% 0% 0% 0%)",
+            duration: 1.2,
+            ease: GSAP_REVEAL_EASE,
+          },
+          "-=0.45"
+        )
+        .fromTo(
+          Array.from(filmstrip.children),
+          { opacity: 0, y: 28 },
+          { opacity: 1, y: 0, duration: 0.5, stagger: 0.12, ease: GSAP_REVEAL_EASE },
+          "-=0.5"
+        );
+    }, runway);
 
     return () => ctx.revert();
   }, [reducedMotion]);
@@ -299,11 +270,11 @@ export function StudioShowcase() {
       >
         <div className="sticky top-0 h-screen flex items-center overflow-hidden px-6">
           <div
-            className="w-full max-w-[1700px] mx-auto grid items-center gap-8"
-            style={{ gridTemplateColumns: "minmax(280px, 30%) 1fr" }}
+            className="w-full max-w-[1600px] mx-auto grid items-center gap-10"
+            style={{ gridTemplateColumns: "minmax(320px, 45%) 1fr" }}
           >
-            <div>
-              <Reveal>
+            <div ref={textColRef}>
+              <div ref={headingRef}>
                 <p className="text-xs uppercase tracking-widest text-kov-steel">{TEXT.eyebrow}</p>
                 <h2
                   className="mt-4 font-display text-kov-bone uppercase font-bold"
@@ -312,127 +283,104 @@ export function StudioShowcase() {
                   {TEXT.heading}
                 </h2>
                 <p className="mt-6 text-kov-steel text-sm leading-relaxed max-w-sm">{TEXT.body}</p>
-              </Reveal>
+              </div>
 
-              <Reveal delay={0.15}>
-                <div className="mt-8">
-                  <StudioCTA />
-                </div>
+              <div ref={ctaRef} className="mt-8">
+                <StudioCTA />
                 <p className="mt-6 text-kov-steel text-[10px] uppercase tracking-widest leading-relaxed opacity-70">
                   {TEXT.microline}
                 </p>
-              </Reveal>
+              </div>
             </div>
 
-            <div ref={entranceRef} className="relative">
-              <Link
-                href="/studio"
-                className="group relative block"
-                onPointerMove={handlePointerMove}
-                onPointerLeave={handlePointerLeave}
-              >
-                <div ref={shellRef} className="relative" style={{ willChange: "transform" }}>
-                  <div
-                    className="relative overflow-hidden"
-                    style={{
-                      aspectRatio: "1280 / 560",
-                      background: "#000",
-                      borderRadius: "44px 30px 44px 30px / 44px 30px 44px 30px",
-                      border: "1px solid rgba(255,255,255,0.10)",
-                      boxShadow:
-                        "inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -50px 70px rgba(0,0,0,0.55), 0 50px 100px rgba(0,0,0,0.55), 0 0 90px rgba(227,30,36,0.08)",
-                    }}
-                  >
-                    <video
-                      ref={videoRef}
-                      src="/home/studio-showreel.mp4"
-                      poster="/home/studio-showreel-poster.webp"
-                      muted
-                      playsInline
-                      preload="auto"
-                      aria-hidden="true"
-                      className="absolute inset-0 w-full h-full object-cover"
-                      style={{ transition: "transform 0.4s ease" }}
-                    />
-
+            <div style={{ maxWidth: PORTAL_MAX_WIDTH }}>
+              <div ref={entranceRef} className="relative">
+                <Link
+                  href="/studio"
+                  className="group relative block"
+                  onPointerMove={handlePointerMove}
+                  onPointerLeave={handlePointerLeave}
+                >
+                  <div ref={shellRef} className="relative" style={{ willChange: "transform" }}>
                     <div
-                      className="absolute inset-0 pointer-events-none"
-                      style={{ background: "linear-gradient(180deg, transparent 55%, rgba(5,5,5,0.75))" }}
-                    />
-
-                    <div
-                      ref={reflectionRef}
-                      aria-hidden="true"
-                      className="absolute inset-0 pointer-events-none"
+                      className="relative overflow-hidden"
                       style={{
-                        background:
-                          "linear-gradient(115deg, rgba(255,255,255,0.10) 0%, transparent 30%, transparent 70%, rgba(255,255,255,0.05) 100%)",
-                        mixBlendMode: "screen",
+                        aspectRatio: "1280 / 560",
+                        background: "#000",
+                        borderRadius: "36px 24px 36px 24px / 36px 24px 36px 24px",
+                        border: "1px solid rgba(255,255,255,0.10)",
+                        boxShadow:
+                          "inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -50px 70px rgba(0,0,0,0.55), 0 40px 80px rgba(0,0,0,0.55), 0 0 70px rgba(227,30,36,0.08)",
                       }}
-                    />
-
-                    <div
-                      aria-hidden="true"
-                      className="absolute bottom-0 inset-x-10 h-px pointer-events-none"
-                      style={{
-                        background: "linear-gradient(90deg, transparent, rgba(227,30,36,0.7), transparent)",
-                        boxShadow: "0 0 12px 2px rgba(227,30,36,0.5)",
-                      }}
-                    />
-
-                    <div ref={chromeRef}>
-                      <CenterControl />
-                    </div>
-
-                    <div
-                      ref={outroRef}
-                      aria-hidden="true"
-                      className="absolute inset-0 flex flex-col items-center justify-center gap-3 pointer-events-none"
-                      style={{ background: "var(--kov-black)", opacity: 0 }}
                     >
-                      <svg
-                        width="28"
-                        height="28"
-                        viewBox="0 0 24 24"
-                        fill="var(--kov-red)"
-                        style={{ filter: "drop-shadow(0 0 12px rgba(227,30,36,0.65))" }}
+                      <video
+                        ref={videoRef}
+                        src="/home/studio-showreel.mp4"
+                        poster="/home/studio-showreel-poster.webp"
+                        muted
+                        playsInline
+                        preload="auto"
+                        aria-hidden="true"
+                        className="absolute inset-0 w-full h-full object-cover"
+                        style={{ transition: "transform 0.4s ease" }}
+                      />
+
+                      <div
+                        className="absolute inset-0 pointer-events-none"
+                        style={{ background: "linear-gradient(180deg, transparent 55%, rgba(5,5,5,0.75))" }}
+                      />
+
+                      <div
+                        ref={reflectionRef}
+                        aria-hidden="true"
+                        className="absolute inset-0 pointer-events-none"
+                        style={{
+                          background:
+                            "linear-gradient(115deg, rgba(255,255,255,0.10) 0%, transparent 30%, transparent 70%, rgba(255,255,255,0.05) 100%)",
+                          mixBlendMode: "screen",
+                        }}
+                      />
+
+                      <div
+                        aria-hidden="true"
+                        className="absolute bottom-0 inset-x-10 h-px pointer-events-none"
+                        style={{
+                          background: "linear-gradient(90deg, transparent, rgba(227,30,36,0.7), transparent)",
+                          boxShadow: "0 0 12px 2px rgba(227,30,36,0.5)",
+                        }}
+                      />
+
+                      <div
+                        ref={outroRef}
+                        aria-hidden="true"
+                        className="absolute inset-0 flex flex-col items-center justify-center gap-3 pointer-events-none"
+                        style={{ background: "var(--kov-black)", opacity: 0 }}
                       >
-                        <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" />
-                      </svg>
-                      <p className="font-display text-kov-bone uppercase tracking-widest text-sm">KOV</p>
-                      <p className="text-kov-steel uppercase tracking-widest text-[10px]">Virtual Studio</p>
+                        <svg
+                          width="26"
+                          height="26"
+                          viewBox="0 0 24 24"
+                          fill="var(--kov-red)"
+                          style={{ filter: "drop-shadow(0 0 12px rgba(227,30,36,0.65))" }}
+                        >
+                          <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" />
+                        </svg>
+                        <p className="font-display text-kov-bone uppercase tracking-widest text-sm">KOV</p>
+                        <p className="text-kov-steel uppercase tracking-widest text-[10px]">Virtual Studio</p>
+                      </div>
                     </div>
                   </div>
+                </Link>
+              </div>
 
-                  <div ref={chromeOuterRef}>
-                    {BADGES.map((badge) => (
-                      <PortalBadge key={badge.label} {...badge} />
-                    ))}
-
-                    <div className="absolute -bottom-8 right-2 flex items-center gap-2">
-                      <span aria-hidden="true" className="w-6 h-px" style={{ background: "var(--glass-border)" }} />
-                      <p className="text-kov-steel text-[9px] uppercase tracking-widest whitespace-nowrap">
-                        Le portail vers vos espaces
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            </div>
-          </div>
-
-          <div className="hidden xl:flex absolute bottom-10 left-6 items-center gap-3">
-            <p className="font-mono text-[10px] text-kov-steel">01 / 04</p>
-            <div className="w-16 h-px overflow-hidden" style={{ background: "rgba(255,255,255,0.1)" }}>
-              <div className="h-full w-1/4" style={{ background: "var(--kov-red)" }} />
+              <PhotoStrip stripRef={filmstripRef} />
             </div>
           </div>
         </div>
       </div>
 
       {/* Mobile/tablet — no pin (scroll-tied video seeking + cursor tilt
-          don't apply on touch), a normal autoplaying muted loop with the
-          badges collapsed into a simple row below. */}
+          don't apply on touch), a normal autoplaying muted loop. */}
       <div className="md:hidden px-6 py-24">
         <p className="text-xs uppercase tracking-widest text-kov-steel">{TEXT.eyebrow}</p>
         <h2
@@ -444,9 +392,9 @@ export function StudioShowcase() {
         <p className="mt-6 text-kov-steel text-sm leading-relaxed">{TEXT.body}</p>
 
         <div
-          className="group relative mt-10 overflow-hidden"
+          className="relative mt-10 overflow-hidden"
           style={{
-            borderRadius: 32,
+            borderRadius: 28,
             border: "1px solid rgba(255,255,255,0.10)",
             aspectRatio: "4 / 5",
             background: "#000",
@@ -467,28 +415,16 @@ export function StudioShowcase() {
             className="absolute inset-0 pointer-events-none"
             style={{ background: "linear-gradient(180deg, transparent 55%, rgba(5,5,5,0.75))" }}
           />
-          <CenterControl />
-          <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
-            <p className="text-kov-bone text-[10px] uppercase tracking-widest">Le portail vers vos espaces</p>
-          </div>
         </div>
 
-        <div className="mt-4 flex flex-wrap justify-center gap-2">
-          {BADGES.map(({ label, icon }) => (
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          {STUDIO_PHOTOS.map((photo) => (
             <div
-              key={label}
-              className="flex items-center gap-2 px-3 py-2"
-              style={{
-                borderRadius: "var(--radius-pill)",
-                background: "var(--glass-bg)",
-                border: "1px solid var(--glass-border)",
-              }}
+              key={photo.src}
+              className="relative overflow-hidden"
+              style={{ borderRadius: 12, aspectRatio: "4 / 3" }}
             >
-              <span className="text-kov-bone" aria-hidden="true">
-                {icon}
-              </span>
-              <span className="text-kov-bone text-[10px] uppercase tracking-widest whitespace-nowrap">{label}</span>
-              <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-kov-red" />
+              <Image src={photo.src} alt={photo.alt} fill sizes="120px" className="object-cover" />
             </div>
           ))}
         </div>
