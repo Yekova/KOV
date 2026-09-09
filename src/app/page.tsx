@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { HeroScene } from "@/scenes/HeroScene";
 import { ScreenShowcase } from "@/components/home/ScreenShowcase";
+import { ImmersiveShowcase } from "@/components/home/ImmersiveShowcase";
 import { ExpertiseTeaser } from "@/components/home/ExpertiseTeaser";
 import { StudioShowcase } from "@/components/home/StudioShowcase";
 import { WorkGallery } from "@/components/home/WorkGallery";
@@ -61,6 +62,7 @@ export default function Home() {
           outside the wrapper. GradualBlur painted over Nav. Fixing the
           canvas itself avoids needing this kind of wrapper at all.) */}
       <HeroScene />
+      <ImmersiveShowcase />
       <ScreenShowcase screenshotSrc="/kov/home/dashboard-showcase.png" />
       <ExpertiseTeaser />
       <StudioShowcase />
