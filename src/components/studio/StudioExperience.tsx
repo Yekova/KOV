@@ -12,6 +12,7 @@ import { StudioProjectPanel } from "@/components/studio/StudioProjectPanel";
 import { StudioInfoPanel } from "@/components/studio/StudioInfoPanel";
 import { StudioRoomPanel } from "@/components/studio/StudioRoomPanel";
 import { StudioRoomCarousel } from "@/components/studio/StudioRoomCarousel";
+import { StudioMiniMap } from "@/components/studio/StudioMiniMap";
 import { StudioFooter } from "@/components/studio/StudioFooter";
 import { StudioErrorScreen } from "@/components/studio/StudioErrorScreen";
 import { StudioErrorBoundary } from "@/components/studio/StudioErrorBoundary";
@@ -403,7 +404,17 @@ function StudioExperienceInner() {
               without touching SiteChrome's per-route exclusion (which
               also governs /client and /admin). */}
           <Nav variant="fixed" />
-          <StudioHUD totalRooms={STUDIO_NODE_ORDER.length} onToggleMenu={toggleMenu} menuOpen={menuOpen} />
+          <StudioHUD
+            totalRooms={STUDIO_NODE_ORDER.length}
+            onToggleMenu={toggleMenu}
+            menuOpen={menuOpen}
+            cameraStateRef={cameraStateRef}
+          />
+          <StudioMiniMap
+            nodes={STUDIO_NODE_ORDER.map((id) => STUDIO_NODES[id])}
+            activeId={currentNodeId}
+            onSelectRoom={navigateToNode}
+          />
           <StudioRoomPanel
             node={currentNode}
             roomIndex={roomIndex}

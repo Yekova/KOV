@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type RefObject } from "react";
+import { StudioCompass } from "@/components/studio/StudioCompass";
+import type { CameraState } from "@/components/studio/CameraController";
 
 const FIRST_VISIT_HINT_MS = 3500;
 
@@ -8,17 +10,19 @@ interface StudioHUDProps {
   totalRooms: number;
   onToggleMenu: () => void;
   menuOpen: boolean;
+  cameraStateRef: RefObject<CameraState>;
 }
 
-// Deliberately minimal beyond the hamburger + mode badge — the room's own
-// identity now lives in StudioRoomPanel (richer than the old bottom-left
-// room-code text this replaced), the site-wide KOV mark/search/nav links
-// come from the real <Nav/> (rendered by StudioExperience.tsx, not this
-// component), and "Drag 360°" is superseded by StudioRoomPanel's own
-// interaction-hints list. This just owns: the hamburger toggle for
-// GlobalOverviewMenu (a distinct "whole-site overview" experience, not
-// what Nav's own mobile menu does) + the first-visit drag hint.
-export function StudioHUD({ totalRooms, onToggleMenu, menuOpen }: StudioHUDProps) {
+// Deliberately minimal beyond the compass + mode badge + hamburger — the
+// room's own identity now lives in StudioRoomPanel (richer than the old
+// bottom-left room-code text this replaced), the site-wide KOV mark/
+// search/nav links come from the real <Nav/> (rendered by
+// StudioExperience.tsx, not this component), and "Drag 360°" is
+// superseded by StudioRoomPanel's own interaction-hints list. This just
+// owns: the live compass, the hamburger toggle for GlobalOverviewMenu (a
+// distinct "whole-site overview" experience, not what Nav's own mobile
+// menu does) + the first-visit drag hint.
+export function StudioHUD({ totalRooms, onToggleMenu, menuOpen, cameraStateRef }: StudioHUDProps) {
   const [showHint, setShowHint] = useState(
     () => typeof window !== "undefined" && !sessionStorage.getItem("kov-studio-hint-seen")
   );
@@ -35,6 +39,7 @@ export function StudioHUD({ totalRooms, onToggleMenu, menuOpen }: StudioHUDProps
   return (
     <div className="absolute inset-0 pointer-events-none" style={{ zIndex: "var(--z-nav)" }}>
       <div className="flex items-start justify-end gap-3 p-6 md:p-8 pointer-events-none">
+        <StudioCompass stateRef={cameraStateRef} />
         <div
           className="pointer-events-auto flex items-center gap-2 px-3 py-1.5"
           style={{
