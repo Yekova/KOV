@@ -16,10 +16,8 @@ import {
 import { PILLARS } from "@/data/expertisePillars";
 
 // Scroll distance (vh) for the desktop reveal — own pinned runway,
-// independent of ImmersiveShowcase's; this section just needs to be a
-// complete, well-built section that appears next in normal scroll flow,
-// its own fade-to-black isn't needed (the previous section's exit fade
-// already handles the hand-off between the two).
+// independent of any other section's. This section just needs to be a
+// complete, well-built section that appears next in normal scroll flow.
 const CARDS_VH = 220;
 
 // In PILLARS order (Stratégie..Intégration) — matches the grid-area names

@@ -19,12 +19,11 @@ const TITLE_SIZE: Record<ExpertiseCardProps["size"], string> = {
   wide: "text-lg",
 };
 
-// Flat glass background (no GlassSurface — same performance-driven choice
-// already made for ActivationCard.tsx: several of these are visible/
-// animating in at once). `active` swaps in a red-tinted border/glow and a
-// small scale boost via a plain CSS transition — a discrete on/off the
-// parent flips per scroll frame's rounded active index, not something
-// scrubbed continuously per pixel.
+// Flat glass background (no GlassSurface — a performance-driven choice:
+// several of these are visible/animating in at once). `active` swaps in a
+// red-tinted border/glow and a small scale boost via a plain CSS
+// transition — a discrete on/off the parent flips per scroll frame's
+// rounded active index, not something scrubbed continuously per pixel.
 export function ExpertiseCard({ pillar, visual, active, size }: ExpertiseCardProps) {
   const showBody = size !== "sm";
 

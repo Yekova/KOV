@@ -12,7 +12,8 @@ interface StudioRoomPanelProps {
   prevDisabled: boolean;
   nextDisabled: boolean;
   /** Real intro-video path once supplied — an honest disabled state
-   * otherwise, same convention as ResponsiveMedia/PhotoPlaceholder. */
+   * otherwise, same convention used throughout the site for assets not
+   * yet supplied. */
   videoSrc?: string;
 }
 

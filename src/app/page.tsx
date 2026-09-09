@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { HeroScene } from "@/scenes/HeroScene";
 import { ScreenShowcase } from "@/components/home/ScreenShowcase";
-import { ImmersiveShowcase } from "@/components/home/ImmersiveShowcase";
 import { ExpertiseTeaser } from "@/components/home/ExpertiseTeaser";
+import { StudioShowcase } from "@/components/home/StudioShowcase";
 import { WorkGallery } from "@/components/home/WorkGallery";
 import { PhilosophyStatement } from "@/components/home/PhilosophyStatement";
 import { ProcessTimeline } from "@/components/home/ProcessTimeline";
@@ -62,8 +62,8 @@ export default function Home() {
           canvas itself avoids needing this kind of wrapper at all.) */}
       <HeroScene />
       <ScreenShowcase screenshotSrc="/kov/home/dashboard-showcase.png" />
-      <ImmersiveShowcase />
       <ExpertiseTeaser />
+      <StudioShowcase />
       <WorkGallery />
       <PhilosophyStatement />
       <ProcessTimeline />

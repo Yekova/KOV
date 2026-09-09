@@ -6,21 +6,14 @@ import { forwardRef } from "react";
 // so it still reads as KOV's own dark/quiet palette, not a loud UI chrome.
 const TRAFFIC_LIGHTS = ["#ff5f57", "#febc2e", "#28c840"];
 
-// Extracted from ScreenShowcase so the immersive "dive in" showcase
-// (ImmersiveShowcase.tsx) renders the exact same window chrome rather than
-// a second hand-copied version drifting out of sync. Forwards its ref so
-// callers that scroll-scrub the chrome's own opacity (fading it out as the
-// window zooms past it) can target it directly.
+// Forwards its ref so callers that scroll-scrub the chrome's own opacity
+// (fading it out as the window zooms past it) can target it directly.
 interface BrowserChromeProps {
   className?: string;
-  /** false: no fake address-bar pill — for windows that are their own
-   * digital environment (ActivationWindow), not a mock browser. Default
-   * true preserves ScreenShowcase's existing look untouched. */
-  showUrlBar?: boolean;
 }
 
 export const BrowserChrome = forwardRef<HTMLDivElement, BrowserChromeProps>(function BrowserChrome(
-  { className = "", showUrlBar = true },
+  { className = "" },
   ref
 ) {
   return (
@@ -34,15 +27,11 @@ export const BrowserChrome = forwardRef<HTMLDivElement, BrowserChromeProps>(func
           <span key={color} className="w-3 h-3 rounded-full" style={{ background: color, opacity: 0.8 }} />
         ))}
       </div>
-      {showUrlBar ? (
-        <div
-          aria-hidden="true"
-          className="h-5 mx-auto w-1/3 min-w-24"
-          style={{ background: "var(--kov-carbon)", borderRadius: "var(--radius-pill)" }}
-        />
-      ) : (
-        <div />
-      )}
+      <div
+        aria-hidden="true"
+        className="h-5 mx-auto w-1/3 min-w-24"
+        style={{ background: "var(--kov-carbon)", borderRadius: "var(--radius-pill)" }}
+      />
       <div />
     </div>
   );

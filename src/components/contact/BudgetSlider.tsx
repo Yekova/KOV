@@ -54,9 +54,8 @@ interface BudgetSliderProps {
   onInteract: () => void;
 }
 
-// Same drag mechanics as ActivationSlider.tsx (framer-motion's native
-// drag="x" + dragConstraints, not hand-rolled pointer math) applied to a
-// value range instead of a 0→1 activation progress. The rolling number
+// Framer-motion's native drag="x" + dragConstraints (not hand-rolled
+// pointer math), applied to a value range. The rolling number
 // above is purely presentational — it reads `value`, drag math never
 // touches it directly.
 export function BudgetSlider({ value, onChange, onInteract }: BudgetSliderProps) {
