@@ -49,7 +49,7 @@ export default function LegalLayout({ children }: { children: ReactNode }) {
               className="absolute inset-0 pointer-events-none"
               style={{
                 background:
-                  "linear-gradient(to right, var(--kov-black) 0%, rgba(10,10,10,0.55) 2%, rgba(10,10,10,0.2) 5%, transparent 16%), linear-gradient(to top, var(--kov-black) 0%, transparent 35%)",
+                  "linear-gradient(to right, var(--kov-black) 0%, rgba(10,10,10,0.6) 6%, rgba(10,10,10,0.25) 18%, transparent 33%), linear-gradient(to top, var(--kov-black) 0%, transparent 35%)",
               }}
             />
           </div>
