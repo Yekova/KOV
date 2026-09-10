@@ -1,17 +1,13 @@
+import Image from "next/image";
 import { KovCTA } from "@/components/ui/KovCTA";
 import { Nav } from "@/components/navigation/Nav";
 import { HeroGlobalMenuButton } from "@/components/layout/HeroGlobalMenuButton";
-import DepthCarousel from "@/components/home/DepthCarousel";
 
-// The character/Studio portrait plus real KOV studio photography already
-// shot for this site (used elsewhere — Expertise, the site-search panel,
-// the old Hero background) — no stock imagery, no placeholders.
-const CAROUSEL_IMAGES = [
+// Real KOV studio photography already shot for this site (used elsewhere —
+// Expertise, the site-search panel) — no stock imagery, no placeholders.
+const STACK_IMAGES = [
   { image: "/kov/home/hero-character-studio.jpg", alt: "KOV Studio" },
   { image: "/kov/menu/atrium-brutaliste.jpg", alt: "Atrium — studio KOV" },
-  { image: "/kov/menu/bureau-moderne.jpg", alt: "Bureau — studio KOV" },
-  { image: "/kov/menu/couloir-brutaliste.jpg", alt: "Couloir — studio KOV" },
-  { image: "/kov/menu/galerie-futuriste.jpg", alt: "Galerie — studio KOV" },
   { image: "/kov/menu/studio-industriel.jpg", alt: "Studio industriel — KOV" },
 ];
 
@@ -51,32 +47,32 @@ export function HeroScene() {
             </div>
           </div>
 
-          {/* Real KOV studio photography, fanned into a depth stack — each
-              card has its own shadow/rounding already, so this doesn't
-              need a flat bordered frame. Arrows sit inside the component's
-              own bounds, right against the card stack, with a red halo on
-              hover. `isolation: isolate` keeps each card's very high
-              internal z-index (ported from upstream, ~1900-3000, meant for
-              a page with nothing else on it) contained to this box. */}
-          <div className="w-full" style={{ height: "34rem", isolation: "isolate" }}>
-            <DepthCarousel
-              items={CAROUSEL_IMAGES}
-              cardWidth={800}
-              cardHeight={450}
-              radius={18}
-              tint="#0a0a0a"
-              depth={400}
-              spread={165}
-              tilt={18}
-              tiltDirection="right"
-              perspective={1600}
-              visibleCards={3}
-              falloff={0.22}
-              blur={5}
-              autoplay={false}
-              loop
-              showIndicators={false}
-            />
+          {/* The real responsive-mockup footage (9:16, already shot for
+              the homepage's Studio showcase) on the left, stretched to the
+              stack's own natural height; three real KOV studio photos
+              (16:9 each) stacked vertically on the right — replaces the
+              depth-carousel, no interaction needed to see all of them. */}
+          <div className="w-full flex items-stretch gap-4">
+            <div className="relative shrink-0 overflow-hidden" style={{ aspectRatio: "9 / 16", borderRadius: 18 }}>
+              <video
+                src="/home/responsive-mockup.mp4"
+                poster="/home/responsive-mockup-poster.jpg"
+                muted
+                autoPlay
+                loop
+                playsInline
+                aria-hidden="true"
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            </div>
+
+            <div className="flex-1 flex flex-col gap-4 min-w-0">
+              {STACK_IMAGES.map((item) => (
+                <div key={item.image} className="relative overflow-hidden" style={{ aspectRatio: "16 / 9", borderRadius: 18 }}>
+                  <Image src={item.image} alt={item.alt} fill sizes="(min-width: 768px) 45vw, 90vw" className="object-cover" />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -85,7 +81,7 @@ export function HeroScene() {
           rather than a bare <HeroGlobalMenuButton /> as a direct child —
           the button's own `bottom-*` resolves against its nearest
           positioned ancestor, and this section is `min-h-screen`: if the
-          content above (the now-larger carousel) ever pushes the section
+          content above (the image/video stack) ever pushes the section
           taller than one real viewport, `bottom-*` against the section
           itself would land below the visible fold, not at the bottom of
           what's actually on screen. `position:absolute` (not sticky/fixed)
