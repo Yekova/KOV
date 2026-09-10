@@ -48,12 +48,18 @@ export function HeroScene() {
           </div>
 
           {/* The real responsive-mockup footage (9:16, already shot for
-              the homepage's Studio showcase) on the left, stretched to the
-              stack's own natural height; three real KOV studio photos
-              (16:9 each) stacked vertically on the right — replaces the
-              depth-carousel, no interaction needed to see all of them. */}
-          <div className="w-full flex items-stretch gap-4">
-            <div className="relative shrink-0 overflow-hidden" style={{ aspectRatio: "9 / 16", borderRadius: 18 }}>
+              the homepage's Studio showcase) on the left, three real KOV
+              studio photos (16:9 each) stacked vertically on the right —
+              replaces the depth-carousel, no interaction needed to see all
+              of them. A fixed height on this row (rather than deriving it
+              from the aspect-ratio boxes it contains) is what actually
+              keeps both columns a real, non-collapsed size: neither an
+              aspect-ratio box nor a `flex-1` column has any intrinsic
+              height of its own to stretch against otherwise, and this
+              exact bug (mutually-undefined sizes collapsing to ~0) is what
+              made the video disappear entirely in the previous pass. */}
+          <div className="w-full flex items-stretch gap-3" style={{ height: "22rem" }}>
+            <div className="relative h-full overflow-hidden" style={{ aspectRatio: "9 / 16", borderRadius: 18 }}>
               <video
                 src="/home/responsive-mockup.mp4"
                 poster="/home/responsive-mockup-poster.jpg"
@@ -66,10 +72,10 @@ export function HeroScene() {
               />
             </div>
 
-            <div className="flex-1 flex flex-col gap-4 min-w-0">
+            <div className="h-full flex flex-col items-start gap-3">
               {STACK_IMAGES.map((item) => (
-                <div key={item.image} className="relative overflow-hidden" style={{ aspectRatio: "16 / 9", borderRadius: 18 }}>
-                  <Image src={item.image} alt={item.alt} fill sizes="(min-width: 768px) 45vw, 90vw" className="object-cover" />
+                <div key={item.image} className="relative flex-1 overflow-hidden" style={{ aspectRatio: "16 / 9", borderRadius: 18 }}>
+                  <Image src={item.image} alt={item.alt} fill sizes="220px" className="object-cover" />
                 </div>
               ))}
             </div>
