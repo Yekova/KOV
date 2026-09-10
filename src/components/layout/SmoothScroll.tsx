@@ -30,7 +30,17 @@ export function SmoothScroll() {
     gsap.ticker.add(tick);
     gsap.ticker.lagSmoothing(0);
 
+    // Lenis measures the document's scrollable height once on init and on
+    // window resize — it has no way to notice content growing afterward
+    // (a `fill` image finishing its layout, a route's content mounting
+    // taller than the previous one), so without this its cached bounds go
+    // stale and scrolling silently caps short of the page's real bottom.
+    // A ResizeObserver on <body> catches exactly that class of change.
+    const resizeObserver = new ResizeObserver(() => lenis.resize());
+    resizeObserver.observe(document.body);
+
     return () => {
+      resizeObserver.disconnect();
       gsap.ticker.remove(tick);
       lenis.destroy();
     };

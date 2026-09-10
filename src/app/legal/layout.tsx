@@ -11,7 +11,7 @@ export default function LegalLayout({ children }: { children: ReactNode }) {
   return (
     <main className="relative min-h-screen px-6 pt-40 pb-32">
       <div className="max-w-[1400px] mx-auto">
-        <div className="grid lg:grid-cols-[1fr_1fr] gap-12 items-center">
+        <div className="grid lg:grid-cols-[1fr_460px] gap-12 items-center">
           <div className="relative z-10">
             <p className="flex items-center gap-3 text-xs uppercase tracking-widest text-kov-steel">
               <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-kov-red" />
@@ -46,7 +46,7 @@ export default function LegalLayout({ children }: { children: ReactNode }) {
             />
             <div
               aria-hidden="true"
-              className="absolute inset-0"
+              className="absolute inset-0 pointer-events-none"
               style={{
                 background:
                   "linear-gradient(to right, var(--kov-black) 0%, transparent 30%), linear-gradient(to top, var(--kov-black) 0%, transparent 35%)",
