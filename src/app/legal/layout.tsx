@@ -1,4 +1,3 @@
-import Image from "next/image";
 import type { ReactNode } from "react";
 import { LegalSidebar } from "@/components/legal/LegalSidebar";
 import LightPillar from "@/components/legal/LightPillar";
@@ -7,30 +6,21 @@ import LightPillar from "@/components/legal/LightPillar";
 // cookies, conditions d'utilisation, gestion des cookies) — the hero and
 // sidebar render once here; only `children` (the document panel) swaps
 // per route. No grid-line backdrop (LegalDoc's old GridParallaxBackdrop) —
-// removed by request, not carried over into this redesign.
-// Reference disposition: the hero photo bleeds all the way to the top of
-// the page (behind the fixed Nav, which sits at a higher z-index — see
-// Nav.tsx's `--z-nav` — so it stays on top with no stacking conflict) and
-// runs flush to this container's own right edge — no inset gap on any
-// side, which is what was reading as a bordered/framed card. Its height
-// is also deliberately taller than the gap before the sidebar row below,
-// so it overflows past the hero section and its bottom edge overlaps the
-// very top of that row — plain CSS stacking already puts an absolutely
-// positioned element like this one above the static content below it, no
-// z-index needed, which is exactly the "dépasse" effect being asked for.
-const HERO_PHOTO_WIDTH = 480;
-const HERO_PHOTO_HEIGHT = 640;
-
+// removed by request, not carried over into this redesign. No hero photo
+// either now — LightPillar's ambient glow is the only visual here.
 export default function LegalLayout({ children }: { children: ReactNode }) {
   return (
     <main className="relative min-h-screen pb-32">
-      {/* Ambient backdrop for the whole /legal hub, not just the hero —
-          same `fixed inset-0` + `--z-canvas` pattern as LineWaves on the
-          homepage (src/app/page.tsx): pinned to the viewport so it stays
-          behind every route's content as you scroll, rather than scrolling
-          away with the hero row like the photo above it does. `--z-canvas`
-          is a negative z-index specifically so it never fights the actual
-          page content's own stacking, only the root background. */}
+      {/* Ambient backdrop for the whole /legal hub — same `fixed inset-0` +
+          `--z-canvas` pattern as LineWaves on the homepage (src/app/page.tsx):
+          pinned to the viewport so it stays behind every route's content as
+          you scroll. `--z-canvas` is a negative z-index specifically so it
+          never fights the actual page content's own stacking, only the root
+          background. pillarWidth/pillarHeight scaled down from the corner
+          version (2.6/0.45 → 1.3/0.3) so the raymarch reads as a smaller,
+          more contained column instead of a wide glow that saturates the
+          whole frame into one color — that's what actually reveals the
+          red-to-near-black gradient between uTopColor and uBottomColor. */}
       <div className="fixed inset-0 pointer-events-none" style={{ zIndex: "var(--z-canvas)" }}>
         <LightPillar
           topColor="#e31e24"
@@ -38,8 +28,8 @@ export default function LegalLayout({ children }: { children: ReactNode }) {
           intensity={0.85}
           rotationSpeed={0.12}
           glowAmount={0.005}
-          pillarWidth={2.6}
-          pillarHeight={0.45}
+          pillarWidth={1.3}
+          pillarHeight={0.3}
           noiseIntensity={0.4}
           quality="medium"
           mixBlendMode="screen"
@@ -48,34 +38,6 @@ export default function LegalLayout({ children }: { children: ReactNode }) {
 
       <div className="px-6">
         <div className="relative max-w-[1400px] mx-auto">
-          <div
-            className="absolute top-0 right-0 hidden md:block overflow-hidden"
-            style={{ width: HERO_PHOTO_WIDTH, height: HERO_PHOTO_HEIGHT }}
-          >
-            <Image
-              src="/legal/hero-lobby.webp"
-              alt="Le studio KOV"
-              fill
-              sizes={`${HERO_PHOTO_WIDTH}px`}
-              className="object-cover object-left-top"
-              priority
-            />
-            <div
-              aria-hidden="true"
-              className="absolute inset-0 pointer-events-none"
-              style={{ background: "linear-gradient(to top, var(--kov-black) 0%, transparent 40%)" }}
-            />
-            {/* Caption sits inset over the photo's own bottom-left corner
-                (on top of the fade, so it stays legible) instead of in a
-                side gutter — that gutter was the other piece of the boxed,
-                "card" look, on top of it not needing its own dead space. */}
-            <p className="absolute left-6 bottom-6 text-[10px] uppercase tracking-widest text-kov-steel leading-relaxed">
-              Des expériences
-              <br />
-              qui vont plus loin
-            </p>
-          </div>
-
           <div className="pt-40">
             <div className="max-w-xl lg:max-w-2xl relative z-10">
               <p className="flex items-center gap-3 text-xs uppercase tracking-widest text-kov-steel">
