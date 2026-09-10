@@ -11,26 +11,30 @@ import LightPillar from "@/components/legal/LightPillar";
 export default function LegalLayout({ children }: { children: ReactNode }) {
   return (
     <main className="relative min-h-screen pb-32">
-      {/* Ambient backdrop for the whole /legal hub — same `fixed inset-0` +
+      {/* Ambient backdrop for the whole /legal hub — same `fixed` +
           `--z-canvas` pattern as LineWaves on the homepage (src/app/page.tsx):
           pinned to the viewport so it stays behind every route's content as
           you scroll. `--z-canvas` is a negative z-index specifically so it
           never fights the actual page content's own stacking, only the root
-          background. Red/pink duo per spec (topColor/bottomColor) — not a
-          brand-red-only treatment. pillarWidth/pillarHeight scaled down from
-          the corner version (2.6/0.45 → 1.3/0.3) so the raymarch reads as a
-          smaller, contained column instead of a wide glow that saturates
-          into one color, which is what actually reveals the gradient. */}
-      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: "var(--z-canvas)" }}>
+          background. Confined to the right half on desktop (md:) rather
+          than the full width, so it never sits directly behind the text
+          column on the left — the previous full-bleed version fought that
+          text for attention. Props reverted to the spec's own example
+          values (pillarWidth 3.0, pillarHeight 0.4, glowAmount 0.005,
+          intensity 1.0) — an earlier pass shrank pillarWidth/intensity to
+          try to "reveal both colors", which instead made the shape read as
+          too zoomed-in; the example's own values are what actually produce
+          the recognizable ribbon shape shown in reactbits.dev's own demo. */}
+      <div className="fixed inset-y-0 right-0 w-full md:w-[55%] pointer-events-none" style={{ zIndex: "var(--z-canvas)" }}>
         <LightPillar
           topColor="#ff0000"
           bottomColor="#FF9FFC"
-          intensity={0.85}
-          rotationSpeed={0.12}
+          intensity={1.0}
+          rotationSpeed={0.3}
           glowAmount={0.005}
-          pillarWidth={1.3}
-          pillarHeight={0.3}
-          noiseIntensity={0.4}
+          pillarWidth={3.0}
+          pillarHeight={0.4}
+          noiseIntensity={0.5}
           quality="medium"
           mixBlendMode="screen"
         />
