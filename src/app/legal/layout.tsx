@@ -34,7 +34,10 @@ export default function LegalLayout({ children }: { children: ReactNode }) {
 
           {/* No card treatment — the photo bleeds straight into the page's
               own black instead of sitting in a bordered/rounded box, via a
-              two-direction fade (left + bottom) rather than a hard edge. */}
+              two-direction fade (left + bottom) rather than a hard edge.
+              Left fade capped at 16%: the photo's real "KOV / DIGITAL
+              EXPERIENCES / REAL IMPACT" wall signage starts around 20% in
+              from the left edge — any wider and the fade washes it out. */}
           <div className="relative hidden md:block" style={{ aspectRatio: "4 / 5" }}>
             <Image
               src="/legal/hero-lobby.webp"
@@ -49,7 +52,7 @@ export default function LegalLayout({ children }: { children: ReactNode }) {
               className="absolute inset-0 pointer-events-none"
               style={{
                 background:
-                  "linear-gradient(to right, var(--kov-black) 0%, rgba(10,10,10,0.65) 12%, rgba(10,10,10,0.3) 32%, transparent 55%), linear-gradient(to top, var(--kov-black) 0%, transparent 35%)",
+                  "linear-gradient(to right, var(--kov-black) 0%, rgba(10,10,10,0.5) 5%, rgba(10,10,10,0.15) 10%, transparent 16%), linear-gradient(to top, var(--kov-black) 0%, transparent 35%)",
               }}
             />
           </div>
