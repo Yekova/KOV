@@ -9,14 +9,16 @@ import { LegalSidebar } from "@/components/legal/LegalSidebar";
 // removed by request, not carried over into this redesign.
 // Reference disposition: the hero photo bleeds all the way to the top of
 // the page (behind the fixed Nav, which sits at a higher z-index — see
-// Nav.tsx's `--z-nav` — so it stays on top with no stacking conflict),
-// taller than the text block beside it, with a small caption sitting in
-// the margin to its right. That means the photo can't just be a normal
-// grid cell sized off `pt-40` like the text column — it's pulled out to
-// `absolute`, anchored to this section's own top-left origin, so its own
-// height is independent of the padding applied to the text underneath it.
-const HERO_PHOTO_WIDTH = 420;
-const HERO_PHOTO_HEIGHT = 560;
+// Nav.tsx's `--z-nav` — so it stays on top with no stacking conflict) and
+// runs flush to this container's own right edge — no inset gap on any
+// side, which is what was reading as a bordered/framed card. Its height
+// is also deliberately taller than the gap before the sidebar row below,
+// so it overflows past the hero section and its bottom edge overlaps the
+// very top of that row — plain CSS stacking already puts an absolutely
+// positioned element like this one above the static content below it, no
+// z-index needed, which is exactly the "dépasse" effect being asked for.
+const HERO_PHOTO_WIDTH = 480;
+const HERO_PHOTO_HEIGHT = 640;
 
 export default function LegalLayout({ children }: { children: ReactNode }) {
   return (
@@ -24,7 +26,7 @@ export default function LegalLayout({ children }: { children: ReactNode }) {
       <div className="px-6">
         <div className="relative max-w-[1400px] mx-auto">
           <div
-            className="absolute top-0 right-[130px] hidden md:block overflow-hidden"
+            className="absolute top-0 right-0 hidden md:block overflow-hidden"
             style={{ width: HERO_PHOTO_WIDTH, height: HERO_PHOTO_HEIGHT }}
           >
             <Image
@@ -38,15 +40,13 @@ export default function LegalLayout({ children }: { children: ReactNode }) {
             <div
               aria-hidden="true"
               className="absolute inset-0 pointer-events-none"
-              style={{ background: "linear-gradient(to top, var(--kov-black) 0%, transparent 30%)" }}
+              style={{ background: "linear-gradient(to top, var(--kov-black) 0%, transparent 40%)" }}
             />
-          </div>
-
-          <div
-            className="absolute hidden lg:flex flex-col justify-end text-right"
-            style={{ top: HERO_PHOTO_HEIGHT - 90, right: 0, width: 110, height: 90 }}
-          >
-            <p className="text-[10px] uppercase tracking-widest text-kov-steel leading-relaxed">
+            {/* Caption sits inset over the photo's own bottom-left corner
+                (on top of the fade, so it stays legible) instead of in a
+                side gutter — that gutter was the other piece of the boxed,
+                "card" look, on top of it not needing its own dead space. */}
+            <p className="absolute left-6 bottom-6 text-[10px] uppercase tracking-widest text-kov-steel leading-relaxed">
               Des expériences
               <br />
               qui vont plus loin
