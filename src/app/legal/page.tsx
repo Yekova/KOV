@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { LegalDoc } from "@/components/legal/LegalDoc";
+import { LegalDocument } from "@/components/legal/LegalDocument";
 import { getBusinessInfo } from "@/lib/billing/businessInfo";
 
 export const metadata: Metadata = {
@@ -55,7 +55,8 @@ export default async function LegalNoticePage() {
   ];
 
   return (
-    <LegalDoc
+    <LegalDocument
+      number="02"
       title="Mentions légales"
       updated="Septembre 2026"
       intro="Les informations qu'un site est tenu d'afficher légalement, sans le jargon qui va généralement avec."

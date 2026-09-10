@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { LegalDoc } from "@/components/legal/LegalDoc";
+import Link from "next/link";
+import { LegalDocument } from "@/components/legal/LegalDocument";
 import { Todo } from "@/components/legal/Todo";
 
 export const metadata: Metadata = {
   title: "Confidentialité | KOV",
   description: "Comment KOV collecte et traite les données personnelles.",
-  alternates: { canonical: "https://kov-agency.site/privacy" },
+  alternates: { canonical: "https://kov-agency.site/legal/confidentialite" },
 };
 
 const SECTIONS = [
@@ -16,10 +17,11 @@ const SECTIONS = [
       <p>
         Les seules données personnelles que KOV collecte sont celles que vous soumettez via le formulaire de
         contact : nom, adresse email, numéro de téléphone (facultatif) et votre message. On utilise également des
-        cookies de mesure d&apos;audience (Vercel Analytics), mais uniquement avec votre consentement : vous pouvez
-        l&apos;accorder ou le refuser via le bandeau affiché à votre première visite, et revenir sur ce choix à tout
-        moment en effaçant les données de ce site dans votre navigateur. En dehors de ça, on n&apos;utilise aucun
-        autre traceur.
+        cookies de mesure d&apos;audience (Vercel Analytics), mais uniquement avec votre consentement — voir notre{" "}
+        <Link href="/legal/cookies" className="text-kov-red hover:underline">
+          politique de cookies
+        </Link>
+        . En dehors de ça, on n&apos;utilise aucun autre traceur.
       </p>
     ),
   },
@@ -75,7 +77,8 @@ const SECTIONS = [
 
 export default function PrivacyPolicyPage() {
   return (
-    <LegalDoc
+    <LegalDocument
+      number="03"
       title="Politique de confidentialité"
       updated="Août 2026"
       intro="Ce qu'on collecte, pourquoi, et comment reprendre la main : en clair, pas en clauses illisibles."

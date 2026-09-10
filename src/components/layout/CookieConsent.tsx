@@ -1,19 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Button } from "@/components/ui/Button";
 import { GlassSurface } from "@/components/ui/GlassSurface";
 
-const STORAGE_KEY = "kov-cookie-consent";
+export const COOKIE_CONSENT_STORAGE_KEY = "kov-cookie-consent";
+// Dispatched by /legal/gestion-cookies after clearing the stored choice —
+// this component is mounted once, globally (layout.tsx), so a page on the
+// other side of the app has no direct handle to it; a window event is the
+// simplest way to tell this specific mounted instance "show yourself
+// again" without lifting consent into a context nobody else needs.
+export const REOPEN_COOKIE_CONSENT_EVENT = "kov-reopen-cookie-consent";
 
 type Consent = "accepted" | "rejected" | null;
 
 function readStoredConsent(): Consent {
   if (typeof window === "undefined") return null;
-  const stored = window.localStorage.getItem(STORAGE_KEY);
+  const stored = window.localStorage.getItem(COOKIE_CONSENT_STORAGE_KEY);
   return stored === "accepted" || stored === "rejected" ? stored : null;
 }
 
@@ -33,8 +39,16 @@ function readStoredConsent(): Consent {
 export function CookieConsent() {
   const [consent, setConsent] = useState<Consent>(() => readStoredConsent());
 
+  useEffect(() => {
+    function handleReopen() {
+      setConsent(null);
+    }
+    window.addEventListener(REOPEN_COOKIE_CONSENT_EVENT, handleReopen);
+    return () => window.removeEventListener(REOPEN_COOKIE_CONSENT_EVENT, handleReopen);
+  }, []);
+
   function decide(value: "accepted" | "rejected") {
-    window.localStorage.setItem(STORAGE_KEY, value);
+    window.localStorage.setItem(COOKIE_CONSENT_STORAGE_KEY, value);
     setConsent(value);
   }
 
@@ -64,7 +78,7 @@ export function CookieConsent() {
                 On utilise des cookies de mesure d&apos;audience pour comprendre comment le site est utilisé,
                 uniquement avec votre accord.{" "}
                 <Link
-                  href="/privacy"
+                  href="/legal/cookies"
                   className="text-kov-red hover:text-kov-red-signal transition-colors underline underline-offset-2"
                 >
                   En savoir plus

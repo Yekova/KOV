@@ -19,10 +19,11 @@ const RESOURCE_LINKS = [
 const CLIENT_LINKS = [{ href: "/login", label: "Connexion" }];
 
 const LEGAL_LINKS = [
+  { href: "/legal/cgv", label: "CGV" },
   { href: "/legal", label: "Mentions légales" },
-  { href: "/privacy", label: "Confidentialité" },
-  { href: "/terms", label: "Conditions d'utilisation" },
-  { href: "/cgv", label: "CGV" },
+  { href: "/legal/confidentialite", label: "Confidentialité" },
+  { href: "/legal/cookies", label: "Cookies" },
+  { href: "/legal/conditions-utilisation", label: "Conditions d'utilisation" },
 ];
 
 // KOV has no real social profiles yet — these are the recognizable icons for
