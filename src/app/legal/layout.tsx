@@ -16,15 +16,15 @@ export default function LegalLayout({ children }: { children: ReactNode }) {
           pinned to the viewport so it stays behind every route's content as
           you scroll. `--z-canvas` is a negative z-index specifically so it
           never fights the actual page content's own stacking, only the root
-          background. pillarWidth/pillarHeight scaled down from the corner
-          version (2.6/0.45 → 1.3/0.3) so the raymarch reads as a smaller,
-          more contained column instead of a wide glow that saturates the
-          whole frame into one color — that's what actually reveals the
-          red-to-near-black gradient between uTopColor and uBottomColor. */}
+          background. Red/pink duo per spec (topColor/bottomColor) — not a
+          brand-red-only treatment. pillarWidth/pillarHeight scaled down from
+          the corner version (2.6/0.45 → 1.3/0.3) so the raymarch reads as a
+          smaller, contained column instead of a wide glow that saturates
+          into one color, which is what actually reveals the gradient. */}
       <div className="fixed inset-0 pointer-events-none" style={{ zIndex: "var(--z-canvas)" }}>
         <LightPillar
-          topColor="#e31e24"
-          bottomColor="#1a0505"
+          topColor="#ff0000"
+          bottomColor="#FF9FFC"
           intensity={0.85}
           rotationSpeed={0.12}
           glowAmount={0.005}

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalDocument } from "@/components/legal/LegalDocument";
-import { Todo } from "@/components/legal/Todo";
 
 export const metadata: Metadata = {
   title: "Confidentialité | KOV",
@@ -56,9 +55,8 @@ const SECTIONS = [
     title: "Conservation",
     body: (
       <p>
-        On conserve les soumissions du formulaire de contact pendant{" "}
-        <Todo>durée de conservation, ex. 3 ans à compter du dernier contact</Todo>, après quoi elles sont
-        supprimées.
+        On conserve les soumissions du formulaire de contact pendant 3 ans à compter du dernier contact, après quoi
+        elles sont supprimées.
       </p>
     ),
   },
@@ -69,7 +67,10 @@ const SECTIONS = [
       <p>
         En vertu du RGPD, vous avez le droit d&apos;accéder à vos données, de les rectifier, de les supprimer ou de
         les exporter, et de retirer votre consentement à tout moment. Pour exercer ces droits, contactez-nous à{" "}
-        <Todo>adresse email de contact</Todo> ou via le formulaire de contact.
+        <a href="mailto:kov-agency@outlook.com" className="text-kov-red hover:text-kov-red-signal transition-colors underline underline-offset-2">
+          kov-agency@outlook.com
+        </a>{" "}
+        ou via le formulaire de contact.
       </p>
     ),
   },

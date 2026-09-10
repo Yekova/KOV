@@ -5,7 +5,6 @@ import Link from "next/link";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Button } from "@/components/ui/Button";
-import { GlassSurface } from "@/components/ui/GlassSurface";
 
 export const COOKIE_CONSENT_STORAGE_KEY = "kov-cookie-consent";
 // Dispatched by /legal/gestion-cookies after clearing the stored choice —
@@ -62,20 +61,30 @@ export function CookieConsent() {
       )}
 
       {consent === null && (
-        // Full-width bar anchored to the bottom edge, not a floating
-        // corner card — width="100%" on GlassSurface is safe here
-        // specifically because its parent has a *definite* width (fixed +
-        // inset-x-0 resolves to the real viewport width, not an
-        // ambiguous auto-sized box) — the pattern that broke Nav's pill
-        // was width:100% on a position:absolute child inside an
-        // auto-sized parent; this is a normal-flow child of a
-        // concretely-sized one, a different and safe case.
-        <div className="fixed inset-x-0 bottom-0" style={{ zIndex: "var(--z-modal)" }}>
-          <GlassSurface width="100%" height="auto" borderRadius={0} className="block">
-            <div className="px-6 py-5 md:py-6 max-w-[1600px] mx-auto flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
-              <p className="text-kov-bone text-sm leading-relaxed flex-1">
-                <span className="text-kov-steel uppercase tracking-widest text-xs mr-2">Cookies</span>
-                On utilise des cookies de mesure d&apos;audience pour comprendre comment le site est utilisé,
+        // Back to the original bottom-left compact card (the full-width
+        // bottom bar this replaced was a later redesign) — styled with the
+        // site's flat glass recipe (Nav.tsx's `flat` variant: a plain
+        // --glass-bg/--glass-border div, no GlassSurface SVG displacement
+        // filter) rather than GlassSurface, which is the heavier of the
+        // two liquid-glass treatments used across this codebase.
+        <div
+          className="fixed bottom-4 left-4 right-4 sm:left-6 sm:right-auto sm:max-w-sm"
+          style={{ zIndex: "var(--z-modal)" }}
+        >
+          <div
+            style={{
+              borderRadius: 20,
+              background: "var(--glass-bg)",
+              backdropFilter: "blur(var(--glass-blur)) saturate(180%)",
+              WebkitBackdropFilter: "blur(var(--glass-blur)) saturate(180%)",
+              border: "1px solid var(--glass-border)",
+              boxShadow: "var(--glass-shadow-full)",
+            }}
+          >
+            <div className="p-6">
+              <p className="text-xs uppercase tracking-widest text-kov-steel mb-3">Cookies</p>
+              <p className="text-kov-bone text-sm leading-relaxed mb-6">
+                On utilise des cookies de mesure d&apos;audience pour comprendre comment le site est utilisé —
                 uniquement avec votre accord.{" "}
                 <Link
                   href="/legal/cookies"
@@ -84,16 +93,16 @@ export function CookieConsent() {
                   En savoir plus
                 </Link>
               </p>
-              <div className="flex items-center gap-3 shrink-0">
-                <Button type="button" variant="secondary" onClick={() => decide("rejected")} className="flex-1 md:flex-initial justify-center">
-                  Refuser
-                </Button>
-                <Button type="button" variant="primary" onClick={() => decide("accepted")} className="flex-1 md:flex-initial justify-center">
+              <div className="flex items-center gap-3">
+                <Button type="button" variant="primary" onClick={() => decide("accepted")} className="flex-1 justify-center">
                   Accepter
+                </Button>
+                <Button type="button" variant="secondary" onClick={() => decide("rejected")} className="flex-1 justify-center">
+                  Refuser
                 </Button>
               </div>
             </div>
-          </GlassSurface>
+          </div>
         </div>
       )}
     </>

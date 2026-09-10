@@ -77,21 +77,21 @@ export default function LightPillar({
   // exists for. Lazy initializer, not a setState-in-effect call.
   const [reducedMotion] = useState(() => prefersReducedMotion());
 
-  // A disposable probe renderer, built once during the lazy initializer
-  // rather than a separate mount effect + setState — same reasoning as
-  // `reducedMotion` above. This also doubles as the check for whether the
-  // main effect's own (otherwise identical) WebGLRenderer construction
-  // below can be expected to succeed.
+  // Same capability check as upstream (plain canvas.getContext probe, no
+  // renderer construction) — moved into a lazy initializer instead of a
+  // separate mount effect + setState, same reasoning as `reducedMotion`
+  // above, to avoid a react-hooks/set-state-in-effect lint error. An
+  // earlier version of this probe constructed and immediately disposed a
+  // full THREE.WebGLRenderer here instead of a bare canvas context, which
+  // could itself throw/report false in some browsers (e.g. forceContextLoss
+  // racing the dispose) and silently force every visitor onto the static
+  // CSS fallback below — the plain context probe is what upstream actually
+  // ships, and it's what the main effect's own renderer construction is
+  // already guarded against separately (its own try/catch further down).
   const [webGLSupported] = useState(() => {
     if (typeof window === "undefined") return true;
-    try {
-      const probe = new THREE.WebGLRenderer({ antialias: false, alpha: true, stencil: false, depth: false });
-      probe.dispose();
-      probe.forceContextLoss();
-      return true;
-    } catch {
-      return false;
-    }
+    const canvas = document.createElement("canvas");
+    return Boolean(canvas.getContext("webgl") || canvas.getContext("experimental-webgl"));
   });
 
   useEffect(() => {
