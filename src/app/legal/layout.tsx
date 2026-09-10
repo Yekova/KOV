@@ -34,19 +34,17 @@ export default function LegalLayout({ children }: { children: ReactNode }) {
 
           {/* No card treatment — the photo bleeds straight into the page's
               own black instead of sitting in a bordered/rounded box. Only a
-              bottom fade now. The source photo is 1200x800 (3:2, landscape)
-              but this box is 4:5 (portrait) — object-cover's default center
-              crop was cutting deep into both sides to fit, which sliced off
-              the left edge of the photo's real "KOV / DIGITAL EXPERIENCES /
-              REAL IMPACT" wall signage. object-left keeps that edge intact
-              and crops from the right (the window/skyline side) instead. */}
-          <div className="relative hidden md:block" style={{ aspectRatio: "4 / 5" }}>
+              bottom fade now. The box's aspect-ratio matches the source
+              photo's real 1200x800 (3:2) dimensions exactly, so the whole
+              image shows with zero cropping — any mismatched ratio here
+              means object-cover slices part of it away to fill the box. */}
+          <div className="relative hidden md:block" style={{ aspectRatio: "3 / 2" }}>
             <Image
               src="/legal/hero-lobby.webp"
               alt="Le studio KOV"
               fill
               sizes="(min-width: 1024px) 45vw, 90vw"
-              className="object-cover object-left"
+              className="object-cover"
               priority
             />
             <div
