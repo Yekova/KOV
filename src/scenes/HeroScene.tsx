@@ -2,16 +2,32 @@ import Image from "next/image";
 import { KovCTA } from "@/components/ui/KovCTA";
 import { Nav } from "@/components/navigation/Nav";
 import { HeroGlobalMenuButton } from "@/components/layout/HeroGlobalMenuButton";
+import { HeroClockBadge } from "@/components/home/HeroClockBadge";
+import { HeroChartWidget } from "@/components/home/HeroChartWidget";
+import { HeroJournalWidget, type HeroJournalWidgetPost } from "@/components/home/HeroJournalWidget";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 // Real KOV studio photography already shot for this site (used elsewhere —
 // Expertise, the site-search panel) — no stock imagery, no placeholders.
-const STACK_IMAGES = [
-  { image: "/kov/home/hero-character-studio.jpg", alt: "KOV Studio" },
-  { image: "/kov/menu/atrium-brutaliste.jpg", alt: "Atrium — studio KOV" },
-  { image: "/kov/menu/studio-industriel.jpg", alt: "Studio industriel — KOV" },
-];
+// Only the top photo stays a photo now; the other two stack slots became
+// dashboard-style widgets (see HeroChartWidget/HeroJournalWidget below).
+const TOP_IMAGE = { image: "/kov/home/hero-character-studio.jpg", alt: "KOV Studio" };
 
-export function HeroScene() {
+async function getLatestJournalPost(): Promise<HeroJournalWidgetPost | null> {
+  const { data } = await supabaseAdmin
+    .from("posts")
+    .select("slug, title, tag, published_at")
+    .eq("status", "published")
+    .order("published_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!data) return null;
+  return { slug: data.slug, title: data.title, tag: data.tag, publishedAt: data.published_at };
+}
+
+export async function HeroScene() {
+  const latestPost = await getLatestJournalPost();
   return (
     <section id="hero" className="relative min-h-screen overflow-hidden">
       {/* No background color here on purpose — the animated LineWaves
@@ -48,16 +64,18 @@ export function HeroScene() {
           </div>
 
           {/* The real responsive-mockup footage (9:16, already shot for
-              the homepage's Studio showcase) on the left, three real KOV
-              studio photos (16:9 each) stacked vertically on the right —
-              replaces the depth-carousel, no interaction needed to see all
-              of them. A fixed height on this row (rather than deriving it
-              from the aspect-ratio boxes it contains) is what actually
-              keeps both columns a real, non-collapsed size: neither an
-              aspect-ratio box nor a `flex-1` column has any intrinsic
-              height of its own to stretch against otherwise, and this
-              exact bug (mutually-undefined sizes collapsing to ~0) is what
-              made the video disappear entirely in the previous pass. */}
+              the homepage's Studio showcase) on the left; on the right, the
+              top photo stays a real KOV studio photo (16:9, with a live
+              Bordeaux-time badge overlaid), and the other two stack slots
+              are now dashboard-style widgets (a performance chart, a
+              Journal preview) instead of two more photos. A fixed height on
+              this row (rather than deriving it from the aspect-ratio boxes
+              it contains) is what actually keeps both columns a real,
+              non-collapsed size: neither an aspect-ratio box nor a
+              `flex-1` column has any intrinsic height of its own to
+              stretch against otherwise, and this exact bug (mutually-
+              undefined sizes collapsing to ~0) is what made the video
+              disappear entirely in an earlier pass. */}
           <div className="w-full flex items-stretch gap-3" style={{ height: "22rem" }}>
             <div className="relative h-full overflow-hidden" style={{ aspectRatio: "9 / 16", borderRadius: 18 }}>
               <video
@@ -73,11 +91,16 @@ export function HeroScene() {
             </div>
 
             <div className="h-full flex flex-col items-start gap-3">
-              {STACK_IMAGES.map((item) => (
-                <div key={item.image} className="relative flex-1 overflow-hidden" style={{ aspectRatio: "16 / 9", borderRadius: 18 }}>
-                  <Image src={item.image} alt={item.alt} fill sizes="220px" className="object-cover" />
-                </div>
-              ))}
+              <div className="relative flex-1 w-full overflow-hidden" style={{ aspectRatio: "16 / 9", borderRadius: 18 }}>
+                <Image src={TOP_IMAGE.image} alt={TOP_IMAGE.alt} fill sizes="220px" className="object-cover" />
+                <HeroClockBadge />
+              </div>
+              <div className="relative flex-1 w-full" style={{ aspectRatio: "16 / 9" }}>
+                <HeroChartWidget />
+              </div>
+              <div className="relative flex-1 w-full" style={{ aspectRatio: "16 / 9" }}>
+                <HeroJournalWidget post={latestPost} />
+              </div>
             </div>
           </div>
         </div>
