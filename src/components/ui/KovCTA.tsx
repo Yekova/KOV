@@ -9,6 +9,17 @@ interface KovCTAProps {
   dot?: boolean;
   haloColor?: string;
   className?: string;
+  /** Plain dark pill (fond sombre + border fine) instead of the GlassSurface
+   * liquid-glass treatment — the Hero widget-grid brief asked for a sobered
+   * down CTA rendering there specifically ("éviter les effets glitch ou RGB
+   * ... fond sombre, border fine"). Scoped to a prop rather than changed
+   * sitewide since /faq also renders this component and wasn't part of
+   * that request. */
+  flat?: boolean;
+  /** Extra red on the pill itself (not just the hover halo) — used for the
+   * Hero's primary CTA per the same brief ("le bouton primaire peut
+   * recevoir davantage de rouge"). Only meaningful together with `flat`. */
+  emphasis?: boolean;
 }
 
 // The homepage's premium CTA — extracted from HeroScene's original inline
@@ -23,33 +34,58 @@ interface KovCTAProps {
 // hover state (see ShapeBlur.tsx) — group-hover:opacity gates its
 // visibility rather than the effect itself, so the halo reads as a
 // discrete hover reveal instead of a faint always-on glow.
-export function KovCTA({ href, children, dot = true, haloColor = "#E31E24", className = "" }: KovCTAProps) {
+export function KovCTA({
+  href,
+  children,
+  dot = true,
+  haloColor = "#E31E24",
+  className = "",
+  flat = false,
+  emphasis = false,
+}: KovCTAProps) {
   return (
     <div className={`group relative inline-block ${className}`}>
       <div className="absolute -inset-2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
         <ShapeBlur variation={0} shapeSize={1.6} roundness={1.55} borderSize={0.07} circleSize={0.55} circleEdge={1} color={haloColor} />
       </div>
       <Link href={href} className="relative block">
-        {/* width/height "auto" — GlassSurface wraps its real content and
-            sizes to fit it, rather than being a position:absolute overlay
-            stretched via a percentage inside this auto-sized Link. That
-            combination is exactly what broke Nav's pill once already (see
-            GlassSurface.tsx's own note) — wrapping content instead of
-            overlaying it sidesteps the problem entirely. */}
-        <GlassSurface
-          width="auto"
-          height="auto"
-          borderRadius={999}
-          className="inline-flex items-center text-kov-bone text-xs uppercase tracking-widest group-hover:text-kov-red transition-all duration-300 group-hover:scale-[1.02]"
-        >
-          <span className="inline-flex items-center gap-2 px-6 py-3">
+        {flat ? (
+          <span
+            className="inline-flex items-center gap-2 px-6 py-3 text-kov-bone text-xs uppercase tracking-widest group-hover:text-kov-red transition-all duration-300 group-hover:scale-[1.02]"
+            style={{
+              borderRadius: 999,
+              background: emphasis ? "rgba(227,30,36,0.12)" : "rgba(10,10,10,0.6)",
+              border: `1px solid ${emphasis ? "rgba(227,30,36,0.4)" : "rgba(255,255,255,0.14)"}`,
+            }}
+          >
             {dot && <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-kov-red shrink-0" />}
             <span>{children}</span>
             <span aria-hidden="true" className="inline-block transition-transform duration-300 group-hover:translate-x-1">
               →
             </span>
           </span>
-        </GlassSurface>
+        ) : (
+          // width/height "auto" — GlassSurface wraps its real content and
+          // sizes to fit it, rather than being a position:absolute overlay
+          // stretched via a percentage inside this auto-sized Link. That
+          // combination is exactly what broke Nav's pill once already (see
+          // GlassSurface.tsx's own note) — wrapping content instead of
+          // overlaying it sidesteps the problem entirely.
+          <GlassSurface
+            width="auto"
+            height="auto"
+            borderRadius={999}
+            className="inline-flex items-center text-kov-bone text-xs uppercase tracking-widest group-hover:text-kov-red transition-all duration-300 group-hover:scale-[1.02]"
+          >
+            <span className="inline-flex items-center gap-2 px-6 py-3">
+              {dot && <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-kov-red shrink-0" />}
+              <span>{children}</span>
+              <span aria-hidden="true" className="inline-block transition-transform duration-300 group-hover:translate-x-1">
+                →
+              </span>
+            </span>
+          </GlassSurface>
+        )}
       </Link>
     </div>
   );
