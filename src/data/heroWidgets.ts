@@ -48,5 +48,11 @@ export const MOBILE_HERO_WIDGET_ORDER: HeroWidgetId[] = [
   "start-project",
 ];
 
-export const HERO_WIDGET_LAYOUT_STORAGE_KEY = "kov-home-widget-layout";
+// v2: bumped when the widget upgrade (design pass) shipped, in case a
+// stored v1 order ever became incompatible with a future widget set —
+// migrated forward once (see readStoredOrder in HeroWidgetGrid.tsx), not
+// read directly, so an incompatible v1 value can never leak through.
+export const HERO_WIDGET_LAYOUT_STORAGE_KEY_V1 = "kov-home-widget-layout";
+export const HERO_WIDGET_LAYOUT_STORAGE_KEY = "kov-home-widget-layout-v2";
 export const HERO_WIDGET_HINT_SEEN_STORAGE_KEY = "kov-home-widget-hint-seen";
+export const HERO_WIDGET_ANIMATIONS_STORAGE_KEY = "kov-home-widget-animations";

@@ -2,10 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { MoreHorizontal, GripVertical } from "lucide-react";
 import {
   DEFAULT_HERO_WIDGET_ORDER,
   HERO_WIDGET_LAYOUT_STORAGE_KEY,
+  HERO_WIDGET_LAYOUT_STORAGE_KEY_V1,
   HERO_WIDGET_HINT_SEEN_STORAGE_KEY,
+  HERO_WIDGET_ANIMATIONS_STORAGE_KEY,
   HERO_WIDGET_SIZE,
   MOBILE_HERO_WIDGET_ORDER,
   type HeroWidgetId,
@@ -20,13 +23,9 @@ import { ExpertiseSwitcherContent } from "@/components/home/hero-widgets/Experti
 import { JournalContent, type HeroJournalPost } from "@/components/home/hero-widgets/JournalContent";
 import { StartProjectContent } from "@/components/home/hero-widgets/StartProjectContent";
 
-// Returns null when there's nothing usable stored — the caller keeps
-// whatever it already had (the default order) rather than this function
-// re-deciding that fallback itself.
-function readStoredOrder(): HeroWidgetId[] | null {
+function parseOrder(raw: string | null): HeroWidgetId[] | null {
+  if (!raw) return null;
   try {
-    const raw = window.localStorage.getItem(HERO_WIDGET_LAYOUT_STORAGE_KEY);
-    if (!raw) return null;
     const parsed = JSON.parse(raw);
     const valid =
       Array.isArray(parsed) &&
@@ -38,9 +37,39 @@ function readStoredOrder(): HeroWidgetId[] | null {
   }
 }
 
+// Returns null when there's nothing usable stored — the caller keeps
+// whatever it already had (the default order) rather than this function
+// re-deciding that fallback itself. Reads the v2 key first; a v1 value
+// (from before this design pass) is migrated forward once rather than
+// read directly, so a shape change to the widget set can never resurrect
+// an incompatible old layout.
+function readStoredOrder(): HeroWidgetId[] | null {
+  try {
+    const v2 = parseOrder(window.localStorage.getItem(HERO_WIDGET_LAYOUT_STORAGE_KEY));
+    if (v2) return v2;
+    const v1 = parseOrder(window.localStorage.getItem(HERO_WIDGET_LAYOUT_STORAGE_KEY_V1));
+    if (v1) {
+      window.localStorage.setItem(HERO_WIDGET_LAYOUT_STORAGE_KEY, JSON.stringify(v1));
+      window.localStorage.removeItem(HERO_WIDGET_LAYOUT_STORAGE_KEY_V1);
+      return v1;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 function readHintSeen(): boolean {
   try {
     return window.localStorage.getItem(HERO_WIDGET_HINT_SEEN_STORAGE_KEY) === "1";
+  } catch {
+    return true;
+  }
+}
+
+function readAnimationsEnabled(): boolean {
+  try {
+    return window.localStorage.getItem(HERO_WIDGET_ANIMATIONS_STORAGE_KEY) !== "0";
   } catch {
     return true;
   }
@@ -60,6 +89,7 @@ export function HeroWidgetGrid({ latestPost }: { latestPost: HeroJournalPost | n
   // rather than mismatching the server's HTML.
   const [order, setOrder] = useState<HeroWidgetId[]>(DEFAULT_HERO_WIDGET_ORDER);
   const [reducedMotion] = useState(() => prefersReducedMotion());
+  const [animationsEnabled, setAnimationsEnabled] = useState(true);
   const [showHint, setShowHint] = useState(false);
   const [draggedId, setDraggedId] = useState<HeroWidgetId | null>(null);
   const [dropTargetId, setDropTargetId] = useState<HeroWidgetId | null>(null);
@@ -70,6 +100,11 @@ export function HeroWidgetGrid({ latestPost }: { latestPost: HeroJournalPost | n
   // update the DOM attribute in time.
   const [armedId, setArmedId] = useState<HeroWidgetId | null>(null);
 
+  // Reduced-motion (an OS-level preference) and the user's own "disable
+  // animations" menu toggle both collapse to the same effective flag —
+  // either one skips the layout reflow animation and the entrance stagger.
+  const skipAnimation = reducedMotion || !animationsEnabled;
+
   useEffect(() => {
     // Deferred via setTimeout rather than called straight in the effect
     // body — same pattern as the hint auto-dismiss effect just below,
@@ -79,6 +114,7 @@ export function HeroWidgetGrid({ latestPost }: { latestPost: HeroJournalPost | n
       const stored = readStoredOrder();
       if (stored) setOrder(stored);
       if (!readHintSeen()) setShowHint(true);
+      setAnimationsEnabled(readAnimationsEnabled());
     }, 0);
     return () => window.clearTimeout(id);
   }, []);
@@ -131,6 +167,16 @@ export function HeroWidgetGrid({ latestPost }: { latestPost: HeroJournalPost | n
     setMenuOpen(false);
   }
 
+  function toggleAnimations() {
+    const next = !animationsEnabled;
+    setAnimationsEnabled(next);
+    try {
+      window.localStorage.setItem(HERO_WIDGET_ANIMATIONS_STORAGE_KEY, next ? "1" : "0");
+    } catch {
+      // Nice-to-have, same as the other persistence writes in this file.
+    }
+  }
+
   const content: Record<HeroWidgetId, React.ReactNode> = {
     spotlight: <ProjectSpotlightContent />,
     responsive: <ResponsivePreviewContent />,
@@ -143,37 +189,46 @@ export function HeroWidgetGrid({ latestPost }: { latestPost: HeroJournalPost | n
 
   return (
     <div className="relative w-full">
-      {/* Radial gradient behind the grid for legibility (spec §15) —
+      {/* Radial gradient behind the grid for legibility (spec §15/§31) —
           strictly local to this component, not a new page-wide
           background: the sitewide LineWaves canvas (src/app/page.tsx)
-          is untouched. */}
+          is untouched, the red waves still show through around the edges. */}
       <div
         aria-hidden="true"
         className="absolute -inset-8 pointer-events-none"
-        style={{ background: "radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.35) 100%)" }}
+        style={{ background: "radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.4) 100%)" }}
+      />
+
+      {/* Ghost backdrop panel (spec §25) — almost invisible, just enough to
+          read the 7 widgets as one system rather than loose cards. */}
+      <div
+        aria-hidden="true"
+        className="absolute -inset-2.5 hidden md:block pointer-events-none"
+        style={{ borderRadius: 30, background: "rgba(0,0,0,0.18)", border: "1px solid rgba(255,255,255,0.025)" }}
       />
 
       {/* Desktop/tablet: the draggable dense grid. Hidden below md rather
           than gated by a JS media-query check, so there's no
           client/server hydration mismatch. */}
-      <div className="relative hidden md:grid grid-cols-4 grid-flow-row-dense gap-3" style={{ height: "34rem" }}>
+      <div className="relative hidden md:grid grid-cols-4 grid-flow-row-dense gap-2.5" style={{ height: "34rem" }}>
         {order.map((id, i) => (
           <motion.div
             key={id}
-            layout={!reducedMotion}
-            initial={reducedMotion ? false : { opacity: 0, y: 15, scale: 0.98 }}
+            layout={!skipAnimation}
+            initial={skipAnimation ? false : { opacity: 0, y: 10, scale: 0.985 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{
               layout: { duration: 0.3, ease: "easeInOut" },
-              opacity: { duration: 0.4, delay: reducedMotion ? 0 : i * 0.08 },
-              y: { duration: 0.4, delay: reducedMotion ? 0 : i * 0.08 },
-              scale: { duration: 0.4, delay: reducedMotion ? 0 : i * 0.08 },
+              opacity: { duration: 0.35, delay: skipAnimation ? 0 : i * 0.05 },
+              y: { duration: 0.35, delay: skipAnimation ? 0 : i * 0.05 },
+              scale: { duration: 0.35, delay: skipAnimation ? 0 : i * 0.05 },
             }}
             className={HERO_WIDGET_SIZE[id]}
           >
             <WidgetShell
               draggable={armedId === id}
               isDragging={draggedId === id}
+              isOtherDragging={draggedId !== null && draggedId !== id}
               isDropTarget={dropTargetId === id}
               onDragStart={() => setDraggedId(id)}
               onDragEnd={() => {
@@ -203,7 +258,7 @@ export function HeroWidgetGrid({ latestPost }: { latestPost: HeroJournalPost | n
               className="flex items-center gap-2 px-4 py-2 text-kov-bone text-xs uppercase tracking-widest"
               style={{ borderRadius: 999, background: "rgba(10,10,10,0.8)", border: "1px solid rgba(255,255,255,0.14)" }}
             >
-              <span>⠿</span>
+              <GripVertical size={13} />
               Déplacez les modules
             </div>
           </div>
@@ -213,35 +268,67 @@ export function HeroWidgetGrid({ latestPost }: { latestPost: HeroJournalPost | n
           <button
             type="button"
             onClick={() => setMenuOpen((v) => !v)}
-            aria-label="Options de disposition"
-            className="w-7 h-7 flex items-center justify-center rounded-full text-kov-steel hover:text-kov-bone transition-colors text-xs"
+            aria-label="Personnaliser la disposition"
+            className="w-7 h-7 flex items-center justify-center rounded-full text-kov-steel hover:text-kov-bone transition-colors"
             style={{ border: "1px solid rgba(255,255,255,0.10)" }}
           >
-            •••
+            <MoreHorizontal size={14} />
           </button>
           {menuOpen && (
             <div
-              className="absolute right-0 mt-2 py-1 text-xs whitespace-nowrap"
-              style={{ borderRadius: 12, background: "rgba(10,10,10,0.9)", border: "1px solid rgba(255,255,255,0.10)" }}
+              className="absolute right-0 mt-2 py-1.5 text-xs whitespace-nowrap"
+              style={{ borderRadius: 12, background: "rgba(10,10,10,0.92)", border: "1px solid rgba(255,255,255,0.10)" }}
             >
-              <button type="button" onClick={resetLayout} className="block w-full px-4 py-2 text-left text-kov-steel hover:text-kov-red transition-colors">
-                Réinitialiser
+              <p className="px-4 pt-1 pb-2 text-kov-steel text-[10px] uppercase tracking-widest" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                Personnaliser
+              </p>
+              <button
+                type="button"
+                onClick={resetLayout}
+                className="block w-full px-4 py-2 mt-1 text-left text-kov-steel hover:text-kov-red transition-colors"
+              >
+                Réinitialiser la disposition
+              </button>
+              <button
+                type="button"
+                onClick={toggleAnimations}
+                className="block w-full px-4 py-2 text-left text-kov-steel hover:text-kov-red transition-colors"
+              >
+                Animations : {animationsEnabled ? "activées" : "désactivées"}
               </button>
             </div>
           )}
         </div>
       </div>
 
-      {/* Mobile: fixed editorial order (spec §23), no drag at all. */}
-      <div className="md:hidden flex flex-col gap-3">
+      {/* Mobile: fixed editorial order (spec §23/§34), no drag at all. */}
+      <div className="md:hidden flex flex-col gap-2.5">
         <div className="relative" style={{ aspectRatio: "3 / 4" }}>
-          <WidgetShell draggable={false} isDragging={false} isDropTarget={false} onDragStart={() => {}} onDragEnd={() => {}} onDragOver={() => {}} onDrop={() => {}}>
+          <WidgetShell
+            draggable={false}
+            isDragging={false}
+            isOtherDragging={false}
+            isDropTarget={false}
+            onDragStart={() => {}}
+            onDragEnd={() => {}}
+            onDragOver={() => {}}
+            onDrop={() => {}}
+          >
             {content.responsive}
           </WidgetShell>
         </div>
         {MOBILE_HERO_WIDGET_ORDER.filter((id) => id !== "responsive").map((id) => (
           <div key={id} className="relative" style={{ aspectRatio: id === "spotlight" ? "4 / 3" : "16 / 9" }}>
-            <WidgetShell draggable={false} isDragging={false} isDropTarget={false} onDragStart={() => {}} onDragEnd={() => {}} onDragOver={() => {}} onDrop={() => {}}>
+            <WidgetShell
+              draggable={false}
+              isDragging={false}
+              isOtherDragging={false}
+              isDropTarget={false}
+              onDragStart={() => {}}
+              onDragEnd={() => {}}
+              onDragOver={() => {}}
+              onDrop={() => {}}
+            >
               {content[id]}
             </WidgetShell>
           </div>

@@ -2,21 +2,17 @@
 
 import { useRef, useState } from "react";
 
-// Explicitly NOT a real analytics claim (spec §03: "ne présente pas de
-// chiffres inventés comme statistiques réelles") — no unit, no "%", no
-// number presented as fact. Hovering the curve reveals one of the spec's
-// own suggested creative labels instead of a fabricated figure.
-const LABELS = ["DESIGN", "MOTION", "RESPONSIVE", "IMPACT"];
-// 8 points (was 4) grouped two-per-label, for a curve detailed enough that
-// straight-line segments between them would read as jagged rather than a
-// deliberate wave.
-const RAW_VALUES = [82, 70, 74, 58, 63, 42, 48, 18];
-const POINTS = RAW_VALUES.map((y, i) => ({ x: (i / (RAW_VALUES.length - 1)) * 100, y }));
-const GRID_LINES = [25, 50, 75];
+// Explicitly NOT a real analytics claim (spec §14: "si les statistiques ne
+// sont pas réelles, elles doivent rester clairement démonstratives") — the
+// small "Aperçu" tag keeps that honest without cluttering the "Impact" /
+// "+62%" / "Engagement" headline the brief asked for verbatim.
+const MONTHS = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin"];
+const VALUES = [24, 31, 38, 45, 48, 62];
+const POINTS = VALUES.map((v, i) => ({ x: (i / (VALUES.length - 1)) * 100, y: 92 - (v / 62) * 74 }));
 
-// Catmull-Rom → cubic Bezier conversion (tension 1/6, the standard
-// coefficient) — turns the straight-segment polyline into a genuinely
-// smooth curve through every point, instead of a jagged line chart.
+// Catmull-Rom → cubic Bezier (tension 1/6) — an actual smooth curve
+// through every point rather than straight jagged segments (spec §15:
+// "je veux... SVG propre").
 function smoothPath(points: { x: number; y: number }[]): string {
   if (points.length < 2) return "";
   let d = `M${points[0].x},${points[0].y}`;
@@ -42,7 +38,7 @@ export function PerformanceContent() {
   const [hovered, setHovered] = useState<number | null>(null);
   const activeIndex = hovered ?? POINTS.length - 1;
   const active = POINTS[activeIndex];
-  const activeLabel = LABELS[Math.min(Math.floor(activeIndex / 2), LABELS.length - 1)];
+  const isDefault = hovered === null;
 
   function handleMove(event: React.MouseEvent<HTMLDivElement>) {
     const rect = containerRef.current?.getBoundingClientRect();
@@ -57,56 +53,69 @@ export function PerformanceContent() {
       ref={containerRef}
       onMouseMove={handleMove}
       onMouseLeave={() => setHovered(null)}
-      className="relative h-full w-full p-4 overflow-hidden"
+      className="relative h-full w-full p-4 overflow-hidden flex flex-col"
       style={{ borderRadius: 20 }}
     >
-      <div className="relative z-10 flex items-center justify-between">
-        <p className="text-kov-steel text-[10px] uppercase tracking-widest">Impact</p>
-        <span
-          aria-hidden="true"
-          className="w-1.5 h-1.5 rounded-full bg-kov-red"
-          style={{ boxShadow: hovered !== null ? "0 0 6px var(--kov-red)" : "none" }}
-        />
+      <div className="relative z-10 flex items-start justify-between">
+        <p className="flex items-center gap-2 text-kov-steel text-[10px] uppercase tracking-widest">
+          <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-kov-red" />
+          Impact
+        </p>
+        <span className="text-kov-steel text-[8px] uppercase tracking-widest opacity-40">Aperçu</span>
       </div>
 
-      {/* Grid lines + curve/fill are plain SVG (a distorted viewBox stretch
-          doesn't break a straight horizontal line or a path's overall
-          shape). The marker dot and guide line are regular HTML instead —
-          a plain SVG circle would render as an ellipse under this same
-          non-uniform stretch once the card isn't square. */}
-      <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 w-full h-full">
-        <defs>
-          <linearGradient id="hero-impact-fill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--kov-red)" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="var(--kov-red)" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        {GRID_LINES.map((y) => (
-          <line key={y} x1="0" y1={y} x2="100" y2={y} stroke="rgba(255,255,255,0.06)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
-        ))}
-        <path d={AREA_PATH} fill="url(#hero-impact-fill)" stroke="none" />
-        <path d={LINE_PATH} fill="none" stroke="var(--kov-red)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" strokeLinecap="round" />
-      </svg>
+      <div className="relative z-10 mt-1">
+        <span className="font-display text-kov-bone" style={{ fontSize: "clamp(24px, 2.6vw, 34px)" }}>
+          +{VALUES[activeIndex]}%
+        </span>
+        <p className="text-kov-steel text-[10px] uppercase tracking-widest mt-0.5">
+          Engagement{!isDefault && <span className="text-kov-red"> · {MONTHS[activeIndex]}</span>}
+        </p>
+      </div>
 
-      <div
-        aria-hidden="true"
-        className="absolute top-0 bottom-0 w-px pointer-events-none transition-[left] duration-150"
-        style={{ left: `${active.x}%`, background: "rgba(255,255,255,0.14)" }}
-      />
-      <div
-        aria-hidden="true"
-        className="absolute w-2 h-2 rounded-full pointer-events-none transition-[left,top] duration-150"
-        style={{
-          left: `${active.x}%`,
-          top: `${active.y}%`,
-          transform: "translate(-50%, -50%)",
-          background: "var(--kov-bone)",
-          border: "1.5px solid var(--kov-red)",
-          boxShadow: "0 0 8px rgba(227,30,36,0.6)",
-        }}
-      />
+      {/* Grid-free, fine stroke curve (spec §15: "pas de bar chart
+          générique") — points stay invisible except the hovered one and
+          the last (default) point, which keeps a faint permanent halo. */}
+      <div className="relative flex-1 min-h-0 mt-2">
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 w-full h-full">
+          <defs>
+            <linearGradient id="hero-impact-fill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--kov-red)" stopOpacity="0.28" />
+              <stop offset="100%" stopColor="var(--kov-red)" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <path d={AREA_PATH} fill="url(#hero-impact-fill)" stroke="none" />
+          <path d={LINE_PATH} fill="none" stroke="var(--kov-red)" strokeWidth="1.4" vectorEffect="non-scaling-stroke" strokeLinecap="round" />
+        </svg>
 
-      <p className="absolute bottom-4 left-4 text-kov-bone text-xs uppercase tracking-widest">{activeLabel}</p>
+        {/* Plain HTML dot, not an SVG circle — this viewBox stretches
+            non-uniformly to fill a non-square card, which would distort a
+            true SVG circle into an ellipse. */}
+        <div
+          aria-hidden="true"
+          className="absolute w-1.5 h-1.5 rounded-full pointer-events-none transition-[left,top] duration-150"
+          style={{
+            left: `${active.x}%`,
+            top: `${active.y}%`,
+            transform: "translate(-50%, -50%)",
+            background: "var(--kov-bone)",
+            border: "1.5px solid var(--kov-red)",
+            boxShadow: isDefault ? "0 0 6px rgba(227,30,36,0.5)" : "0 0 8px rgba(227,30,36,0.7)",
+          }}
+        />
+
+        <div className="absolute bottom-0 inset-x-0 flex items-center justify-between">
+          {MONTHS.map((month, i) => (
+            <span
+              key={month}
+              className="text-[8px] uppercase tracking-wide transition-colors"
+              style={{ color: i === activeIndex ? "var(--kov-bone)" : "var(--kov-steel)" }}
+            >
+              {month}
+            </span>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

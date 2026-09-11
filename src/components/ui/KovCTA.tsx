@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import ShapeBlur from "@/components/ui/ShapeBlurLazy";
 import { GlassSurface } from "@/components/ui/GlassSurface";
 
@@ -51,18 +52,18 @@ export function KovCTA({
       <Link href={href} className="relative block">
         {flat ? (
           <span
-            className="inline-flex items-center gap-2 px-6 py-3 text-kov-bone text-xs uppercase tracking-widest group-hover:text-kov-red transition-all duration-300 group-hover:scale-[1.02]"
+            className={`inline-flex items-center gap-2 px-6 py-3 text-xs uppercase tracking-widest transition-all duration-300 group-hover:scale-[1.02] ${
+              emphasis ? "text-white" : "text-kov-bone group-hover:text-kov-red"
+            }`}
             style={{
               borderRadius: 999,
-              background: emphasis ? "rgba(227,30,36,0.12)" : "rgba(10,10,10,0.6)",
-              border: `1px solid ${emphasis ? "rgba(227,30,36,0.4)" : "rgba(255,255,255,0.14)"}`,
+              background: emphasis ? "linear-gradient(135deg, rgba(227,30,36,0.4), rgba(90,8,12,0.35))" : "rgba(10,10,10,0.6)",
+              border: `1px solid ${emphasis ? "rgba(227,30,36,0.6)" : "rgba(255,255,255,0.14)"}`,
             }}
           >
             {dot && <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-kov-red shrink-0" />}
             <span>{children}</span>
-            <span aria-hidden="true" className="inline-block transition-transform duration-300 group-hover:translate-x-1">
-              →
-            </span>
+            <ArrowRight size={13} className="transition-transform duration-300 group-hover:translate-x-1" />
           </span>
         ) : (
           // width/height "auto" — GlassSurface wraps its real content and

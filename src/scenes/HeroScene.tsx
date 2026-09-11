@@ -8,14 +8,14 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 async function getLatestJournalPost(): Promise<HeroJournalPost | null> {
   const { data } = await supabaseAdmin
     .from("posts")
-    .select("slug, title, tag, published_at")
+    .select("slug, title, tag, excerpt, published_at")
     .eq("status", "published")
     .order("published_at", { ascending: false })
     .limit(1)
     .maybeSingle();
 
   if (!data) return null;
-  return { slug: data.slug, title: data.title, tag: data.tag };
+  return { slug: data.slug, title: data.title, tag: data.tag, excerpt: data.excerpt };
 }
 
 export async function HeroScene() {
