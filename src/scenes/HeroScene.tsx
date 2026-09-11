@@ -2,8 +2,8 @@ import Image from "next/image";
 import { KovCTA } from "@/components/ui/KovCTA";
 import { Nav } from "@/components/navigation/Nav";
 import { HeroGlobalMenuButton } from "@/components/layout/HeroGlobalMenuButton";
-import { HeroClockBadge } from "@/components/home/HeroClockBadge";
-import { HeroChartWidget } from "@/components/home/HeroChartWidget";
+import { HeroClockCard } from "@/components/home/HeroClockCard";
+import { HeroLineChartWidget } from "@/components/home/HeroLineChartWidget";
 import { HeroJournalWidget, type HeroJournalWidgetPost } from "@/components/home/HeroJournalWidget";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
@@ -64,18 +64,19 @@ export async function HeroScene() {
           </div>
 
           {/* The real responsive-mockup footage (9:16, already shot for
-              the homepage's Studio showcase) on the left; on the right, the
-              top photo stays a real KOV studio photo (16:9, with a live
-              Bordeaux-time badge overlaid), and the other two stack slots
-              are now dashboard-style widgets (a performance chart, a
-              Journal preview) instead of two more photos. A fixed height on
-              this row (rather than deriving it from the aspect-ratio boxes
-              it contains) is what actually keeps both columns a real,
-              non-collapsed size: neither an aspect-ratio box nor a
-              `flex-1` column has any intrinsic height of its own to
-              stretch against otherwise, and this exact bug (mutually-
-              undefined sizes collapsing to ~0) is what made the video
-              disappear entirely in an earlier pass. */}
+              the homepage's Studio showcase) on the left. On the right, a
+              small bento grid instead of three uniform stacked photos: the
+              studio photo stays wide up top, then a row splitting into a
+              narrower square-ish clock card next to a wider interactive
+              line-chart card (two different shapes side by side, not
+              another uniform rectangle), then the Journal preview wide
+              again at the bottom. A fixed height on the outer row (rather
+              than deriving it from the aspect-ratio boxes it contains) is
+              what actually keeps both columns a real, non-collapsed size:
+              neither an aspect-ratio box nor a `flex-1` column has any
+              intrinsic height of its own to stretch against otherwise, and
+              this exact bug (mutually-undefined sizes collapsing to ~0) is
+              what made the video disappear entirely in an earlier pass. */}
           <div className="w-full flex items-stretch gap-3" style={{ height: "22rem" }}>
             <div className="relative h-full overflow-hidden" style={{ aspectRatio: "9 / 16", borderRadius: 18 }}>
               <video
@@ -93,10 +94,14 @@ export async function HeroScene() {
             <div className="h-full flex flex-col items-start gap-3">
               <div className="relative flex-1 w-full overflow-hidden" style={{ aspectRatio: "16 / 9", borderRadius: 18 }}>
                 <Image src={TOP_IMAGE.image} alt={TOP_IMAGE.alt} fill sizes="220px" className="object-cover" />
-                <HeroClockBadge />
               </div>
-              <div className="relative flex-1 w-full" style={{ aspectRatio: "16 / 9" }}>
-                <HeroChartWidget />
+              <div className="flex-1 w-full flex items-stretch gap-3">
+                <div className="h-full" style={{ width: "38%" }}>
+                  <HeroClockCard />
+                </div>
+                <div className="h-full flex-1">
+                  <HeroLineChartWidget />
+                </div>
               </div>
               <div className="relative flex-1 w-full" style={{ aspectRatio: "16 / 9" }}>
                 <HeroJournalWidget post={latestPost} />
