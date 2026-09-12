@@ -25,7 +25,7 @@ export function ProjectSpotlightContent() {
       <div
         aria-hidden="true"
         className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-        style={{ background: "rgba(10,10,10,0.72)" }}
+        style={{ background: "rgba(6,6,6,0.9)" }}
       />
       {/* Thin red line, invisible at rest — a targeted accent rather than a
           permanent red border (spec §06/§11). */}
