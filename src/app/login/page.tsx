@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { LoginForm } from "./LoginForm";
 import { MouseFrameBackdrop } from "@/components/ui/MouseFrameBackdrop";
 import { GlassCard } from "@/components/ui/GlassCard";
+import Lightning from "@/components/login/Lightning";
 
 export const metadata: Metadata = {
   title: "Connexion — KOV",
@@ -25,6 +26,18 @@ export default async function LoginPage(props: PageProps<"/login">) {
         frameCount={LOGIN_FRAME_COUNT}
         poster={`/kov/character/login-frames/frame-${String(Math.floor(LOGIN_FRAME_COUNT / 2)).padStart(3, "0")}.jpg`}
       />
+
+      {/* Ambient WebGL bolt, layered above the (opaque, full-bleed) character
+          backdrop with a screen blend so it adds red light over the image
+          rather than hiding it — `--z-atmosphere` sits exactly between
+          `--z-canvas` (the backdrop above) and `--z-content` (the form). */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0"
+        style={{ zIndex: "var(--z-atmosphere)", pointerEvents: "none", mixBlendMode: "screen" }}
+      >
+        <Lightning hue={360} xOffset={0.15} speed={0.7} intensity={0.6} size={1.4} />
+      </div>
 
       <div className="relative min-h-screen max-w-[1800px] mx-auto flex flex-col md:flex-row items-center justify-between gap-16 px-6 md:px-16 py-24">
         <div className="hidden md:block max-w-xs">
