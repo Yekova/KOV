@@ -171,20 +171,22 @@ export function StudioShowcase() {
     return () => trigger.kill();
   }, [reducedMotion]);
 
-  // One coordinated entrance timeline: heading, then CTA, then the video
-  // portal (a clip-path wipe alongside blur/scale/translateX — a curtain
-  // opening, not a fade), then the photos one by one. Runs on entranceRef
-  // + headingRef/ctaRef/filmstripRef only — shellRef (continuous scroll-
-  // growth/tilt transform) is never touched here, so the two mechanisms
-  // never fight over the same inline style.
+  // One coordinated entrance timeline: heading, then CTA, then the photos
+  // one by one. The portal used to be the timeline's third beat (a
+  // fixed-duration tween) — pulled into its own scroll-scrubbed animation
+  // below instead, so it visibly arrives from the right *as you scroll*,
+  // continuing Expertise's own scroll motion into this section rather than
+  // playing a one-off entrance the instant the section comes into view.
+  // Runs on headingRef/ctaRef/filmstripRef only — shellRef (continuous
+  // scroll-growth/tilt transform) is never touched here, so the two
+  // mechanisms never fight over the same inline style.
   useEffect(() => {
     if (reducedMotion) return;
     const heading = headingRef.current;
     const cta = ctaRef.current;
-    const portal = entranceRef.current;
     const filmstrip = filmstripRef.current;
     const runway = runwayRef.current;
-    if (!heading || !cta || !portal || !filmstrip || !runway) return;
+    if (!heading || !cta || !filmstrip || !runway) return;
     initGsap();
 
     const ctx = gsap.context(() => {
@@ -195,25 +197,45 @@ export function StudioShowcase() {
       tl.fromTo(heading, { opacity: 0, y: 44 }, { opacity: 1, y: 0, duration: 0.75, ease: GSAP_REVEAL_EASE })
         .fromTo(cta, { opacity: 0, y: 32 }, { opacity: 1, y: 0, duration: 0.6, ease: GSAP_REVEAL_EASE }, "-=0.4")
         .fromTo(
-          portal,
-          { opacity: 0, x: 120, scale: 0.9, filter: "blur(18px)", clipPath: "inset(0% 100% 0% 0%)" },
-          {
-            opacity: 1,
-            x: 0,
-            scale: 1,
-            filter: "blur(0px)",
-            clipPath: "inset(0% 0% 0% 0%)",
-            duration: 1.2,
-            ease: GSAP_REVEAL_EASE,
-          },
-          "-=0.45"
-        )
-        .fromTo(
           Array.from(filmstrip.children),
           { opacity: 0, y: 28 },
           { opacity: 1, y: 0, duration: 0.5, stagger: 0.12, ease: GSAP_REVEAL_EASE },
-          "-=0.5"
+          "-=0.2"
         );
+    }, runway);
+
+    return () => ctx.revert();
+  }, [reducedMotion]);
+
+  // The portal's own scroll-scrubbed arrival — tied directly to scroll
+  // position (not a fixed-duration tween) so it reads as a continuation of
+  // the same scroll motion that builds Expertise's grid, rather than a
+  // hard cut into a separately-timed animation. Same start/end convention
+  // as this codebase's other scrubbed one-off transitions (see
+  // transitions.ts's dissolve()): the window just before the section
+  // reaches the top of the viewport, not the pinned runway's own 0-1
+  // progress (that one drives the video scrub + outro further down).
+  useEffect(() => {
+    if (reducedMotion) return;
+    const portal = entranceRef.current;
+    const runway = runwayRef.current;
+    if (!portal || !runway) return;
+    initGsap();
+
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        portal,
+        { opacity: 0, x: 380, scale: 0.9, filter: "blur(18px)", clipPath: "inset(0% 100% 0% 0%)" },
+        {
+          opacity: 1,
+          x: 0,
+          scale: 1,
+          filter: "blur(0px)",
+          clipPath: "inset(0% 0% 0% 0%)",
+          ease: "none",
+          scrollTrigger: { trigger: runway, start: "top 60%", end: "top 20%", scrub: true },
+        }
+      );
     }, runway);
 
     return () => ctx.revert();
