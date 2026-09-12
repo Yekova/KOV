@@ -37,10 +37,17 @@ body {
    past their own box's edges for a soft/faded look, and a couple of them
    were wide enough to push the page's real scrollable width past 100vw
    on some viewports. Vertical scroll (including Lenis' smooth scroll,
-   which only ever touches window.scrollY) is completely unaffected. */
+   which only ever touches window.scrollY) is completely unaffected.
+   `clip`, not `hidden`: `overflow: hidden` on html/body makes them a
+   *scroll container*, and per spec a position:sticky element sticks
+   relative to its nearest scroll-container ancestor rather than the
+   viewport — which broke every sticky section sitewide (ActivationWindow,
+   StudioShowcase, ScreenShowcase's pinAndTrack sections) the moment this
+   was added. `overflow: clip` clips the same overflow without creating a
+   scroll container, so sticky keeps resolving against the viewport. */
 html,
 body {
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 ::selection {
