@@ -3,30 +3,29 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { PROJECTS } from "@/data/projects";
 
-// The one real named client project (projects.ts) — the other three
-// entries there are honest "à venir" placeholders, not usable here. No
-// dedicated Kanti photo exists in the codebase yet (WorkGallery itself was
-// gutted back to a placeholder), so this reuses real KOV studio
-// photography rather than fabricating a product screenshot — the name,
-// category and destination are all real; only the backdrop is generic.
+// The one real named client project (projects.ts). Real device mockup of
+// the actual Kanti site (supplied directly — public/work/kanti-mockup.webp),
+// not a stand-in photo.
 const KANTI = PROJECTS[0];
 
 export function ProjectSpotlightContent() {
   return (
     <Link href="/#work-gallery" className="group relative block h-full w-full overflow-hidden" style={{ borderRadius: 20 }}>
+      {/* No text over the mockup at rest — it stays fully visible so the
+          real screenshot reads clearly. Everything (labels, title, CTA)
+          only appears on hover, over a graying overlay so it's legible
+          against whatever's underneath it. */}
       <Image
-        src="/kov/menu/atrium-brutaliste.jpg"
-        alt=""
+        src="/work/kanti-mockup.webp"
+        alt="Aperçu du site Kanti"
         fill
         sizes="(min-width: 1024px) 30vw, 60vw"
-        className="object-cover transition-[transform,filter] duration-500 group-hover:scale-[1.02] group-hover:contrast-110"
+        className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
       />
-      {/* Progressive gradient only — the image is meant to breathe, not
-          sit behind an opaque content block (spec §10). */}
       <div
         aria-hidden="true"
-        className="absolute inset-0"
-        style={{ background: "linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.1) 55%, transparent 78%)" }}
+        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+        style={{ background: "rgba(10,10,10,0.72)" }}
       />
       {/* Thin red line, invisible at rest — a targeted accent rather than a
           permanent red border (spec §06/§11). */}
@@ -36,13 +35,13 @@ export function ProjectSpotlightContent() {
         style={{ background: "linear-gradient(to bottom, transparent, var(--kov-red), transparent)" }}
       />
 
-      <div className="relative h-full w-full flex flex-col justify-between p-5">
+      <div className="relative h-full w-full flex flex-col justify-between p-5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
         <div className="flex items-center justify-between">
           <p className="flex items-center gap-2 text-kov-steel text-[10px] uppercase tracking-widest">
             <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-kov-red" />
             Projet featured
           </p>
-          <span className="text-kov-steel text-[10px] tabular-nums opacity-60 group-hover:opacity-100 transition-opacity">01 / 07</span>
+          <span className="text-kov-steel text-[10px] tabular-nums">01 / 07</span>
         </div>
 
         <div>
