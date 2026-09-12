@@ -32,6 +32,17 @@ body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
+/* Sitewide guard against a horizontal scrollbar — several decorative
+   elements (glow layers, negative-inset backdrops) intentionally bleed
+   past their own box's edges for a soft/faded look, and a couple of them
+   were wide enough to push the page's real scrollable width past 100vw
+   on some viewports. Vertical scroll (including Lenis' smooth scroll,
+   which only ever touches window.scrollY) is completely unaffected. */
+html,
+body {
+  overflow-x: hidden;
+}
+
 ::selection {
   background: var(--kov-red);
   color: var(--kov-white);

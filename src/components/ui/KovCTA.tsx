@@ -46,9 +46,15 @@ export function KovCTA({
 }: KovCTAProps) {
   return (
     <div className={`group relative inline-block ${className}`}>
-      <div className="absolute -inset-2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-        <ShapeBlur variation={0} shapeSize={1.6} roundness={1.55} borderSize={0.07} circleSize={0.55} circleEdge={1} color={haloColor} />
-      </div>
+      {/* Only the non-flat (GlassSurface) variant gets the WebGL halo — the
+          Hero's flat CTAs had it explicitly removed by request, and `flat`
+          is only ever used there, so gating it here is equivalent to a
+          Hero-only toggle without adding a redundant separate prop. */}
+      {!flat && (
+        <div className="absolute -inset-2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <ShapeBlur variation={0} shapeSize={1.6} roundness={1.55} borderSize={0.07} circleSize={0.55} circleEdge={1} color={haloColor} />
+        </div>
+      )}
       <Link href={href} className="relative block">
         {flat ? (
           <span

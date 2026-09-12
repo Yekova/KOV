@@ -4,18 +4,27 @@ import { HeroGlobalMenuButton } from "@/components/layout/HeroGlobalMenuButton";
 import { HeroWidgetGrid } from "@/components/home/HeroWidgetGrid";
 import type { HeroJournalPost } from "@/components/home/hero-widgets/JournalContent";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { resolvePostImageUrl } from "@/lib/portal/storage";
 
 async function getLatestJournalPost(): Promise<HeroJournalPost | null> {
   const { data } = await supabaseAdmin
     .from("posts")
-    .select("slug, title, tag, excerpt, published_at")
+    .select("slug, title, tag, excerpt, cover_image_path, published_at, reading_time")
     .eq("status", "published")
     .order("published_at", { ascending: false })
     .limit(1)
     .maybeSingle();
 
   if (!data) return null;
-  return { slug: data.slug, title: data.title, tag: data.tag, excerpt: data.excerpt };
+  return {
+    slug: data.slug,
+    title: data.title,
+    tag: data.tag,
+    excerpt: data.excerpt,
+    coverUrl: resolvePostImageUrl(data.cover_image_path),
+    publishedAt: data.published_at,
+    readingTime: data.reading_time,
+  };
 }
 
 export async function HeroScene() {
