@@ -14,6 +14,7 @@ import { StudioRoomPanel } from "@/components/studio/StudioRoomPanel";
 import { StudioRoomCarousel } from "@/components/studio/StudioRoomCarousel";
 import { StudioMiniMap } from "@/components/studio/StudioMiniMap";
 import { StudioFooter } from "@/components/studio/StudioFooter";
+import { StudioMusicPlayer } from "@/components/studio/StudioMusicPlayer";
 import { StudioErrorScreen } from "@/components/studio/StudioErrorScreen";
 import { StudioErrorBoundary } from "@/components/studio/StudioErrorBoundary";
 import { Nav } from "@/components/navigation/Nav";
@@ -409,6 +410,11 @@ function StudioExperienceInner() {
             onToggleMenu={toggleMenu}
             menuOpen={menuOpen}
             cameraStateRef={cameraStateRef}
+            // Room-scoped, not sitewide — the Lounge (p06) is the one room
+            // this was actually asked for; mounting/unmounting it as the
+            // visitor enters/leaves is what stops playback automatically
+            // (see StudioMusicPlayer's own cleanup effect).
+            extra={currentNodeId === "p06" ? <StudioMusicPlayer /> : undefined}
           />
           <StudioMiniMap
             nodes={STUDIO_NODE_ORDER.map((id) => STUDIO_NODES[id])}

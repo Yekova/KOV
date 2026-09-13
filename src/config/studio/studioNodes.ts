@@ -97,6 +97,18 @@ export const STUDIO_NODES: Record<string, StudioNode> = {
         position: [0, -30, -480],
         label: "Design Studio",
       },
+      {
+        targetNodeId: "p06",
+        // Unlike the P02 hotspot above, this one wasn't derived from the
+        // real P01 texture's own geometry (no reference to re-derive
+        // yaw/pitch from for a second passage) — an invented placement to
+        // the side of the arrival view, same "you can invent the room
+        // layout for now" latitude already used for the HUD mini-map's
+        // floor plan. Worth nudging via StudioDebugPanel once walked
+        // through live.
+        position: [420, -20, -260],
+        label: "Lounge",
+      },
     ],
     artworks: [],
     // Copy adapted from the homepage/expertise intro copy — not an
@@ -218,18 +230,45 @@ export const STUDIO_NODES: Record<string, StudioNode> = {
   },
   p06: {
     id: "p06",
-    name: "Salle Immersive",
+    name: "Lounge",
     room: "P06",
-    subtitle: "Expériences sans limites",
-    description: "Bientôt disponible.",
-    panorama: "",
+    subtitle: "Un temps pour souffler",
+    description:
+      "Un salon pensé pour ralentir : lumière tamisée, feu de cheminée, grandes baies vitrées. Le seul espace du studio pensé pour une pause, pas pour produire.",
+    panorama: "/studio/panoramas/p06.webp",
+    // Real photo (heavily AI-upscaled — "upscayl 5x", same honest caveat
+    // as P01/P02's own sources), horizontal center already frames the
+    // sofa/fireplace wall — the natural "face forward" arrival, same
+    // convention as P01/P02's own yaw 0.
     initialYaw: 0,
     initialPitch: 0,
-    zoomEnabled: true,
-    available: false,
-    connections: [],
+    // A 5x AI upscale is a heavy one — disabled rather than assumed to
+    // hold up under a closer look, same conservative call P02 already
+    // made for its own upscaled artwork.
+    zoomEnabled: false,
+    available: true,
+    connections: [
+      {
+        targetNodeId: "p01",
+        // Directly behind the arrival orientation, same "turn around to
+        // find the way back" convention P02 uses for its own return
+        // connection.
+        position: [0, -30, 480],
+        label: "Portal",
+      },
+    ],
+    // The framed photos already visible on this room's own gallery wall
+    // are left as plain decoration (same call already made for P02's
+    // extra painted frames) rather than wired to fabricated project data.
     artworks: [],
-    infoHotspots: [],
+    infoHotspots: [
+      {
+        position: [-260, -10, -180],
+        label: "Une pause, pas une pose",
+        title: "Une pause, pas une pose",
+        body: "Chaque studio a besoin d'un endroit où ralentir. Ce salon existe pour ça : un feu, une vue, et une ambiance sonore pensée pour souffler entre deux idées.",
+      },
+    ],
   },
 };
 
