@@ -192,7 +192,7 @@ export function HandTrackingController({ cameraStateRef, enabled }: HandTracking
 
   return (
     // Centered under Nav's own pill rather than tucked into either side
-    // column — the right side is already StudioHUD's row + StudioMiniMap,
+    // column — the right side is already StudioHUD's row + StudioMap3D,
     // the left is StudioRoomPanel, and this needed a spot clear of both
     // regardless of which room is active.
     <div

@@ -1,0 +1,135 @@
+"use client";
+
+import { Component, useState, type ReactNode } from "react";
+import { Canvas } from "@react-three/fiber";
+import { Maximize2 } from "lucide-react";
+import { prefersReducedMotion } from "@/lib/motion";
+import { StudioMapScene } from "@/components/studio/map/StudioMapScene";
+import { StudioMapAccessibleNav } from "@/components/studio/map/StudioMapAccessibleNav";
+import { StudioMapExpanded } from "@/components/studio/map/StudioMapExpanded";
+
+interface StudioMap3DProps {
+  currentRoomId: string;
+  onNavigate: (id: string) => void;
+  isExpanded: boolean;
+  onExpand: () => void;
+  onCollapse: () => void;
+}
+
+class StudioMapErrorBoundary extends Component<{ children: ReactNode; fallback: ReactNode }, { hasError: boolean }> {
+  state = { hasError: false };
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  render() {
+    return this.state.hasError ? this.props.fallback : this.props.children;
+  }
+}
+
+// Replaces the old 2D SVG StudioMiniMap with an isometric 3D architectural
+// model of the building, generated from studioMapLayout.ts data (no GLB,
+// no Blender) — same position in the HUD, same real navigation function
+// (`onNavigate` is StudioExperience.tsx's own navigateToNode, called
+// directly, never a parallel nav path). An error boundary around the
+// Canvas falls back to the plain accessible room list if the 3D scene
+// ever fails to render, so Studio navigation can never actually break.
+export function StudioMap3D({ currentRoomId, onNavigate, isExpanded, onExpand, onCollapse }: StudioMap3DProps) {
+  const [reducedMotion] = useState(() => prefersReducedMotion());
+  // This component only ever renders once StudioExperience.tsx reaches
+  // its "exploring" phase (well past the intro, purely client-side —
+  // `phase` always starts at "intro" identically on server and client),
+  // so `window` is always available here; a one-time check is enough —
+  // deciding whether to mount a second WebGL context isn't something
+  // that needs to react to a live resize. Desktop/tablet gets a real
+  // small 3D preview; mobile skips mounting the Canvas entirely (not
+  // just CSS-hiding it) rather than paying for a WebGL context nobody
+  // can usefully see or aim a cursor at on a phone screen.
+  const [isDesktop] = useState(() => typeof window !== "undefined" && window.innerWidth >= 768);
+
+  return (
+    <>
+      {isDesktop ? (
+        <div
+          className="absolute top-20 right-6 md:top-24 md:right-8 p-3"
+          style={{
+            width: 280,
+            borderRadius: 16,
+            background: "var(--glass-bg)",
+            backdropFilter: "blur(var(--glass-blur)) saturate(180%)",
+            WebkitBackdropFilter: "blur(var(--glass-blur)) saturate(180%)",
+            border: "1px solid var(--glass-border)",
+            boxShadow: "var(--glass-shadow-full)",
+          }}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[9px] uppercase tracking-widest text-kov-steel">Carte du studio</p>
+            <button
+              type="button"
+              onClick={onExpand}
+              aria-label="Agrandir la carte"
+              className="text-kov-steel hover:text-kov-red transition-colors"
+            >
+              <Maximize2 size={13} />
+            </button>
+          </div>
+          <div className="relative" style={{ height: 220, borderRadius: 10, overflow: "hidden", background: "#0a0a0a" }}>
+            <StudioMapErrorBoundary
+              fallback={
+                <div className="p-2 h-full overflow-y-auto">
+                  <StudioMapAccessibleNav currentRoomId={currentRoomId} onSelect={onNavigate} visuallyHidden={false} />
+                </div>
+              }
+            >
+              <Canvas dpr={[1, 1.5]} gl={{ antialias: true }} frameloop="demand">
+                <StudioMapScene
+                  currentRoomId={currentRoomId}
+                  onHoverChange={() => {}}
+                  onSelect={onNavigate}
+                  reducedMotion={reducedMotion}
+                  zoom={42}
+                />
+              </Canvas>
+            </StudioMapErrorBoundary>
+          </div>
+          <StudioMapAccessibleNav currentRoomId={currentRoomId} onSelect={onNavigate} />
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={onExpand}
+          className="absolute top-20 right-6 px-3 py-2 flex items-center gap-2 text-kov-bone text-[10px] uppercase tracking-widest"
+          style={{
+            borderRadius: "var(--radius-pill)",
+            background: "var(--glass-bg)",
+            backdropFilter: "blur(var(--glass-blur)) saturate(180%)",
+            WebkitBackdropFilter: "blur(var(--glass-blur)) saturate(180%)",
+            border: "1px solid var(--glass-border)",
+          }}
+        >
+          <Maximize2 size={12} />
+          Carte
+        </button>
+      )}
+
+      {isExpanded && (
+        <StudioMapErrorBoundary
+          fallback={
+            <div
+              className="fixed inset-0 flex items-center justify-center p-6"
+              style={{ zIndex: "var(--z-modal)", background: "rgba(0,0,0,0.85)" }}
+            >
+              <div className="w-full max-w-sm p-6" style={{ borderRadius: 16, background: "var(--kov-black)", border: "1px solid var(--glass-border)" }}>
+                <StudioMapAccessibleNav currentRoomId={currentRoomId} onSelect={onNavigate} visuallyHidden={false} />
+                <button type="button" onClick={onCollapse} className="mt-4 text-kov-steel text-xs uppercase tracking-widest">
+                  Fermer
+                </button>
+              </div>
+            </div>
+          }
+        >
+          <StudioMapExpanded currentRoomId={currentRoomId} onNavigate={onNavigate} onCollapse={onCollapse} />
+        </StudioMapErrorBoundary>
+      )}
+    </>
+  );
+}

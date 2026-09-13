@@ -156,3 +156,36 @@ body {
     transform: none !important;
   }
 }
+
+/* Current-position pin on StudioMap3D (StudioMapRoom.tsx) — a plain CSS
+   pulse on this <Html>-anchored DOM dot rather than an R3F/useFrame
+   animation, deliberately: the 3D scene otherwise sits fully idle between
+   interactions (frameloop="demand" in StudioMapScene.tsx), and animating
+   this in CSS instead of the render loop keeps that true rather than
+   forcing a continuous re-render just for one slow pulse. */
+@keyframes kovStudioMapPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+}
+
+.kov-studio-map-pin {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--kov-red);
+  box-shadow: 0 0 0 6px rgba(227, 30, 36, 0.22);
+  animation: kovStudioMapPulse 2.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kov-studio-map-pin {
+    animation: none;
+  }
+}

@@ -12,7 +12,7 @@ import { StudioProjectPanel } from "@/components/studio/StudioProjectPanel";
 import { StudioInfoPanel } from "@/components/studio/StudioInfoPanel";
 import { StudioRoomPanel } from "@/components/studio/StudioRoomPanel";
 import { StudioRoomCarousel } from "@/components/studio/StudioRoomCarousel";
-import { StudioMiniMap } from "@/components/studio/StudioMiniMap";
+import { StudioMap3D } from "@/components/studio/map/StudioMap3D";
 import { StudioFooter } from "@/components/studio/StudioFooter";
 import { StudioMusicPlayer } from "@/components/studio/StudioMusicPlayer";
 import { HandTrackingController } from "@/components/studio/HandTrackingController";
@@ -152,6 +152,7 @@ export function StudioExperience() {
 function StudioExperienceInner() {
   const { open: menuOpen, toggle: toggleMenu, close: closeMenu } = useGlobalMenu();
   const [handTrackingEnabled, setHandTrackingEnabled] = useState(false);
+  const [mapExpanded, setMapExpanded] = useState(false);
   const [phase, setPhase] = useState<EnginePhase>("intro");
   const [currentNodeId, setCurrentNodeId] = useState(STUDIO_ENTRY_NODE_ID);
   const [texture, setTexture] = useState<THREE.Texture | null>(null);
@@ -442,10 +443,12 @@ function StudioExperienceInner() {
               is what stops playback automatically (see
               StudioMusicPlayer's own cleanup effect). */}
           {currentNodeId === "p06" && <StudioMusicPlayer />}
-          <StudioMiniMap
-            nodes={STUDIO_NODE_ORDER.map((id) => STUDIO_NODES[id])}
-            activeId={currentNodeId}
-            onSelectRoom={navigateToNode}
+          <StudioMap3D
+            currentRoomId={currentNodeId}
+            onNavigate={navigateToNode}
+            isExpanded={mapExpanded}
+            onExpand={() => setMapExpanded(true)}
+            onCollapse={() => setMapExpanded(false)}
           />
           <StudioRoomPanel
             node={currentNode}
