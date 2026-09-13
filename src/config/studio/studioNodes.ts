@@ -146,10 +146,10 @@ export const STUDIO_NODES: Record<string, StudioNode> = {
     initialYaw: 0,
     initialPitch: 0,
     // AI-upscaled source (8x, same honest-upscale caveat as P01's own
-    // panorama) — zooming in just magnifies upscaler artifacts on the
-    // framed pieces, so FOV is locked to DEFAULT_FOV instead of pretending
-    // this holds up to a closer look.
-    zoomEnabled: false,
+    // panorama) — zoom re-enabled per explicit request (same as every
+    // other room) despite the upscale, rather than the earlier
+    // conservative default.
+    zoomEnabled: true,
     available: true,
     connections: [
       {
@@ -242,10 +242,11 @@ export const STUDIO_NODES: Record<string, StudioNode> = {
     // convention as P01/P02's own yaw 0.
     initialYaw: 0,
     initialPitch: 0,
-    // A 5x AI upscale is a heavy one — disabled rather than assumed to
-    // hold up under a closer look, same conservative call P02 already
-    // made for its own upscaled artwork.
-    zoomEnabled: false,
+    // A 5x AI upscale is a heavy one, but zoom is re-enabled here per
+    // explicit request — every room now matches the Portal's own
+    // zoomEnabled: true rather than each upscaled room getting its own
+    // conservative default.
+    zoomEnabled: true,
     available: true,
     connections: [
       {

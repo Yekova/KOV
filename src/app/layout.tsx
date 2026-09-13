@@ -3,7 +3,6 @@ import { Archivo_Black, Inter, Geist_Mono } from "next/font/google";
 import { SiteChrome } from "@/components/layout/SiteChrome";
 import { CustomCursor } from "@/components/ui/CustomCursor";
 import { AosInit } from "@/components/ui/AosInit";
-import { CookieConsent } from "@/components/layout/CookieConsent";
 import { OrganizationJsonLd } from "@/components/seo/OrganizationJsonLd";
 import "./globals.css";
 
@@ -54,7 +53,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <CustomCursor />
         <AosInit />
         <SiteChrome>{children}</SiteChrome>
-        <CookieConsent />
+        {/* CookieConsent temporarily disabled — a live report of the
+            banner not responding to clicks at all (not even hover) needs
+            more diagnosis than could be done without a real browser
+            (see CookieConsent.tsx's own hardening from this same session,
+            which is still in place and unaffected). Re-enable by restoring
+            this line and its import once that's resolved. */}
       </body>
     </html>
   );

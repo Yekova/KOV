@@ -16,14 +16,16 @@ export default function LegalLayout({ children }: { children: ReactNode }) {
           pinned to the viewport so it stays behind every route's content as
           you scroll. `--z-canvas` is a negative z-index specifically so it
           never fights the actual page content's own stacking, only the root
-          background. Confined to the left half on desktop (md:) rather
-          than the full width. Props match the spec's own example values
-          (pillarWidth 3.0, pillarHeight 0.4, glowAmount 0.005, intensity
-          1.0) — an earlier pass shrank pillarWidth/intensity to try to
-          "reveal both colors", which instead made the shape read as too
-          zoomed-in; the example's own values are what actually produce the
-          recognizable ribbon shape shown in reactbits.dev's own demo. */}
-      <div className="fixed inset-y-0 left-0 w-full md:w-[55%] pointer-events-none" style={{ zIndex: "var(--z-canvas)" }}>
+          background. Confined to the right half on desktop (md:) rather
+          than the full width — pinned to the right edge specifically (was
+          left-anchored before) so it sits clear of the hero copy/sidebar,
+          which are both left-aligned. Props match the spec's own example
+          values (pillarWidth 3.0, pillarHeight 0.4, glowAmount 0.005,
+          intensity 1.0) — an earlier pass shrank pillarWidth/intensity to
+          try to "reveal both colors", which instead made the shape read as
+          too zoomed-in; the example's own values are what actually produce
+          the recognizable ribbon shape shown in reactbits.dev's own demo. */}
+      <div className="fixed inset-y-0 right-0 w-full md:w-[55%] pointer-events-none" style={{ zIndex: "var(--z-canvas)" }}>
         <LightPillar
           topColor="#ff0000"
           bottomColor="#FF9FFC"
