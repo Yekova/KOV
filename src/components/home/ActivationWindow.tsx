@@ -27,16 +27,21 @@ const CARD_REST_HEIGHT = 640;
 // it CARD_SPACING px sideways; scale/opacity/blur fall off with distance,
 // clamped at 1 (i.e. cards 2+ away from active look the same as cards
 // exactly 1 away don't get scaled/blurred further past that point).
-const CARD_WIDTH = 250;
-const CARD_HEIGHT = 445; // 9:16
-const CARD_SPACING = 300;
+const CARD_WIDTH = 270;
+const CARD_HEIGHT = 480; // 9:16
+const CARD_SPACING = 320;
 
 interface ApproachCardData {
   title: string;
   body: string;
   features?: string[];
-  Visual: ComponentType<{ reducedMotion: boolean; src?: string }>;
+  Visual: ComponentType<{ reducedMotion: boolean; active: boolean; src?: string }>;
   mediaSrc?: string;
+  /** A real destination for this card's topic — an actual /expertise
+   * pillar, the real work gallery, or /contact. Omitted for the one card
+   * ("Un vrai accompagnement") with no single obvious page to point at,
+   * rather than forcing a link that doesn't really fit. */
+  href?: string;
 }
 
 // Responsive stays 3rd per the reference spec's own order (Introduction →
@@ -46,22 +51,26 @@ const CARDS: ApproachCardData[] = [
     title: "Une base solide",
     body: "Une stratégie claire pour un site qui a du sens.",
     Visual: PhotoPlaceholder, // mountain-peak photo — user-supplied later
+    href: "/expertise#strategie",
   },
   {
     title: "Design sur mesure",
     body: "Une identité unique qui vous ressemble vraiment.",
     Visual: RadarChart,
+    href: "/expertise#design",
   },
   {
     title: "Responsive par nature",
     body: "Une expérience parfaite sur tous les écrans, mobile, tablette, desktop.",
     Visual: ResponsiveMedia,
+    href: "/expertise#developpement",
   },
   {
     title: "Performance durable",
     body: "Des sites rapides, optimisés et pensés pour la croissance.",
     features: ["Core Web Vitals", "SEO technique", "Chargement ultra-rapide", "Infrastructure fiable"],
     Visual: PerformanceGauge,
+    href: "/expertise#systemes",
   },
   {
     title: "Un vrai accompagnement",
@@ -72,6 +81,7 @@ const CARDS: ApproachCardData[] = [
     title: "Des résultats concrets",
     body: "Plus de visibilité. Plus d'engagement. Plus d'opportunités.",
     Visual: GrowthBars,
+    href: "/#work-gallery",
   },
 ];
 
@@ -94,6 +104,15 @@ export function ActivationWindow() {
   const [reducedMotion] = useState(
     () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
   );
+  // Which card currently reads as "active" — a real React state (not just
+  // an imperative style), so ActivationCard's border/glow and each chart's
+  // replay-on-focus (see ActivationCharts.tsx) can react to it via props
+  // instead of only ever being driven by inline transforms. Updated from
+  // inside the scroll callback below, guarded against redundant re-renders
+  // (every scroll frame recomputes `segment`, but the *rounded* active
+  // index only actually changes a few times across the whole runway).
+  const [activeIndex, setActiveIndex] = useState(0);
+  const lastActiveIndexRef = useRef(0);
 
   // Pins the window (via CSS position:sticky on its wrapper below — the
   // sitewide convention for scroll-scrubbed sections, see @/lib/motion:
@@ -125,6 +144,12 @@ export function ActivationWindow() {
 
         const cardsProgress = gsap.utils.clamp(0, 1, (progress - DIVE_SPLIT) / (CARDS_SPLIT - DIVE_SPLIT));
         const segment = cardsProgress * (CARDS.length - 1);
+
+        const roundedActive = Math.round(segment);
+        if (roundedActive !== lastActiveIndexRef.current) {
+          lastActiveIndexRef.current = roundedActive;
+          setActiveIndex(roundedActive);
+        }
 
         CARDS.forEach((_, i) => {
           const el = coverflowRefs.current[i];
@@ -235,6 +260,26 @@ export function ActivationWindow() {
                     Voir nos réalisations ↗
                   </Button>
                 </div>
+
+                {/* Progress indicator — reflects the real activeIndex state
+                    driven by scroll (see the effect above), not decorative:
+                    hidden under reducedMotion since that state never moves
+                    there (the scroll effect bails out entirely). */}
+                {!reducedMotion && (
+                  <div className="flex items-center gap-2 mt-8" aria-hidden="true">
+                    {CARDS.map((card, i) => (
+                      <span
+                        key={card.title}
+                        className="h-1 rounded-full transition-all duration-300"
+                        style={{
+                          width: i === activeIndex ? 20 : 6,
+                          background: i === activeIndex ? "var(--kov-red)" : "var(--glass-border)",
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
+
                 <div className="mt-auto pt-10">
                   <p className="text-[10px] uppercase tracking-widest text-kov-steel">
                     Des sites pour des marques qui comptent
@@ -260,7 +305,8 @@ export function ActivationWindow() {
                           title={card.title}
                           body={card.body}
                           features={card.features}
-                          visual={<card.Visual reducedMotion={reducedMotion} src={card.mediaSrc} />}
+                          href={card.href}
+                          visual={<card.Visual reducedMotion={reducedMotion} active={false} src={card.mediaSrc} />}
                         />
                       </div>
                     ))}
@@ -282,7 +328,9 @@ export function ActivationWindow() {
                         title={card.title}
                         body={card.body}
                         features={card.features}
-                        visual={<card.Visual reducedMotion={reducedMotion} src={card.mediaSrc} />}
+                        href={card.href}
+                        active={i === activeIndex}
+                        visual={<card.Visual reducedMotion={reducedMotion} active={i === activeIndex} src={card.mediaSrc} />}
                       />
                     </div>
                   ))}

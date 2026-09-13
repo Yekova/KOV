@@ -1,5 +1,12 @@
 interface MediaProps {
   reducedMotion: boolean;
+  /** Unused here — accepted only so PhotoPlaceholder/ResponsiveMedia share
+   * the exact same prop shape as the chart Visuals in ActivationCharts.tsx
+   * (ActivationWindow renders whichever one a given card's data points at
+   * through one common `<card.Visual .../>` call), which do use it to
+   * replay their entrance animation. Neither a photo nor a looping video
+   * has an "entrance" to replay. */
+  active: boolean;
   /** Real photo path, supplied per-card once the user provides one. Falls
    * back to the honest "Photo à venir" placeholder when absent — matches
    * the convention already used elsewhere (ScreenShowcase, KovProjectCard)
