@@ -12,6 +12,12 @@ interface StudioMapLabelsProps {
 // silhouette, each tied back to its room by a fine leader line — kept
 // off the mini HUD card (too small to read there, and StudioMapRoom's
 // own hover tooltip already covers that context in mini mode).
+//
+// Phase-2 pass: a clearer hierarchy between the current room's label
+// (larger, a real pill background, brighter leader line) and every other
+// label (small, no background, dimmed further when unavailable) — the
+// original had every label at the same weight, which read as noise
+// rather than a hierarchy.
 export function StudioMapLabels({ currentRoomId }: StudioMapLabelsProps) {
   return (
     <>
@@ -27,7 +33,7 @@ export function StudioMapLabels({ currentRoomId }: StudioMapLabelsProps) {
         const dist = Math.hypot(dx, dz) || 1;
         const nx = dx / dist;
         const nz = dz / dist;
-        const anchor: [number, number, number] = [rx + nx * 1.7, ry + layout.size[1] + 0.9, rz + nz * 1.7];
+        const anchor: [number, number, number] = [rx + nx * 2, ry + layout.size[1] + 1.05, rz + nz * 2];
         const edgePoint: [number, number, number] = [
           rx + nx * (layout.size[0] / 2),
           ry + layout.size[1],
@@ -37,19 +43,26 @@ export function StudioMapLabels({ currentRoomId }: StudioMapLabelsProps) {
 
         return (
           <group key={id}>
-            <Line points={[edgePoint, anchor]} color={isActive ? "#e31e24" : "#4a4a4a"} lineWidth={1} />
+            <Line points={[edgePoint, anchor]} color={isActive ? "#e31e24" : "#3a3a3a"} lineWidth={isActive ? 1.4 : 0.8} />
             <Html position={anchor} center zIndexRange={[5, 0]} occlude={false}>
-              <div className="pointer-events-none text-center whitespace-nowrap">
-                <p className={`text-[9px] font-mono tracking-widest ${isActive ? "text-kov-red" : "text-kov-steel"}`}>
-                  {node.room}
-                </p>
-                <p
-                  className={`text-[9px] uppercase tracking-widest ${isActive ? "text-kov-bone" : "text-kov-steel"}`}
-                  style={{ opacity: node.available ? 1 : 0.5 }}
+              {isActive ? (
+                <div
+                  className="pointer-events-none text-center whitespace-nowrap px-3 py-1.5"
+                  style={{
+                    borderRadius: 8,
+                    background: "rgba(8,8,8,0.88)",
+                    border: "1px solid rgba(227,30,36,0.35)",
+                  }}
                 >
-                  {node.name}
-                </p>
-              </div>
+                  <p className="text-kov-red text-[10px] font-mono tracking-widest">{node.room}</p>
+                  <p className="text-kov-bone text-[11px] uppercase tracking-widest mt-0.5">{node.name}</p>
+                </div>
+              ) : (
+                <div className="pointer-events-none text-center whitespace-nowrap" style={{ opacity: node.available ? 0.8 : 0.4 }}>
+                  <p className="text-kov-steel text-[8px] font-mono tracking-widest">{node.room}</p>
+                  <p className="text-kov-steel text-[8px] uppercase tracking-widest mt-0.5">{node.name}</p>
+                </div>
+              )}
             </Html>
           </group>
         );

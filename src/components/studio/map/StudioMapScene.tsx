@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo, useRef, type RefObject } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { OrthographicCamera, OrbitControls, Line } from "@react-three/drei";
+import { OrthographicCamera, OrbitControls } from "@react-three/drei";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { STUDIO_NODES, STUDIO_NODE_ORDER } from "@/config/studio/studioNodes";
 import { STUDIO_MAP_LAYOUT, STUDIO_MAP_CENTER } from "@/config/studio/studioMapLayout";
+import { STUDIO_MAP_PALETTE } from "@/config/studio/studioMapMaterials";
 import { StudioMapRoom } from "@/components/studio/map/StudioMapRoom";
 
 const CAMERA_POSITION: [number, number, number] = [9, 10, 11];
@@ -119,19 +120,27 @@ export function StudioMapScene({
       <ambientLight intensity={0.55} />
       <directionalLight position={[6, 10, 4]} intensity={0.9} />
 
-      {/* Thin base platform tying the volumes together visually — not a
-          real floor, just enough to read as "one building" rather than
-          boxes floating in a void. */}
-      <mesh position={[0, -0.25, 0.4]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[11, 10]} />
-        <meshBasicMaterial color="#080808" transparent opacity={0.55} />
+      {/* Two-tier plinth — a wider dark base plus a slightly raised,
+          lighter-edged deck the rooms actually sit on. A single flat
+          plane read as "boxes floating over a void"; a real (if very
+          simple) two-level base reads as an actual maquette pedestal. */}
+      <mesh position={[0, -0.34, 0.4]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[12, 11]} />
+        <meshBasicMaterial color="#050505" transparent opacity={0.6} />
+      </mesh>
+      <mesh position={[0, -0.28, 0.4]}>
+        <boxGeometry args={[10.4, 0.1, 9.4]} />
+        <meshStandardMaterial color="#100f0c" roughness={0.9} metalness={0.05} />
+      </mesh>
+      <mesh position={[0, -0.225, 0.4]}>
+        <boxGeometry args={[10.42, 0.01, 9.42]} />
+        <meshStandardMaterial {...{ color: STUDIO_MAP_PALETTE.wallCap.color, roughness: 0.5, metalness: 0.3 }} />
       </mesh>
 
       {pairs.map(({ a, b }) => {
         const layoutA = STUDIO_MAP_LAYOUT[a];
         const layoutB = STUDIO_MAP_LAYOUT[b];
         const involvesCurrent = a === currentRoomId || b === currentRoomId;
-        const color = involvesCurrent ? "#7a2226" : "#2a2a2a";
         const sameLevel = layoutA.level === layoutB.level;
 
         if (sameLevel) {
@@ -146,24 +155,42 @@ export function StudioMapScene({
           const angle = Math.atan2(dx, dz);
           const midX = (ax + bx) / 2;
           const midZ = (az + bz) / 2;
+          const color = involvesCurrent ? "#5c1d20" : STUDIO_MAP_PALETTE.corridor.color;
           return (
             <mesh key={`${a}-${b}`} position={[midX, -0.02, midZ]} rotation={[-Math.PI / 2, 0, angle]}>
-              <planeGeometry args={[0.45, length]} />
-              <meshStandardMaterial color={color} roughness={0.9} metalness={0} />
+              <planeGeometry args={[0.5, length]} />
+              <meshStandardMaterial color={color} roughness={0.85} metalness={0.05} />
             </mesh>
           );
         }
 
-        // Cross-level (Portal ↔ Rooftop): a rising connector standing in
-        // for a simplified stair/lift shaft — a flat corridor plane
-        // wouldn't read correctly across a height change.
+        // Cross-level (Portal ↔ Rooftop): a simplified stair/lift core —
+        // a slim rising shaft plus a few stacked step slabs — rather than
+        // just a line floating between two floors.
+        const [ax, ay, az] = layoutA.position;
+        const [bx, by, bz] = layoutB.position;
+        const midX = (ax + bx) / 2;
+        const midZ = (az + bz) / 2;
+        const bottomY = Math.min(ay, by);
+        const topY = Math.max(ay, by);
+        const riserColor = involvesCurrent ? "#5c1d20" : STUDIO_MAP_PALETTE.darkStone.color;
+        const stepCount = 4;
         return (
-          <Line
-            key={`${a}-${b}`}
-            points={[layoutA.position, layoutB.position]}
-            color={involvesCurrent ? "#7a2226" : "#3a3a3a"}
-            lineWidth={involvesCurrent ? 2.4 : 1.6}
-          />
+          <group key={`${a}-${b}`}>
+            <mesh position={[midX, (bottomY + topY) / 2, midZ]}>
+              <boxGeometry args={[0.4, topY - bottomY, 0.4]} />
+              <meshStandardMaterial color={riserColor} roughness={0.75} metalness={0.1} />
+            </mesh>
+            {Array.from({ length: stepCount }).map((_, i) => {
+              const t = (i + 1) / (stepCount + 1);
+              return (
+                <mesh key={i} position={[midX, bottomY + (topY - bottomY) * t, midZ]}>
+                  <boxGeometry args={[0.5, 0.03, 0.5]} />
+                  <meshStandardMaterial {...{ color: STUDIO_MAP_PALETTE.wallCap.color, roughness: 0.5, metalness: 0.25 }} />
+                </mesh>
+              );
+            })}
+          </group>
         );
       })}
 
@@ -177,6 +204,7 @@ export function StudioMapScene({
             node={node}
             layout={layout}
             isActive={id === currentRoomId}
+            isSelected={id === focusId}
             onSelect={onSelect}
             onHoverChange={onHoverChange}
             reducedMotion={reducedMotion}

@@ -8,6 +8,7 @@ import { X, Minus, RotateCcw } from "lucide-react";
 import { motion, LIQUID_EASE, prefersReducedMotion } from "@/lib/motion";
 import { STUDIO_NODES, type StudioNode } from "@/config/studio/studioNodes";
 import { STUDIO_MAP_LAYOUT } from "@/config/studio/studioMapLayout";
+import { STUDIO_ROOM_TYPE_INFO } from "@/config/studio/studioMapFurniture";
 import { StudioMapScene } from "@/components/studio/map/StudioMapScene";
 import { StudioMapLabels } from "@/components/studio/map/StudioMapLabels";
 import { StudioMapAccessibleNav } from "@/components/studio/map/StudioMapAccessibleNav";
@@ -192,14 +193,48 @@ export function StudioMapExpanded({ currentRoomId, onNavigate, onCollapse }: Stu
                     sizes="280px"
                     className="object-cover"
                   />
+                  {previewNode.id === currentRoomId && (
+                    <span
+                      className="absolute top-2 left-2 px-2 py-1 text-[8px] uppercase tracking-widest text-kov-white flex items-center gap-1.5"
+                      style={{ borderRadius: 6, background: "rgba(227,30,36,0.85)" }}
+                    >
+                      <span aria-hidden="true" className="w-1 h-1 rounded-full bg-white" />
+                      Salle actuelle
+                    </span>
+                  )}
                 </div>
               )}
-              <p className="text-kov-red text-[10px] font-mono tracking-widest">{previewNode.room}</p>
+
+              <div className="flex items-center justify-between">
+                <p className="text-kov-red text-[10px] font-mono tracking-widest">{previewNode.room}</p>
+                {STUDIO_MAP_LAYOUT[previewId] && (
+                  <span
+                    className="text-kov-steel text-[9px] uppercase tracking-widest px-2 py-0.5"
+                    style={{ borderRadius: 999, border: "1px solid var(--glass-border)" }}
+                  >
+                    {STUDIO_ROOM_TYPE_INFO[STUDIO_MAP_LAYOUT[previewId].type].label}
+                  </span>
+                )}
+              </div>
               <p className="font-display text-kov-bone uppercase text-lg mt-2">{previewNode.name}</p>
               <p className="text-kov-steel text-xs mt-1">{previewNode.subtitle}</p>
-              <p className="text-kov-steel text-[11px] mt-2 leading-relaxed">
+
+              <div className="h-px my-4" style={{ background: "var(--glass-border)" }} />
+
+              <p className="text-kov-steel text-[11px] leading-relaxed">
                 Niveau {STUDIO_MAP_LAYOUT[previewId]?.level ?? 0}
               </p>
+
+              {STUDIO_MAP_LAYOUT[previewId] && (
+                <ul className="mt-3 space-y-1.5">
+                  {STUDIO_ROOM_TYPE_INFO[STUDIO_MAP_LAYOUT[previewId].type].features.map((feature) => (
+                    <li key={feature} className="flex items-center gap-2 text-kov-bone text-[11px]">
+                      <span aria-hidden="true" className="w-1 h-1 rounded-full shrink-0 bg-kov-red" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+              )}
 
               {previewNode.connections.length > 0 && (
                 <div className="mt-4">
@@ -219,6 +254,7 @@ export function StudioMapExpanded({ currentRoomId, onNavigate, onCollapse }: Stu
               )}
 
               <div className="flex-1" />
+              <div className="h-px mb-4" style={{ background: "var(--glass-border)" }} />
 
               {previewNode.available ? (
                 <button

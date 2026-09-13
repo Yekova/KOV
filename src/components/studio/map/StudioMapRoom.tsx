@@ -11,15 +11,21 @@ import { STUDIO_MAP_FURNITURE, type FurnitureItem } from "@/config/studio/studio
 
 const HOVER_LIFT = 0.06;
 const LIFT_SPEED = 10;
-const WALL_THICKNESS = 0.15;
+const WALL_THICKNESS = 0.19;
+const WALL_CAP_THICKNESS = 0.05;
 const DOOR_GAP_RATIO = 0.42;
 
 const EDGE_ACTIVE = "#e31e24";
+const EDGE_SELECTED = "#e7e5e0";
 const EDGE_HOVER = "rgba(255,255,255,0.35)";
 
 interface WallSegment {
   position: [number, number, number];
   size: [number, number, number];
+  /** Which side this segment belongs to — used to place the warm accent
+   * strip on the wall opposite the doorway, not a specific literal
+   * segment. */
+  side: "north" | "south" | "east" | "west";
 }
 
 // Real cutaway walls (with a doorway gap) instead of one solid box — this
@@ -31,7 +37,7 @@ function buildWalls(size: [number, number, number], doorSide: StudioMapLayoutEnt
   const hy = wallHeight / 2;
 
   if (doorSide === "all") {
-    return [{ position: [0, hy, depth / 2], size: [width, wallHeight, WALL_THICKNESS] }];
+    return [{ position: [0, hy, depth / 2], size: [width, wallHeight, WALL_THICKNESS], side: "south" }];
   }
 
   const segments: WallSegment[] = [];
@@ -46,30 +52,38 @@ function buildWalls(size: [number, number, number], doorSide: StudioMapLayoutEnt
       const segLength = (length - gap) / 2;
       const offset = gap / 2 + segLength / 2;
       if (isNS) {
-        segments.push({ position: [-offset, hy, z], size: [segLength, wallHeight, WALL_THICKNESS] });
-        segments.push({ position: [offset, hy, z], size: [segLength, wallHeight, WALL_THICKNESS] });
+        segments.push({ position: [-offset, hy, z], size: [segLength, wallHeight, WALL_THICKNESS], side });
+        segments.push({ position: [offset, hy, z], size: [segLength, wallHeight, WALL_THICKNESS], side });
       } else {
-        segments.push({ position: [x, hy, -offset], size: [WALL_THICKNESS, wallHeight, segLength] });
-        segments.push({ position: [x, hy, offset], size: [WALL_THICKNESS, wallHeight, segLength] });
+        segments.push({ position: [x, hy, -offset], size: [WALL_THICKNESS, wallHeight, segLength], side });
+        segments.push({ position: [x, hy, offset], size: [WALL_THICKNESS, wallHeight, segLength], side });
       }
     } else {
       segments.push({
         position: isNS ? [0, hy, z] : [x, hy, 0],
         size: isNS ? [width, wallHeight, WALL_THICKNESS] : [WALL_THICKNESS, wallHeight, depth],
+        side,
       });
     }
   });
   return segments;
 }
 
-function materialProps(key: StudioMapMaterialKey, opacity: number, forceTransparent: boolean) {
+const OPPOSITE_SIDE = { north: "south", south: "north", east: "west", west: "east" } as const;
+
+function materialProps(
+  key: StudioMapMaterialKey,
+  opacity: number,
+  forceTransparent: boolean,
+  emissiveBoost = 0
+) {
   const spec = STUDIO_MAP_PALETTE[key];
   return {
     color: spec.color,
     roughness: spec.roughness,
     metalness: spec.metalness,
-    emissive: spec.emissive ?? "#000000",
-    emissiveIntensity: spec.emissiveIntensity ?? 0,
+    emissive: emissiveBoost > 0 ? "#e31e24" : (spec.emissive ?? "#000000"),
+    emissiveIntensity: emissiveBoost > 0 ? emissiveBoost : (spec.emissiveIntensity ?? 0),
     transparent: forceTransparent || spec.transparent || opacity < 1,
     opacity: (spec.opacity ?? 1) * opacity,
   };
@@ -92,7 +106,12 @@ function FurniturePiece({ item, opacity, dimmed }: { item: FurnitureItem; opacit
 interface StudioMapRoomProps {
   node: StudioNode;
   layout: StudioMapLayoutEntry;
+  /** The room actually open in the 360° engine right now. */
   isActive: boolean;
+  /** The room clicked/previewed in expanded mode's info panel — distinct
+   * from `isActive` (see StudioMapExpanded.tsx: clicking selects, it
+   * doesn't navigate). */
+  isSelected: boolean;
   onSelect: (id: string) => void;
   onHoverChange: (id: string | null) => void;
   reducedMotion: boolean;
@@ -110,6 +129,7 @@ export function StudioMapRoom({
   node,
   layout,
   isActive,
+  isSelected,
   onSelect,
   onHoverChange,
   reducedMotion,
@@ -158,11 +178,23 @@ export function StudioMapRoom({
 
   const opacity = dimmedByLevel ? 0.28 : node.available ? 1 : 0.25;
   const walls = buildWalls(layout.size, layout.doorSide);
-  const wallEdgeColor = isActive ? EDGE_ACTIVE : hovered ? EDGE_HOVER : null;
+  const wallEdgeColor = isActive ? EDGE_ACTIVE : isSelected ? EDGE_SELECTED : hovered ? EDGE_HOVER : null;
   const furniture = detailed && node.available ? STUDIO_MAP_FURNITURE[layout.type] : [];
+  // Warm accent strip sits on whichever wall faces away from the doorway
+  // (the room's "back wall") — a stand-in for warm architectural
+  // lighting via an emissive material rather than a real dynamic light.
+  const backSide = layout.doorSide === "all" ? null : OPPOSITE_SIDE[layout.doorSide];
 
   return (
     <group ref={groupRef} position={[layout.position[0], layout.position[1], layout.position[2]]}>
+      {/* Fake ambient occlusion — a soft, larger, darker blob beneath the
+          footprint so the room reads as grounded/casting a shadow
+          without a real shadow-casting light. */}
+      <mesh position={[0, -0.06, 0]}>
+        <boxGeometry args={[layout.size[0] * 1.35, 0.02, layout.size[2] * 1.35]} />
+        <meshBasicMaterial color="#000000" transparent opacity={dimmedByLevel ? 0.08 : 0.28} />
+      </mesh>
+
       {/* Invisible hitbox — R3F skips pointer events on non-visible
           meshes, so this uses zero opacity rather than visible=false to
           stay a real click/hover target covering the whole footprint. */}
@@ -182,19 +214,62 @@ export function StudioMapRoom({
       </mesh>
 
       {isActive && (
+        <>
+          <mesh position={[0, 0.005, 0]}>
+            <boxGeometry args={[layout.size[0] * 0.92, 0.01, layout.size[2] * 0.92]} />
+            <meshStandardMaterial color="#e31e24" transparent opacity={0.16} roughness={1} metalness={0} />
+          </mesh>
+          <mesh position={[0, 0.004, 0]}>
+            <boxGeometry args={[layout.size[0] * 1.15, 0.008, layout.size[2] * 1.15]} />
+            <meshStandardMaterial color="#e31e24" transparent opacity={0.06} roughness={1} metalness={0} />
+          </mesh>
+        </>
+      )}
+
+      {!isActive && isSelected && (
         <mesh position={[0, 0.005, 0]}>
           <boxGeometry args={[layout.size[0] * 0.92, 0.01, layout.size[2] * 0.92]} />
-          <meshStandardMaterial color="#e31e24" transparent opacity={0.22} roughness={1} metalness={0} />
+          <meshStandardMaterial color="#e7e5e0" transparent opacity={0.1} roughness={1} metalness={0} />
         </mesh>
       )}
 
       {walls.map((wall, i) => (
         <mesh key={i} position={wall.position}>
           <boxGeometry args={wall.size} />
-          <meshStandardMaterial {...materialProps("darkStone", opacity, dimmedByLevel)} />
+          <meshStandardMaterial {...materialProps("darkStone", opacity, dimmedByLevel, isActive ? 0.1 : 0)} />
           {wallEdgeColor && !dimmedByLevel && <Edges color={wallEdgeColor} />}
         </mesh>
       ))}
+
+      {/* Wall-cap trim — a thin lighter strip along each wall's top edge,
+          the kind of edge highlight that reads as "a real built wall"
+          instead of a flat-shaded block. */}
+      {!dimmedByLevel &&
+        walls.map((wall, i) => (
+          <mesh key={`cap-${i}`} position={[wall.position[0], wall.position[1] + wall.size[1] / 2, wall.position[2]]}>
+            <boxGeometry args={[wall.size[0] + 0.03, WALL_CAP_THICKNESS, wall.size[2] + 0.03]} />
+            <meshStandardMaterial {...materialProps("wallCap", opacity, false)} />
+          </mesh>
+        ))}
+
+      {backSide && node.available && detailed && (
+        <mesh
+          position={[
+            backSide === "east" ? layout.size[0] / 2 - 0.03 : backSide === "west" ? -layout.size[0] / 2 + 0.03 : 0,
+            layout.size[1] - 0.08,
+            backSide === "south" ? layout.size[2] / 2 - 0.03 : backSide === "north" ? -layout.size[2] / 2 + 0.03 : 0,
+          ]}
+        >
+          <boxGeometry
+            args={
+              backSide === "east" || backSide === "west"
+                ? [0.02, 0.05, layout.size[2] * 0.7]
+                : [layout.size[0] * 0.7, 0.05, 0.02]
+            }
+          />
+          <meshStandardMaterial {...materialProps("warmLight", opacity, false)} />
+        </mesh>
+      )}
 
       {furniture.map((item, i) => (
         <FurniturePiece key={i} item={item} opacity={opacity} dimmed={dimmedByLevel} />

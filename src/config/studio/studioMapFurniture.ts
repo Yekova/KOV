@@ -15,6 +15,20 @@ export interface FurnitureItem {
 
 export type StudioRoomType = "portal" | "design" | "gallery" | "motion" | "devlab" | "lounge" | "rooftop";
 
+// A short French label + 2-3 "what's actually in this room" bullets per
+// type, for StudioMapExpanded.tsx's right-hand info panel — describing
+// the schematic furniture set above, not fabricated facts about the
+// business. Keyed by type for the same reason STUDIO_MAP_FURNITURE is.
+export const STUDIO_ROOM_TYPE_INFO: Record<StudioRoomType, { label: string; features: string[] }> = {
+  portal: { label: "Réception", features: ["Desk d'accueil", "Mur KOV", "Entrée du studio"] },
+  design: { label: "Studio de design", features: ["Grandes tables", "Écran de présentation", "Assises"] },
+  gallery: { label: "Galerie", features: ["Cadres muraux", "Parcours ouvert"] },
+  motion: { label: "Salle motion", features: ["Grand écran", "Ambiance projection"] },
+  devlab: { label: "Lab développement", features: ["Postes techniques", "Trois écrans"] },
+  lounge: { label: "Lounge", features: ["Canapé", "Table basse", "Tapis"] },
+  rooftop: { label: "Terrasse", features: ["Pergola", "Assises extérieures", "Garde-corps"] },
+};
+
 // Keyed by room *type*, not by room id — StudioMapRoom.tsx looks this up
 // generically (`STUDIO_MAP_FURNITURE[layout.type]`), no `if id === "p01"`
 // branching anywhere in the render code. Max ~8 very simple primitives
@@ -71,5 +85,12 @@ export const STUDIO_MAP_FURNITURE: Record<StudioRoomType, FurnitureItem[]> = {
     { shape: { kind: "box", size: [0.5, 0.2, 0.4] }, position: [0.45, 0.1, 0.35], material: "fabric" },
     { shape: { kind: "cylinder", radiusTop: 0.12, radiusBottom: 0.14, height: 0.22 }, position: [-0.7, 0.11, -0.5], material: "wood" },
     { shape: { kind: "sphere", radius: 0.16 }, position: [-0.7, 0.3, -0.5], material: "foliage" },
+    // A discreet perimeter guard-rail — the terrace reads as an actual
+    // elevated platform rather than an open edge with nothing to signal
+    // "you're one floor up here."
+    { shape: { kind: "box", size: [2.2, 0.22, 0.03] }, position: [0, 0.11, -1.05], material: "wallCap" },
+    { shape: { kind: "box", size: [2.2, 0.22, 0.03] }, position: [0, 0.11, 1.05], material: "wallCap" },
+    { shape: { kind: "box", size: [0.03, 0.22, 1.9] }, position: [-1.05, 0.11, 0], material: "wallCap" },
+    { shape: { kind: "box", size: [0.03, 0.22, 1.9] }, position: [1.05, 0.11, 0], material: "wallCap" },
   ],
 };
