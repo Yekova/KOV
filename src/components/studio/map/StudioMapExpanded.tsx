@@ -3,11 +3,20 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Canvas } from "@react-three/fiber";
+import Image from "next/image";
 import { X, Minus, RotateCcw } from "lucide-react";
 import { motion, LIQUID_EASE, prefersReducedMotion } from "@/lib/motion";
 import { STUDIO_NODES, type StudioNode } from "@/config/studio/studioNodes";
+import { STUDIO_MAP_LAYOUT } from "@/config/studio/studioMapLayout";
 import { StudioMapScene } from "@/components/studio/map/StudioMapScene";
+import { StudioMapLabels } from "@/components/studio/map/StudioMapLabels";
 import { StudioMapAccessibleNav } from "@/components/studio/map/StudioMapAccessibleNav";
+
+const LEVELS = [
+  { id: null, label: "Tous" },
+  { id: 0, label: "Niveau 0" },
+  { id: 1, label: "Rooftop" },
+] as const;
 
 const GLASS_PANEL = {
   background: "var(--glass-bg)",
@@ -32,6 +41,7 @@ export function StudioMapExpanded({ currentRoomId, onNavigate, onCollapse }: Stu
   const [visible, setVisible] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
   const [cameraResetKey, setCameraResetKey] = useState(0);
   const [reducedMotion] = useState(() => prefersReducedMotion());
 
@@ -90,7 +100,11 @@ export function StudioMapExpanded({ currentRoomId, onNavigate, onCollapse }: Stu
             <div className="flex items-center gap-2 shrink-0">
               <button
                 type="button"
-                onClick={() => setCameraResetKey((k) => k + 1)}
+                onClick={() => {
+                  setCameraResetKey((k) => k + 1);
+                  setSelectedId(null);
+                  setSelectedLevel(null);
+                }}
                 aria-label="Réinitialiser la vue"
                 className="w-8 h-8 flex items-center justify-center text-kov-steel hover:text-kov-bone transition-colors"
               >
@@ -115,7 +129,29 @@ export function StudioMapExpanded({ currentRoomId, onNavigate, onCollapse }: Stu
             </div>
           </div>
 
-          <div className="relative flex-1 min-h-0">
+          <div className="relative flex-1 min-h-0 flex">
+            {/* Level selector — dims the other level in the scene rather
+                than hiding it, so the Rooftop's "one floor up" relationship
+                to the ground floor stays legible either way. */}
+            <div className="absolute top-3 left-3 z-10 flex md:flex-col gap-1.5">
+              {LEVELS.map((lvl) => (
+                <button
+                  key={String(lvl.id)}
+                  type="button"
+                  onClick={() => setSelectedLevel(lvl.id)}
+                  className="px-2.5 py-1.5 text-[9px] uppercase tracking-widest transition-colors"
+                  style={{
+                    borderRadius: 8,
+                    background: selectedLevel === lvl.id ? "var(--kov-red)" : "rgba(10,10,10,0.6)",
+                    color: selectedLevel === lvl.id ? "var(--kov-white)" : "var(--kov-steel)",
+                    border: "1px solid var(--glass-border)",
+                  }}
+                >
+                  {lvl.label}
+                </button>
+              ))}
+            </div>
+
             <Canvas
               key={cameraResetKey}
               dpr={[1, 1.5]}
@@ -130,8 +166,12 @@ export function StudioMapExpanded({ currentRoomId, onNavigate, onCollapse }: Stu
                 onSelect={setSelectedId}
                 reducedMotion={reducedMotion}
                 interactive
+                detailed
+                selectedLevel={selectedLevel}
+                focusId={selectedId}
                 zoom={70}
               />
+              <StudioMapLabels currentRoomId={currentRoomId} />
             </Canvas>
             <StudioMapAccessibleNav currentRoomId={currentRoomId} onSelect={onNavigate} />
           </div>
@@ -143,11 +183,22 @@ export function StudioMapExpanded({ currentRoomId, onNavigate, onCollapse }: Stu
         >
           {previewNode && (
             <>
+              {previewNode.available && (
+                <div className="relative w-full mb-4 overflow-hidden" style={{ aspectRatio: "16/9", borderRadius: 10 }}>
+                  <Image
+                    src={`/studio/thumbnails/${previewNode.id}.webp`}
+                    alt=""
+                    fill
+                    sizes="280px"
+                    className="object-cover"
+                  />
+                </div>
+              )}
               <p className="text-kov-red text-[10px] font-mono tracking-widest">{previewNode.room}</p>
               <p className="font-display text-kov-bone uppercase text-lg mt-2">{previewNode.name}</p>
               <p className="text-kov-steel text-xs mt-1">{previewNode.subtitle}</p>
               <p className="text-kov-steel text-[11px] mt-2 leading-relaxed">
-                Niveau {previewId === "p07" ? 1 : 0}
+                Niveau {STUDIO_MAP_LAYOUT[previewId]?.level ?? 0}
               </p>
 
               {previewNode.connections.length > 0 && (

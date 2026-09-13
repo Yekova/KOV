@@ -80,7 +80,7 @@ export function StudioMap3D({ currentRoomId, onNavigate, isExpanded, onExpand, o
                 </div>
               }
             >
-              <Canvas dpr={[1, 1.5]} gl={{ antialias: true }} frameloop="demand">
+              <Canvas dpr={1} gl={{ antialias: true }} frameloop="demand">
                 <StudioMapScene
                   currentRoomId={currentRoomId}
                   onHoverChange={() => {}}
