@@ -1,16 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
-import { COOKIE_CONSENT_STORAGE_KEY, REOPEN_COOKIE_CONSENT_EVENT } from "@/components/layout/CookieConsent";
+import {
+  COOKIE_CONSENT_STORAGE_KEY,
+  REOPEN_COOKIE_CONSENT_EVENT,
+  COOKIE_CONSENT_DECIDED_EVENT,
+} from "@/components/layout/CookieConsent";
 
 type Consent = "accepted" | "rejected" | null;
 
 function readConsent(): Consent {
   if (typeof window === "undefined") return null;
-  const stored = window.localStorage.getItem(COOKIE_CONSENT_STORAGE_KEY);
-  return stored === "accepted" || stored === "rejected" ? stored : null;
+  try {
+    const stored = window.localStorage.getItem(COOKIE_CONSENT_STORAGE_KEY);
+    return stored === "accepted" || stored === "rejected" ? stored : null;
+  } catch {
+    return null;
+  }
 }
 
 const STATUS_LABEL: Record<"accepted" | "rejected" | "none", string> = {
@@ -29,8 +37,26 @@ const STATUS_LABEL: Record<"accepted" | "rejected" | "none", string> = {
 export default function CookieManagementPage() {
   const [consent, setConsent] = useState<Consent>(() => readConsent());
 
+  // The actual accept/refuse buttons live in the global CookieConsent
+  // banner (reopened below) — this page's own `consent` state needs to
+  // hear about it once the visitor decides there, or the status readout
+  // below would stay frozen on "Aucun choix enregistré" until a refresh.
+  useEffect(() => {
+    function handleDecided(event: Event) {
+      const value = (event as CustomEvent<"accepted" | "rejected">).detail;
+      setConsent(value);
+    }
+    window.addEventListener(COOKIE_CONSENT_DECIDED_EVENT, handleDecided);
+    return () => window.removeEventListener(COOKIE_CONSENT_DECIDED_EVENT, handleDecided);
+  }, []);
+
   function handleReset() {
-    window.localStorage.removeItem(COOKIE_CONSENT_STORAGE_KEY);
+    try {
+      window.localStorage.removeItem(COOKIE_CONSENT_STORAGE_KEY);
+    } catch {
+      // Same storage-can-throw guard as CookieConsent.tsx — the reopened
+      // banner + this page's own state still update either way.
+    }
     setConsent(null);
     window.dispatchEvent(new Event(REOPEN_COOKIE_CONSENT_EVENT));
   }

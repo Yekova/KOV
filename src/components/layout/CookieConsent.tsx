@@ -13,13 +13,26 @@ export const COOKIE_CONSENT_STORAGE_KEY = "kov-cookie-consent";
 // simplest way to tell this specific mounted instance "show yourself
 // again" without lifting consent into a context nobody else needs.
 export const REOPEN_COOKIE_CONSENT_EVENT = "kov-reopen-cookie-consent";
+// Dispatched by this component every time a real choice is recorded, with
+// the value in `event.detail` — lets /legal/gestion-cookies (a separate
+// component instance, reading the same storage key into its own state)
+// refresh its displayed status the moment the banner above is used again,
+// without needing a shared context or a page reload.
+export const COOKIE_CONSENT_DECIDED_EVENT = "kov-cookie-consent-decided";
 
 type Consent = "accepted" | "rejected" | null;
 
 function readStoredConsent(): Consent {
   if (typeof window === "undefined") return null;
-  const stored = window.localStorage.getItem(COOKIE_CONSENT_STORAGE_KEY);
-  return stored === "accepted" || stored === "rejected" ? stored : null;
+  // localStorage can throw (private-browsing storage caps, strict
+  // cookie/site-data browser settings, some corporate policies) — treated
+  // the same as "no choice yet" rather than left to crash the banner.
+  try {
+    const stored = window.localStorage.getItem(COOKIE_CONSENT_STORAGE_KEY);
+    return stored === "accepted" || stored === "rejected" ? stored : null;
+  } catch {
+    return null;
+  }
 }
 
 // Gates Vercel Analytics/Speed Insights behind an actual decision instead
@@ -47,8 +60,17 @@ export function CookieConsent() {
   }, []);
 
   function decide(value: "accepted" | "rejected") {
-    window.localStorage.setItem(COOKIE_CONSENT_STORAGE_KEY, value);
+    // The banner must close on a real click regardless of whether
+    // persisting the choice succeeds — a storage write that throws (see
+    // readStoredConsent's own note) must not leave it stuck open forever.
+    try {
+      window.localStorage.setItem(COOKIE_CONSENT_STORAGE_KEY, value);
+    } catch {
+      // Choice still applies for this session (consent state below still
+      // updates); it just won't be remembered on the next visit.
+    }
     setConsent(value);
+    window.dispatchEvent(new CustomEvent(COOKIE_CONSENT_DECIDED_EVENT, { detail: value }));
   }
 
   return (
@@ -69,7 +91,11 @@ export function CookieConsent() {
         // two liquid-glass treatments used across this codebase.
         <div
           className="fixed bottom-4 left-4 right-4 sm:left-6 sm:right-auto sm:max-w-sm"
-          style={{ zIndex: "var(--z-modal)" }}
+          // `env(safe-area-inset-bottom)` guards against mobile browsers'
+          // own bottom toolbar overlapping (and eating clicks meant for)
+          // a plain `bottom-4` fixed element — falls back to 0 on browsers
+          // without the safe-area env vars.
+          style={{ zIndex: "var(--z-modal)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
         >
           <div
             style={{
