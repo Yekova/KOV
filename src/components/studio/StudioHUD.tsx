@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type RefObject } from "react";
+import { Hand } from "lucide-react";
 import { StudioCompass } from "@/components/studio/StudioCompass";
 import type { CameraState } from "@/components/studio/CameraController";
 
@@ -11,6 +12,8 @@ interface StudioHUDProps {
   onToggleMenu: () => void;
   menuOpen: boolean;
   cameraStateRef: RefObject<CameraState>;
+  handTrackingEnabled: boolean;
+  onToggleHandTracking: () => void;
 }
 
 // Deliberately minimal beyond the compass + mode badge + hamburger — the
@@ -22,7 +25,14 @@ interface StudioHUDProps {
 // owns: the live compass, the hamburger toggle for GlobalOverviewMenu (a
 // distinct "whole-site overview" experience, not what Nav's own mobile
 // menu does) + the first-visit drag hint.
-export function StudioHUD({ totalRooms, onToggleMenu, menuOpen, cameraStateRef }: StudioHUDProps) {
+export function StudioHUD({
+  totalRooms,
+  onToggleMenu,
+  menuOpen,
+  cameraStateRef,
+  handTrackingEnabled,
+  onToggleHandTracking,
+}: StudioHUDProps) {
   const [showHint, setShowHint] = useState(
     () => typeof window !== "undefined" && !sessionStorage.getItem("kov-studio-hint-seen")
   );
@@ -55,6 +65,25 @@ export function StudioHUD({ totalRooms, onToggleMenu, menuOpen, cameraStateRef }
             Mode exploration · {totalRooms} salles
           </span>
         </div>
+        <button
+          type="button"
+          onClick={onToggleHandTracking}
+          aria-pressed={handTrackingEnabled}
+          aria-label={
+            handTrackingEnabled ? "Désactiver le contrôle par la main" : "Activer le contrôle par la main (caméra)"
+          }
+          className="pointer-events-auto flex items-center justify-center w-8 h-8 transition-colors"
+          style={{
+            borderRadius: "var(--radius-pill)",
+            background: handTrackingEnabled ? "var(--kov-red)" : "var(--glass-bg)",
+            backdropFilter: "blur(var(--glass-blur)) saturate(180%)",
+            WebkitBackdropFilter: "blur(var(--glass-blur)) saturate(180%)",
+            border: "1px solid var(--glass-border)",
+            color: handTrackingEnabled ? "var(--kov-white)" : "var(--kov-bone)",
+          }}
+        >
+          <Hand size={14} />
+        </button>
         <button
           type="button"
           onClick={onToggleMenu}

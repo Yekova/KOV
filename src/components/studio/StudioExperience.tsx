@@ -15,6 +15,7 @@ import { StudioRoomCarousel } from "@/components/studio/StudioRoomCarousel";
 import { StudioMiniMap } from "@/components/studio/StudioMiniMap";
 import { StudioFooter } from "@/components/studio/StudioFooter";
 import { StudioMusicPlayer } from "@/components/studio/StudioMusicPlayer";
+import { HandTrackingController } from "@/components/studio/HandTrackingController";
 import { StudioErrorScreen } from "@/components/studio/StudioErrorScreen";
 import { StudioErrorBoundary } from "@/components/studio/StudioErrorBoundary";
 import { Nav } from "@/components/navigation/Nav";
@@ -150,6 +151,7 @@ export function StudioExperience() {
 
 function StudioExperienceInner() {
   const { open: menuOpen, toggle: toggleMenu, close: closeMenu } = useGlobalMenu();
+  const [handTrackingEnabled, setHandTrackingEnabled] = useState(false);
   const [phase, setPhase] = useState<EnginePhase>("intro");
   const [currentNodeId, setCurrentNodeId] = useState(STUDIO_ENTRY_NODE_ID);
   const [texture, setTexture] = useState<THREE.Texture | null>(null);
@@ -426,7 +428,13 @@ function StudioExperienceInner() {
             onToggleMenu={toggleMenu}
             menuOpen={menuOpen}
             cameraStateRef={cameraStateRef}
+            handTrackingEnabled={handTrackingEnabled}
+            onToggleHandTracking={() => setHandTrackingEnabled((v) => !v)}
           />
+          {/* Sitewide (any room), opt-in only — writes into the same
+              cameraStateRef CameraController.tsx (inside the Canvas)
+              already reads every frame, so no changes were needed there. */}
+          <HandTrackingController cameraStateRef={cameraStateRef} enabled={handTrackingEnabled} />
           {/* Room-scoped, not sitewide — the Lounge (p06) is the one room
               this was actually asked for. Self-positioned bottom-right
               (not part of StudioHUD's top-right row) per its own device

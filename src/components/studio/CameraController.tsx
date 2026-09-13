@@ -13,8 +13,12 @@ import * as THREE from "three";
 export const MIN_FOV = 48;
 export const MAX_FOV = 75;
 export const DEFAULT_FOV = 62;
-const MAX_PITCH = THREE.MathUtils.degToRad(75);
-const MIN_PITCH = -MAX_PITCH;
+// Exported for HandTrackingController.tsx, which needs the same vertical
+// clamp range for its own hand-driven pitch target — a single source of
+// truth for "how far up/down any input is allowed to look" rather than a
+// second hardcoded 75° elsewhere.
+export const MAX_PITCH = THREE.MathUtils.degToRad(75);
+export const MIN_PITCH = -MAX_PITCH;
 // Deliberately low — "lente, premium, physique, précise", explicitly not
 // FPS-game sensitivity (studio spec §08).
 const DRAG_SENSITIVITY = 0.0022;
