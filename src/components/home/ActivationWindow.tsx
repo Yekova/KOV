@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useRef, useState, type ComponentType } from "react";
 import { gsap, initGsap, pinAndTrack, motion as motionTiming, GSAP_REVEAL_EASE } from "@/lib/motion";
 import { BrowserChrome } from "@/components/ui/BrowserChrome";
@@ -213,6 +212,34 @@ export function ActivationWindow() {
         className="sticky top-0 h-screen flex items-center justify-center overflow-hidden"
         style={{ marginLeft: "calc(50% - 50vw)", marginRight: "calc(50% - 50vw)", width: "100vw" }}
       >
+        {/* Arc transitions — solid black circle-segments sitting in the
+            letterboxed gap above/below the card, where the page-level
+            LineWaves canvas (src/app/page.tsx, behind every homepage
+            section) still shows through. Marks the Hero→section seam
+            above, and the section→next seam below, without needing to
+            touch HeroScene.tsx or whatever follows: both live entirely
+            inside this component's own sticky viewport. Once the card
+            dives to fullscreen it naturally covers these, which is fine —
+            that dive is its own transition by then. */}
+        <svg
+          aria-hidden="true"
+          className="absolute top-0 inset-x-0 w-full pointer-events-none"
+          viewBox="0 0 1440 110"
+          preserveAspectRatio="none"
+          style={{ height: 110 }}
+        >
+          <path d="M0,0 L1440,0 L1440,38 Q720,108 0,38 Z" fill="var(--kov-black)" />
+        </svg>
+        <svg
+          aria-hidden="true"
+          className="absolute bottom-0 inset-x-0 w-full pointer-events-none"
+          viewBox="0 0 1440 110"
+          preserveAspectRatio="none"
+          style={{ height: 110 }}
+        >
+          <path d="M0,110 L1440,110 L1440,72 Q720,2 0,72 Z" fill="var(--kov-black)" />
+        </svg>
+
         <div ref={entranceRef} className="w-full flex justify-center">
           <div
             ref={cardRef}
@@ -224,11 +251,19 @@ export function ActivationWindow() {
               boxShadow: "var(--glass-shadow-full), 0 60px 120px -40px rgba(0,0,0,0.7)",
             }}
           >
-            <Image src="/home/activation-background.webp" alt="" fill sizes="100vw" className="object-cover" />
-
-            {/* Legibility scrim — a light, uniform dim so text stays readable
-                against the image regardless of where its highlights sit. */}
-            <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: "rgba(5,5,5,0.35)" }} />
+            {/* Pure CSS "design" background — no photo, matching the same
+                direction the six cards' own visuals just moved to. A
+                graphite base with two soft radial glows (red upper-left,
+                a cooler steel lower-right) rather than the previous
+                smoky/red photographic texture. */}
+            <div
+              aria-hidden="true"
+              className="absolute inset-0"
+              style={{
+                background:
+                  "radial-gradient(ellipse 60% 50% at 15% 10%, rgba(227,30,36,0.22), transparent 60%), radial-gradient(ellipse 50% 45% at 85% 90%, rgba(255,255,255,0.05), transparent 65%), var(--kov-graphite)",
+              }}
+            />
             <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ boxShadow: "inset 0 1px 0 var(--glass-highlight)" }} />
 
             <BrowserChrome className="relative shrink-0" showUrlBar={false} />
