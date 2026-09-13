@@ -220,15 +220,31 @@ function StudioExperienceInner() {
   // hotspot, the target panorama's bytes are typically already local, so
   // the real load inside navigateToNode resolves fast enough to land
   // inside StudioNavigationOverlay's cover window instead of racing it.
-  // Same fire-and-forget Image() prefetch idiom as MouseFrameBackdrop.tsx.
+  // Sequential, not fire-and-forget for every connection at once: the
+  // Portal now has three reachable rooms, and decoding three full
+  // 8192x4096 rasters concurrently (~128MB each once decoded, on top of
+  // whatever the current room's own texture already holds) is real,
+  // avoidable memory pressure on modest/mobile GPUs — `decode()` waits
+  // for one to finish before the next one starts.
   useEffect(() => {
     if (phase !== "exploring") return;
-    currentNode.connections.forEach((connection) => {
-      const target = STUDIO_NODES[connection.targetNodeId];
-      if (!target) return;
-      const img = new window.Image();
-      img.src = target.panorama;
-    });
+    let cancelled = false;
+
+    async function prefetchReachableRooms() {
+      for (const connection of currentNode.connections) {
+        if (cancelled) return;
+        const target = STUDIO_NODES[connection.targetNodeId];
+        if (!target) continue;
+        const img = new window.Image();
+        img.src = target.panorama;
+        await img.decode().catch(() => {});
+      }
+    }
+    prefetchReachableRooms();
+
+    return () => {
+      cancelled = true;
+    };
   }, [phase, currentNode]);
 
   function handleEnter() {

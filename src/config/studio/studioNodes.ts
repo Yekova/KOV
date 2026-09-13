@@ -109,6 +109,15 @@ export const STUDIO_NODES: Record<string, StudioNode> = {
         position: [420, -20, -260],
         label: "Lounge",
       },
+      {
+        targetNodeId: "p07",
+        // Same invented-placement latitude as the Lounge connection
+        // above — no real second-passage geometry to derive this from
+        // either. Placed on the opposite side of the arrival view from
+        // the Lounge so the two branches don't overlap.
+        position: [-420, -20, -260],
+        label: "Rooftop",
+      },
     ],
     artworks: [],
     // Copy adapted from the homepage/expertise intro copy — not an
@@ -271,9 +280,51 @@ export const STUDIO_NODES: Record<string, StudioNode> = {
       },
     ],
   },
+  p07: {
+    id: "p07",
+    name: "Rooftop",
+    room: "P07",
+    subtitle: "Prendre de la hauteur",
+    description:
+      "Une terrasse ouverte sur les montagnes — l'endroit du studio pensé pour prendre du recul avant de redescendre dans le détail.",
+    panorama: "/studio/panoramas/p07.webp",
+    // Real photo (AI-upscaled — "upscayl 5x", same honest caveat as every
+    // other real panorama here), horizontal center already frames the
+    // pergola's own peak and the mountain/lake view beyond it — the
+    // natural "face forward" arrival, same convention as every other
+    // room's own yaw 0.
+    initialYaw: 0,
+    initialPitch: 0,
+    zoomEnabled: true,
+    available: true,
+    connections: [
+      {
+        targetNodeId: "p01",
+        // Directly behind the arrival orientation, same "turn around to
+        // find the way back" convention every other room's return
+        // connection uses.
+        position: [0, -30, 480],
+        label: "Portal",
+      },
+    ],
+    artworks: [],
+    // "Éclairer les possibles" / this body line are the Stratégie
+    // pillar's own real copy (src/data/expertisePillars.ts), reused
+    // verbatim for the same reason P01's own hotspots reuse the Design
+    // pillar's line — a rooftop view read naturally as "gaining
+    // perspective/altitude," not an invented backstory for this room.
+    infoHotspots: [
+      {
+        position: [-260, -10, -180],
+        label: "Éclairer les possibles",
+        title: "Éclairer les possibles",
+        body: "Positionnement, architecture et parcours utilisateur. Avant de dessiner une interface, on décide ce qu'elle doit dire, à qui et pourquoi.",
+      },
+    ],
+  },
 };
 
-// Ordered room list (StudioRoomPanel's "N/6", StudioRoomCarousel's strip)
+// Ordered room list (StudioRoomPanel's "N/7", StudioRoomCarousel's strip)
 // — Object.values on STUDIO_NODES isn't guaranteed to preserve this exact
 // order across engines, so it's declared explicitly here instead.
-export const STUDIO_NODE_ORDER = ["p01", "p02", "p03", "p04", "p05", "p06"];
+export const STUDIO_NODE_ORDER = ["p01", "p02", "p03", "p04", "p05", "p06", "p07"];

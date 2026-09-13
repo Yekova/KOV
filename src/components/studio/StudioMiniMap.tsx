@@ -12,7 +12,8 @@ interface StudioMiniMapProps {
 // real studio. Indexed to STUDIO_NODE_ORDER: P01/P02 sit stacked on the
 // spine (they're the one real, connected pair today), P03-P06 branch off
 // it two-by-two — a placeholder layout to swap for real coordinates once
-// those rooms exist for real.
+// those rooms exist for real. P07 (Rooftop) sits beside P02 rather than
+// extending the spine further, to stay inside the existing viewBox.
 const VIEWBOX_W = 200;
 const VIEWBOX_H = 260;
 const ROOM_LAYOUT = [
@@ -22,6 +23,7 @@ const ROOM_LAYOUT = [
   { x: 130, y: 95, w: 55, h: 40 }, // p04
   { x: 15, y: 40, w: 55, h: 40 }, // p05
   { x: 130, y: 40, w: 55, h: 40 }, // p06
+  { x: 15, y: 150, w: 40, h: 45 }, // p07
 ];
 
 export function StudioMiniMap({ nodes, activeId, onSelectRoom }: StudioMiniMapProps) {
