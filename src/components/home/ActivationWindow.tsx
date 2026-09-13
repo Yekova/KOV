@@ -212,34 +212,6 @@ export function ActivationWindow() {
         className="sticky top-0 h-screen flex items-center justify-center overflow-hidden"
         style={{ marginLeft: "calc(50% - 50vw)", marginRight: "calc(50% - 50vw)", width: "100vw" }}
       >
-        {/* Arc transitions — solid black circle-segments sitting in the
-            letterboxed gap above/below the card, where the page-level
-            LineWaves canvas (src/app/page.tsx, behind every homepage
-            section) still shows through. Marks the Hero→section seam
-            above, and the section→next seam below, without needing to
-            touch HeroScene.tsx or whatever follows: both live entirely
-            inside this component's own sticky viewport. Once the card
-            dives to fullscreen it naturally covers these, which is fine —
-            that dive is its own transition by then. */}
-        <svg
-          aria-hidden="true"
-          className="absolute top-0 inset-x-0 w-full pointer-events-none"
-          viewBox="0 0 1440 110"
-          preserveAspectRatio="none"
-          style={{ height: 110 }}
-        >
-          <path d="M0,0 L1440,0 L1440,38 Q720,108 0,38 Z" fill="var(--kov-black)" />
-        </svg>
-        <svg
-          aria-hidden="true"
-          className="absolute bottom-0 inset-x-0 w-full pointer-events-none"
-          viewBox="0 0 1440 110"
-          preserveAspectRatio="none"
-          style={{ height: 110 }}
-        >
-          <path d="M0,110 L1440,110 L1440,72 Q720,2 0,72 Z" fill="var(--kov-black)" />
-        </svg>
-
         <div ref={entranceRef} className="w-full flex justify-center">
           <div
             ref={cardRef}
@@ -252,16 +224,25 @@ export function ActivationWindow() {
             }}
           >
             {/* Pure CSS "design" background — no photo, matching the same
-                direction the six cards' own visuals just moved to. A
-                graphite base with two soft radial glows (red upper-left,
-                a cooler steel lower-right) rather than the previous
-                smoky/red photographic texture. */}
+                direction the six cards' own visuals just moved to. The
+                arc transitions are no longer separate overlay shapes
+                sitting outside the card — they're two large circular
+                dark voids baked directly into this same gradient stack
+                (top and bottom), so the "arc" genuinely *is* the
+                background curving in/out at the edges rather than a
+                disconnected cap. `filter: invert(1)` on the whole layer
+                is a requested experiment — a literal photographic
+                negative of the previous red-glow-on-graphite version, not
+                a hand-picked "safe" recolor — swap/remove it once seen
+                live if the inverted (now cyan-leaning) tone doesn't work
+                against the KOV red used everywhere else on the page. */}
             <div
               aria-hidden="true"
               className="absolute inset-0"
               style={{
+                filter: "invert(1)",
                 background:
-                  "radial-gradient(ellipse 60% 50% at 15% 10%, rgba(227,30,36,0.22), transparent 60%), radial-gradient(ellipse 50% 45% at 85% 90%, rgba(255,255,255,0.05), transparent 65%), var(--kov-graphite)",
+                  "radial-gradient(circle 640px at 50% -6%, rgba(0,0,0,0.95), transparent 46%), radial-gradient(circle 640px at 50% 106%, rgba(0,0,0,0.95), transparent 46%), radial-gradient(ellipse 60% 50% at 15% 10%, rgba(227,30,36,0.22), transparent 60%), radial-gradient(ellipse 50% 45% at 85% 90%, rgba(255,255,255,0.05), transparent 65%), var(--kov-graphite)",
               }}
             />
             <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ boxShadow: "inset 0 1px 0 var(--glass-highlight)" }} />
