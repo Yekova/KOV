@@ -6,8 +6,7 @@ import { gsap, initGsap, pinAndTrack, motion as motionTiming, GSAP_REVEAL_EASE }
 import { BrowserChrome } from "@/components/ui/BrowserChrome";
 import { Button } from "@/components/ui/Button";
 import { ActivationCard } from "@/components/home/ActivationCard";
-import { RadarChart, GrowthBars, PerformanceGauge } from "@/components/home/ActivationCharts";
-import { PhotoPlaceholder, ResponsiveMedia } from "@/components/home/ActivationMedia";
+import { RadarChart, GrowthBars, PerformanceGauge, FoundationStack, DeviceFrames, JourneyPath } from "@/components/home/ActivationCharts";
 
 // Scroll distance (vh), split into three consecutive phases within one
 // pinned runway: grow the window to fullscreen, coverflow through the
@@ -35,8 +34,7 @@ interface ApproachCardData {
   title: string;
   body: string;
   features?: string[];
-  Visual: ComponentType<{ reducedMotion: boolean; active: boolean; src?: string }>;
-  mediaSrc?: string;
+  Visual: ComponentType<{ reducedMotion: boolean; active: boolean }>;
   /** A real destination for this card's topic — an actual /expertise
    * pillar, the real work gallery, or /contact. Omitted for the one card
    * ("Un vrai accompagnement") with no single obvious page to point at,
@@ -45,12 +43,15 @@ interface ApproachCardData {
 }
 
 // Responsive stays 3rd per the reference spec's own order (Introduction →
-// Design → Responsive → Performance → Accompagnement → Résultats).
+// Design → Responsive → Performance → Accompagnement → Résultats). Every
+// visual is now a pure abstract/graphic composition (no photo, no video) —
+// by request, so a stock-photo-shaped gap doesn't sit next to five real
+// design pieces.
 const CARDS: ApproachCardData[] = [
   {
     title: "Une base solide",
     body: "Une stratégie claire pour un site qui a du sens.",
-    Visual: PhotoPlaceholder, // mountain-peak photo — user-supplied later
+    Visual: FoundationStack,
     href: "/expertise#strategie",
   },
   {
@@ -62,7 +63,7 @@ const CARDS: ApproachCardData[] = [
   {
     title: "Responsive par nature",
     body: "Une expérience parfaite sur tous les écrans, mobile, tablette, desktop.",
-    Visual: ResponsiveMedia,
+    Visual: DeviceFrames,
     href: "/expertise#developpement",
   },
   {
@@ -75,7 +76,7 @@ const CARDS: ApproachCardData[] = [
   {
     title: "Un vrai accompagnement",
     body: "À vos côtés, de l'idée aux résultats, et bien au-delà.",
-    Visual: PhotoPlaceholder, // two facing silhouettes — user-supplied later
+    Visual: JourneyPath,
   },
   {
     title: "Des résultats concrets",
@@ -306,7 +307,7 @@ export function ActivationWindow() {
                           body={card.body}
                           features={card.features}
                           href={card.href}
-                          visual={<card.Visual reducedMotion={reducedMotion} active={false} src={card.mediaSrc} />}
+                          visual={<card.Visual reducedMotion={reducedMotion} active={false} />}
                         />
                       </div>
                     ))}
@@ -330,7 +331,7 @@ export function ActivationWindow() {
                         features={card.features}
                         href={card.href}
                         active={i === activeIndex}
-                        visual={<card.Visual reducedMotion={reducedMotion} active={i === activeIndex} src={card.mediaSrc} />}
+                        visual={<card.Visual reducedMotion={reducedMotion} active={i === activeIndex} />}
                       />
                     </div>
                   ))}
