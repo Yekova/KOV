@@ -16,7 +16,7 @@ import { uploadClientFile, uploadClientFileBuffer, createSignedDownloadUrl, dele
 import { logActivity, getActorDisplayName, notifyClientOfAdminReply } from "@/lib/activity";
 import { isPipelineStage, isPriority } from "@/lib/admin/status";
 import { generateInvoicePdfBuffer } from "@/lib/billing/generatePdf";
-import { sendEmail } from "@/lib/email/brevo";
+import { getEmailProviderForSender } from "@/lib/email/resolveProvider";
 import { invoiceEmailHtml, invoiceEmailSubject } from "@/lib/email/invoiceEmail";
 import { toDbLineItems, fromDbLineItems, parseLineItemsFromForm } from "@/lib/billing/quoteLineItems";
 import { revalidateClient } from "@/lib/revalidateClient";
@@ -553,7 +553,8 @@ export async function sendInvoiceEmail(invoiceId: string) {
     projectName,
   };
 
-  await sendEmail({
+  const provider = await getEmailProviderForSender(admin.id);
+  await provider.send({
     to: client.email,
     toName: clientName,
     subject: invoiceEmailSubject(emailData),

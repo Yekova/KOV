@@ -27,6 +27,18 @@ export async function updateMyProfile(formData: FormData) {
   revalidatePath("/admin");
 }
 
+export async function disconnectMicrosoftAccount() {
+  const admin = await requireAdmin();
+
+  const { error } = await supabaseAdmin
+    .from("profiles")
+    .update({ ms_refresh_token: null, ms_connected_email: null, ms_connected_at: null })
+    .eq("id", admin.id);
+  if (error) throw new Error("La déconnexion a échoué.");
+
+  revalidatePath("/admin/settings");
+}
+
 function requiredField(formData: FormData, name: string, label: string): string {
   const value = formData.get(name);
   if (typeof value !== "string" || !value.trim()) throw new Error(`${label} requis.`);

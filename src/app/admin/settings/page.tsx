@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getBusinessInfo } from "@/lib/billing/businessInfo";
 import { SettingsForm } from "./SettingsForm";
 import { ProfileForm } from "./ProfileForm";
+import { EmailAccountConnection } from "@/components/admin/settings/EmailAccountConnection";
 
 export const metadata: Metadata = { title: "Paramètres — Admin KOV" };
 
@@ -11,7 +13,7 @@ export default async function AdminSettingsPage() {
   const user = await requireAdmin();
   const [businessInfo, { data: profile }] = await Promise.all([
     getBusinessInfo(),
-    supabaseAdmin.from("profiles").select("full_name, display_title").eq("id", user.id).maybeSingle(),
+    supabaseAdmin.from("profiles").select("full_name, display_title, ms_connected_email").eq("id", user.id).maybeSingle(),
   ]);
 
   return (
@@ -46,7 +48,7 @@ export default async function AdminSettingsPage() {
         <p className="text-kov-steel text-sm mb-4">
           Modèles utilisés dans le composer, et vos signatures personnelles.
         </p>
-        <div className="flex flex-wrap gap-x-6 gap-y-2">
+        <div className="flex flex-wrap gap-x-6 gap-y-2 mb-6">
           <a href="/admin/settings/email-templates" className="text-kov-red text-sm hover:underline">
             Gérer les modèles d&apos;emails →
           </a>
@@ -54,6 +56,9 @@ export default async function AdminSettingsPage() {
             Gérer mes signatures →
           </a>
         </div>
+        <Suspense fallback={null}>
+          <EmailAccountConnection connectedEmail={profile?.ms_connected_email ?? null} />
+        </Suspense>
       </section>
 
       <section className="border-t pt-8" style={{ borderColor: "var(--kov-border)" }}>

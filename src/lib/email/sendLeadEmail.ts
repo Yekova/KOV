@@ -1,6 +1,6 @@
 import "server-only";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { getEmailProvider } from "./providers/brevoProvider";
+import { getEmailProviderForSender } from "./resolveProvider";
 import { logLeadInteraction } from "@/lib/leads/interactions";
 import { recomputeLeadScore } from "@/lib/leads/recomputeScore";
 
@@ -42,7 +42,8 @@ export async function sendLeadEmail(params: {
   if (insertError || !row) return { error: "L'enregistrement de l'email a échoué." };
 
   try {
-    const result = await getEmailProvider().send({
+    const provider = await getEmailProviderForSender(params.senderId);
+    const result = await provider.send({
       to: lead.email,
       toName: lead.name,
       subject: params.subject,
