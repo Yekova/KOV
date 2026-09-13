@@ -11,10 +11,6 @@ interface StudioHUDProps {
   onToggleMenu: () => void;
   menuOpen: boolean;
   cameraStateRef: RefObject<CameraState>;
-  /** Extra room-specific control rendered in the same top-right row —
-   * currently only the Lounge's AirPods music player (see
-   * StudioExperience.tsx), never shown in any other room. */
-  extra?: React.ReactNode;
 }
 
 // Deliberately minimal beyond the compass + mode badge + hamburger — the
@@ -26,7 +22,7 @@ interface StudioHUDProps {
 // owns: the live compass, the hamburger toggle for GlobalOverviewMenu (a
 // distinct "whole-site overview" experience, not what Nav's own mobile
 // menu does) + the first-visit drag hint.
-export function StudioHUD({ totalRooms, onToggleMenu, menuOpen, cameraStateRef, extra }: StudioHUDProps) {
+export function StudioHUD({ totalRooms, onToggleMenu, menuOpen, cameraStateRef }: StudioHUDProps) {
   const [showHint, setShowHint] = useState(
     () => typeof window !== "undefined" && !sessionStorage.getItem("kov-studio-hint-seen")
   );
@@ -59,7 +55,6 @@ export function StudioHUD({ totalRooms, onToggleMenu, menuOpen, cameraStateRef, 
             Mode exploration · {totalRooms} salles
           </span>
         </div>
-        {extra}
         <button
           type="button"
           onClick={onToggleMenu}

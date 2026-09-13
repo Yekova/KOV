@@ -3,6 +3,12 @@ export interface LoungeTrack {
   artist: string;
   /** Path under /public — e.g. "/studio/music/track-01.mp3". */
   src: string;
+  /** Path under /public to real cover art, if supplied — e.g.
+   * "/studio/music/covers/orizon.webp". None of the tracks below have one
+   * (no cover art was provided for these Epidemic Sound exports), so the
+   * player falls back to a plain abstract mark rather than a fabricated
+   * image. Add this once real artwork exists for a track. */
+  cover?: string;
 }
 
 // Real tracks supplied by the user (Epidemic Sound exports — "ES_<Title>

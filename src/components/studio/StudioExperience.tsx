@@ -410,12 +410,14 @@ function StudioExperienceInner() {
             onToggleMenu={toggleMenu}
             menuOpen={menuOpen}
             cameraStateRef={cameraStateRef}
-            // Room-scoped, not sitewide — the Lounge (p06) is the one room
-            // this was actually asked for; mounting/unmounting it as the
-            // visitor enters/leaves is what stops playback automatically
-            // (see StudioMusicPlayer's own cleanup effect).
-            extra={currentNodeId === "p06" ? <StudioMusicPlayer /> : undefined}
           />
+          {/* Room-scoped, not sitewide — the Lounge (p06) is the one room
+              this was actually asked for. Self-positioned bottom-right
+              (not part of StudioHUD's top-right row) per its own device
+              styling. Mounting/unmounting it as the visitor enters/leaves
+              is what stops playback automatically (see
+              StudioMusicPlayer's own cleanup effect). */}
+          {currentNodeId === "p06" && <StudioMusicPlayer />}
           <StudioMiniMap
             nodes={STUDIO_NODE_ORDER.map((id) => STUDIO_NODES[id])}
             activeId={currentNodeId}
