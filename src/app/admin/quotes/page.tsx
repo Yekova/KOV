@@ -219,6 +219,8 @@ export default async function AdminQuotesPage(props: PageProps<"/admin/quotes">)
                           totalCents={quote.total_cents}
                           invoiceId={quote.invoice_id}
                           clients={clientOptions}
+                          signatureRequestId={quote.yousign_request_id}
+                          signedAt={quote.signed_at}
                         />
                       </td>
                     </tr>

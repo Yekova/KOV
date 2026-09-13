@@ -2,7 +2,15 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { sendQuoteEmail, downloadQuotePdf, getQuotePdfUrl, deleteQuote, convertQuoteToInvoice, linkQuoteToClient } from "./actions";
+import {
+  sendQuoteEmail,
+  downloadQuotePdf,
+  getQuotePdfUrl,
+  deleteQuote,
+  convertQuoteToInvoice,
+  linkQuoteToClient,
+  requestQuoteSignature,
+} from "./actions";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import { InvoiceKindFields } from "@/components/admin/invoices/InvoiceKindFields";
@@ -121,6 +129,8 @@ export function QuoteRowActions({
   totalCents,
   invoiceId,
   clients,
+  signatureRequestId,
+  signedAt,
 }: {
   quoteId: string;
   hasEmail: boolean;
@@ -130,13 +140,17 @@ export function QuoteRowActions({
   totalCents: number;
   invoiceId: string | null;
   clients: { id: string; label: string }[];
+  signatureRequestId: string | null;
+  signedAt: string | null;
 }) {
   const [isSending, startSending] = useTransition();
   const [isViewing, startViewing] = useTransition();
   const [isDeleting, startDeleting] = useTransition();
+  const [isRequestingSignature, startRequestingSignature] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
   const [converting, setConverting] = useState(false);
+  const [signatureRequested, setSignatureRequested] = useState(false);
 
   return (
     <div className="w-full flex flex-wrap items-center gap-3">
@@ -182,6 +196,33 @@ export function QuoteRowActions({
       >
         {isSending ? "Envoi…" : sent ? "Envoyé ✓" : "Envoyer par email"}
       </Button>
+
+      {signedAt ? (
+        <span className="text-[#3FB27F] text-xs uppercase tracking-widest">
+          Signé le {new Date(signedAt).toLocaleDateString("fr-FR")}
+        </span>
+      ) : signatureRequestId || signatureRequested ? (
+        <span className="text-kov-steel text-xs uppercase tracking-widest">Signature demandée — en attente</span>
+      ) : (
+        <Button
+          type="button"
+          variant="secondary"
+          disabled={isRequestingSignature || !hasEmail}
+          onClick={() => {
+            setError(null);
+            startRequestingSignature(async () => {
+              try {
+                await requestQuoteSignature(quoteId);
+                setSignatureRequested(true);
+              } catch (err) {
+                setError(err instanceof Error ? err.message : "La demande de signature a échoué.");
+              }
+            });
+          }}
+        >
+          {isRequestingSignature ? "Envoi…" : "Demander la signature électronique"}
+        </Button>
+      )}
 
       {status === "accepted" ? (
         invoiceId ? (

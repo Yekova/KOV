@@ -7,7 +7,8 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { uploadClientFile, uploadClientFileBuffer, createSignedDownloadUrl, deleteClientFile } from "@/lib/portal/storage";
 import { logActivity, getActorDisplayName } from "@/lib/activity";
 import { generateQuotePdfBuffer } from "@/lib/billing/generatePdf";
-import { sendEmail } from "@/lib/email/brevo";
+import { getEmailProviderForSender } from "@/lib/email/resolveProvider";
+import { createSignatureRequest } from "@/lib/yousign/client";
 import { quoteEmailHtml, quoteEmailSubject } from "@/lib/email/quoteEmail";
 import { isQuoteStatus, QUOTE_STATUS_LABELS, isInvoiceKind, type InvoiceKind } from "@/lib/portal/status";
 import { toDbLineItems, fromDbLineItems, parseLineItemsFromForm } from "@/lib/billing/quoteLineItems";
@@ -234,7 +235,8 @@ export async function sendQuoteEmail(quoteId: string) {
     validUntil: quote.valid_until,
   };
 
-  await sendEmail({
+  const provider = await getEmailProviderForSender(admin.id);
+  await provider.send({
     to: quote.recipient_email,
     toName: quote.recipient_name,
     subject: quoteEmailSubject(emailData),
@@ -265,6 +267,74 @@ export async function sendQuoteEmail(quoteId: string) {
   }
 
   revalidatePath("/admin/quotes");
+}
+
+// Requests a real, eIDAS-scoped electronic signature via Yousign — not a
+// homemade signature capture. Reuses the quote's own existing PDF (never
+// regenerates it: sendQuoteEmail's own comment on this same principle
+// applies here too — the PDF may be a custom upload) rather than building
+// a new one, uploads it to Yousign, and stores the client's real signing
+// link on the quote row for the portal to show.
+export async function requestQuoteSignature(quoteId: string) {
+  const admin = await requireAdmin();
+
+  const { data: quote } = await supabaseAdmin
+    .from("quotes")
+    .select("client_id, recipient_name, recipient_email, reference, status, yousign_request_id")
+    .eq("id", quoteId)
+    .maybeSingle();
+  if (!quote) throw new Error("Devis introuvable.");
+  if (!quote.recipient_email) throw new Error("Ce devis n'a pas d'adresse email destinataire.");
+  if (quote.yousign_request_id) throw new Error("Une signature a déjà été demandée pour ce devis.");
+
+  const pdfPath = `quotes/${quoteId}.pdf`;
+  const signedUrl = await createSignedDownloadUrl(pdfPath);
+  if (!signedUrl) throw new Error("PDF du devis introuvable — recréez le devis.");
+  const pdfResponse = await fetch(signedUrl);
+  if (!pdfResponse.ok) throw new Error("Le téléchargement du PDF a échoué.");
+  const pdfBuffer = Buffer.from(await pdfResponse.arrayBuffer());
+
+  // recipient_name is a single free-text field (a devis can be addressed to
+  // a lead with no separate first/last name on file) — Yousign's signer
+  // object wants both, so this splits on the first space as a reasonable
+  // default rather than blocking signature requests on a schema change.
+  const nameParts = quote.recipient_name.trim().split(/\s+/);
+  const firstName = nameParts[0] ?? quote.recipient_name;
+  const lastName = nameParts.slice(1).join(" ") || nameParts[0];
+
+  const result = await createSignatureRequest({
+    name: `Devis ${quote.reference}`,
+    pdfBuffer,
+    filename: `${quote.reference}.pdf`,
+    signer: { firstName, lastName, email: quote.recipient_email },
+  });
+
+  const { error } = await supabaseAdmin
+    .from("quotes")
+    .update({
+      yousign_request_id: result.signatureRequestId,
+      yousign_signer_id: result.signerId,
+      signing_url: result.signingUrl,
+      status: quote.status === "draft" ? "sent" : quote.status,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", quoteId);
+  if (error) throw new Error("L'enregistrement de la demande de signature a échoué.");
+
+  if (quote.client_id) {
+    const actorName = await getActorDisplayName(admin.id);
+    await logActivity({
+      clientId: quote.client_id,
+      type: "quote",
+      title: "Signature électronique demandée",
+      adminTitle: `${actorName} a demandé la signature électronique du devis ${quote.reference}`,
+      actorId: admin.id,
+      description: `Devis ${quote.reference}`,
+    });
+  }
+
+  revalidatePath("/admin/quotes");
+  revalidatePath("/client/quotes");
 }
 
 export async function downloadQuotePdf(formData: FormData) {

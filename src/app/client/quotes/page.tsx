@@ -15,7 +15,7 @@ export default async function ClientQuotesPage() {
 
   const { data: quotes } = await supabaseAdmin
     .from("quotes")
-    .select("id, reference, line_items, total_cents, status, valid_until, created_at")
+    .select("id, reference, line_items, total_cents, status, valid_until, created_at, signing_url, signed_at")
     .eq("client_id", user.id)
     .order("created_at", { ascending: false });
 
@@ -60,7 +60,7 @@ export default async function ClientQuotesPage() {
                     <span className="text-kov-steel text-xs uppercase tracking-widest">
                       {QUOTE_STATUS_LABELS[quote.status as QuoteStatus] ?? quote.status}
                     </span>
-                    <QuoteRowActions quoteId={quote.id} />
+                    <QuoteRowActions quoteId={quote.id} signingUrl={quote.signing_url} signedAt={quote.signed_at} />
                   </div>
                 </li>
               );

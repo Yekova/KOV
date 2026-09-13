@@ -4,12 +4,38 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
 import { downloadClientQuotePdf, getClientQuotePdfUrl } from "./actions";
 
-export function QuoteRowActions({ quoteId }: { quoteId: string }) {
+export function QuoteRowActions({
+  quoteId,
+  signingUrl,
+  signedAt,
+}: {
+  quoteId: string;
+  signingUrl: string | null;
+  signedAt: string | null;
+}) {
   const [isViewing, startViewing] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
   return (
     <div className="flex items-center gap-3">
+      {signedAt ? (
+        <span className="text-[#3FB27F] text-xs uppercase tracking-widest">
+          Signé le {new Date(signedAt).toLocaleDateString("fr-FR")}
+        </span>
+      ) : (
+        signingUrl && (
+          // A real Yousign signing link, not a placeholder — opens
+          // Yousign's own eIDAS-compliant signing flow in a new tab.
+          <a
+            href={signingUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-kov-red text-xs uppercase tracking-widest hover:text-kov-red-signal transition-colors"
+          >
+            Signer le devis →
+          </a>
+        )
+      )}
       <Button
         type="button"
         variant="ghost"
