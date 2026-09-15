@@ -23,6 +23,17 @@ function formatTime(seconds: number): string {
 // unmounts it, stopping playback via the cleanup effect below.
 export function StudioMusicPlayer() {
   const [open, setOpen] = useState(false);
+  // The <audio> element is not created on arrival — only once the visitor
+  // has actually opened the player at least once, and it stays mounted
+  // afterwards so hiding the device doesn't stop the music.
+  //
+  // Entering the Lounge is the one navigation in the Studio that also
+  // spins up a media element, and it did so in the very same commit that
+  // decodes and uploads a multi-megapixel panorama to the GPU. The
+  // Rooftop, whose panorama is twice the weight, has never crashed — so
+  // whatever is wrong is on this side, and the collapsed player has no
+  // business touching the media pipeline at all: it's a button.
+  const [audioArmed, setAudioArmed] = useState(false);
   const [mode, setMode] = useState<ScreenMode>("now-playing");
   const [trackIndex, setTrackIndex] = useState(0);
   const [cursorIndex, setCursorIndex] = useState(0);
@@ -53,17 +64,11 @@ export function StudioMusicPlayer() {
 
   // `.load()` before `.play()` on every track change — a plain <audio>'s
   // `src` attribute updating in the DOM doesn't reliably reload the
-  // element's own media pipeline across browsers on its own. Skipped on
-  // the very first render: with preload="none" there is nothing loaded to
-  // reload, and calling load() here would defeat the point by kicking the
-  // media pipeline awake the instant the visitor walks into the room.
-  const loadedOnceRef = useRef(false);
+  // element's own media pipeline across browsers on its own. On the
+  // Lounge's first render there is no element yet (see `audioArmed`), so
+  // this simply no-ops until the visitor opens the player.
   useEffect(() => {
     if (!audioRef.current) return;
-    if (!loadedOnceRef.current) {
-      loadedOnceRef.current = true;
-      return;
-    }
     audioRef.current.load();
     setProgress({ current: 0, duration: 0 });
     if (isPlayingRef.current) audioRef.current.play().catch(() => setIsPlaying(false));
@@ -110,7 +115,7 @@ export function StudioMusicPlayer() {
 
   return (
     <div className="fixed bottom-56 right-6" style={{ zIndex: "var(--z-nav)" }}>
-      {track && (
+      {audioArmed && track && (
         <audio
           ref={audioRef}
           src={track.src}
@@ -131,7 +136,11 @@ export function StudioMusicPlayer() {
       {!open && (
         <button
           type="button"
-          onClick={() => setOpen(true)}
+          onClick={() => {
+            setOpen(true);
+            setAudioArmed(true);
+            diag("music:armed");
+          }}
           className="flex items-center gap-2 px-4 py-2.5 text-kov-bone hover:text-kov-red transition-colors"
           style={{
             borderRadius: "var(--radius-pill)",

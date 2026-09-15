@@ -181,6 +181,14 @@ function StudioExperienceInner() {
   const [reducedMotion] = useState(
     () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
   );
+  // ?nomusic=1 skips the Lounge's music player entirely. The Lounge is the
+  // only room that mounts it and the only room that crashes the tab, while
+  // the Rooftop — same data shape, a heavier panorama — never has. This
+  // makes that the one variable a single reload can isolate for certain,
+  // instead of another round of inference.
+  const [musicDisabled] = useState(
+    () => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("nomusic") === "1"
+  );
 
   const currentNode = STUDIO_NODES[currentNodeId];
   const cameraStateRef = useRef<CameraState>({
@@ -529,7 +537,7 @@ function StudioExperienceInner() {
               styling. Mounting/unmounting it as the visitor enters/leaves
               is what stops playback automatically (see
               StudioMusicPlayer's own cleanup effect). */}
-          {currentNodeId === "p06" && <StudioMusicPlayer />}
+          {currentNodeId === "p06" && !musicDisabled && <StudioMusicPlayer />}
           <StudioMap3D
             currentRoomId={currentNodeId}
             onNavigate={navigateToNode}
