@@ -135,7 +135,7 @@ export function StudioMapExpanded({ currentRoomId, onNavigate, onCollapse }: Stu
             </div>
           </div>
 
-          <div className="relative flex-1 min-h-0" style={{ background: "#050505" }}>
+          <div className="relative flex-1 min-h-0" style={{ background: "#0b0b0d" }}>
             <div className="absolute top-3 left-3 z-10 flex md:flex-col gap-1.5">
               {LEVELS.map((lvl) => (
                 <button
@@ -162,7 +162,7 @@ export function StudioMapExpanded({ currentRoomId, onNavigate, onCollapse }: Stu
               frameloop="demand"
               onPointerMissed={() => setSelectedId(null)}
             >
-              <color attach="background" args={["#050505"]} />
+              <color attach="background" args={["#0b0b0d"]} />
               <StudioMapMaterialsProvider>
                 <StudioMapScene
                   currentRoomId={currentRoomId}

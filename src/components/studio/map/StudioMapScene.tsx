@@ -231,15 +231,16 @@ export function StudioMapScene({
       <OrthographicCamera makeDefault position={CAMERA_POSITION} near={0.1} far={80} />
       <CameraRig margin={margin} resetToken={resetToken} controlsRef={controlsRef} />
 
-      {/* Three lights total: a warm key that casts the shadows, a cool
-          back-fill for separation, and a low ambient so the interiors are
-          never pure black. Everything else "lit" in this scene is an
-          emissive material. */}
-      <ambientLight intensity={0.34} color="#cfc6b8" />
+      {/* Four lights, none of them expensive: a warm key that casts the
+          shadows, a cool back-fill for separation, a hemisphere for
+          sky/ground bounce, and an ambient floor so no interior ever
+          falls to black. Everything else "lit" here is emissive. */}
+      <ambientLight intensity={0.85} color="#d8d1c4" />
+      <hemisphereLight args={["#cfe0f2", "#463b2c", 0.55]} />
       <directionalLight
         position={[7, 10, 6]}
-        intensity={1.25}
-        color="#fff0da"
+        intensity={1.95}
+        color="#fff3e2"
         castShadow={shadows}
         shadow-mapSize={[1024, 1024]}
         shadow-bias={-0.0009}
@@ -250,7 +251,7 @@ export function StudioMapScene({
         shadow-camera-near={0.5}
         shadow-camera-far={34}
       />
-      <directionalLight position={[-8, 6, -7]} intensity={0.4} color="#93a9c6" />
+      <directionalLight position={[-8, 6, -7]} intensity={0.75} color="#a8bcd6" />
 
       <StudioMapBuilding shadows={shadows} detailed={detailed} dim0={renderDim.level0} dim1={renderDim.level1} />
 
@@ -284,7 +285,7 @@ export function StudioMapScene({
           scale={13}
           resolution={512}
           blur={2.6}
-          opacity={0.5}
+          opacity={0.38}
           far={2.2}
           frames={1}
           color="#000000"

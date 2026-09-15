@@ -73,7 +73,7 @@ export function StudioMap3D({ currentRoomId, onNavigate, isExpanded, onExpand, o
               <Maximize2 size={13} />
             </button>
           </div>
-          <div className="relative" style={{ height: 230, borderRadius: 10, overflow: "hidden", background: "#070707" }}>
+          <div className="relative" style={{ height: 230, borderRadius: 10, overflow: "hidden", background: "#0b0b0d" }}>
             <StudioMapErrorBoundary
               fallback={
                 <div className="p-2 h-full overflow-y-auto">
@@ -85,7 +85,7 @@ export function StudioMap3D({ currentRoomId, onNavigate, isExpanded, onExpand, o
                   few pieces flagged `mini`, no labels — the expanded view
                   is where the full model lives. */}
               <Canvas dpr={1} gl={{ antialias: true }} frameloop="demand">
-                <color attach="background" args={["#070707"]} />
+                <color attach="background" args={["#0b0b0d"]} />
                 <StudioMapMaterialsProvider>
                   <StudioMapScene
                     currentRoomId={currentRoomId}
