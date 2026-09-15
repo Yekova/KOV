@@ -6,14 +6,19 @@ interface ActivationBackdropProps {
   reducedMotion: boolean;
 }
 
-// The window's own background, in four layers from back to front:
+// The window's own background, in five layers from back to front:
 //
 //   1. the graphite base,
-//   2. three slowly drifting colour blobs,
-//   3. the two dark circular voids that make the card's top and bottom read
+//   2. three slowly drifting masses of colour — two reds and a neutral,
+//      since red is this page's only accent and a second hue would read as
+//      a two-tone gradient rather than as depth,
+//   3. a ruled field at a 72px pitch, which is what keeps the colour from
+//      being wallpaper: the masses now drift across something with a known
+//      measure, and the eye has a straight edge to judge them against,
+//   4. the two dark circular voids that make the card's top and bottom read
 //      as arcs curving out of the page — kept above the colour so they stay
 //      genuinely dark rather than tinted,
-//   4. a scrim weighted toward the left, where the copy sits.
+//   5. a scrim weighted toward the left, where the copy sits.
 //
 // This replaces a version that put `filter: invert(1)` over the whole stack.
 // Inverting turned the graphite base (#181d20) into #e7e2df — near-white,
@@ -31,7 +36,10 @@ export function ActivationBackdrop({ reducedMotion }: ActivationBackdropProps) {
       >
         <div className={`kov-blob kov-blob--red${still}`} />
         <div className={`kov-blob kov-blob--signal${still}`} />
-        <div className={`kov-blob kov-blob--cool${still}`} />
+        <div className={`kov-blob kov-blob--neutral${still}`} />
+
+        {/* Ruled field over the colour, under everything else. */}
+        <div className="kov-grid" />
 
         <div
           className="absolute inset-0"

@@ -39,8 +39,8 @@
   min-height: 680px;
   background: radial-gradient(
     circle at 50% 50%,
-    rgba(227, 30, 36, 0.34),
-    rgba(227, 30, 36, 0.12) 40%,
+    rgba(227, 30, 36, 0.26),
+    rgba(227, 30, 36, 0.09) 40%,
     transparent 66%
   );
   animation-name: kov-drift-red;
@@ -56,17 +56,19 @@
   min-height: 600px;
   background: radial-gradient(
     circle at 50% 50%,
-    rgba(255, 77, 77, 0.24),
-    rgba(255, 77, 77, 0.08) 42%,
+    rgba(255, 77, 77, 0.18),
+    rgba(255, 77, 77, 0.06) 42%,
     transparent 68%
   );
   animation-name: kov-drift-signal;
   animation-duration: 34s;
 }
 
-/* One cool note so the field has somewhere to travel to. Kept well below the
-   reds in weight — it reads as depth, not as a second brand colour. */
-.kov-blob--cool {
+/* A neutral, not a second hue. Red is the only accent on this page, so the
+   third mass is --kov-steel: it gives the field somewhere to travel to and
+   keeps the colour from reading as a two-tone gradient, without introducing
+   a colour the brand doesn't own. */
+.kov-blob--neutral {
   top: 6vh;
   left: 42vw;
   width: 52vw;
@@ -75,12 +77,39 @@
   min-height: 520px;
   background: radial-gradient(
     circle at 50% 50%,
-    rgba(92, 132, 168, 0.2),
-    rgba(92, 132, 168, 0.07) 44%,
+    rgba(119, 119, 116, 0.22),
+    rgba(119, 119, 116, 0.08) 44%,
     transparent 70%
   );
-  animation-name: kov-drift-cool;
+  animation-name: kov-drift-neutral;
   animation-duration: 41s;
+}
+
+/* The structure the colour is measured against.
+ *
+ * Soft colour on its own is wallpaper — it reads as decoration whatever the
+ * palette. A ruled field behind it turns the same colour into a drawing:
+ * the blobs now drift across something with a known pitch, and the eye has
+ * a straight edge to judge them by. It is also the section's own argument
+ * rendered literally, since the copy a few centimetres away says the
+ * structure comes before the style.
+ *
+ * Sized in viewport units and anchored at the origin rather than inset to
+ * the container, for the same reason as the blobs: this window resizes on
+ * every frame of its dive and a box that resizes with it would repaint the
+ * whole grid each time. */
+.kov-grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  background-image: linear-gradient(to right, rgba(231, 231, 229, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(231, 231, 229, 0.05) 1px, transparent 1px);
+  background-size: 72px 72px;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 16%, #000 70%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 16%, #000 70%, transparent 100%);
 }
 
 @keyframes kov-drift-red {
@@ -101,7 +130,7 @@
   }
 }
 
-@keyframes kov-drift-cool {
+@keyframes kov-drift-neutral {
   from {
     transform: translate3d(0, 0, 0) scale(0.92);
   }
