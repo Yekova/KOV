@@ -15,6 +15,11 @@ interface StudioMap3DProps {
   isExpanded: boolean;
   onExpand: () => void;
   onCollapse: () => void;
+  /** Takes the compact map down entirely — not merely CSS-hidden, so its
+   * WebGL context is released rather than left compositing underneath
+   * whatever replaced it. Used when the Lounge's MP3 device is out, since
+   * the two occupy the same corner. */
+  hidden?: boolean;
 }
 
 class StudioMapErrorBoundary extends Component<{ children: ReactNode; fallback: ReactNode }, { hasError: boolean }> {
@@ -34,7 +39,7 @@ class StudioMapErrorBoundary extends Component<{ children: ReactNode; fallback: 
 // directly, never a parallel nav path). An error boundary around the
 // Canvas falls back to the plain accessible room list if the 3D scene
 // ever fails to render, so Studio navigation can never actually break.
-export function StudioMap3D({ currentRoomId, onNavigate, isExpanded, onExpand, onCollapse }: StudioMap3DProps) {
+export function StudioMap3D({ currentRoomId, onNavigate, isExpanded, onExpand, onCollapse, hidden = false }: StudioMap3DProps) {
   const [reducedMotion] = useState(() => prefersReducedMotion());
   // This component only ever renders once StudioExperience.tsx reaches
   // its "exploring" phase (well past the intro, purely client-side —
@@ -49,7 +54,7 @@ export function StudioMap3D({ currentRoomId, onNavigate, isExpanded, onExpand, o
 
   return (
     <>
-      {isDesktop ? (
+      {hidden ? null : isDesktop ? (
         <div
           className="absolute top-20 right-6 md:top-24 md:right-8 p-3"
           style={{

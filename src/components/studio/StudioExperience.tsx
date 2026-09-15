@@ -167,6 +167,7 @@ function StudioExperienceInner() {
   });
   const [handTrackingEnabled, setHandTrackingEnabled] = useState(false);
   const [mapExpanded, setMapExpanded] = useState(false);
+  const [musicOpen, setMusicOpen] = useState(false);
   const [phase, setPhase] = useState<EnginePhase>("intro");
   const [currentNodeId, setCurrentNodeId] = useState(STUDIO_ENTRY_NODE_ID);
   const [texture, setTexture] = useState<THREE.Texture | null>(null);
@@ -537,13 +538,17 @@ function StudioExperienceInner() {
               styling. Mounting/unmounting it as the visitor enters/leaves
               is what stops playback automatically (see
               StudioMusicPlayer's own cleanup effect). */}
-          {currentNodeId === "p06" && !musicDisabled && <StudioMusicPlayer />}
+          {currentNodeId === "p06" && !musicDisabled && <StudioMusicPlayer onOpenChange={setMusicOpen} />}
           <StudioMap3D
             currentRoomId={currentNodeId}
             onNavigate={navigateToNode}
             isExpanded={mapExpanded}
             onExpand={() => setMapExpanded(true)}
             onCollapse={() => setMapExpanded(false)}
+            // The MP3 device and the mini-map are both right-column panels
+            // and they physically collide on a laptop-height viewport. The
+            // device wins while it's out; closing it brings the map back.
+            hidden={musicOpen}
           />
           <StudioRoomPanel
             node={currentNode}

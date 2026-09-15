@@ -21,7 +21,17 @@ function formatTime(seconds: number): string {
 // StudioHUD's top-right row), and only ever mounted while the visitor
 // is in the Lounge (see StudioExperience.tsx) — leaving the room
 // unmounts it, stopping playback via the cleanup effect below.
-export function StudioMusicPlayer() {
+interface StudioMusicPlayerProps {
+  /** Lets StudioExperience take the mini-map down while the device is out.
+   * They are both right-column panels: the device is ~430px tall anchored
+   * 224px from the bottom, the map runs from 96px to ~378px from the top,
+   * so on any laptop-height viewport they physically overlap — the device
+   * covering the map, and its glass button running a backdrop-filter over
+   * the map's live WebGL canvas. You can't use both at once anyway. */
+  onOpenChange?: (open: boolean) => void;
+}
+
+export function StudioMusicPlayer({ onOpenChange }: StudioMusicPlayerProps) {
   const [open, setOpen] = useState(false);
   // The <audio> element is not created on arrival — only once the visitor
   // has actually opened the player at least once, and it stays mounted
@@ -173,6 +183,7 @@ export function StudioMusicPlayer() {
           type="button"
           onClick={() => {
             diag("music:ui-open", audioSuppressed ? "audio suppressed" : "arming audio");
+            onOpenChange?.(true);
             setOpen(true);
             setAudioArmed(true);
           }}
@@ -199,14 +210,20 @@ export function StudioMusicPlayer() {
         <div className="flex flex-col items-end gap-3">
           <button
             type="button"
-            onClick={() => setOpen(false)}
+            onClick={() => {
+              diag("music:ui-close");
+              onOpenChange?.(false);
+              setOpen(false);
+            }}
             className="flex items-center gap-1.5 px-3 py-1.5 text-kov-steel hover:text-kov-bone transition-colors"
             style={{
               borderRadius: "var(--radius-pill)",
-              background: "var(--glass-bg)",
-              backdropFilter: "blur(var(--glass-blur)) saturate(180%)",
-              WebkitBackdropFilter: "blur(var(--glass-blur)) saturate(180%)",
-              border: "1px solid var(--glass-border)",
+              // Solid, not glass: this button belongs to the device, not to
+              // the site's chrome. It also means the opened player runs no
+              // backdrop-filter at all — nothing here reads back the WebGL
+              // canvas it sits on top of.
+              background: "#19191a",
+              border: "1px solid rgba(255,255,255,0.1)",
             }}
           >
             <ChevronDown size={12} />
