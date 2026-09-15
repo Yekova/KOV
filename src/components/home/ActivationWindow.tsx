@@ -5,6 +5,7 @@ import { gsap, initGsap, pinAndTrack, motion as motionTiming, GSAP_REVEAL_EASE }
 import { BrowserChrome } from "@/components/ui/BrowserChrome";
 import { Button } from "@/components/ui/Button";
 import { ActivationCard } from "@/components/home/ActivationCard";
+import { ActivationBackdrop } from "@/components/home/ActivationBackdrop";
 import { RadarChart, GrowthBars, PerformanceGauge, FoundationStack, DeviceFrames, JourneyPath } from "@/components/home/ActivationCharts";
 
 // Scroll distance (vh), split into three consecutive phases within one
@@ -223,29 +224,13 @@ export function ActivationWindow() {
               boxShadow: "var(--glass-shadow-full), 0 60px 120px -40px rgba(0,0,0,0.7)",
             }}
           >
-            {/* Pure CSS "design" background — no photo, matching the same
-                direction the six cards' own visuals just moved to. The
-                arc transitions are no longer separate overlay shapes
-                sitting outside the card — they're two large circular
-                dark voids baked directly into this same gradient stack
-                (top and bottom), so the "arc" genuinely *is* the
-                background curving in/out at the edges rather than a
-                disconnected cap. `filter: invert(1)` on the whole layer
-                is a requested experiment — a literal photographic
-                negative of the previous red-glow-on-graphite version, not
-                a hand-picked "safe" recolor — swap/remove it once seen
-                live if the inverted (now cyan-leaning) tone doesn't work
-                against the KOV red used everywhere else on the page. */}
-            <div
-              aria-hidden="true"
-              className="absolute inset-0"
-              style={{
-                filter: "invert(1)",
-                background:
-                  "radial-gradient(circle 640px at 50% -6%, rgba(0,0,0,0.95), transparent 46%), radial-gradient(circle 640px at 50% 106%, rgba(0,0,0,0.95), transparent 46%), radial-gradient(ellipse 60% 50% at 15% 10%, rgba(227,30,36,0.22), transparent 60%), radial-gradient(ellipse 50% 45% at 85% 90%, rgba(255,255,255,0.05), transparent 65%), var(--kov-graphite)",
-              }}
-            />
-            <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ boxShadow: "inset 0 1px 0 var(--glass-highlight)" }} />
+            {/* Pure CSS, no photo — matching the direction the six cards'
+                own visuals took. The arcs at top and bottom are still dark
+                voids baked into the same stack, so the card genuinely
+                curves out of the page rather than wearing a separate cap.
+                What changed is that the colour now moves, and that the
+                whole thing is no longer inverted: see ActivationBackdrop. */}
+            <ActivationBackdrop reducedMotion={reducedMotion} />
 
             <BrowserChrome className="relative shrink-0" showUrlBar={false} />
 

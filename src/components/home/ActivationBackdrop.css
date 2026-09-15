@@ -1,0 +1,124 @@
+/* Drifting colour field behind the "Notre approche" window.
+ *
+ * Every blob is a radial-gradient with a long falloff — already soft, so no
+ * `filter: blur()` anywhere in here. That matters: a blurred layer has to be
+ * re-rasterised whenever it moves, which is precisely the cost that made the
+ * studio's entry animation stutter on integrated graphics. A gradient is
+ * painted once into its own layer and then only transformed, which the
+ * compositor does for free.
+ *
+ * For the same reason the keyframes touch `transform` and nothing else. No
+ * width, no top/left, no background-position — none of which can be
+ * composited.
+ */
+
+.kov-blob {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  will-change: transform;
+  /* Durations are deliberately coprime-ish: the three never return to the
+     same arrangement, so the field reads as continuous rather than looping. */
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+
+/* Offsets are in viewport units and pixels, never percentages of the
+   container. The window this sits in resizes on every scroll frame during
+   its dive to fullscreen, and a percentage offset would resize each blob's
+   box with it — forcing the compositor to re-rasterise three large
+   gradients per frame. Anchored this way the boxes never change, so only
+   their position does. */
+.kov-blob--red {
+  top: -320px;
+  left: -12vw;
+  width: 70vw;
+  height: 70vw;
+  min-width: 680px;
+  min-height: 680px;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(227, 30, 36, 0.34),
+    rgba(227, 30, 36, 0.12) 40%,
+    transparent 66%
+  );
+  animation-name: kov-drift-red;
+  animation-duration: 27s;
+}
+
+.kov-blob--signal {
+  bottom: -340px;
+  right: -10vw;
+  width: 62vw;
+  height: 62vw;
+  min-width: 600px;
+  min-height: 600px;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(255, 77, 77, 0.24),
+    rgba(255, 77, 77, 0.08) 42%,
+    transparent 68%
+  );
+  animation-name: kov-drift-signal;
+  animation-duration: 34s;
+}
+
+/* One cool note so the field has somewhere to travel to. Kept well below the
+   reds in weight — it reads as depth, not as a second brand colour. */
+.kov-blob--cool {
+  top: 6vh;
+  left: 42vw;
+  width: 52vw;
+  height: 52vw;
+  min-width: 520px;
+  min-height: 520px;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(92, 132, 168, 0.2),
+    rgba(92, 132, 168, 0.07) 44%,
+    transparent 70%
+  );
+  animation-name: kov-drift-cool;
+  animation-duration: 41s;
+}
+
+@keyframes kov-drift-red {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(14%, 10%, 0) scale(1.16);
+  }
+}
+
+@keyframes kov-drift-signal {
+  from {
+    transform: translate3d(0, 0, 0) scale(1.1);
+  }
+  to {
+    transform: translate3d(-16%, -9%, 0) scale(0.94);
+  }
+}
+
+@keyframes kov-drift-cool {
+  from {
+    transform: translate3d(0, 0, 0) scale(0.92);
+  }
+  to {
+    transform: translate3d(-11%, 13%, 0) scale(1.14);
+  }
+}
+
+/* Honoured both ways: the component passes reducedMotion down from its own
+   matchMedia check, and the query below catches a preference that changes
+   after mount, without needing a re-render to notice. */
+.kov-blob--still {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kov-blob {
+    animation: none;
+  }
+}
