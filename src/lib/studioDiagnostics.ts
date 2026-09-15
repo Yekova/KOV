@@ -12,8 +12,12 @@
 // rotated aside and shown. The last breadcrumb before the gap is the
 // instruction that killed the tab.
 //
-// Off by default and completely inert unless explicitly switched on with
-// ?diag=1 — nothing here runs for a normal visitor.
+// Recording is always on; only the panel is gated behind ?diag=1. That
+// split matters in practice: a crash can't be planned for, and requiring
+// the flag up front meant every crash had to happen twice before it could
+// be read. Now the trail is already there, and opening ?diag=1 in the same
+// tab afterwards shows the session that died. The cost is a few dozen
+// small sessionStorage writes per visit, and nothing at all on screen.
 
 export interface DiagEntry {
   /** ms since this page load. */
@@ -32,9 +36,11 @@ export interface DiagEntry {
 const KEY = "kov-studio-diag";
 const PREV_KEY = "kov-studio-diag-prev";
 const STICKY_KEY = "kov-studio-diag-on";
-const MAX_ENTRIES = 300;
+// Kept modest: the whole trail is rewritten on every breadcrumb so it can
+// survive a crash at any instant, and what matters is always the tail.
+const MAX_ENTRIES = 150;
 
-let enabled = false;
+let visible = false;
 let initialised = false;
 let entries: DiagEntry[] = [];
 let startedAt = 0;
@@ -49,17 +55,17 @@ function safeSession(): Storage | null {
   }
 }
 
-export function isDiagEnabled(): boolean {
+/** Whether the on-screen panel should be shown. Recording happens either
+ * way — this only controls the display. */
+export function isDiagVisible(): boolean {
   if (typeof window === "undefined") return false;
-  if (initialised) return enabled;
   const store = safeSession();
   const fromUrl = new URLSearchParams(window.location.search).get("diag") === "1";
-  // Sticky for the rest of the tab session: the whole point is to survive
-  // a crash + reload, and the reload won't carry the query string if the
-  // visitor uses the browser's own reload button.
+  // Sticky for the rest of the tab session: the reload after a crash won't
+  // carry the query string if the visitor uses the browser's own button.
   if (fromUrl) store?.setItem(STICKY_KEY, "1");
-  enabled = fromUrl || store?.getItem(STICKY_KEY) === "1";
-  return enabled;
+  visible = fromUrl || store?.getItem(STICKY_KEY) === "1";
+  return visible;
 }
 
 /** Rotates the previous session's trail aside and starts a fresh one. Safe
@@ -67,7 +73,7 @@ export function isDiagEnabled(): boolean {
 export function initDiagnostics() {
   if (initialised || typeof window === "undefined") return;
   initialised = true;
-  if (!isDiagEnabled()) return;
+  isDiagVisible();
 
   const store = safeSession();
   const previous = store?.getItem(KEY);
@@ -93,7 +99,7 @@ export function registerRendererProbe(fn: (() => { tex: number; geo: number }) |
 }
 
 export function diag(step: string, note?: string) {
-  if (!enabled) return;
+  if (!initialised) return;
   const perf = performance as Performance & { memory?: { usedJSHeapSize: number } };
   const info = rendererProbe?.();
   const entry: DiagEntry = {
@@ -134,13 +140,15 @@ export function readCurrentSession(): DiagEntry[] {
   return parse(safeSession()?.getItem(KEY));
 }
 
+/** Hides the panel for the rest of the tab session and drops what has been
+ * collected. Recording itself continues — it costs nothing visible. */
 export function clearDiagnostics() {
   const store = safeSession();
   store?.removeItem(KEY);
   store?.removeItem(PREV_KEY);
   store?.removeItem(STICKY_KEY);
   entries = [];
-  enabled = false;
+  visible = false;
 }
 
 export function formatEntries(list: DiagEntry[]): string {

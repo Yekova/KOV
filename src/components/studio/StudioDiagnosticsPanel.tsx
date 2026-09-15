@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import {
-  isDiagEnabled,
+  isDiagVisible,
   readPreviousSession,
   readCurrentSession,
   clearDiagnostics,
@@ -10,15 +10,16 @@ import {
   type DiagEntry,
 } from "@/lib/studioDiagnostics";
 
-// Only ever rendered when ?diag=1 has been used in this tab. Shows the
-// trail from the session that crashed (rotated aside on load) above the
-// live one, because the last line of the crashed trail is the answer.
+// Only ever rendered when ?diag=1 has been used in this tab — though the
+// trail is recorded either way, so opening ?diag=1 *after* a crash still
+// shows the session that died. It sits above the live one, because its
+// last line is the answer.
 export function StudioDiagnosticsPanel() {
   const [visible, setVisible] = useState(true);
   const [tick, setTick] = useState(0);
   const [copied, setCopied] = useState(false);
 
-  if (!isDiagEnabled()) return null;
+  if (!isDiagVisible()) return null;
 
   const previous: DiagEntry[] = readPreviousSession();
   const current: DiagEntry[] = readCurrentSession();

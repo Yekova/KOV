@@ -83,10 +83,15 @@ export function StudioMusicPlayer() {
     if (!audio || !track) return;
     let superseded = false;
 
-    const wanted = new URL(track.src, window.location.href).href;
+    // Ask the element itself which encoding it can take, rather than
+    // sniffing the browser. "probably"/"maybe" both mean yes; only the
+    // empty string is a no.
+    const preferred =
+      audio.canPlayType('audio/webm; codecs="opus"') !== "" ? track.srcOpus : track.src;
+    const wanted = new URL(preferred, window.location.href).href;
     if (audio.src !== wanted) {
-      diag("music:src", track.src);
-      audio.src = track.src;
+      diag("music:src", preferred);
+      audio.src = preferred;
     }
 
     if (isPlaying) {
@@ -204,8 +209,10 @@ export function StudioMusicPlayer() {
           // for" and "audio is coming out", each one stamped with the heap
           // and the live GPU resource counts. This is the window the tab
           // is dying in, so it's the one window worth narrating.
-          onError={(e) => diag("music:error", `code ${e.currentTarget.error?.code ?? "?"} · ${track.src}`)}
-          onLoadStart={() => diag("music:loadstart", track.src)}
+          onError={(e) =>
+            diag("music:error", `code ${e.currentTarget.error?.code ?? "?"} · ${e.currentTarget.currentSrc}`)
+          }
+          onLoadStart={(e) => diag("music:loadstart", e.currentTarget.currentSrc)}
           onPlay={() => diag("music:play")}
           onPlaying={() => diag("music:playing")}
           onWaiting={() => diag("music:waiting")}
