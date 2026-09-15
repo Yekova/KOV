@@ -218,10 +218,31 @@ export function StudioMusicPlayer() {
           onWaiting={() => diag("music:waiting")}
           onStalled={() => diag("music:stalled")}
           onSuspend={() => diag("music:suspend")}
-          onTimeUpdate={(e) => setProgress((p) => ({ ...p, current: e.currentTarget.currentTime }))}
+          // Both of these read the value out synchronously first, and that
+          // is the whole point rather than a style preference.
+          //
+          // React sets `currentTarget` for the duration of the dispatch and
+          // clears it to null immediately afterwards. A functional setState
+          // updater does not run during the dispatch — React calls it later,
+          // while rendering — so `e.currentTarget.duration` inside the
+          // updater dereferenced null every single time, throwing an
+          // uncaught TypeError that took the whole React tree down with it
+          // (and the WebGL context with that, ~500ms later, which is why it
+          // looked like a rendering or GPU fault).
+          //
+          // It fired on `loadedmetadata`, which is why it tracked the media
+          // exactly: on arrival in the Lounge while the element still
+          // preloaded metadata, then on every explicit .load() when changing
+          // track, and finally on the first play() once neither of those
+          // happened any more. Same one line throughout.
+          onTimeUpdate={(e) => {
+            const current = e.currentTarget.currentTime;
+            setProgress((p) => ({ ...p, current }));
+          }}
           onLoadedMetadata={(e) => {
-            diag("music:metadata", `${Math.round(e.currentTarget.duration)}s`);
-            setProgress((p) => ({ ...p, duration: e.currentTarget.duration }));
+            const duration = e.currentTarget.duration;
+            diag("music:metadata", `${Math.round(duration)}s`);
+            setProgress((p) => ({ ...p, duration }));
           }}
         />
       )}
