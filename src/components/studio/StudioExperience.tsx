@@ -48,8 +48,11 @@ const NAV_OVERLAY_DELAY_MS = 300;
 // covered for the common case where the target texture is already warm.
 const NAV_TOTAL_DURATION_MS = 1400;
 // How long to wait for the browser to hand back a lost WebGL context
-// before giving up and showing the retry screen.
-const CONTEXT_RESTORE_GRACE_MS = 4000;
+// before giving up and showing the retry screen. Generous on purpose: a
+// GPU process that is being restarted can take several seconds, and
+// throwing up an error screen on a context that was about to come back is
+// the worse failure of the two.
+const CONTEXT_RESTORE_GRACE_MS = 9000;
 
 const DEBUG = process.env.NODE_ENV !== "production";
 
@@ -167,6 +170,12 @@ function StudioExperienceInner() {
   });
   const [handTrackingEnabled, setHandTrackingEnabled] = useState(false);
   const [mapExpanded, setMapExpanded] = useState(false);
+  // A WebGL context can be taken away from the page at any moment — a
+  // driver reset, GPU memory pressure, the browser's GPU process being
+  // restarted underneath us — with nothing in this code as the cause.
+  // Until now that ended the visit; these two make it recoverable.
+  const [contextLost, setContextLost] = useState(false);
+  const [canvasKey, setCanvasKey] = useState(0);
   const [phase, setPhase] = useState<EnginePhase>("intro");
   const [currentNodeId, setCurrentNodeId] = useState(STUDIO_ENTRY_NODE_ID);
   const [texture, setTexture] = useState<THREE.Texture | null>(null);
@@ -430,6 +439,7 @@ function StudioExperienceInner() {
         }}
       >
         <Canvas
+          key={canvasKey}
           // [min,max] — R3F clamps to the device's actual devicePixelRatio
           // within this range automatically (min(devicePixelRatio, 2), per
           // the quality audit's request), rather than a fixed value. Was
@@ -460,13 +470,24 @@ function StudioExperienceInner() {
               }`
             );
             gl.domElement.addEventListener("webglcontextlost", (event) => {
+              // preventDefault is what makes the browser try to hand the
+              // context back instead of leaving the canvas dead forever.
               event.preventDefault();
               diag("gl:context-lost");
+              setContextLost(true);
               contextLostTimerRef.current = setTimeout(() => setPhase("error"), CONTEXT_RESTORE_GRACE_MS);
             });
             gl.domElement.addEventListener("webglcontextrestored", () => {
               diag("gl:context-restored");
               clearTimeout(contextLostTimerRef.current);
+              setContextLost(false);
+              // Rebuild the canvas rather than trusting the old renderer to
+              // pick itself back up. Everything it needs survives in React
+              // state — the panorama THREE.Texture still holds its decoded
+              // image — so a fresh renderer simply re-uploads it. A brief
+              // flash is a far better outcome than a room that never comes
+              // back.
+              setCanvasKey((k) => k + 1);
             });
           }}
         >
@@ -564,6 +585,16 @@ function StudioExperienceInner() {
           />
           <StudioFooter />
         </>
+      )}
+
+      {contextLost && (
+        <div
+          className="absolute inset-0 flex flex-col items-center justify-center gap-3 pointer-events-none"
+          style={{ zIndex: "var(--z-modal)", background: "rgba(5,5,5,0.9)" }}
+        >
+          <p className="font-display text-kov-bone uppercase text-sm tracking-widest">Reprise du rendu</p>
+          <p className="text-kov-steel text-[10px] uppercase tracking-widest">La salle revient dans un instant</p>
+        </div>
       )}
 
       <StudioNavigationOverlay active={navOverlayActive} />
