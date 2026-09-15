@@ -19,6 +19,8 @@ import { HandTrackingController } from "@/components/studio/HandTrackingControll
 import { StudioErrorScreen } from "@/components/studio/StudioErrorScreen";
 import { StudioErrorBoundary } from "@/components/studio/StudioErrorBoundary";
 import { Nav } from "@/components/navigation/Nav";
+import { StudioDiagnosticsPanel } from "@/components/studio/StudioDiagnosticsPanel";
+import { initDiagnostics, diag, registerRendererProbe } from "@/lib/studioDiagnostics";
 import { DEFAULT_FOV, type CameraState } from "@/components/studio/CameraController";
 import { GlobalMenuProvider, useGlobalMenu } from "@/components/layout/GlobalMenuContext";
 import { GlobalOverviewMenu } from "@/components/layout/GlobalOverviewMenu";
@@ -45,6 +47,9 @@ const NAV_OVERLAY_DELAY_MS = 300;
 // after this fires), so the swap below lands while the screen is still
 // covered for the common case where the target texture is already warm.
 const NAV_TOTAL_DURATION_MS = 1400;
+// How long to wait for the browser to hand back a lost WebGL context
+// before giving up and showing the retry screen.
+const CONTEXT_RESTORE_GRACE_MS = 4000;
 
 const DEBUG = process.env.NODE_ENV !== "production";
 
@@ -151,6 +156,15 @@ export function StudioExperience() {
 
 function StudioExperienceInner() {
   const { open: menuOpen, toggle: toggleMenu, close: closeMenu } = useGlobalMenu();
+  // Lazy initializer rather than an effect: the breadcrumb trail has to be
+  // armed before anything else in this component can fail, and it must
+  // rotate the previous session's trail aside exactly once. Entirely inert
+  // unless ?diag=1 was used in this tab.
+  useState(() => {
+    initDiagnostics();
+    diag("studio:mount");
+    return null;
+  });
   const [handTrackingEnabled, setHandTrackingEnabled] = useState(false);
   const [mapExpanded, setMapExpanded] = useState(false);
   const [phase, setPhase] = useState<EnginePhase>("intro");
@@ -175,6 +189,7 @@ function StudioExperienceInner() {
     fov: DEFAULT_FOV,
   });
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const contextLostTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => () => timersRef.current.forEach(clearTimeout), []);
 
@@ -196,16 +211,19 @@ function StudioExperienceInner() {
       () => cancelled
     );
 
+    diag("intro:texture-load-start", STUDIO_ENTRY_NODE_ID);
     loadTexture(STUDIO_NODES[STUDIO_ENTRY_NODE_ID].panorama)
       .then((loaded) => {
         if (cancelled) {
           loaded.dispose();
           return;
         }
+        diag("intro:texture-loaded");
         setTexture(loaded);
         curve.notifyTextureReady();
       })
       .catch(() => {
+        diag("intro:texture-failed");
         if (!cancelled) setPhase("error");
       });
     return () => {
@@ -217,6 +235,12 @@ function StudioExperienceInner() {
   }, [currentNodeId, retryKey]);
 
   useEffect(() => () => texture?.dispose(), [texture]);
+
+  useEffect(() => {
+    diag("room:active", currentNodeId);
+  }, [currentNodeId]);
+
+  useEffect(() => () => clearTimeout(contextLostTimerRef.current), []);
 
   // Warms the HTTP cache for every room reachable from here while the
   // visitor is still looking around — by the time they actually click a
@@ -243,6 +267,7 @@ function StudioExperienceInner() {
         const target = STUDIO_NODES[connection.targetNodeId];
         if (!target?.panorama) continue;
         try {
+          diag("prefetch:start", target.id);
           const response = await fetch(target.panorama, {
             signal: controller.signal,
             cache: "force-cache",
@@ -251,6 +276,7 @@ function StudioExperienceInner() {
           // in the HTTP cache — but it's the compressed bytes, never a
           // bitmap, and it goes out of scope immediately.
           await response.arrayBuffer();
+          diag("prefetch:done", target.id);
         } catch {
           // Aborted (left the room) or offline — prefetching is a pure
           // optimisation, navigation loads its own texture regardless.
@@ -287,6 +313,7 @@ function StudioExperienceInner() {
       setSelectedArtwork(null);
       setSelectedInfo(null);
 
+      diag("nav:start", `${currentNode.id} -> ${targetId}`);
       if (DEBUG) {
         console.info(`Navigation target: ${targetId}`);
       }
@@ -314,11 +341,13 @@ function StudioExperienceInner() {
         timersRef.current.push(setTimeout(resolve, reducedMotion ? 500 : NAV_TOTAL_DURATION_MS));
       });
 
-      Promise.all([loadTexture(targetNode.panorama), minWait])
+      diag("nav:texture-load-start", targetId);
+      Promise.all([loadTexture(targetNode.panorama).then((t) => (diag("nav:texture-decoded", targetId), t)), minWait])
         .then(([loaded]) => {
           // The pre-existing `useEffect(() => () => texture?.dispose(), [texture])`
           // below disposes whatever texture this replaces once React commits
           // it — no manual dispose needed here.
+          diag("nav:swap-commit", targetId);
           setTexture(loaded);
           setNavOverlayActive(false);
           setCurrentNodeId(targetId);
@@ -326,8 +355,10 @@ function StudioExperienceInner() {
           cameraStateRef.current.pitch = targetNode.initialPitch;
           cameraStateRef.current.fov = DEFAULT_FOV;
           setPhase("exploring");
+          diag("nav:committed", targetId);
         })
         .catch(() => {
+          diag("nav:failed", targetId);
           // A failed mid-experience navigation aborts the transition and
           // stays on the current, already-working node instead of tearing
           // down the whole 360° experience the visitor is already in —
@@ -364,7 +395,12 @@ function StudioExperienceInner() {
   const canGoNext = Boolean(nextNodeId && currentNode.connections.some((c) => c.targetNodeId === nextNodeId));
 
   if (phase === "error") {
-    return <StudioErrorScreen onRetry={handleRetry} />;
+    return (
+      <>
+        <StudioErrorScreen onRetry={handleRetry} />
+        <StudioDiagnosticsPanel />
+      </>
+    );
   }
 
   const controlsEnabled = phase === "exploring";
@@ -394,6 +430,37 @@ function StudioExperienceInner() {
           dpr={[1, 2]}
           gl={{ antialias: true, toneMapping: THREE.NoToneMapping }}
           camera={{ fov: DEFAULT_FOV, near: 0.1, far: 1100, position: [0, 0, 0] }}
+          // A lost WebGL context used to leave a permanently dead canvas
+          // with no explanation — the GPU process can be killed out from
+          // under the page (driver reset, GPU memory pressure, the OS
+          // reclaiming it) entirely independently of anything this code
+          // does. preventDefault() asks the browser to restore it; if
+          // nothing comes back within the grace window, fall back to the
+          // honest error screen with its working retry rather than a
+          // black rectangle.
+          onCreated={({ gl }) => {
+            registerRendererProbe(() => ({
+              tex: gl.info.memory.textures,
+              geo: gl.info.memory.geometries,
+            }));
+            const ctx = gl.getContext();
+            const debugInfo = ctx.getExtension("WEBGL_debug_renderer_info");
+            diag(
+              "gl:created",
+              `maxTex ${gl.capabilities.maxTextureSize} · aniso ${gl.capabilities.getMaxAnisotropy()} · ${
+                debugInfo ? String(ctx.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)) : "gpu unknown"
+              }`
+            );
+            gl.domElement.addEventListener("webglcontextlost", (event) => {
+              event.preventDefault();
+              diag("gl:context-lost");
+              contextLostTimerRef.current = setTimeout(() => setPhase("error"), CONTEXT_RESTORE_GRACE_MS);
+            });
+            gl.domElement.addEventListener("webglcontextrestored", () => {
+              diag("gl:context-restored");
+              clearTimeout(contextLostTimerRef.current);
+            });
+          }}
         >
           {/* Visible, non-black fallback — if the sphere ever fails to
               render for any reason, this reads as "something's off" (dark
@@ -495,6 +562,9 @@ function StudioExperienceInner() {
       <StudioInfoPanel hotspot={selectedInfo} onClose={handleCloseInfoPanel} />
 
       <GlobalOverviewMenu open={menuOpen} onClose={closeMenu} />
+
+      {/* Inert unless ?diag=1 was used in this tab. */}
+      <StudioDiagnosticsPanel />
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Play, Pause, SkipBack, SkipForward, ChevronUp, ChevronDown } from "lucide-react";
 import { LOUNGE_TRACKS } from "@/data/loungeTracks";
+import { diag } from "@/lib/studioDiagnostics";
 
 type ScreenMode = "now-playing" | "list";
 
@@ -43,16 +44,26 @@ export function StudioMusicPlayer() {
 
   useEffect(() => {
     const audio = audioRef.current;
+    diag("music:mounted");
     return () => {
       audio?.pause();
+      diag("music:unmounted");
     };
   }, []);
 
   // `.load()` before `.play()` on every track change — a plain <audio>'s
   // `src` attribute updating in the DOM doesn't reliably reload the
-  // element's own media pipeline across browsers on its own.
+  // element's own media pipeline across browsers on its own. Skipped on
+  // the very first render: with preload="none" there is nothing loaded to
+  // reload, and calling load() here would defeat the point by kicking the
+  // media pipeline awake the instant the visitor walks into the room.
+  const loadedOnceRef = useRef(false);
   useEffect(() => {
     if (!audioRef.current) return;
+    if (!loadedOnceRef.current) {
+      loadedOnceRef.current = true;
+      return;
+    }
     audioRef.current.load();
     setProgress({ current: 0, duration: 0 });
     if (isPlayingRef.current) audioRef.current.play().catch(() => setIsPlaying(false));
@@ -103,7 +114,15 @@ export function StudioMusicPlayer() {
         <audio
           ref={audioRef}
           src={track.src}
+          // Nothing is fetched or handed to the browser's media pipeline
+          // until the visitor actually presses play. Walking into the
+          // Lounge used to start pulling a ~4MB track (and spinning up a
+          // decoder) at the exact moment the room's panorama was being
+          // decoded and uploaded to the GPU — work nobody asked for, in
+          // the worst possible millisecond.
+          preload="none"
           onEnded={() => step(1)}
+          onError={() => diag("music:error", track.src)}
           onTimeUpdate={(e) => setProgress((p) => ({ ...p, current: e.currentTarget.currentTime }))}
           onLoadedMetadata={(e) => setProgress((p) => ({ ...p, duration: e.currentTarget.duration }))}
         />
