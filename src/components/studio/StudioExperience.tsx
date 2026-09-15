@@ -223,31 +223,44 @@ function StudioExperienceInner() {
   // hotspot, the target panorama's bytes are typically already local, so
   // the real load inside navigateToNode resolves fast enough to land
   // inside StudioNavigationOverlay's cover window instead of racing it.
-  // Sequential, not fire-and-forget for every connection at once: the
-  // Portal now has three reachable rooms, and decoding three full
-  // 8192x4096 rasters concurrently (~128MB each once decoded, on top of
-  // whatever the current room's own texture already holds) is real,
-  // avoidable memory pressure on modest/mobile GPUs — `decode()` waits
-  // for one to finish before the next one starts.
+  //
+  // Bytes only — deliberately NOT an <img> + decode(). That earlier
+  // version was the Lounge crash: the Portal has three reachable rooms,
+  // and decode() forces each panorama into a full uncompressed raster in
+  // the renderer process (6144x3072 is ~72MB, the old 8192x4096 was
+  // ~128MB) purely to throw it away. Three of those, plus the current
+  // room's own decoded texture, plus the decode of whichever room you
+  // then navigate to, is enough to OOM the tab ("this page couldn't
+  // load") on a normal laptop. fetch() gets the exact same HTTP-cache
+  // warming for the compressed ~1MB, and the decode then happens once,
+  // where it's actually needed: inside loadTexture.
   useEffect(() => {
     if (phase !== "exploring") return;
-    let cancelled = false;
+    const controller = new AbortController();
 
     async function prefetchReachableRooms() {
       for (const connection of currentNode.connections) {
-        if (cancelled) return;
         const target = STUDIO_NODES[connection.targetNodeId];
-        if (!target) continue;
-        const img = new window.Image();
-        img.src = target.panorama;
-        await img.decode().catch(() => {});
+        if (!target?.panorama) continue;
+        try {
+          const response = await fetch(target.panorama, {
+            signal: controller.signal,
+            cache: "force-cache",
+          });
+          // The body has to be drained for the response to actually land
+          // in the HTTP cache — but it's the compressed bytes, never a
+          // bitmap, and it goes out of scope immediately.
+          await response.arrayBuffer();
+        } catch {
+          // Aborted (left the room) or offline — prefetching is a pure
+          // optimisation, navigation loads its own texture regardless.
+          return;
+        }
       }
     }
     prefetchReachableRooms();
 
-    return () => {
-      cancelled = true;
-    };
+    return () => controller.abort();
   }, [phase, currentNode]);
 
   function handleEnter() {
@@ -434,8 +447,15 @@ function StudioExperienceInner() {
           />
           {/* Sitewide (any room), opt-in only — writes into the same
               cameraStateRef CameraController.tsx (inside the Canvas)
-              already reads every frame, so no changes were needed there. */}
-          <HandTrackingController cameraStateRef={cameraStateRef} enabled={handTrackingEnabled} />
+              already reads every frame, so no changes were needed there.
+              Pinch-drag turns, hand depth zooms; `zoomEnabled` is the
+              room's own, so hand zoom is allowed exactly where the wheel
+              already is. */}
+          <HandTrackingController
+            cameraStateRef={cameraStateRef}
+            enabled={handTrackingEnabled}
+            zoomEnabled={currentNode.zoomEnabled}
+          />
           {/* Room-scoped, not sitewide — the Lounge (p06) is the one room
               this was actually asked for. Self-positioned bottom-right
               (not part of StudioHUD's top-right row) per its own device
