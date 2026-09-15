@@ -46,6 +46,10 @@ const TRANSITION_MS = 220;
 
 interface ActivationCardProps {
   number: string;
+  /** How many cards there are in all — the chip beside the number shows
+   * the position in the sequence, which is real information here: these six
+   * are the stages of an approach and are read in order. */
+  total: number;
   title: string;
   body: string;
   /** Only card 4 ("Performance durable") actually passes this — the
@@ -75,7 +79,7 @@ interface ActivationCardProps {
 // directly on the DOM node (no React state/re-render per mousemove) —
 // same technique WidgetShell.tsx uses, for the same performance reason:
 // up to 5-6 of these can be mounted simultaneously in the coverflow.
-export function ActivationCard({ number, title, body, features, visual, active = false, href }: ActivationCardProps) {
+export function ActivationCard({ number, total, title, body, features, visual, active = false, href }: ActivationCardProps) {
   const shellRef = useRef<HTMLDivElement>(null);
 
   function handlePointerMove(event: React.MouseEvent<HTMLDivElement>) {
@@ -93,31 +97,41 @@ export function ActivationCard({ number, title, body, features, visual, active =
       style={{
         ...LIGHT_SURFACE_TOKENS,
         borderRadius: RADIUS,
-        // Frosted, faintly pearlescent — cool at the top, warming a little
-        // toward the bottom, the way the reference's panels do. A flat
-        // white would read as paper; the gradient is what makes it glass.
+        // Genuinely translucent — this was the mistake in the opaque
+        // version. Frosted glass is not a white panel: you have to see the
+        // colour behind it move. At 0.30 the field reads through clearly
+        // and the blur below is what turns it into glass rather than a
+        // window. Only the shell carries backdrop-filter; everything
+        // nested inside uses plain translucent fills, which look identical
+        // over an already-blurred parent and cost nothing.
         background:
-          "linear-gradient(158deg, rgba(255,255,255,0.95) 0%, rgba(246,247,249,0.90) 46%, rgba(232,235,239,0.92) 100%)",
-        // No backdrop-filter. At these alphas barely a tenth of the field
-        // shows through, so blurring it is invisible — while six of these
-        // are mounted at once over a background whose colour is drifting,
-        // which would mean six full-panel re-blurs every frame. The panel
-        // reads as frosted because of the gradient, not because of a
-        // filter.
+          "linear-gradient(150deg, rgba(255,255,255,0.46) 0%, rgba(255,255,255,0.26) 44%, rgba(255,255,255,0.34) 100%)",
+        backdropFilter: "blur(26px) saturate(165%)",
+        WebkitBackdropFilter: "blur(26px) saturate(165%)",
         // The rim is light, not dark: on a pale panel a dark outline reads
         // as a drawn box, while a white rim reads as a lit edge.
-        border: `1px solid ${active ? "rgba(227,30,36,0.42)" : "rgba(255,255,255,0.72)"}`,
-        // Two shadows doing two jobs: a tight contact shadow that sets the
-        // card on the surface, and a wide ambient one that gives it air.
-        // Both achromatic — the active card used to carry a 44px red
-        // bloom, which is a blurred, imprecise way to say something the
-        // accent rule below now says with an edge.
+        border: `1px solid ${active ? "rgba(227,30,36,0.45)" : "rgba(255,255,255,0.55)"}`,
+        // Four jobs at once: a bright top rim and a faint bottom one so the
+        // pane has thickness, a tight contact shadow that sets the card
+        // down, and a wide ambient one that gives it air.
         boxShadow: active
-          ? "inset 0 1px 0 rgba(255,255,255,0.95), 0 10px 20px -10px rgba(6,8,10,0.5), 0 42px 70px -34px rgba(6,8,10,0.75)"
-          : "inset 0 1px 0 rgba(255,255,255,0.8), 0 8px 16px -10px rgba(6,8,10,0.42), 0 30px 54px -32px rgba(6,8,10,0.6)",
+          ? "inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -1px 0 rgba(255,255,255,0.28), 0 12px 24px -12px rgba(46,20,26,0.4), 0 44px 72px -34px rgba(46,20,26,0.6)"
+          : "inset 0 1px 0 rgba(255,255,255,0.75), inset 0 -1px 0 rgba(255,255,255,0.2), 0 10px 18px -12px rgba(46,20,26,0.32), 0 32px 56px -32px rgba(46,20,26,0.48)",
         transitionDuration: `${TRANSITION_MS}ms`,
       }}
     >
+      {/* The diagonal sheen every pane of glass in the reference carries —
+          light catching the upper-left corner and falling away. Without it
+          a translucent rectangle reads as a hole, not as a surface. */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          borderRadius: RADIUS,
+          background:
+            "linear-gradient(142deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.12) 26%, transparent 52%)",
+        }}
+      />
       {/* Cursor-reactive specular. On the old dark panel this was a faint
           white wash; on a pale one it has to be near-opaque white to show
           at all, which is also what it looks like on real frosted glass —
@@ -132,56 +146,65 @@ export function ActivationCard({ number, title, body, features, visual, active =
         }}
       />
 
-      <div className="relative flex-1 min-h-0 overflow-hidden flex items-center justify-center">{visual}</div>
-
-      {/* The visual and the copy are two zones of one card, so they get a
-          real edge between them rather than floating apart on whitespace.
-          When the card is active that edge carries the accent — a 2px rule
-          laid over the hairline, so nothing shifts by a pixel as it turns
-          on. */}
+      {/* Header plate — the number as a chip rather than as loose type,
+          which is how the reference labels every one of its panels, and the
+          position in the sequence beside it. */}
       <div
-        className="relative shrink-0 text-left"
-        style={{
-          padding: PADDING,
-          borderTop: "1px solid var(--glass-border)",
-          // A brighter plate under the copy. The reference builds its depth
-          // by stacking panels of slightly different whites rather than by
-          // outlining them, so the label area sits a step above the field
-          // the visual floats in.
-          background: "linear-gradient(180deg, rgba(255,255,255,0.62), rgba(255,255,255,0.34))",
-        }}
+        className="relative flex items-center justify-between shrink-0"
+        style={{ padding: PADDING, paddingBottom: 0 }}
       >
         <span
-          aria-hidden="true"
-          className="absolute left-0 right-0 transition-opacity ease-out"
+          className="flex items-center justify-center font-mono transition-colors ease-out"
           style={{
-            top: -1,
-            height: 2,
-            background: "var(--kov-red)",
-            opacity: active ? 1 : 0,
+            width: 34,
+            height: 34,
+            borderRadius: 11,
+            fontSize: TYPE.label,
+            letterSpacing: "0.08em",
+            fontVariantNumeric: "tabular-nums",
+            color: active ? "var(--kov-white)" : "var(--kov-bone)",
+            background: active ? "var(--kov-red)" : "rgba(255,255,255,0.4)",
+            border: `1px solid ${active ? "transparent" : "rgba(255,255,255,0.6)"}`,
+            boxShadow: active
+              ? "0 6px 14px -6px rgba(227,30,36,0.7)"
+              : "inset 0 1px 0 rgba(255,255,255,0.8), 0 4px 10px -6px rgba(46,20,26,0.35)",
             transitionDuration: `${TRANSITION_MS}ms`,
           }}
-        />
+        >
+          {number}
+        </span>
+        <span
+          className="font-mono"
+          style={{
+            fontSize: TYPE.label,
+            letterSpacing: "0.14em",
+            fontVariantNumeric: "tabular-nums",
+            color: "var(--kov-steel)",
+          }}
+        >
+          {number} / {String(total).padStart(2, "0")}
+        </span>
+      </div>
 
-        <div className="flex items-center justify-between" style={{ marginBottom: 10 }}>
-          <p
-            className="font-mono transition-colors ease-out"
-            style={{
-              fontSize: TYPE.label,
-              letterSpacing: "0.14em",
-              // Tabular figures so 01 through 06 occupy the same width and
-              // the titles under them start on the same optical line from
-              // card to card.
-              fontVariantNumeric: "tabular-nums",
-              color: active ? "var(--kov-red)" : "var(--kov-steel)",
-              transitionDuration: `${TRANSITION_MS}ms`,
-            }}
-          >
-            {number}
-          </p>
-          {active && <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-kov-red" />}
-        </div>
+      {/* The visual sits in its own recessed pane instead of floating on
+          the card. That nesting — a panel inside a panel, each with its own
+          rim — is most of what gives the reference its depth, and most of
+          what the flat version was missing. */}
+      <div
+        className="relative flex-1 min-h-0 overflow-hidden flex items-center justify-center"
+        style={{
+          margin: PADDING,
+          marginBottom: 0,
+          borderRadius: RADIUS - 8,
+          background: "linear-gradient(160deg, rgba(255,255,255,0.34), rgba(255,255,255,0.14))",
+          border: "1px solid rgba(255,255,255,0.45)",
+          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.7), inset 0 -10px 24px -18px rgba(46,20,26,0.5)",
+        }}
+      >
+        {visual}
+      </div>
 
+      <div className="relative shrink-0 text-left" style={{ padding: PADDING }}>
         <p
           className="text-kov-bone uppercase"
           style={{ fontSize: TYPE.title, letterSpacing: "0.045em", lineHeight: 1.25, marginBottom: 8 }}
@@ -210,18 +233,35 @@ export function ActivationCard({ number, title, body, features, visual, active =
           </ul>
         )}
 
+        {/* A real pill, and always visible. As a hover-only line of text it
+            was both invisible on the five cards you aren't pointing at and
+            one less surface on a card that needed more of them. */}
         {href && (
           <span
-            className="inline-flex items-center gap-1.5 uppercase text-kov-red opacity-0 group-hover:opacity-100 transition-opacity ease-out"
+            className="inline-flex items-center gap-2 uppercase transition-colors ease-out"
             style={{
               marginTop: PADDING,
+              padding: "7px 12px",
+              borderRadius: 999,
               fontSize: TYPE.caption,
-              letterSpacing: "0.16em",
+              letterSpacing: "0.14em",
+              color: "var(--kov-bone)",
+              background: "rgba(255,255,255,0.42)",
+              border: "1px solid rgba(255,255,255,0.6)",
+              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.8), 0 4px 12px -8px rgba(46,20,26,0.4)",
               transitionDuration: `${TRANSITION_MS}ms`,
             }}
           >
             En savoir plus
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="transition-transform group-hover:translate-x-0.5">
+            <svg
+              width="10"
+              height="10"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="var(--kov-red)"
+              strokeWidth="2.5"
+              className="transition-transform group-hover:translate-x-0.5"
+            >
               <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </span>

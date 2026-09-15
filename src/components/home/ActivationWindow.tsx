@@ -304,6 +304,7 @@ export function ActivationWindow() {
                       <div key={card.title} style={{ aspectRatio: "9 / 16" }}>
                         <ActivationCard
                           number={String(i + 1).padStart(2, "0")}
+                          total={CARDS.length}
                           title={card.title}
                           body={card.body}
                           features={card.features}
@@ -327,6 +328,7 @@ export function ActivationWindow() {
                     >
                       <ActivationCard
                         number={String(i + 1).padStart(2, "0")}
+                        total={CARDS.length}
                         title={card.title}
                         body={card.body}
                         features={card.features}

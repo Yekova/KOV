@@ -85,6 +85,33 @@
   animation-duration: 41s;
 }
 
+/* The light the glass panels are made of.
+ *
+ * Frosted glass only exists if there is something bright behind it — the
+ * reference's panels read as glass because they sit on a luminous field,
+ * not because of anything in the panels themselves. So the right half of
+ * this window, where the cards live, is washed pale rose; the left stays
+ * dark under its own scrim, because the section's copy is light type and
+ * has to keep a dark ground to sit on.
+ *
+ * Anchored and sized in viewport units, like everything else in here, so
+ * the window's dive to fullscreen never resizes its box. */
+.kov-wash {
+  position: absolute;
+  top: -20vh;
+  left: 18vw;
+  width: 96vw;
+  height: 140vh;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 52% 46% at 50% 50%,
+    rgba(255, 243, 244, 0.78),
+    rgba(255, 226, 229, 0.42) 44%,
+    rgba(255, 214, 218, 0.14) 66%,
+    transparent 78%
+  );
+}
+
 /* The structure the colour is measured against.
  *
  * Soft colour on its own is wallpaper — it reads as decoration whatever the

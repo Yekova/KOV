@@ -34,6 +34,11 @@ export function ActivationBackdrop({ reducedMotion }: ActivationBackdropProps) {
         className="absolute inset-0 overflow-hidden"
         style={{ background: "var(--kov-graphite)" }}
       >
+        {/* Pale wash first, then the colour drifting over it — the order
+            matters: the masses have to sit on the light for the right half
+            to read as a lit surface rather than as glow on black. */}
+        <div className="kov-wash" />
+
         <div className={`kov-blob kov-blob--red${still}`} />
         <div className={`kov-blob kov-blob--signal${still}`} />
         <div className={`kov-blob kov-blob--neutral${still}`} />
