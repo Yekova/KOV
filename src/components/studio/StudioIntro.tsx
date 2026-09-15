@@ -10,11 +10,17 @@ interface StudioIntroProps {
    * TextureLoader's own progress event — not a simulated/fake timer. */
   loadProgress: number;
   totalRooms: number;
-  /** Entry node's own small thumbnail (already generated for
-   * StudioRoomCarousel) — blurred behind the card so the backdrop is a real
-   * glimpse of the room about to be entered, not a stock image, while
-   * staying tiny to load (contrast with the multi-MB panorama itself). */
+  /** Entry node's pre-blurred backdrop (`<id>-blur.webp`, 640x360 with the
+   * blur baked in by sharp). Deliberately not the sharp thumbnail under a
+   * CSS `filter: blur(50px)`: blurring a full-screen element is a real
+   * per-frame compositor cost, and it was being paid while this whole
+   * screen cross-faded out over a live WebGL canvas. The same look, for
+   * 2KB and no runtime work. */
   backdropSrc: string;
+  /** Room code and name of the entry node — the backdrop is a real glimpse
+   * of it, so it may as well say which room it is. */
+  roomCode: string;
+  roomName: string;
   /** True during the "revealing" phase — fades this screen out in place
    * (via `animate`, while still mounted) so it cross-fades with the canvas
    * fading in underneath, rather than sitting opaque for the whole reveal
@@ -25,238 +31,201 @@ interface StudioIntroProps {
   revealDurationMs: number;
 }
 
-// Cosmetic staging over the one real load event above (a single panorama
-// fetch), not four separately-measured operations — same honest device as
-// showing a qualitative "Optimisé" instead of a fake score elsewhere in the
-// codebase: the underlying signal (loadProgress) is real, only the labels
-// are narrative.
-const LOADING_STEPS = [
+// Cosmetic staging over the one real load event underneath (a single
+// panorama fetch), not separately-measured operations — the same honest
+// device as showing a qualitative label instead of a fake score elsewhere
+// in this codebase: `loadProgress` is real, only the wording is narrative.
+// One line that changes, rather than the checklist this used to draw: four
+// ticking rows implied four measured stages, and there has only ever been
+// one.
+const LOADING_STAGES = [
   { label: "Chargement de l'environnement", threshold: 0 },
   { label: "Préparation du panorama", threshold: 30 },
   { label: "Synchronisation du studio", threshold: 65 },
   { label: "Finalisation des éléments interactifs", threshold: 90 },
 ];
 
-// The very first thing /studio shows — no marketing Hero, just a two-step
-// board (loading, then ready-to-enter) over a heavily blurred real glimpse
-// of the room being prepared. `ready` gates which of the two card states
-// renders: the panorama texture loads underneath this screen while it's
-// still showing, so entering never reveals a half-loaded sphere.
+const EASE_OUT = [0.22, 1, 0.36, 1] as const;
+
+// The very first thing /studio shows — no marketing hero, just a single
+// card over a real, heavily blurred glimpse of the room being prepared.
+// `ready` gates its two states: the panorama loads underneath while this is
+// still up, so entering never reveals a half-loaded sphere.
 export function StudioIntro({
   onEnter,
   ready,
   loadProgress,
   totalRooms,
   backdropSrc,
+  roomCode,
+  roomName,
   revealing,
   revealDurationMs,
 }: StudioIntroProps) {
   return (
     <motion.div
-      className="absolute inset-0 flex flex-col items-center justify-center gap-8 overflow-hidden px-6"
+      className="absolute inset-0 flex flex-col items-center justify-center gap-7 overflow-hidden px-6"
       style={{ background: "#050505", zIndex: "var(--z-modal)" as unknown as number }}
-      animate={{ opacity: revealing ? 0 : 1 }}
-      transition={{ duration: revealDurationMs / 1000, ease: "easeInOut" }}
+      animate={{ opacity: revealing ? 0 : 1, scale: revealing ? 1.015 : 1 }}
+      transition={{ duration: revealDurationMs / 1000, ease: EASE_OUT }}
     >
       <div className="absolute inset-0" aria-hidden="true">
         <Image
           src={backdropSrc}
           alt=""
           fill
+          priority
           sizes="100vw"
           className="object-cover"
-          style={{ filter: "blur(50px) brightness(0.4) saturate(1.2)", transform: "scale(1.2)" }}
+          // Already blurred in the file; the scale only hides the softened
+          // edges an upscale leaves behind.
+          style={{ transform: "scale(1.08)" }}
         />
         <div
           className="absolute inset-0"
-          style={{ background: "radial-gradient(55% 45% at 75% 40%, rgba(227,30,36,0.22), transparent 70%)" }}
+          style={{ background: "radial-gradient(60% 50% at 72% 38%, rgba(227,30,36,0.2), transparent 72%)" }}
         />
-        <div className="absolute inset-0" style={{ background: "rgba(5,5,5,0.5)" }} />
+        <div
+          className="absolute inset-0"
+          style={{ background: "linear-gradient(180deg, rgba(5,5,5,0.55), rgba(5,5,5,0.78))" }}
+        />
       </div>
 
       <div className="relative text-center">
-        <p className="font-display text-kov-bone uppercase tracking-widest text-sm">KOV</p>
-        <p className="text-kov-steel uppercase tracking-widest text-[10px] mt-2">Virtual Studio</p>
+        <p className="font-display text-kov-bone uppercase tracking-[0.35em] text-sm">KOV</p>
+        <p className="text-kov-steel uppercase tracking-[0.3em] text-[9px] mt-2">Virtual Studio</p>
       </div>
 
-      <div
-        className="relative w-[440px] max-w-[90vw] p-8"
+      <motion.div
+        className="relative w-[420px] max-w-[92vw] p-7 flex flex-col"
         style={{
-          borderRadius: 20,
+          borderRadius: 18,
           background: "var(--glass-bg)",
           backdropFilter: "blur(var(--glass-blur)) saturate(180%)",
           WebkitBackdropFilter: "blur(var(--glass-blur)) saturate(180%)",
           border: "1px solid var(--glass-border)",
           boxShadow: "var(--glass-shadow-full)",
+          // Fixed body height so the card doesn't resize under the visitor
+          // when the loading state gives way to the ready state.
+          minHeight: 268,
         }}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: EASE_OUT }}
       >
-        <p className="absolute top-6 right-8 font-mono text-xs text-kov-steel">{ready ? "02" : "01"} / 02</p>
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-kov-steel text-[9px] uppercase tracking-[0.25em] truncate">
+            <span className="text-kov-red font-mono">{roomCode}</span>
+            <span className="mx-2 opacity-40">/</span>
+            {roomName}
+          </p>
+          <p className="font-mono text-[10px] text-kov-steel shrink-0">{ready ? "02" : "01"} — 02</p>
+        </div>
+
+        <div
+          aria-hidden="true"
+          className="mt-4 mb-6 h-px w-full shrink-0"
+          style={{ background: "var(--glass-border)" }}
+        />
 
         {ready ? (
           <ReadyState onEnter={onEnter} totalRooms={totalRooms} />
         ) : (
           <LoadingState loadProgress={loadProgress} />
         )}
-      </div>
+      </motion.div>
     </motion.div>
   );
 }
 
 function LoadingState({ loadProgress }: { loadProgress: number }) {
-  const activeStepIndex = LOADING_STEPS.reduce((acc, step, i) => (loadProgress >= step.threshold ? i : acc), 0);
+  const stage = LOADING_STAGES.reduce((acc, s, i) => (loadProgress >= s.threshold ? i : acc), 0);
+  const pct = Math.round(loadProgress);
 
   return (
-    <div className="text-center">
-      <div className="relative w-14 h-14 mx-auto mb-6 flex items-center justify-center">
-        <span
-          aria-hidden="true"
-          className="absolute inset-0 rounded-full animate-ping motion-reduce:animate-none"
-          style={{ background: "var(--kov-red)", opacity: 0.2 }}
-        />
-        <span
-          aria-hidden="true"
-          className="absolute inset-0 rounded-full"
-          style={{ border: "1px solid rgba(227,30,36,0.4)" }}
-        />
-        <span aria-hidden="true" className="w-2.5 h-2.5 rounded-full" style={{ background: "var(--kov-red)" }} />
+    <motion.div
+      className="flex flex-col flex-1"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
+      <h2 className="font-display text-kov-bone uppercase text-xl leading-tight">Initialisation du studio</h2>
+      <p className="mt-2.5 text-kov-steel text-[13px] leading-relaxed">
+        Préparation de votre visite immersive.
+      </p>
+
+      <div className="flex-1 min-h-6" />
+
+      {/* The progress is the whole point of this state, so it gets the
+          weight: a large tabular figure over a full-width rule. */}
+      <div className="flex items-end justify-between gap-4 mb-2.5">
+        <p className="text-kov-steel text-[10px] uppercase tracking-[0.2em] leading-snug">
+          {LOADING_STAGES[stage].label}
+        </p>
+        <p
+          className="font-mono text-kov-bone text-2xl leading-none shrink-0"
+          style={{ fontVariantNumeric: "tabular-nums" }}
+        >
+          {pct}
+          <span className="text-kov-steel text-sm ml-0.5">%</span>
+        </p>
       </div>
-
-      <h2 className="font-display text-kov-bone uppercase text-lg">Initialisation du studio</h2>
-      <p className="mt-2 text-kov-steel text-sm">Préparation de votre expérience immersive</p>
-
-      <div className="mt-6">
-        <div className="h-1 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.08)" }}>
-          <div
-            className="h-full rounded-full"
-            style={{ width: `${loadProgress}%`, background: "var(--kov-red)", transition: "width 0.25s ease" }}
-          />
-        </div>
-        <p className="mt-2 text-right font-mono text-[11px] text-kov-steel">{Math.round(loadProgress)} %</p>
+      <div className="h-[3px] w-full overflow-hidden" style={{ background: "rgba(255,255,255,0.09)", borderRadius: 2 }}>
+        <div
+          className="h-full"
+          style={{
+            width: `${loadProgress}%`,
+            background: "var(--kov-red)",
+            borderRadius: 2,
+            transition: "width 0.3s cubic-bezier(0.22,1,0.36,1)",
+          }}
+        />
       </div>
-
-      <ul className="mt-6 space-y-2.5 text-left">
-        {LOADING_STEPS.map((step, i) => {
-          const done = i < activeStepIndex;
-          const active = i === activeStepIndex;
-          return (
-            <li
-              key={step.label}
-              className="flex items-center gap-3 text-xs"
-              style={{ color: done || active ? "var(--kov-bone)" : "var(--kov-steel)" }}
-            >
-              <span
-                aria-hidden="true"
-                className="w-2 h-2 rounded-full shrink-0"
-                style={{
-                  background: done ? "var(--kov-red)" : "transparent",
-                  border: done ? "none" : `1px solid ${active ? "var(--kov-red)" : "var(--glass-border)"}`,
-                }}
-              />
-              {step.label}
-              {active && (
-                <span aria-hidden="true" className="animate-pulse motion-reduce:animate-none">
-                  …
-                </span>
-              )}
-            </li>
-          );
-        })}
-      </ul>
-    </div>
+    </motion.div>
   );
 }
 
 function ReadyState({ onEnter, totalRooms }: { onEnter: () => void; totalRooms: number }) {
   return (
     <motion.div
-      className="text-center"
-      initial={{ opacity: 0, scale: 0.94 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="flex flex-col flex-1"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, ease: EASE_OUT }}
     >
-      <div
-        aria-hidden="true"
-        className="w-14 h-14 mx-auto mb-6 rounded-full flex items-center justify-center"
-        style={{ border: "1.5px solid var(--kov-red)", boxShadow: "0 0 24px rgba(227,30,36,0.35)" }}
-      >
-        <svg
-          width="22"
-          height="22"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="var(--kov-red)"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M5 13l4 4L19 7" />
-        </svg>
-      </div>
-
-      <h2 className="font-display text-kov-bone uppercase text-lg">Le studio est prêt</h2>
-      <p className="mt-4 text-kov-steel text-sm leading-relaxed">
-        Explorez les {totalRooms} espaces du KOV Virtual Studio et plongez dans un univers dédié à la création,
-        l&apos;innovation et aux expériences sans limites.
+      <h2 className="font-display text-kov-bone uppercase text-xl leading-tight">Le studio est prêt</h2>
+      <p className="mt-2.5 text-kov-steel text-[13px] leading-relaxed">
+        {totalRooms} espaces à parcourir librement, en 360°. Prenez le temps de regarder autour de vous.
       </p>
+
+      <div className="flex-1 min-h-6" />
 
       <button
         type="button"
         onClick={onEnter}
-        className="mt-6 w-full flex items-center justify-center gap-2 py-3.5 text-kov-bone text-xs uppercase tracking-widest transition-colors hover:text-kov-red-signal"
+        className="group w-full flex items-center justify-center gap-2.5 py-3.5 text-kov-white text-[11px] uppercase tracking-[0.2em] transition-colors"
         style={{
           borderRadius: "var(--radius-pill)",
-          border: "1px solid var(--kov-red)",
-          background: "rgba(227,30,36,0.1)",
-          boxShadow: "0 0 28px rgba(227,30,36,0.25)",
+          // Solid, not a 10% tint. This is the single action the screen
+          // exists for; it should look like it.
+          background: "var(--kov-red)",
+          boxShadow: "0 8px 30px rgba(227,30,36,0.3)",
         }}
       >
         Entrer dans le studio
-        <span aria-hidden="true">→</span>
+        <span aria-hidden="true" className="transition-transform duration-300 group-hover:translate-x-1">
+          →
+        </span>
       </button>
 
-      <div className="mt-6 pt-5 grid grid-cols-3 gap-2" style={{ borderTop: "1px solid var(--glass-border)" }}>
-        <div>
-          <p className="font-display text-kov-red text-sm">360°</p>
-          <p className="mt-1 text-kov-steel text-[10px] uppercase tracking-widest leading-tight">
-            Explorer en 360°
-          </p>
-        </div>
-        <div>
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="var(--kov-steel)"
-            strokeWidth="1.6"
-            className="mx-auto"
-          >
-            <circle cx="12" cy="12" r="9" />
-            <path d="M15 9l-2.2 5.2L9 16l2.2-5.2z" fill="var(--kov-steel)" stroke="none" />
-          </svg>
-          <p className="mt-1 text-kov-steel text-[10px] uppercase tracking-widest leading-tight">
-            Visite libre et intuitive
-          </p>
-        </div>
-        <div>
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="var(--kov-steel)"
-            strokeWidth="1.6"
-            className="mx-auto"
-          >
-            <rect x="4" y="4" width="7" height="7" rx="1" />
-            <rect x="13" y="4" width="7" height="7" rx="1" />
-            <rect x="4" y="13" width="7" height="7" rx="1" />
-            <rect x="13" y="13" width="7" height="7" rx="1" />
-          </svg>
-          <p className="mt-1 text-kov-steel text-[10px] uppercase tracking-widest leading-tight">
-            {totalRooms} salles d&apos;expériences
-          </p>
-        </div>
+      {/* Text, not icons. A compass and a 2x2 grid said nothing these three
+          words don't say better. */}
+      <div className="mt-4 flex items-center justify-center gap-3 text-kov-steel text-[9px] uppercase tracking-[0.2em]">
+        <span>{totalRooms} salles</span>
+        <span aria-hidden="true" className="w-px h-2.5" style={{ background: "var(--glass-border)" }} />
+        <span>Vue 360°</span>
+        <span aria-hidden="true" className="w-px h-2.5" style={{ background: "var(--glass-border)" }} />
+        <span>Visite libre</span>
       </div>
     </motion.div>
   );

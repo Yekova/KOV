@@ -7,7 +7,7 @@ import * as THREE from "three";
 import { StudioIntro } from "@/components/studio/StudioIntro";
 import { StudioHUD } from "@/components/studio/StudioHUD";
 import { StudioCanvasContent } from "@/components/studio/StudioCanvasContent";
-import { StudioNavigationOverlay } from "@/components/studio/StudioNavigationOverlay";
+import { StudioNavigationOverlay, NAV_COVER_MS } from "@/components/studio/StudioNavigationOverlay";
 import { StudioProjectPanel } from "@/components/studio/StudioProjectPanel";
 import { StudioInfoPanel } from "@/components/studio/StudioInfoPanel";
 import { StudioRoomPanel } from "@/components/studio/StudioRoomPanel";
@@ -39,14 +39,15 @@ import {
 // blocks input, same guarantee (studio spec §31).
 type EnginePhase = "intro" | "revealing" | "exploring" | "transitioning" | "error";
 
-const REVEAL_DURATION_MS = 1200;
-const NAV_OVERLAY_DELAY_MS = 300;
-// Also doubles as the minimum floor a real node-to-node navigation waits
-// before settling (see navigateToNode) — matches StudioNavigationOverlay's
-// own fixed 1.1s cover animation (styled to start NAV_OVERLAY_DELAY_MS
-// after this fires), so the swap below lands while the screen is still
-// covered for the common case where the target texture is already warm.
-const NAV_TOTAL_DURATION_MS = 1400;
+// Entry reveal. Shorter than the old 1200ms: it used to animate a
+// full-screen CSS blur on the live WebGL canvas, which needs a real hold to
+// read at all. Now that it's opacity and a transform, the same gesture
+// lands cleanly in less time.
+const REVEAL_DURATION_MS = 760;
+// How long the black stays fully closed once it has closed, before the swap
+// is allowed to happen. Just enough that the changeover reads as a beat
+// rather than a stutter — the swap itself waits on this AND on the texture.
+const NAV_HOLD_MS = 160;
 // How long to wait for the browser to hand back a lost WebGL context
 // before giving up and showing the retry screen. Generous on purpose: a
 // GPU process that is being restarted can take several seconds, and
@@ -176,6 +177,7 @@ function StudioExperienceInner() {
   // Until now that ended the visit; these two make it recoverable.
   const [contextLost, setContextLost] = useState(false);
   const [canvasKey, setCanvasKey] = useState(0);
+  const [mapReady, setMapReady] = useState(false);
   const [phase, setPhase] = useState<EnginePhase>("intro");
   const [currentNodeId, setCurrentNodeId] = useState(STUDIO_ENTRY_NODE_ID);
   const [texture, setTexture] = useState<THREE.Texture | null>(null);
@@ -256,6 +258,33 @@ function StudioExperienceInner() {
   useEffect(() => {
     diag("room:active", currentNodeId);
   }, [currentNodeId]);
+
+  // The studio map is a second WebGL context with a couple of hundred
+  // meshes behind it. Mounting it in the same commit that reveals the
+  // panorama meant building an entire second scene while the entry
+  // animation was still playing — the most expensive possible moment. It
+  // now waits for the browser to actually be idle, with a timeout so it
+  // still arrives promptly on a busy machine.
+  useEffect(() => {
+    if (phase !== "exploring" || mapReady) return;
+    let cancelled = false;
+    const idle = (window as Window & typeof globalThis).requestIdleCallback;
+    const show = () => {
+      if (!cancelled) setMapReady(true);
+    };
+    if (typeof idle === "function") {
+      idle(show, { timeout: 1200 });
+    } else {
+      const timer = setTimeout(show, 400);
+      return () => {
+        cancelled = true;
+        clearTimeout(timer);
+      };
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [phase, mapReady]);
 
   useEffect(() => () => clearTimeout(contextLostTimerRef.current), []);
 
@@ -352,27 +381,40 @@ function StudioExperienceInner() {
         });
       }
 
-      timersRef.current.push(setTimeout(() => setNavOverlayActive(true), reducedMotion ? 0 : NAV_OVERLAY_DELAY_MS));
+      // The black starts closing immediately, and the swap waits for it to
+      // be *fully* closed — not for a timer that happened to be the same
+      // length as the whole animation. Nothing is allowed to change on
+      // screen until there is nothing visible to change.
+      setNavOverlayActive(true);
 
-      const minWait = new Promise<void>((resolve) => {
-        timersRef.current.push(setTimeout(resolve, reducedMotion ? 500 : NAV_TOTAL_DURATION_MS));
+      const covered = new Promise<void>((resolve) => {
+        timersRef.current.push(setTimeout(resolve, reducedMotion ? 0 : NAV_COVER_MS + NAV_HOLD_MS));
       });
 
       diag("nav:texture-load-start", targetId);
-      Promise.all([loadTexture(targetNode.panorama).then((t) => (diag("nav:texture-decoded", targetId), t)), minWait])
+      Promise.all([loadTexture(targetNode.panorama).then((t) => (diag("nav:texture-decoded", targetId), t)), covered])
         .then(([loaded]) => {
           // The pre-existing `useEffect(() => () => texture?.dispose(), [texture])`
           // below disposes whatever texture this replaces once React commits
           // it — no manual dispose needed here.
           diag("nav:swap-commit", targetId);
           setTexture(loaded);
-          setNavOverlayActive(false);
           setCurrentNodeId(targetId);
           cameraStateRef.current.yaw = targetNode.initialYaw;
           cameraStateRef.current.pitch = targetNode.initialPitch;
           cameraStateRef.current.fov = DEFAULT_FOV;
           setPhase("exploring");
-          diag("nav:committed", targetId);
+
+          // Two frames, deliberately: the first lets React commit the new
+          // texture, the second lets the renderer actually paint it. Only
+          // then does the black open. Lifting it in the same tick as the
+          // swap is what made the old room visible during the changeover.
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() => {
+              setNavOverlayActive(false);
+              diag("nav:committed", targetId);
+            })
+          );
         })
         .catch(() => {
           diag("nav:failed", targetId);
@@ -430,10 +472,19 @@ function StudioExperienceInner() {
         className="absolute inset-0"
         style={{
           opacity: canvasRevealed ? 1 : 0,
-          filter: canvasRevealed ? "blur(0px)" : reducedMotion ? "blur(0px)" : "blur(20px)",
+          // Opacity and a transform, never `filter`. This used to animate
+          // blur(20px) -> blur(0) across a full-screen WebGL canvas, which
+          // forces the compositor to re-blur the entire viewport every
+          // single frame — the one thing guaranteed to stutter on the
+          // integrated GPUs most visitors actually have. A slight push-in
+          // reads as the same "coming into focus" gesture and costs nothing:
+          // both properties are handled on the compositor without repainting.
+          transform: canvasRevealed || reducedMotion ? "scale(1)" : "scale(1.045)",
+          transformOrigin: "center",
+          willChange: canvasRevealed ? "auto" : "opacity, transform",
           transition: reducedMotion
             ? "opacity 0.4s ease"
-            : `opacity ${REVEAL_DURATION_MS}ms ease, filter ${REVEAL_DURATION_MS}ms ease`,
+            : `opacity ${REVEAL_DURATION_MS}ms cubic-bezier(0.22,1,0.36,1), transform ${REVEAL_DURATION_MS}ms cubic-bezier(0.22,1,0.36,1)`,
           cursor: controlsEnabled ? (dragging ? "grabbing" : "grab") : "default",
           touchAction: "none",
         }}
@@ -520,7 +571,9 @@ function StudioExperienceInner() {
           ready={introReady}
           loadProgress={loadProgress}
           totalRooms={STUDIO_NODE_ORDER.length}
-          backdropSrc={`/studio/thumbnails/${STUDIO_ENTRY_NODE_ID}.webp`}
+          backdropSrc={`/studio/thumbnails/${STUDIO_ENTRY_NODE_ID}-blur.webp`}
+          roomCode={STUDIO_NODES[STUDIO_ENTRY_NODE_ID].room}
+          roomName={STUDIO_NODES[STUDIO_ENTRY_NODE_ID].name}
           revealing={phase === "revealing"}
           revealDurationMs={REVEAL_DURATION_MS}
         />
@@ -558,13 +611,15 @@ function StudioExperienceInner() {
               styling. Mounting/unmounting it as the visitor enters/leaves
               is what stops playback automatically (see
               StudioMusicPlayer's own cleanup effect). */}
-          <StudioMap3D
-            currentRoomId={currentNodeId}
-            onNavigate={navigateToNode}
-            isExpanded={mapExpanded}
-            onExpand={() => setMapExpanded(true)}
-            onCollapse={() => setMapExpanded(false)}
-          />
+          {mapReady && (
+            <StudioMap3D
+              currentRoomId={currentNodeId}
+              onNavigate={navigateToNode}
+              isExpanded={mapExpanded}
+              onExpand={() => setMapExpanded(true)}
+              onCollapse={() => setMapExpanded(false)}
+            />
+          )}
           <StudioRoomPanel
             node={currentNode}
             roomIndex={roomIndex}

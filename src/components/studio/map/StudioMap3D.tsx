@@ -1,6 +1,6 @@
 "use client";
 
-import { Component, useState, type ReactNode } from "react";
+import { Component, useEffect, useState, type ReactNode } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Maximize2 } from "lucide-react";
 import { prefersReducedMotion } from "@/lib/motion";
@@ -46,6 +46,19 @@ export function StudioMap3D({ currentRoomId, onNavigate, isExpanded, onExpand, o
   // just CSS-hiding it) rather than paying for a WebGL context nobody
   // can usefully see or aim a cursor at on a phone screen.
   const [isDesktop] = useState(() => typeof window !== "undefined" && window.innerWidth >= 768);
+  // This component is mounted late on purpose (StudioExperience waits for
+  // an idle frame before building a second WebGL scene), so it fades itself
+  // in rather than appearing out of nowhere a beat after the room does.
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setShown(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  const appear = {
+    opacity: shown ? 1 : 0,
+    transform: shown ? "translateY(0)" : "translateY(-6px)",
+    transition: "opacity 0.45s ease, transform 0.45s cubic-bezier(0.22,1,0.36,1)",
+  } as const;
 
   return (
     <>
@@ -53,6 +66,7 @@ export function StudioMap3D({ currentRoomId, onNavigate, isExpanded, onExpand, o
         <div
           className="absolute top-20 right-6 md:top-24 md:right-8 p-3"
           style={{
+            ...appear,
             width: 280,
             borderRadius: 16,
             background: "var(--glass-bg)",
@@ -106,6 +120,7 @@ export function StudioMap3D({ currentRoomId, onNavigate, isExpanded, onExpand, o
           onClick={onExpand}
           className="absolute top-20 right-6 px-3 py-2 flex items-center gap-2 text-kov-bone text-[10px] uppercase tracking-widest"
           style={{
+            ...appear,
             borderRadius: "var(--radius-pill)",
             background: "var(--glass-bg)",
             backdropFilter: "blur(var(--glass-blur)) saturate(180%)",
