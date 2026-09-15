@@ -1,9 +1,7 @@
-// Shared material palette for the 3D studio map (StudioMap3D and
-// friends) — plain color/roughness/metalness values read by JSX
-// `<meshStandardMaterial>` tags, not literal shared THREE.Material
-// instances (R3F already manages per-mesh material lifecycles; sharing
-// values here is what avoids every mesh inventing its own ad-hoc color,
-// which is the actual thing worth centralizing).
+// Shared material palette for the 3D studio map. These are plain specs —
+// the actual THREE.Material instances are built once per Canvas and
+// mutualised through StudioMapMaterials.tsx's context, so ~250 meshes
+// share ~60 materials rather than allocating one each.
 export interface MaterialSpec {
   color: string;
   roughness: number;
@@ -15,48 +13,69 @@ export interface MaterialSpec {
 }
 
 type PaletteKey =
+  // structure
+  | "blackStone"
   | "darkStone"
-  | "wallCap"
   | "graphite"
-  | "wood"
-  | "glass"
-  | "warmLight"
-  | "kovRed"
-  | "kovRedSoft"
+  | "concrete"
+  | "wallTrim"
+  | "warmMetal"
+  // floors
   | "floorStone"
   | "floorWood"
   | "floorCarpet"
+  | "floorConcrete"
+  | "floorDeck"
   | "corridor"
-  | "fabric"
-  | "foliage";
+  // surfaces
+  | "darkWood"
+  | "smokedGlass"
+  | "screen"
+  | "fabricDark"
+  | "fabricLight"
+  | "foliage"
+  | "planter"
+  // accents
+  | "kovRed"
+  | "kovRedSoft"
+  | "warmEmissive"
+  | "coolEmissive";
 
-// Typed as `Record<PaletteKey, MaterialSpec>` (an annotation, not `as
-// const satisfies`) so every entry is treated as the full MaterialSpec
-// shape — the optional fields (emissive, transparent, ...) read back as
-// genuinely optional (`string | undefined`) wherever they're actually
-// used, rather than TypeScript narrowing each entry down to only the
-// properties its own literal happened to include.
-//
-// Phase-2 pass: walls lifted a shade lighter/cooler than the floors (was
-// nearly the same value as the floor, which is exactly what made the
-// whole scene read as one undifferentiated dark mass) and furniture
-// pushed warmer/lighter so it actually pops against dark floors instead
-// of disappearing into them.
+// Values tuned for a dark scene that still reads: walls sit a clear step
+// lighter than floors, furniture a step lighter again, metal/trim
+// brightest. Roughness is deliberately spread out (stone high, metal low)
+// since with this little light, roughness contrast is doing most of the
+// work of separating materials.
 export const STUDIO_MAP_PALETTE: Record<PaletteKey, MaterialSpec> = {
-  darkStone: { color: "#26261f", roughness: 0.8, metalness: 0.12 },
-  wallCap: { color: "#4a4740", roughness: 0.5, metalness: 0.25 },
-  graphite: { color: "#1c1c1c", roughness: 0.55, metalness: 0.4 },
-  wood: { color: "#3d2a18", roughness: 0.65, metalness: 0.04 },
-  glass: { color: "#31434a", roughness: 0.12, metalness: 0.15, transparent: true, opacity: 0.42 },
-  warmLight: { color: "#3a2a1c", roughness: 0.4, metalness: 0, emissive: "#e8a55c", emissiveIntensity: 0.5 },
+  blackStone: { color: "#0d0d0c", roughness: 0.95, metalness: 0.05 },
+  darkStone: { color: "#2b2a26", roughness: 0.82, metalness: 0.08 },
+  graphite: { color: "#35342f", roughness: 0.7, metalness: 0.18 },
+  concrete: { color: "#3a3833", roughness: 0.88, metalness: 0.04 },
+  wallTrim: { color: "#5d594f", roughness: 0.45, metalness: 0.4 },
+  warmMetal: { color: "#6b5a44", roughness: 0.35, metalness: 0.65 },
+
+  floorStone: { color: "#1a1a18", roughness: 0.72, metalness: 0.06 },
+  floorWood: { color: "#33220f", roughness: 0.6, metalness: 0.03 },
+  floorCarpet: { color: "#241f19", roughness: 1, metalness: 0 },
+  floorConcrete: { color: "#201f1d", roughness: 0.8, metalness: 0.04 },
+  floorDeck: { color: "#2a2723", roughness: 0.78, metalness: 0.05 },
+  corridor: { color: "#232220", roughness: 0.7, metalness: 0.08 },
+
+  darkWood: { color: "#4a3520", roughness: 0.55, metalness: 0.05 },
+  smokedGlass: { color: "#4a6470", roughness: 0.08, metalness: 0.25, transparent: true, opacity: 0.28 },
+  screen: { color: "#121a20", roughness: 0.18, metalness: 0.4, emissive: "#3d6b8a", emissiveIntensity: 0.35 },
+  fabricDark: { color: "#3b362d", roughness: 0.95, metalness: 0 },
+  fabricLight: { color: "#6b6152", roughness: 0.9, metalness: 0 },
+  foliage: { color: "#2f4a28", roughness: 0.85, metalness: 0 },
+  planter: { color: "#40392f", roughness: 0.8, metalness: 0.05 },
+
   kovRed: { color: "#3a0d0f", roughness: 0.5, metalness: 0.2, emissive: "#e31e24", emissiveIntensity: 0.55 },
-  kovRedSoft: { color: "#2a1012", roughness: 0.6, metalness: 0.1, emissive: "#e31e24", emissiveIntensity: 0.22 },
-  floorStone: { color: "#121212", roughness: 0.9, metalness: 0.05 },
-  floorWood: { color: "#20150c", roughness: 0.75, metalness: 0.02 },
-  floorCarpet: { color: "#17130f", roughness: 1, metalness: 0 },
-  corridor: { color: "#1d1a15", roughness: 0.85, metalness: 0.05 },
-  fabric: { color: "#3c362d", roughness: 0.9, metalness: 0 },
-  foliage: { color: "#233521", roughness: 0.85, metalness: 0 },
+  kovRedSoft: { color: "#2a1012", roughness: 0.6, metalness: 0.1, emissive: "#e31e24", emissiveIntensity: 0.18 },
+  // ~2900K interior lighting, faked with emissive strips rather than real
+  // point lights (dozens of dynamic lights would cost far more than this
+  // map is allowed to).
+  warmEmissive: { color: "#4a3520", roughness: 0.4, metalness: 0, emissive: "#ffb46b", emissiveIntensity: 1.1 },
+  coolEmissive: { color: "#2a3038", roughness: 0.4, metalness: 0, emissive: "#c9ddf0", emissiveIntensity: 0.85 },
 };
 
 export type StudioMapMaterialKey = PaletteKey;

@@ -2,65 +2,69 @@
 
 import { Html, Line } from "@react-three/drei";
 import { STUDIO_NODES, STUDIO_NODE_ORDER } from "@/config/studio/studioNodes";
-import { STUDIO_MAP_LAYOUT, STUDIO_MAP_CENTER } from "@/config/studio/studioMapLayout";
+import { STUDIO_MAP_LAYOUT } from "@/config/studio/studioMapLayout";
 
 interface StudioMapLabelsProps {
   currentRoomId: string;
+  selectedId: string | null;
+  hoveredId: string | null;
+  selectedLevel: number | null;
 }
 
-// Expanded-mode-only labels floating just outside the building's
-// silhouette, each tied back to its room by a fine leader line — kept
-// off the mini HUD card (too small to read there, and StudioMapRoom's
-// own hover tooltip already covers that context in mini mode).
-//
-// Phase-2 pass: a clearer hierarchy between the current room's label
-// (larger, a real pill background, brighter leader line) and every other
-// label (small, no background, dimmed further when unavailable) — the
-// original had every label at the same weight, which read as noise
-// rather than a hierarchy.
-export function StudioMapLabels({ currentRoomId }: StudioMapLabelsProps) {
+// Expanded-mode-only labels, anchored at fixed world positions declared in
+// studioMapLayout.ts rather than derived from a direction vector — the
+// derived version collapsed for rooms near the centre of the plan and
+// stacked labels on top of each other. Exactly one label per room, and
+// StudioMapRoom's hover tooltip is disabled in this mode so a hovered
+// room never shows its name twice.
+export function StudioMapLabels({ currentRoomId, selectedId, hoveredId, selectedLevel }: StudioMapLabelsProps) {
   return (
     <>
       {STUDIO_NODE_ORDER.map((id) => {
         const layout = STUDIO_MAP_LAYOUT[id];
         const node = STUDIO_NODES[id];
         if (!layout || !node) return null;
+        // A level filtered out of view doesn't get labels either, so the
+        // faded floor doesn't leave orphaned text hanging over the model.
+        if (selectedLevel !== null && layout.level !== selectedLevel) return null;
 
         const [rx, ry, rz] = layout.position;
-        const [cx, , cz] = STUDIO_MAP_CENTER;
-        const dx = rx - cx;
-        const dz = rz - cz;
-        const dist = Math.hypot(dx, dz) || 1;
-        const nx = dx / dist;
-        const nz = dz / dist;
-        const anchor: [number, number, number] = [rx + nx * 2, ry + layout.size[1] + 1.05, rz + nz * 2];
-        const edgePoint: [number, number, number] = [
-          rx + nx * (layout.size[0] / 2),
-          ry + layout.size[1],
-          rz + nz * (layout.size[2] / 2),
-        ];
+        const anchor = layout.labelAnchor;
+        const top: [number, number, number] = [rx, ry + layout.architecture.backHeight + 0.1, rz];
         const isActive = id === currentRoomId;
+        const isPrimary = isActive || id === selectedId || id === hoveredId;
 
         return (
           <group key={id}>
-            <Line points={[edgePoint, anchor]} color={isActive ? "#e31e24" : "#3a3a3a"} lineWidth={isActive ? 1.4 : 0.8} />
+            <Line
+              points={[top, anchor]}
+              color={isActive ? "#e31e24" : isPrimary ? "#8a857c" : "#3d3b37"}
+              lineWidth={isActive ? 1.4 : 1}
+            />
             <Html position={anchor} center zIndexRange={[5, 0]} occlude={false}>
               {isActive ? (
                 <div
                   className="pointer-events-none text-center whitespace-nowrap px-3 py-1.5"
                   style={{
                     borderRadius: 8,
-                    background: "rgba(8,8,8,0.88)",
-                    border: "1px solid rgba(227,30,36,0.35)",
+                    background: "rgba(8,8,8,0.9)",
+                    border: "1px solid rgba(227,30,36,0.4)",
                   }}
                 >
                   <p className="text-kov-red text-[10px] font-mono tracking-widest">{node.room}</p>
                   <p className="text-kov-bone text-[11px] uppercase tracking-widest mt-0.5">{node.name}</p>
                 </div>
               ) : (
-                <div className="pointer-events-none text-center whitespace-nowrap" style={{ opacity: node.available ? 0.8 : 0.4 }}>
-                  <p className="text-kov-steel text-[8px] font-mono tracking-widest">{node.room}</p>
-                  <p className="text-kov-steel text-[8px] uppercase tracking-widest mt-0.5">{node.name}</p>
+                <div
+                  className="pointer-events-none text-center whitespace-nowrap"
+                  style={{ opacity: !node.available ? 0.35 : isPrimary ? 0.95 : 0.62 }}
+                >
+                  <p className={`text-[9px] font-mono tracking-widest ${isPrimary ? "text-kov-red" : "text-kov-steel"}`}>
+                    {node.room}
+                  </p>
+                  <p className={`text-[9px] uppercase tracking-widest ${isPrimary ? "text-kov-bone" : "text-kov-steel"}`}>
+                    {node.name}
+                  </p>
                 </div>
               )}
             </Html>

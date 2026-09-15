@@ -7,6 +7,7 @@ import { prefersReducedMotion } from "@/lib/motion";
 import { StudioMapScene } from "@/components/studio/map/StudioMapScene";
 import { StudioMapAccessibleNav } from "@/components/studio/map/StudioMapAccessibleNav";
 import { StudioMapExpanded } from "@/components/studio/map/StudioMapExpanded";
+import { StudioMapMaterialsProvider } from "@/components/studio/map/StudioMapMaterials";
 
 interface StudioMap3DProps {
   currentRoomId: string;
@@ -72,7 +73,7 @@ export function StudioMap3D({ currentRoomId, onNavigate, isExpanded, onExpand, o
               <Maximize2 size={13} />
             </button>
           </div>
-          <div className="relative" style={{ height: 220, borderRadius: 10, overflow: "hidden", background: "#0a0a0a" }}>
+          <div className="relative" style={{ height: 230, borderRadius: 10, overflow: "hidden", background: "#070707" }}>
             <StudioMapErrorBoundary
               fallback={
                 <div className="p-2 h-full overflow-y-auto">
@@ -80,14 +81,20 @@ export function StudioMap3D({ currentRoomId, onNavigate, isExpanded, onExpand, o
                 </div>
               }
             >
+              {/* Mini LOD: dpr 1, no shadow map, no furniture beyond the
+                  few pieces flagged `mini`, no labels — the expanded view
+                  is where the full model lives. */}
               <Canvas dpr={1} gl={{ antialias: true }} frameloop="demand">
-                <StudioMapScene
-                  currentRoomId={currentRoomId}
-                  onHoverChange={() => {}}
-                  onSelect={onNavigate}
-                  reducedMotion={reducedMotion}
-                  zoom={42}
-                />
+                <color attach="background" args={["#070707"]} />
+                <StudioMapMaterialsProvider>
+                  <StudioMapScene
+                    currentRoomId={currentRoomId}
+                    onHoverChange={() => {}}
+                    onSelect={onNavigate}
+                    reducedMotion={reducedMotion}
+                    margin={0.9}
+                  />
+                </StudioMapMaterialsProvider>
               </Canvas>
             </StudioMapErrorBoundary>
           </div>
