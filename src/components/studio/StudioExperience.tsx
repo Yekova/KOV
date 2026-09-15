@@ -19,6 +19,7 @@ import { HandTrackingController } from "@/components/studio/HandTrackingControll
 import { StudioErrorScreen } from "@/components/studio/StudioErrorScreen";
 import { StudioErrorBoundary } from "@/components/studio/StudioErrorBoundary";
 import { Nav } from "@/components/navigation/Nav";
+import { StudioTour } from "@/components/studio/StudioTour";
 import { StudioDiagnosticsPanel } from "@/components/studio/StudioDiagnosticsPanel";
 import { initDiagnostics, diag, registerRendererProbe } from "@/lib/studioDiagnostics";
 import { DEFAULT_FOV, type CameraState } from "@/components/studio/CameraController";
@@ -48,6 +49,7 @@ const REVEAL_DURATION_MS = 760;
 // is allowed to happen. Just enough that the changeover reads as a beat
 // rather than a stutter — the swap itself waits on this AND on the texture.
 const NAV_HOLD_MS = 160;
+const TOUR_SEEN_KEY = "kov-studio-tour-seen";
 // How long to wait for the browser to hand back a lost WebGL context
 // before giving up and showing the retry screen. Generous on purpose: a
 // GPU process that is being restarted can take several seconds, and
@@ -178,6 +180,18 @@ function StudioExperienceInner() {
   const [contextLost, setContextLost] = useState(false);
   const [canvasKey, setCanvasKey] = useState(0);
   const [mapReady, setMapReady] = useState(false);
+  // "pending" only ever becomes "open" once the HUD is fully built (see the
+  // mapReady effect) — a tour that points at controls that haven't mounted
+  // yet would silently drop half its steps.
+  const [tourState, setTourState] = useState<"pending" | "open" | "done">(() => {
+    if (typeof window === "undefined") return "pending";
+    try {
+      return window.localStorage.getItem(TOUR_SEEN_KEY) === "1" ? "done" : "pending";
+    } catch {
+      // Blocked storage — show it, rather than refusing to on a technicality.
+      return "pending";
+    }
+  });
   const [phase, setPhase] = useState<EnginePhase>("intro");
   const [currentNodeId, setCurrentNodeId] = useState(STUDIO_ENTRY_NODE_ID);
   const [texture, setTexture] = useState<THREE.Texture | null>(null);
@@ -285,6 +299,24 @@ function StudioExperienceInner() {
       cancelled = true;
     };
   }, [phase, mapReady]);
+
+  // Started only once the map has mounted, since it is one of the things
+  // the tour points at. The short delay after that lets its own fade-in
+  // finish, so the first highlight lands on a settled element.
+  useEffect(() => {
+    if (!mapReady || tourState !== "pending") return;
+    const timer = setTimeout(() => setTourState("open"), 700);
+    return () => clearTimeout(timer);
+  }, [mapReady, tourState]);
+
+  const closeTour = useCallback(() => {
+    setTourState("done");
+    try {
+      window.localStorage.setItem(TOUR_SEEN_KEY, "1");
+    } catch {
+      // Blocked storage — the tour simply offers itself again next visit.
+    }
+  }, []);
 
   useEffect(() => () => clearTimeout(contextLostTimerRef.current), []);
 
@@ -593,6 +625,7 @@ function StudioExperienceInner() {
             cameraStateRef={cameraStateRef}
             handTrackingEnabled={handTrackingEnabled}
             onToggleHandTracking={() => setHandTrackingEnabled((v) => !v)}
+            onReplayTour={() => setTourState("open")}
           />
           {/* Sitewide (any room), opt-in only — writes into the same
               cameraStateRef CameraController.tsx (inside the Canvas)
@@ -633,14 +666,17 @@ function StudioExperienceInner() {
             nodes={STUDIO_NODE_ORDER.map((id) => STUDIO_NODES[id])}
             activeId={currentNodeId}
             onSelectRoom={navigateToNode}
-            // Room-scoped: the Lounge's player rides at the end of the room
-            // strip, level with the thumbnails. Mounting/unmounting it as
-            // the visitor enters and leaves is still what stops playback.
-            trailing={currentNodeId === "p06" && !musicDisabled ? <StudioMusicPlayer /> : undefined}
+            // Available everywhere now, not just the Lounge. It keeps the
+            // same slot in the room strip across a navigation, so React
+            // reconciles it in place rather than remounting — which is what
+            // lets a track carry on playing from one room into the next.
+            trailing={musicDisabled ? undefined : <StudioMusicPlayer />}
           />
           <StudioFooter />
         </>
       )}
+
+      {tourState === "open" && phase === "exploring" && <StudioTour onClose={closeTour} />}
 
       {contextLost && (
         <div

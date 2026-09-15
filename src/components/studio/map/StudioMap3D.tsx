@@ -64,6 +64,7 @@ export function StudioMap3D({ currentRoomId, onNavigate, isExpanded, onExpand, o
     <>
       {isDesktop ? (
         <div
+          data-tour="map"
           className="absolute top-20 right-6 md:top-24 md:right-8 p-3"
           style={{
             ...appear,

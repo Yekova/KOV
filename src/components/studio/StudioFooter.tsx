@@ -65,6 +65,7 @@ export function StudioFooter() {
         <p className="text-kov-steel text-[10px] uppercase tracking-widest font-mono">{time ? `Paris · ${time}` : "Paris"}</p>
         <button
           type="button"
+          data-tour="fullscreen"
           onClick={toggle}
           aria-label={isFullscreen ? "Quitter le plein écran" : "Plein écran"}
           className="text-kov-bone hover:text-kov-red transition-colors"

@@ -30,7 +30,7 @@ export function StudioRoomCarousel({ nodes, activeId, onSelectRoom, trailing }: 
           <p className="text-kov-steel text-[10px] uppercase tracking-widest">{nodes.length} salles · une même vision</p>
         </div>
         <div className="flex items-end gap-3">
-          <div className="flex gap-3 overflow-x-auto pb-1 min-w-0" style={{ scrollbarWidth: "none" }}>
+          <div data-tour="rooms" className="flex gap-3 overflow-x-auto pb-1 min-w-0" style={{ scrollbarWidth: "none" }}>
             {nodes.map((node, i) => {
               const active = node.id === activeId;
               return (
@@ -39,7 +39,15 @@ export function StudioRoomCarousel({ nodes, activeId, onSelectRoom, trailing }: 
                   type="button"
                   disabled={!node.available}
                   onClick={() => onSelectRoom(node.id)}
-                  className="relative shrink-0 text-left overflow-hidden disabled:cursor-not-allowed"
+                  // The name lives here rather than only in the overlay, so
+                  // it is announced whether or not anything is hovered.
+                  aria-label={
+                    node.available
+                      ? `${node.name} — ${node.subtitle}${active ? " (salle actuelle)" : ""}`
+                      : `${node.name} — bientôt disponible`
+                  }
+                  aria-current={active ? "true" : undefined}
+                  className="group relative shrink-0 text-left overflow-hidden disabled:cursor-not-allowed"
                   style={{
                     width: 168,
                     aspectRatio: "16 / 9",
@@ -55,23 +63,46 @@ export function StudioRoomCarousel({ nodes, activeId, onSelectRoom, trailing }: 
                       alt=""
                       fill
                       sizes="168px"
-                      className="object-cover"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center" style={{ background: "var(--kov-carbon)" }}>
                       <span className="text-kov-steel text-[9px] uppercase tracking-widest">Bientôt</span>
                     </div>
                   )}
-                  <div
-                    className="absolute inset-x-0 bottom-0 px-2.5 py-2"
-                    style={{ background: "linear-gradient(180deg, transparent, rgba(5,5,5,0.85))" }}
-                  >
-                    <p className="text-kov-bone text-[11px] leading-tight">
-                      <span className="text-kov-red font-mono mr-1">{String(i + 1).padStart(2, "0")}</span>
-                      {node.name}
-                    </p>
-                    <p className="text-kov-steel text-[9px] uppercase tracking-widest truncate">{node.subtitle}</p>
-                  </div>
+
+                  {/* The active room has to be identifiable without hovering
+                      it, so it keeps a mark — but a dot, not a caption. */}
+                  {active && (
+                    <span
+                      aria-hidden="true"
+                      className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full"
+                      style={{ background: "var(--kov-red)", boxShadow: "0 0 8px var(--kov-red)" }}
+                    />
+                  )}
+
+                  {/* Nothing but the photograph until you reach for it. The
+                      captions used to sit permanently over every thumbnail,
+                      two lines of small type on an uncontrolled background —
+                      unreadable on a bright frame and noisy across seven
+                      tiles at once. Now the tile darkens under the cursor and
+                      the name arrives on a surface dark enough to carry it.
+                      Touch devices, which have no hover to give, keep the
+                      caption visible. */}
+                  {node.available && (
+                    <span
+                      className="absolute inset-0 flex flex-col justify-end px-2.5 py-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100 [@media(hover:none)]:opacity-100"
+                      style={{ background: "linear-gradient(180deg, rgba(5,5,5,0.25) 0%, rgba(5,5,5,0.88) 70%)" }}
+                    >
+                      <span className="block text-kov-bone text-[12px] leading-tight">
+                        <span className="text-kov-red font-mono mr-1.5">{String(i + 1).padStart(2, "0")}</span>
+                        {node.name}
+                      </span>
+                      <span className="block text-kov-steel text-[9px] uppercase tracking-widest truncate mt-0.5">
+                        {node.subtitle}
+                      </span>
+                    </span>
+                  )}
                 </button>
               );
             })}

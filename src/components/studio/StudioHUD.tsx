@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type RefObject } from "react";
-import { Hand } from "lucide-react";
+import { Hand, HelpCircle } from "lucide-react";
 import { StudioCompass } from "@/components/studio/StudioCompass";
 import type { CameraState } from "@/components/studio/CameraController";
 
@@ -14,6 +14,9 @@ interface StudioHUDProps {
   cameraStateRef: RefObject<CameraState>;
   handTrackingEnabled: boolean;
   onToggleHandTracking: () => void;
+  /** Re-opens the guided tour. It runs itself once per visitor; this is how
+   * anyone gets it back afterwards. */
+  onReplayTour: () => void;
 }
 
 // Deliberately minimal beyond the compass + mode badge + hamburger — the
@@ -32,6 +35,7 @@ export function StudioHUD({
   cameraStateRef,
   handTrackingEnabled,
   onToggleHandTracking,
+  onReplayTour,
 }: StudioHUDProps) {
   const [showHint, setShowHint] = useState(
     () => typeof window !== "undefined" && !sessionStorage.getItem("kov-studio-hint-seen")
@@ -67,6 +71,7 @@ export function StudioHUD({
         </div>
         <button
           type="button"
+          data-tour="hand"
           onClick={onToggleHandTracking}
           aria-pressed={handTrackingEnabled}
           aria-label={
@@ -83,6 +88,21 @@ export function StudioHUD({
           }}
         >
           <Hand size={14} />
+        </button>
+        <button
+          type="button"
+          onClick={onReplayTour}
+          aria-label="Revoir la visite guidée"
+          className="pointer-events-auto flex items-center justify-center w-8 h-8 text-kov-bone hover:text-kov-red transition-colors"
+          style={{
+            borderRadius: "var(--radius-pill)",
+            background: "var(--glass-bg)",
+            backdropFilter: "blur(var(--glass-blur)) saturate(180%)",
+            WebkitBackdropFilter: "blur(var(--glass-blur)) saturate(180%)",
+            border: "1px solid var(--glass-border)",
+          }}
+        >
+          <HelpCircle size={14} />
         </button>
         <button
           type="button"

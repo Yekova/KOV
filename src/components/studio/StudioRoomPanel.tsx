@@ -54,6 +54,7 @@ export function StudioRoomPanel({
 
   return (
     <div
+      data-tour="room-panel"
       className="absolute left-6 top-24 md:top-28 w-[300px] max-w-[85vw] p-6"
       style={{
         borderRadius: 18,

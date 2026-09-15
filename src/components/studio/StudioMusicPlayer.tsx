@@ -17,12 +17,12 @@ function formatTime(seconds: number): string {
 }
 
 // A literal MP3-player device — black body, recessed screen, circular
-// click-wheel — modeled directly on the reference photo the user
-// supplied ("MP3 STUDIO.png"), not a generic music-widget skin. Lives
-// bottom-right on its own (the Lounge's own control, distinct from
-// StudioHUD's top-right row), and only ever mounted while the visitor
-// is in the Lounge (see StudioExperience.tsx) — leaving the room
-// unmounts it, stopping playback via the cleanup effect below.
+// click-wheel — modeled directly on the reference photo the user supplied
+// ("MP3 STUDIO.png"), not a generic music-widget skin. It rides at the end
+// of the room strip (StudioRoomCarousel's `trailing` slot), in every room
+// rather than only the Lounge, and holds that same slot across a
+// navigation — so a track started in one room carries on into the next
+// instead of being cut off by an unmount.
 export function StudioMusicPlayer() {
   const [open, setOpen] = useState(false);
   // The <audio> element is not created on arrival — only once the visitor
@@ -179,7 +179,7 @@ export function StudioMusicPlayer() {
     // thumbnails — not floating chrome pinned to the viewport. The device
     // then rises from that anchor, which keeps it clear of the studio map
     // in the opposite corner instead of landing on top of it.
-    <div className="relative shrink-0">
+    <div data-tour="music" className="relative shrink-0">
       {audioArmed && !audioSuppressed && track && (
         <audio
           ref={audioRef}
