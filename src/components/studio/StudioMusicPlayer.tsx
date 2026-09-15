@@ -7,6 +7,8 @@ import { diag } from "@/lib/studioDiagnostics";
 
 type ScreenMode = "now-playing" | "list";
 
+const TRACK_CHANGE_COOLDOWN_MS = 300;
+
 function formatTime(seconds: number): string {
   if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
   const m = Math.floor(seconds / 60);
@@ -61,15 +63,6 @@ export function StudioMusicPlayer({ onOpenChange }: StudioMusicPlayerProps) {
   const hasTracks = LOUNGE_TRACKS.length > 0;
   const track = hasTracks ? LOUNGE_TRACKS[trackIndex] : null;
 
-  // Read via a ref rather than a `useEffect` dependency below — the
-  // track-change effect must only re-run on `trackIndex`, not every time
-  // playback toggles (that would re-`.load()` the element and restart
-  // the current track from 0 on a plain pause/resume).
-  const isPlayingRef = useRef(isPlaying);
-  useEffect(() => {
-    isPlayingRef.current = isPlaying;
-  }, [isPlaying]);
-
   useEffect(() => {
     const audio = audioRef.current;
     diag("music:mounted");
@@ -79,23 +72,49 @@ export function StudioMusicPlayer({ onOpenChange }: StudioMusicPlayerProps) {
     };
   }, []);
 
-  // `.load()` before `.play()` on every track change — a plain <audio>'s
-  // `src` attribute updating in the DOM doesn't reliably reload the
-  // element's own media pipeline across browsers on its own. On the
-  // Lounge's first render there is no element yet (see `audioArmed`), so
-  // this simply no-ops until the visitor opens the player.
+  // One effect owns the media element, and `src` is deliberately NOT a JSX
+  // prop any more.
+  //
+  // Every track change used to fire the media element load algorithm three
+  // times over: React writing the changed `src` attribute starts a load on
+  // its own (that is what the spec says the attribute does), then the
+  // track-change effect called .load() explicitly, aborting it, and then
+  // two separate effects each called .play(). Aborting a load rejects the
+  // pending play() promises with AbortError, whose catch handler flipped
+  // isPlaying back to false — which paused the element, on top of the two
+  // loads already racing. Changing track was never one operation; it was
+  // four, fighting each other over the same element.
+  //
+  // Here it is one: point the element at the track if it isn't already,
+  // then play or pause. Assigning `src` is itself the load — no explicit
+  // .load() — so a plain pause/resume never reloads anything.
   useEffect(() => {
-    if (!audioRef.current) return;
-    audioRef.current.load();
-    setProgress({ current: 0, duration: 0 });
-    if (isPlayingRef.current) audioRef.current.play().catch(() => setIsPlaying(false));
-  }, [trackIndex]);
+    const audio = audioRef.current;
+    if (!audio || !track) return;
+    let superseded = false;
 
-  useEffect(() => {
-    if (!audioRef.current) return;
-    if (isPlaying) audioRef.current.play().catch(() => setIsPlaying(false));
-    else audioRef.current.pause();
-  }, [isPlaying]);
+    const wanted = new URL(track.src, window.location.href).href;
+    if (audio.src !== wanted) {
+      diag("music:src", track.src);
+      audio.src = track.src;
+    }
+
+    if (isPlaying) {
+      audio.play().catch((error: DOMException) => {
+        // A newer load or play took over: expected, not a failure, and
+        // emphatically not a reason to stop playback.
+        if (superseded || error?.name === "AbortError") return;
+        diag("music:play-rejected", error?.name ?? String(error));
+        setIsPlaying(false);
+      });
+    } else {
+      audio.pause();
+    }
+
+    return () => {
+      superseded = true;
+    };
+  }, [track, isPlaying]);
 
   // Heap/GPU sample every two seconds while a track is playing. If the tab
   // dies because memory is climbing, the trail shows a staircase and then
@@ -112,7 +131,22 @@ export function StudioMusicPlayer({ onOpenChange }: StudioMusicPlayerProps) {
     return () => clearInterval(timer);
   }, [isPlaying]);
 
+  // A media element cannot usefully be re-pointed faster than this, and a
+  // rapid-fire burst of loads is exactly the shape of failure being chased
+  // here — a double-click on the wheel, or any path that manages to feed
+  // itself, simply isn't allowed to reach the element.
+  const lastChangeRef = useRef(0);
+
   function selectTrack(index: number, autoplay = true) {
+    if (index !== trackIndex) {
+      const now = performance.now();
+      if (now - lastChangeRef.current < TRACK_CHANGE_COOLDOWN_MS) {
+        diag("music:select-throttled", String(index));
+        return;
+      }
+      lastChangeRef.current = now;
+      diag("music:select", `${trackIndex} -> ${index}`);
+    }
     setTrackIndex(index);
     setCursorIndex(index);
     setMode("now-playing");
@@ -150,15 +184,28 @@ export function StudioMusicPlayer({ onOpenChange }: StudioMusicPlayerProps) {
       {audioArmed && !audioSuppressed && track && (
         <audio
           ref={audioRef}
-          src={track.src}
-          // Nothing is fetched or handed to the browser's media pipeline
-          // until the visitor actually presses play. Walking into the
-          // Lounge used to start pulling a ~4MB track (and spinning up a
-          // decoder) at the exact moment the room's panorama was being
-          // decoded and uploaded to the GPU — work nobody asked for, in
-          // the worst possible millisecond.
+          // No `src` here on purpose — the effect above owns it. Writing it
+          // from JSX starts a load of its own, which is half of what made a
+          // track change three simultaneous loads.
+          //
+          // preload="none": nothing is fetched or handed to the browser's
+          // media pipeline until the visitor actually presses play.
           preload="none"
-          onEnded={() => step(1)}
+          onEmptied={() => setProgress({ current: 0, duration: 0 })}
+          onEnded={(e) => {
+            const el = e.currentTarget;
+            // Only a genuine end-of-track advances. An element that errored
+            // or was reset can report `ended` with nothing behind it, and
+            // since advancing starts a new load, that is a loop that feeds
+            // itself — the one shape that can hammer the media pipeline
+            // hard enough to take the tab with it.
+            if (!Number.isFinite(el.duration) || el.duration <= 0 || el.currentTime <= 0) {
+              diag("music:ended-ignored", `dur=${el.duration} t=${el.currentTime}`);
+              return;
+            }
+            diag("music:ended");
+            step(1);
+          }}
           // Every media event the browser exposes between "play was asked
           // for" and "audio is coming out", each one stamped with the heap
           // and the live GPU resource counts. This is the window the tab
