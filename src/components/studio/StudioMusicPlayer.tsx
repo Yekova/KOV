@@ -34,6 +34,13 @@ export function StudioMusicPlayer() {
   // whatever is wrong is on this side, and the collapsed player has no
   // business touching the media pipeline at all: it's a button.
   const [audioArmed, setAudioArmed] = useState(false);
+  // ?noaudio=1 draws the whole device but never creates the media element.
+  // Paired with ?nomusic=1 (which removes the player entirely), one reload
+  // each separates the three possibilities cleanly: the media pipeline, the
+  // device's own rendering, or neither.
+  const [audioSuppressed] = useState(
+    () => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("noaudio") === "1"
+  );
   const [mode, setMode] = useState<ScreenMode>("now-playing");
   const [trackIndex, setTrackIndex] = useState(0);
   const [cursorIndex, setCursorIndex] = useState(0);
@@ -80,6 +87,21 @@ export function StudioMusicPlayer() {
     else audioRef.current.pause();
   }, [isPlaying]);
 
+  // Heap/GPU sample every two seconds while a track is playing. If the tab
+  // dies because memory is climbing, the trail shows a staircase and then
+  // stops; if it dies on a single instruction, the last sample is flat and
+  // the breadcrumb right after it names the culprit. Without this the trail
+  // would simply go quiet during the one activity under suspicion.
+  useEffect(() => {
+    if (!isPlaying) return;
+    const timer = setInterval(() => {
+      const audio = audioRef.current;
+      const buffered = audio && audio.buffered.length > 0 ? Math.round(audio.buffered.end(audio.buffered.length - 1)) : 0;
+      diag("music:tick", `t=${Math.round(audio?.currentTime ?? 0)}s buffered=${buffered}s`);
+    }, 2000);
+    return () => clearInterval(timer);
+  }, [isPlaying]);
+
   function selectTrack(index: number, autoplay = true) {
     setTrackIndex(index);
     setCursorIndex(index);
@@ -115,7 +137,7 @@ export function StudioMusicPlayer() {
 
   return (
     <div className="fixed bottom-56 right-6" style={{ zIndex: "var(--z-nav)" }}>
-      {audioArmed && track && (
+      {audioArmed && !audioSuppressed && track && (
         <audio
           ref={audioRef}
           src={track.src}
@@ -127,9 +149,22 @@ export function StudioMusicPlayer() {
           // the worst possible millisecond.
           preload="none"
           onEnded={() => step(1)}
-          onError={() => diag("music:error", track.src)}
+          // Every media event the browser exposes between "play was asked
+          // for" and "audio is coming out", each one stamped with the heap
+          // and the live GPU resource counts. This is the window the tab
+          // is dying in, so it's the one window worth narrating.
+          onError={(e) => diag("music:error", `code ${e.currentTarget.error?.code ?? "?"} · ${track.src}`)}
+          onLoadStart={() => diag("music:loadstart", track.src)}
+          onPlay={() => diag("music:play")}
+          onPlaying={() => diag("music:playing")}
+          onWaiting={() => diag("music:waiting")}
+          onStalled={() => diag("music:stalled")}
+          onSuspend={() => diag("music:suspend")}
           onTimeUpdate={(e) => setProgress((p) => ({ ...p, current: e.currentTarget.currentTime }))}
-          onLoadedMetadata={(e) => setProgress((p) => ({ ...p, duration: e.currentTarget.duration }))}
+          onLoadedMetadata={(e) => {
+            diag("music:metadata", `${Math.round(e.currentTarget.duration)}s`);
+            setProgress((p) => ({ ...p, duration: e.currentTarget.duration }));
+          }}
         />
       )}
 
@@ -137,9 +172,9 @@ export function StudioMusicPlayer() {
         <button
           type="button"
           onClick={() => {
+            diag("music:ui-open", audioSuppressed ? "audio suppressed" : "arming audio");
             setOpen(true);
             setAudioArmed(true);
-            diag("music:armed");
           }}
           className="flex items-center gap-2 px-4 py-2.5 text-kov-bone hover:text-kov-red transition-colors"
           style={{
