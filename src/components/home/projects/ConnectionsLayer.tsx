@@ -7,6 +7,9 @@ export interface Connection {
   /** Where the card end of the line meets the card. */
   nodeX: number;
   nodeY: number;
+  /** And where the other end meets the hub. */
+  hubX: number;
+  hubY: number;
 }
 
 interface ConnectionsLayerProps {
@@ -68,6 +71,19 @@ export function ConnectionsLayer({
                 transition: reducedMotion
                   ? "stroke 260ms ease, opacity 260ms ease"
                   : `stroke-dashoffset ${DRAW_MS}ms cubic-bezier(0.22,1,0.36,1) ${i * 90}ms, stroke 260ms ease, opacity 260ms ease`,
+              }}
+            />
+            {/* Both ends of every line are terminated. A line that simply
+                stops reads as unfinished; a line that lands on a point
+                reads as plugged in — which is the whole claim here. */}
+            <circle
+              cx={connection.hubX}
+              cy={connection.hubY}
+              r={2}
+              fill={active ? "var(--kov-red)" : "rgba(231,231,229,0.55)"}
+              style={{
+                opacity: drawn || reducedMotion ? 1 : 0,
+                transition: `opacity 400ms ease ${DRAW_MS * 0.7 + i * 90}ms, fill 240ms ease`,
               }}
             />
             <circle

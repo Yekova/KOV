@@ -10,8 +10,23 @@ import { ConnectionsLayer, type Connection } from "@/components/home/projects/Co
 // Vertical offsets, in pixels, applied per card. The grid stays a grid —
 // three columns, two rows — and these break its symmetry just enough that
 // the set reads as composed rather than tabulated. Small on purpose: past
-// about 30px it stops looking deliberate and starts looking broken.
-const CARD_OFFSETS = [-18, 16, 0, 22, -10, -26];
+// about 40px it stops looking deliberate and starts looking broken.
+//
+// The sign matters as much as the size. The top row only ever moves up and
+// the bottom row only ever moves down, so the corridor the hub sits in can
+// only widen. The previous values pulled two of the bottom cards *up* into
+// that corridor, which is what put the hub on top of them.
+const CARD_OFFSETS = [-22, 12, -8, 30, 12, 38];
+
+// Fixed rather than minimum, and this is the real fix for the overlap.
+//
+// With min-height, each grid row takes the height of its tallest card — and
+// the row of finished work is taller than the row of reserved slots. Unequal
+// rows mean the container's vertical centre is no longer the midpoint of the
+// gap between them, so a hub centred on the container drifts down into the
+// lower row. Equal rows put the two back on the same point, exactly, with no
+// measuring or compensation.
+const CARD_HEIGHT = 286;
 
 export function ProjectsNetwork() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -57,6 +72,8 @@ export function ProjectsNetwork() {
         d: `M ${cx} ${sy} C ${cx} ${sy + bend}, ${hubCx} ${ey - bend}, ${hubCx} ${ey}`,
         nodeX: cx,
         nodeY: sy,
+        hubX: hubCx,
+        hubY: ey,
       });
     });
 
@@ -93,13 +110,16 @@ export function ProjectsNetwork() {
   return (
     <div
       ref={containerRef}
-      className="relative grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-x-6 lg:gap-y-[150px]"
+      className="relative grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-x-6 lg:gap-y-[184px]"
     >
       {PROJECTS.map((project, i) => (
         <div
           key={project.id}
-          className="min-h-[260px] lg:min-h-[286px]"
-          style={{ transform: `translateY(${reducedMotion ? 0 : CARD_OFFSETS[i] ?? 0}px)` }}
+          className="h-[264px] lg:h-[var(--card-h)]"
+          style={{
+            ["--card-h" as string]: `${CARD_HEIGHT}px`,
+            transform: `translateY(${reducedMotion ? 0 : CARD_OFFSETS[i] ?? 0}px)`,
+          }}
         >
           <ProjectCard
             project={project}
