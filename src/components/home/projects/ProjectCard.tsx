@@ -1,21 +1,23 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { Project } from "@/data/projects";
 
 interface ProjectCardProps {
   project: Project;
-  index: number;
-  hovered: boolean;
-  dimmed: boolean;
-  onHover: (id: string | null) => void;
 }
 
 // An off-white card on the section's black field. The contrast is the whole
 // point: these are the only light objects on the page at this scroll depth,
 // which is what makes six of them read as one set.
-export function ProjectCard({ project, index, hovered, dimmed, onHover }: ProjectCardProps) {
+export function ProjectCard({ project }: ProjectCardProps) {
+  // Hover is the card's own business now. It used to be lifted into the
+  // parent so a card could light its line to the hub; with no hub there is
+  // nothing to coordinate, and local state beats threading three props
+  // through for an effect that never leaves this element.
+  const [hovered, setHovered] = useState(false);
   const reserved = project.status === "upcoming";
   const invitation = project.status === "invitation";
 
@@ -30,7 +32,6 @@ export function ProjectCard({ project, index, hovered, dimmed, onHover }: Projec
           ? "0 28px 64px rgba(0,0,0,0.34), inset 1px 1px 0 rgba(255,255,255,0.6)"
           : "0 20px 50px rgba(0,0,0,0.22), inset 1px 1px 0 rgba(255,255,255,0.45)",
         transform: hovered ? "translateY(-4px)" : "translateY(0)",
-        opacity: dimmed ? 0.88 : 1,
       }}
     >
       <div className="flex items-start justify-between gap-3 shrink-0" style={{ padding: "16px 18px 12px" }}>
@@ -153,12 +154,10 @@ export function ProjectCard({ project, index, hovered, dimmed, onHover }: Projec
   const shell = (
     <div
       className="h-full"
-      onMouseEnter={() => onHover(project.id)}
-      onMouseLeave={() => onHover(null)}
-      onFocus={() => onHover(project.id)}
-      onBlur={() => onHover(null)}
-      data-project-card={project.id}
-      style={{ transitionDelay: `${index * 40}ms` }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onFocus={() => setHovered(true)}
+      onBlur={() => setHovered(false)}
     >
       {inner}
     </div>
