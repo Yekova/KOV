@@ -26,9 +26,17 @@ const CARD_REST_HEIGHT = 640;
 // it CARD_SPACING px sideways; scale/opacity/blur fall off with distance,
 // clamped at 1 (i.e. cards 2+ away from active look the same as cards
 // exactly 1 away don't get scaled/blurred further past that point).
-const CARD_WIDTH = 270;
-const CARD_HEIGHT = 480; // 9:16
-const CARD_SPACING = 320;
+const CARD_WIDTH = 320;
+const CARD_HEIGHT = 500;
+const CARD_SPACING = 356;
+// Cards are read as objects now, so they barely shrink and barely blur —
+// the brief's point being that you should still be able to tell what the
+// neighbours contain. Depth comes from the slight turn instead.
+const NEIGHBOUR_SCALE_FALLOFF = 0.13;
+const NEIGHBOUR_OPACITY_FALLOFF = 0.42;
+const NEIGHBOUR_BLUR_MAX = 3;
+const NEIGHBOUR_TURN_DEG = 4;
+const ACTIVE_SCALE = 1.05;
 
 interface ApproachCardData {
   title: string;
@@ -114,6 +122,14 @@ export function ActivationWindow() {
   // index only actually changes a few times across the whole runway).
   const [activeIndex, setActiveIndex] = useState(0);
   const lastActiveIndexRef = useRef(0);
+  // One card at a time on a narrow screen: same geometry, smaller numbers,
+  // so the neighbours fall outside the frame instead of crowding it. Read
+  // once — which card size to use is not something that needs to react to a
+  // live resize mid-scroll.
+  const [compact] = useState(() => typeof window !== "undefined" && window.innerWidth < 768);
+  const cardW = compact ? 228 : CARD_WIDTH;
+  const cardH = compact ? 396 : CARD_HEIGHT;
+  const cardGap = compact ? 262 : CARD_SPACING;
 
   // Pins the window (via CSS position:sticky on its wrapper below — the
   // sitewide convention for scroll-scrubbed sections, see @/lib/motion:
@@ -157,11 +173,18 @@ export function ActivationWindow() {
           if (!el) return;
           const distance = i - segment;
           const absDist = Math.min(1, Math.abs(distance));
-          const scale = 1 - absDist * 0.22;
+          const scale = ACTIVE_SCALE - absDist * NEIGHBOUR_SCALE_FALLOFF;
           const liftY = -(1 - absDist) * 12;
-          const opacity = Math.abs(distance) > 3 ? 0 : 1 - absDist * 0.55;
-          const blurPx = Math.min(8, Math.abs(distance) * 4);
-          el.style.transform = `translate(-50%, -50%) translate(${distance * CARD_SPACING}px, ${liftY}px) scale(${scale})`;
+          const opacity = Math.abs(distance) > 3 ? 0 : 1 - absDist * NEIGHBOUR_OPACITY_FALLOFF;
+          const blurPx = Math.min(NEIGHBOUR_BLUR_MAX, Math.abs(distance) * 1.6);
+          // A few degrees of turn away from the viewer, signed so the cards
+          // on either side lean back and only the active one faces front.
+          // The parent carries the perspective; without it rotateY is a
+          // no-op flatten.
+          const turn = -gsap.utils.clamp(-1, 1, distance) * NEIGHBOUR_TURN_DEG;
+          el.style.transform =
+            `translate(-50%, -50%) translate(${distance * cardGap}px, ${liftY}px) ` +
+            `rotateY(${turn}deg) scale(${scale})`;
           el.style.opacity = String(opacity);
           el.style.filter = blurPx > 0.05 ? `blur(${blurPx}px)` : "none";
           el.style.zIndex = String(Math.round(100 - Math.abs(distance) * 10));
@@ -171,7 +194,7 @@ export function ActivationWindow() {
     );
 
     return () => trigger.kill();
-  }, [reducedMotion]);
+  }, [reducedMotion, cardGap]);
 
   // One-time arrival as the window scrolls into view — a separate tween
   // on entranceRef (not cardRef), which the effect above owns exclusively
@@ -316,7 +339,7 @@ export function ActivationWindow() {
                   </div>
                 </div>
               ) : (
-                <div className="relative flex-1 h-full min-w-0">
+                <div className="relative flex-1 h-full min-w-0" style={{ perspective: 1400 }}>
                   {CARDS.map((card, i) => (
                     <div
                       key={card.title}
@@ -324,7 +347,7 @@ export function ActivationWindow() {
                         coverflowRefs.current[i] = el;
                       }}
                       className="absolute"
-                      style={{ left: "50%", top: "50%", width: CARD_WIDTH, height: CARD_HEIGHT }}
+                      style={{ left: "50%", top: "50%", width: cardW, height: cardH }}
                     >
                       <ActivationCard
                         number={String(i + 1).padStart(2, "0")}
