@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Canvas } from "@react-three/fiber";
+import * as THREE from "three";
 import Image from "next/image";
 import { X, Minus, RotateCcw } from "lucide-react";
 import { motion, LIQUID_EASE, prefersReducedMotion } from "@/lib/motion";
@@ -158,7 +159,17 @@ export function StudioMapExpanded({ currentRoomId, onNavigate, onCollapse }: Stu
             <Canvas
               shadows
               dpr={[1, 1.5]}
-              gl={{ antialias: true }}
+              // Set explicitly rather than inherited. ACES is what keeps a dark
+              // scene from crushing to a single black mass when the key light
+              // is strong, and the exposure lift is the honest way to open the
+              // shadows — as opposed to raising every material's colour, which
+              // is what the palette had been drifting toward.
+              gl={{
+                antialias: true,
+                toneMapping: THREE.ACESFilmicToneMapping,
+                toneMappingExposure: 1.12,
+                outputColorSpace: THREE.SRGBColorSpace,
+              }}
               frameloop="demand"
               onPointerMissed={() => setSelectedId(null)}
             >
@@ -174,7 +185,7 @@ export function StudioMapExpanded({ currentRoomId, onNavigate, onCollapse }: Stu
                   selectedLevel={selectedLevel}
                   focusId={selectedId}
                   resetToken={resetToken}
-                  margin={0.78}
+                  margin={0.88}
                 />
                 <StudioMapLabels
                   currentRoomId={currentRoomId}

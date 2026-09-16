@@ -2,6 +2,7 @@
 
 import { Component, useEffect, useState, type ReactNode } from "react";
 import { Canvas } from "@react-three/fiber";
+import * as THREE from "three";
 import { Maximize2 } from "lucide-react";
 import { prefersReducedMotion } from "@/lib/motion";
 import { StudioMapScene } from "@/components/studio/map/StudioMapScene";
@@ -99,7 +100,16 @@ export function StudioMap3D({ currentRoomId, onNavigate, isExpanded, onExpand, o
               {/* Mini LOD: dpr 1, no shadow map, no furniture beyond the
                   few pieces flagged `mini`, no labels — the expanded view
                   is where the full model lives. */}
-              <Canvas dpr={1} gl={{ antialias: true }} frameloop="demand">
+              <Canvas
+                dpr={1}
+                gl={{
+                  antialias: true,
+                  toneMapping: THREE.ACESFilmicToneMapping,
+                  toneMappingExposure: 1.12,
+                  outputColorSpace: THREE.SRGBColorSpace,
+                }}
+                frameloop="demand"
+              >
                 <color attach="background" args={["#0b0b0d"]} />
                 <StudioMapMaterialsProvider>
                   <StudioMapScene
@@ -107,7 +117,7 @@ export function StudioMap3D({ currentRoomId, onNavigate, isExpanded, onExpand, o
                     onHoverChange={() => {}}
                     onSelect={onNavigate}
                     reducedMotion={reducedMotion}
-                    margin={0.9}
+                    margin={0.95}
                   />
                 </StudioMapMaterialsProvider>
               </Canvas>

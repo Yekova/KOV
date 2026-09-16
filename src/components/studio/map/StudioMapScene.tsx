@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { OrthographicCamera, OrbitControls, ContactShadows } from "@react-three/drei";
+import { PerspectiveCamera, OrbitControls, ContactShadows, Environment, Lightformer } from "@react-three/drei";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import * as THREE from "three";
 import { STUDIO_NODES, STUDIO_NODE_ORDER } from "@/config/studio/studioNodes";
@@ -11,8 +11,19 @@ import { StudioMapRoom } from "@/components/studio/map/StudioMapRoom";
 import { StudioMapBuilding } from "@/components/studio/map/StudioMapBuilding";
 import { useStudioMaterials } from "@/components/studio/map/StudioMapMaterials";
 
-// 3/4 architectural view: ~39° in plan, ~50° above the horizon.
-const CAMERA_POSITION: [number, number, number] = [9, 12, 11];
+// 3/4 architectural view: ~39° in plan, ~50° above the horizon. Only the
+// direction is fixed — the distance is solved for at runtime (CameraRig
+// below), so the building frames itself whatever the canvas size.
+const CAMERA_DIRECTION = new THREE.Vector3(9, 12, 11).normalize();
+// A long lens, far enough back that verticals barely converge.
+//
+// This replaces an OrthographicCamera, and it is the single largest reason
+// the map read as a floor plan rather than as a model. Parallel projection
+// is the one thing the eye never sees in a real object: a scene rendered
+// that way is read as a diagram however well it is lit. 28° keeps the
+// near-isometric composition while giving back the small convergence that
+// says "this is a thing, photographed" instead of "this is a drawing".
+const CAMERA_FOV = 28;
 const AZIMUTH_RANGE = 0.9;
 const DIM_OPACITY = 0.18;
 const LEVEL_FADE_MS = 450;
@@ -28,10 +39,16 @@ function boundsCorners() {
   return corners;
 }
 
-// fitCameraToBuilding: projects the building's bounds into camera space
-// and derives the orthographic zoom that frames it with a margin, so the
-// framing survives any change to the floor plan (and any canvas size)
-// without hand-tuned zoom constants per mode.
+// Frames the building by solving for a camera distance rather than a zoom.
+//
+// Each bounds corner is taken into camera space, where a corner at (x, y,
+// z) is inside the frustum when |x| <= tan(hFov/2)·(-z) and likewise for
+// y. Pulling the camera back by d makes z become z - d, so the distance
+// this corner needs is |x|/tan(hFov/2) + z. The largest of those over all
+// eight corners is the move that brings the whole building inside the
+// frame; shrinking the tangents by `margin` first is what leaves a
+// controlled border around it. No hand-tuned constants, and it survives
+// any change to the floor plan or the canvas size.
 function CameraRig({
   margin,
   resetToken,
@@ -44,46 +61,50 @@ function CameraRig({
   const { camera, size, invalidate } = useThree();
   const initialised = useRef(false);
 
-  /* eslint-disable react-hooks/immutability -- this rule doesn't model
-     React Three Fiber: useThree()'s camera is a live Three.js object meant
-     to be driven imperatively, and the min/max accumulators below are
-     plain locals inside the callback. Per-line disables don't reliably
-     match this rule's function-level analysis, hence the block form (same
-     treatment as CameraController.tsx's own useFrame). */
+  // No eslint-disable here any more: the rewritten rig drives the camera
+  // through Vector3 methods rather than by assigning to its properties, so
+  // react-hooks/immutability no longer has anything to object to.
   useEffect(() => {
-    const cam = camera as THREE.OrthographicCamera;
-    if (!cam.isOrthographicCamera) return;
+    const cam = camera as THREE.PerspectiveCamera;
+    if (!cam.isPerspectiveCamera) return;
 
+    const target = new THREE.Vector3(...STUDIO_MAP_CENTER);
+    const controls = controlsRef.current;
+
+    // On a reset — and on first mount — return to the canonical direction.
+    // On a resize, keep whatever direction the visitor has orbited to and
+    // only correct the distance.
+    let direction: THREE.Vector3;
     if (!initialised.current || resetToken > 0) {
-      cam.position.set(...CAMERA_POSITION);
-      cam.lookAt(...STUDIO_MAP_CENTER);
-      const controls = controlsRef.current;
-      if (controls) {
-        controls.target.set(...STUDIO_MAP_CENTER);
-        controls.update();
-      }
+      direction = CAMERA_DIRECTION.clone();
+      if (controls) controls.target.copy(target);
       initialised.current = true;
+    } else {
+      direction = cam.position.clone().sub(controls ? controls.target : target);
+      if (direction.lengthSq() < 1e-6) direction = CAMERA_DIRECTION.clone();
+      direction.normalize();
     }
 
+    cam.position.copy(target).addScaledVector(direction, 1);
+    cam.lookAt(target);
     cam.updateMatrixWorld();
-    let minX = Infinity;
-    let maxX = -Infinity;
-    let minY = Infinity;
-    let maxY = -Infinity;
+
+    const tanV = Math.tan(THREE.MathUtils.degToRad(cam.fov) / 2) * margin;
+    const tanH = tanV * (size.width / Math.max(size.height, 1));
+
+    let needed = 0;
     for (const corner of boundsCorners()) {
       const view = corner.clone().applyMatrix4(cam.matrixWorldInverse);
-      minX = Math.min(minX, view.x);
-      maxX = Math.max(maxX, view.x);
-      minY = Math.min(minY, view.y);
-      maxY = Math.max(maxY, view.y);
+      needed = Math.max(needed, Math.abs(view.x) / tanH + view.z, Math.abs(view.y) / tanV + view.z);
     }
-    const worldWidth = Math.max(maxX - minX, 0.001);
-    const worldHeight = Math.max(maxY - minY, 0.001);
-    cam.zoom = Math.min(size.width / worldWidth, size.height / worldHeight) * margin;
+
+    const distance = Math.max(needed + 1, 1);
+    cam.position.copy(target).addScaledVector(direction, distance);
+    cam.lookAt(target);
     cam.updateProjectionMatrix();
+    controls?.update();
     invalidate();
   }, [camera, size, margin, resetToken, controlsRef, invalidate]);
-  /* eslint-enable react-hooks/immutability */
 
   return null;
 }
@@ -108,7 +129,10 @@ function CameraFocus({
   useFrame(() => {
     const controls = controlsRef.current;
     if (!controls) return;
-    const cam = camera as THREE.OrthographicCamera;
+    // `zoom` exists on a perspective camera too and scales its projection
+    // independently of distance — which is exactly what's wanted here: the
+    // nudge can't fight the wheel, because the wheel now moves the camera.
+    const cam = camera as THREE.PerspectiveCamera;
 
     if (lastFocus.current !== focusId) {
       const had = Boolean(lastFocus.current);
@@ -200,7 +224,11 @@ export function StudioMapScene({
   selectedLevel = null,
   focusId = null,
   resetToken = 0,
-  margin = 0.82,
+  // Fraction of the frame the building is fitted inside. Raised from
+  // 0.82: the model was sitting small in a lot of empty black, which the
+  // brief called out. These put it at roughly 85% of the expanded canvas
+  // and near the full width of the 280px HUD one.
+  margin = 0.9,
 }: StudioMapSceneProps) {
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
   const shadows = detailed;
@@ -228,15 +256,30 @@ export function StudioMapScene({
 
   return (
     <>
-      <OrthographicCamera makeDefault position={CAMERA_POSITION} near={0.1} far={80} />
+      <PerspectiveCamera makeDefault fov={CAMERA_FOV} near={0.5} far={200} position={[15.5, 20.6, 18.9]} />
       <CameraRig margin={margin} resetToken={resetToken} controlsRef={controlsRef} />
 
-      {/* Four lights, none of them expensive: a warm key that casts the
-          shadows, a cool back-fill for separation, a hemisphere for
-          sky/ground bounce, and an ambient floor so no interior ever
-          falls to black. Everything else "lit" here is emissive. */}
-      <ambientLight intensity={0.85} color="#d8d1c4" />
-      <hemisphereLight args={["#cfe0f2", "#463b2c", 0.55]} />
+      {/* A hierarchy rather than a pile of lamps: an environment that the
+          materials can reflect, one key that casts every shadow, and a
+          single cool bounce for separation.
+
+          The environment is built from Lightformers, not an HDRI — four
+          emissive planes rendered once into a cube target (frames={1},
+          and the scene is frameloop="demand" anyway). That gets real
+          area-light falloff and something for the metal and glass to
+          catch, with no image to fetch and no visible background. Only in
+          the expanded view: the 280px HUD map cannot show a reflection. */}
+      {detailed && (
+        <Environment frames={1} resolution={128}>
+          <Lightformer intensity={1.6} color="#fff1dd" position={[6, 8, 4]} scale={[9, 9, 1]} target={[0, 0, 0]} />
+          <Lightformer intensity={0.8} color="#cfe0f2" position={[-7, 5, -5]} scale={[7, 7, 1]} target={[0, 0, 0]} />
+          <Lightformer intensity={0.45} color="#9aa7b4" position={[0, -6, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[14, 14, 1]} />
+          <Lightformer intensity={0.35} color="#ffd9b0" position={[0, 2, 9]} scale={[10, 4, 1]} target={[0, 0, 0]} />
+        </Environment>
+      )}
+
+      <ambientLight intensity={detailed ? 0.42 : 0.85} color="#d8d1c4" />
+      <hemisphereLight args={["#cfe0f2", "#463b2c", detailed ? 0.3 : 0.55]} />
       <directionalLight
         position={[7, 10, 6]}
         intensity={1.95}
@@ -252,6 +295,17 @@ export function StudioMapScene({
         shadow-camera-far={34}
       />
       <directionalLight position={[-8, 6, -7]} intensity={0.75} color="#a8bcd6" />
+
+      {/* The ground the model stands on. Not pure black on purpose: a
+          shadow cast onto #000 is invisible, so the key light's work
+          simply disappeared. At #080808 it reads, and the model stops
+          floating in a void. */}
+      {detailed && (
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.24, 0]} receiveShadow>
+          <planeGeometry args={[120, 120]} />
+          <meshStandardMaterial color="#080808" roughness={0.94} metalness={0.04} />
+        </mesh>
+      )}
 
       <StudioMapBuilding shadows={shadows} detailed={detailed} dim0={renderDim.level0} dim1={renderDim.level1} />
 
@@ -299,8 +353,12 @@ export function StudioMapScene({
             makeDefault
             enablePan={false}
             enableZoom
-            minZoom={30}
-            maxZoom={220}
+            // Distance, not zoom: a perspective camera dollies. Bounded to
+            // roughly the building's own radius at the near end so you
+            // can't push the lens through a wall, and to a few times it at
+            // the far end so it can't be lost in the dark.
+            minDistance={9}
+            maxDistance={46}
             minPolarAngle={0.55}
             maxPolarAngle={1.15}
             // Clamped so the cutaway stays readable: the tall north/west
