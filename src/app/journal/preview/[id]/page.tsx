@@ -5,7 +5,13 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { resolvePostImageUrl } from "@/lib/portal/storage";
 import { PostView } from "@/components/journal/PostView";
 
-export const metadata: Metadata = { title: "Aperçu | KOV" };
+// requireAdmin() already makes this unreachable for a crawler, so noindex is
+// the second lock rather than the first — but an unpublished draft appearing
+// in search results is exactly the failure worth having two locks for.
+export const metadata: Metadata = {
+  title: "Aperçu | KOV",
+  robots: { index: false, follow: false },
+};
 
 // Deliberately outside /admin — that prefix gets the admin sidebar/topbar
 // shell (src/app/admin/layout.tsx), which would make this look nothing like

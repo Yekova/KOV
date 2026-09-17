@@ -91,10 +91,17 @@ export function StudioIntro({
         />
       </div>
 
-      <div className="relative text-center">
-        <p className="font-display text-kov-bone uppercase tracking-[0.35em] text-sm">KOV</p>
-        <p className="text-kov-steel uppercase tracking-[0.3em] text-[9px] mt-2">Virtual Studio</p>
-      </div>
+      {/* This lockup is the page's title, so it is the page's <h1>.
+          /studio had no h1 at all and went straight to <h2> — the two lines
+          were <p> elements picked for how big they render, which is what CSS
+          is for, not HTML. Same two lines, same classes, same pixels: the
+          only change is that the document now says what its subject is.
+          Nothing is hidden and nothing is added for a crawler's benefit —
+          this text is on screen the moment the page opens. */}
+      <h1 className="relative text-center">
+        <span className="block font-display text-kov-bone uppercase tracking-[0.35em] text-sm">KOV</span>
+        <span className="block text-kov-steel uppercase tracking-[0.3em] text-[9px] mt-2">Virtual Studio</span>
+      </h1>
 
       <motion.div
         className="relative w-[420px] max-w-[92vw] p-7 flex flex-col"

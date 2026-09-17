@@ -96,7 +96,7 @@ export function ResetPasswordForm() {
 
   return (
     <GlassCard className="max-w-md w-full p-8 md:p-12">
-      <p className="font-display text-kov-bone text-xl uppercase mb-1">Nouveau mot de passe</p>
+      <h1 className="font-display text-kov-bone text-xl uppercase mb-1">Nouveau mot de passe</h1>
       <p className="text-kov-steel text-sm mb-8">Choisissez un nouveau mot de passe pour votre compte.</p>
 
       <form onSubmit={handleSubmit} className="space-y-8">

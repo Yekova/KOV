@@ -11,7 +11,7 @@ export async function generateMetadata(props: PageProps<"/journal/[slug]">): Pro
   const { slug } = await props.params;
   const { data: post } = await supabaseAdmin
     .from("posts")
-    .select("title, excerpt, meta_title, meta_description, cover_image_path")
+    .select("title, excerpt, meta_title, meta_description, cover_image_path, published_at, updated_at, author_name")
     .eq("slug", slug)
     .eq("status", "published")
     .maybeSingle();
@@ -31,6 +31,11 @@ export async function generateMetadata(props: PageProps<"/journal/[slug]">): Pro
       description,
       url: `${SITE_URL}/journal/${slug}`,
       type: "article",
+      // og:type is "article", so the article properties that go with it are
+      // expected — and they are all real columns, not guesses.
+      publishedTime: post.published_at ?? undefined,
+      modifiedTime: post.updated_at ?? undefined,
+      authors: post.author_name ? [post.author_name] : ["KOV"],
       images: image ? [{ url: image }] : undefined,
     },
   };
@@ -42,7 +47,7 @@ export default async function JournalPostPage(props: PageProps<"/journal/[slug]"
   const { data: post, error } = await supabaseAdmin
     .from("posts")
     .select(
-      "id, slug, title, excerpt, body, cover_image_path, client_display_name, published_at, tag, reading_time, author_name, audio_url, views, likes, related_post_ids"
+      "id, slug, title, excerpt, body, cover_image_path, client_display_name, published_at, updated_at, tag, reading_time, author_name, audio_url, views, likes, related_post_ids"
     )
     .eq("slug", slug)
     .eq("status", "published")
@@ -110,7 +115,15 @@ export default async function JournalPostPage(props: PageProps<"/journal/[slug]"
         description: post.excerpt ?? undefined,
         image: coverUrl ?? undefined,
         datePublished: post.published_at ?? undefined,
+        // Google reads dateModified to decide how fresh a page is, and it was
+        // the one date missing here even though the column was already there.
+        dateModified: post.updated_at ?? post.published_at ?? undefined,
         author: { "@type": "Organization", name: post.author_name || "KOV" },
+        publisher: {
+          "@type": "Organization",
+          name: "KOV",
+          logo: { "@type": "ImageObject", url: `${SITE_URL}/kov/brand/kov-wordmark-bone.png` },
+        },
         mainEntityOfPage: articleUrl,
       },
       {

@@ -3,6 +3,10 @@ import { ResetPasswordForm } from "./ResetPasswordForm";
 
 export const metadata: Metadata = {
   title: "Nouveau mot de passe — KOV",
+  // A password flow has nothing to offer a search result, and a reset page
+  // reachable from Google is a page reachable by someone who did not ask for
+  // it. /login already answers noindex; these two were missed.
+  robots: { index: false, follow: false },
 };
 
 export default function ResetPasswordPage() {

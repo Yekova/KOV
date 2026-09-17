@@ -4,6 +4,10 @@ import { Button } from "@/components/ui/Button";
 export const metadata: Metadata = {
   title: "Merci — KOV",
   description: "Message reçu — on revient vers vous rapidement.",
+  // Nothing to find here: this page only makes sense to someone who has just
+  // sent the form. Indexed, it competes with /contact for the same intent and
+  // lands people on a confirmation of something they never did.
+  robots: { index: false, follow: true },
 };
 
 export default function MerciPage() {

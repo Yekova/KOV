@@ -175,6 +175,8 @@ export async function createPost(
   revalidatePath("/journal");
   // The homepage hero renders the most recent published post too.
   revalidatePath("/");
+  // And the sitemap lists every published article.
+  revalidatePath("/sitemap.xml");
   return { error: null, id: postId };
 }
 
@@ -218,6 +220,8 @@ export async function updatePost(
   revalidatePath("/journal");
   // The homepage hero renders the most recent published post too.
   revalidatePath("/");
+  // And the sitemap lists every published article.
+  revalidatePath("/sitemap.xml");
   revalidatePath(`/journal/${existing.slug}`);
   if (slug !== existing.slug) revalidatePath(`/journal/${slug}`);
   return { error: null };
@@ -248,6 +252,8 @@ export async function setPostStatus(postId: string, status: "draft" | "published
   revalidatePath("/journal");
   // The homepage hero renders the most recent published post too.
   revalidatePath("/");
+  // And the sitemap lists every published article.
+  revalidatePath("/sitemap.xml");
   revalidatePath(`/journal/${existing.slug}`);
 }
 
@@ -264,6 +270,8 @@ export async function deletePost(postId: string) {
   revalidatePath("/journal");
   // The homepage hero renders the most recent published post too.
   revalidatePath("/");
+  // And the sitemap lists every published article.
+  revalidatePath("/sitemap.xml");
   revalidatePath(`/journal/${existing.slug}`);
 }
 

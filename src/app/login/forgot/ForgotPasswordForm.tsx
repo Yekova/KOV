@@ -26,7 +26,7 @@ export function ForgotPasswordForm() {
 
   return (
     <GlassCard className="max-w-md w-full p-8 md:p-12">
-      <p className="font-display text-kov-bone text-xl uppercase mb-1">Mot de passe oublié</p>
+      <h1 className="font-display text-kov-bone text-xl uppercase mb-1">Mot de passe oublié</h1>
       <p className="text-kov-steel text-sm mb-8">On vous envoie un lien de réinitialisation par email.</p>
 
       <form action={formAction} className="space-y-8">

@@ -49,14 +49,19 @@ export default function LegalLayout({ children }: { children: ReactNode }) {
                 Légal
                 <span aria-hidden="true" className="h-px flex-1 max-w-16" style={{ background: "var(--glass-border)" }} />
               </p>
-              <h1
+              {/* Not an <h1>: this hero is shared by all six legal routes,
+                  and each of those already has its own <h1> for its own
+                  subject ("Conditions générales de vente", "Confidentialité"…).
+                  Every one of them was shipping two. Same classes, same
+                  pixels — only the tag changes. */}
+              <p
                 className="mt-6 font-display text-kov-bone uppercase"
                 style={{ fontSize: "clamp(36px, 5.5vw, 72px)", lineHeight: "var(--line-height-display)" }}
               >
                 Informations
                 <br />
                 <span className="text-kov-red">légales</span>
-              </h1>
+              </p>
               <p className="mt-6 max-w-lg text-kov-steel text-sm leading-relaxed">
                 Transparence, conformité et confiance. Retrouvez ici l&apos;ensemble des informations relatives à
                 notre activité, nos conditions générales et notre politique de confidentialité.

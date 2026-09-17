@@ -8,6 +8,16 @@ export const metadata: Metadata = {
   title: "Connexion — KOV",
   description: "Connexion à l'espace client ou admin KOV.",
   alternates: { canonical: "https://kov-agency.site/login" },
+  // noindex rather than a robots.txt Disallow.
+  //
+  // Disallow and noindex are not the same instruction and were being used as
+  // if they were: a disallowed URL that is linked from somewhere — and this
+  // one is linked from the footer of every page — can still be indexed, as a
+  // bare URL with no title and no snippet, because the crawler is forbidden
+  // from fetching the page that would have told it not to. Letting it be
+  // crawled and answering noindex is the only way the instruction is ever
+  // read. follow:true so the links out of here still count.
+  robots: { index: false, follow: true },
 };
 
 // Must match the number of frames actually extracted into public/kov/character/login-frames/.
