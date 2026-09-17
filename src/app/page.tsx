@@ -35,7 +35,7 @@ const WAVE_COLOR_3 = "#FF4D4D"; // --kov-red-signal
 
 export default function Home() {
   return (
-    <main className="relative">
+    <main id="kov-main" tabIndex={-1} className="relative">
       {/* One fixed background for the whole homepage scroll, not just the
           Hero — previously local to HeroScene, moved here so it persists
           behind every section as you scroll past Hero. `fixed`, not

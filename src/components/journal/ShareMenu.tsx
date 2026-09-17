@@ -40,8 +40,20 @@ export function ShareMenu({ title, url }: { title: string; url: string }) {
         setOpen(false);
       }
     }
-    if (open) document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    // Escape as well as click-outside — loi de Jakob. Click-outside alone
+    // leaves a keyboard user with no way to dismiss this at all: they can
+    // tab past it, but never close it.
+    function handleKey(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
+      window.addEventListener("keydown", handleKey);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("keydown", handleKey);
+    };
   }, [open]);
 
   function handleOpen() {

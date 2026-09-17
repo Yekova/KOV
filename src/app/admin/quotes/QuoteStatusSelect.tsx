@@ -25,7 +25,7 @@ export function QuoteStatusSelect({ quoteId, status }: { quoteId: string; status
           });
         }}
         options={QUOTE_STATUSES.map((value) => ({ value, label: QUOTE_STATUS_LABELS[value] }))}
-        className="bg-transparent border text-kov-bone text-xs uppercase tracking-widest px-3 py-2 focus:outline-none disabled:opacity-50"
+        className="bg-transparent border text-kov-bone text-xs uppercase tracking-widest px-3 py-2 disabled:opacity-50"
         style={{ borderRadius: "var(--radius-sm)", borderColor: "var(--kov-border)" }}
       />
       {error && <p className="text-kov-red text-xs mt-1">{error}</p>}

@@ -36,7 +36,7 @@ export function AssignLeadSelect({
           });
         }}
         options={[{ value: UNASSIGNED, label: "— Non assigné —" }, ...admins.map((a) => ({ value: a.id, label: a.label }))]}
-        className="bg-transparent border text-kov-bone text-xs px-3 py-2 focus:outline-none disabled:opacity-50"
+        className="bg-transparent border text-kov-bone text-xs px-3 py-2 disabled:opacity-50"
         style={{ borderRadius: "var(--radius-sm)", borderColor: "var(--kov-border)" }}
       />
       {error && <p className="text-kov-red text-xs mt-1">{error}</p>}

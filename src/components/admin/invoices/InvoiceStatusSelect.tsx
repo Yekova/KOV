@@ -27,7 +27,7 @@ export function InvoiceStatusSelect({ invoiceId, status }: { invoiceId: string; 
           });
         }}
         options={INVOICE_STATUSES.map((s) => ({ value: s, label: INVOICE_STATUS_LABELS[s] }))}
-        className="bg-transparent border px-3 py-2 text-kov-bone text-sm focus:outline-none disabled:opacity-50 w-40"
+        className="bg-transparent border px-3 py-2 text-kov-bone text-sm disabled:opacity-50 w-40"
         style={{ borderColor: "var(--kov-border)" }}
       />
       {error && <p className="text-kov-red text-xs mt-1">{error}</p>}

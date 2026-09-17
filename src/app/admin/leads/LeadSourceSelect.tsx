@@ -5,7 +5,7 @@ import { updateLeadSource } from "./actions";
 import { LEAD_SOURCES, LEAD_SOURCE_LABELS, normalizeLeadSource } from "@/lib/admin/status";
 import { Select } from "@/components/ui/Select";
 
-const TRIGGER_CLASS = "bg-transparent border text-kov-bone text-xs px-3 py-2 focus:outline-none disabled:opacity-50";
+const TRIGGER_CLASS = "bg-transparent border text-kov-bone text-xs px-3 py-2 disabled:opacity-50";
 
 export function LeadSourceSelect({ leadId, source }: { leadId: string; source: string | null }) {
   const [isPending, startTransition] = useTransition();

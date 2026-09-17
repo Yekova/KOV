@@ -33,7 +33,7 @@ function isOptimizableCover(url: string) {
 
 export function PostView({ post, backHref, backLabel }: { post: PostViewData; backHref: string; backLabel: string }) {
   return (
-    <main className="min-h-screen px-6 pt-40 pb-32">
+    <main id="kov-main" tabIndex={-1} className="min-h-screen px-6 pt-40 pb-32">
       <div className="max-w-3xl mx-auto">
         <Link href={backHref} className="text-kov-steel hover:text-kov-red text-xs uppercase tracking-widest transition-colors">
           {backLabel}

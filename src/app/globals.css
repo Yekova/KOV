@@ -55,6 +55,55 @@ body {
   color: var(--kov-white);
 }
 
+/* Keyboard focus — loi de Jakob.
+   Before this, the site had focus styling on twelve elements out of several
+   hundred. Everything else fell back to the browser default, which on a
+   near-black ground is close to invisible — and the site hides the mouse
+   cursor entirely (.kov-custom-cursor), so "where am I" is a question the
+   interface has to answer, not the pointer.
+
+   Three deliberate choices:
+
+   - `:focus-visible`, never `:focus` — the ring appears for keyboard and
+     assistive navigation and stays invisible for a mouse click. Nothing
+     changes for a pointer user, anywhere.
+   - `:where()`, so the whole rule carries zero specificity. Every component
+     that already defines its own focus treatment (GlassSurface, the studio
+     hotspots, ActivationCard's pill) keeps winning without needing !important
+     or an override.
+   - Red at 2px with an offset, rather than a glow or a fill. The outline
+     follows each element's own border-radius, so a pill reads as a pill and
+     a square input as a square — and it is the same accent the site already
+     uses for "this one", which is what a focus ring means. */
+:where(a, button, input, select, textarea, summary, [role="button"], [tabindex]:not([tabindex="-1"])):focus-visible {
+  outline: 2px solid var(--kov-red);
+  outline-offset: 3px;
+}
+
+/* Skip link — the site's first focusable element, visible only once focused.
+   A keyboard visitor landing on any page otherwise has to tab past the whole
+   nav pill, its dropdowns and the search before reaching the content. */
+.kov-skip-link {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  translate: -50% -150%;
+  z-index: var(--z-cursor);
+  padding: 12px 20px;
+  background: var(--kov-red);
+  color: var(--kov-white);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  transition: translate 0.2s ease;
+}
+
+.kov-skip-link:focus-visible {
+  translate: -50% 0;
+  outline-offset: -4px;
+}
+
 /* Scrollbar — red thumb on a black track, always visible (not just on
    hover) — a clear two-tone red/black signature rather than a restrained
    grey-until-interaction one. Unprefixed/on :root so it applies to every

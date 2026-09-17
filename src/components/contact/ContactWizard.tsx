@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { GlassSurface } from "@/components/ui/GlassSurface";
 import { Button } from "@/components/ui/Button";
@@ -72,6 +72,36 @@ const TIMELINES: { value: Timeline; label: string }[] = [
   { value: "month", label: "Ce mois-ci" },
 ];
 
+// Six questions. The visitor is told so — see the progress rule in the
+// render: a multi-step form the visitor cannot see the end of is a form they
+// abandon in the middle (gradient d'objectif).
+const TOTAL_STEPS = 6;
+
+// Loi de Postel — accept every reasonable way a French person writes their
+// own phone number, then store one tidy form.
+//
+// The previous regex accepted spaces and nothing else, so `06.12.34.56.78`
+// and `06-12-34-56-78` — two of the three ways this number is ever written
+// in France — were answered with "Ce numéro de téléphone n'est pas valide."
+// about a number that is perfectly valid. On an optional field, told to
+// someone who had already answered five questions.
+//
+// Nothing is loosened: the digits are validated exactly as strictly as
+// before. Only the punctuation around them is forgiven.
+function normalizePhone(raw: string): string | null {
+  // Everything that is not a digit or a plus goes: spaces (including the
+  // non-breaking and narrow ones that arrive with a copy-paste), dots,
+  // dashes, slashes, parentheses.
+  const digits = raw.replace(/[^\d+]/g, "");
+  const local = /^\+33(\d{9})$/.exec(digits)?.[1]
+    ?? /^0033(\d{9})$/.exec(digits)?.[1]
+    ?? /^0(\d{9})$/.exec(digits)?.[1]
+    ?? null;
+  if (!local || !/^[1-9]\d{8}$/.test(local)) return null;
+  // Stored the way it is read aloud in France, not as a wall of ten digits.
+  return `0${local}`.replace(/(\d{2})(?=\d)/g, "$1 ");
+}
+
 const ADVANCE_DELAY_MS = 140;
 const LEAVE_DURATION_MS = 180;
 const ENTER_DURATION_MS = 280;
@@ -137,6 +167,13 @@ export function ContactWizard() {
   // own Continuer button unlocks.
   const [budgetTouched, setBudgetTouched] = useState(false);
   const [detailsError, setDetailsError] = useState<string | null>(null);
+  // Which field the current error belongs to, so the message can point at it
+  // and focus can be moved there rather than leaving the visitor to work out
+  // which of four inputs the sentence at the bottom is about.
+  const [errorField, setErrorField] = useState<"name" | "email" | "phone" | null>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const phoneRef = useRef<HTMLInputElement>(null);
   const [verifying, setVerifying] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<"idle" | "submitting" | "error">("idle");
   // Lazy initializer, not a render-time Date.now() call — see components/ui/Reveal.tsx.
@@ -176,24 +213,46 @@ export function ContactWizard() {
     }));
   }
 
+  function fail(field: "name" | "email" | "phone", message: string, ref: React.RefObject<HTMLInputElement | null>) {
+    setErrorField(field);
+    setDetailsError(message);
+    ref.current?.focus();
+  }
+
   async function handleDetailsContinue() {
     setDetailsError(null);
+    setErrorField(null);
     const name = answers.name.trim();
-    const email = answers.email.trim();
+    // Trailing spaces and a capitalised first letter both arrive routinely
+    // from a phone keyboard or a paste; neither is a reason to refuse an
+    // address (loi de Postel).
+    const email = answers.email.trim().toLowerCase();
     const phone = answers.phone.trim();
 
     if (!name) {
-      setDetailsError("Votre nom est requis.");
+      fail("name", "Votre nom est requis.", nameRef);
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setDetailsError("Cette adresse email n'est pas valide.");
+      fail("email", "Cette adresse email n'est pas valide.", emailRef);
       return;
     }
-    if (phone && !/^(\+33|0)\s*[1-9](\s*\d{2}){4}$/.test(phone)) {
-      setDetailsError("Ce numéro de téléphone n'est pas valide.");
-      return;
+    // Optional field — only a value that is present and unreadable is a
+    // problem. normalizePhone forgives the punctuation and rewrites the
+    // number into one consistent form, so the visitor never has to.
+    let normalizedPhone = "";
+    if (phone) {
+      const normalized = normalizePhone(phone);
+      if (!normalized) {
+        fail("phone", "Ce numéro ne ressemble pas à un numéro français. Exemple : 06 12 34 56 78.", phoneRef);
+        return;
+      }
+      normalizedPhone = normalized;
     }
+    // Write the tidied values back, so the recap above and everything sent
+    // afterwards use them — the system does the cleaning up, not the visitor
+    // (loi de Tesler).
+    setAnswers((a) => ({ ...a, name, email, phone: normalizedPhone }));
 
     setVerifying(true);
     try {
@@ -286,6 +345,44 @@ export function ContactWizard() {
         style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }}
       />
 
+      {/* Gradient d'objectif + effet Zeigarnik.
+          Six steps, and the visitor could not see that. Each step announced
+          its own number and the answered ones stacked up above it, so the
+          only visible trend was the form getting *longer* — the opposite
+          signal. A finish line you can see is the thing that pulls someone
+          across it. A hairline rule and one line of the micro-caps already
+          used everywhere here; no new visual vocabulary. */}
+      <div className="mb-6">
+        <div className="flex items-baseline justify-between mb-2.5">
+          <span className="text-kov-steel text-[10px] uppercase tracking-widest">
+            Étape {step + 1} sur {TOTAL_STEPS}
+          </span>
+          <span className="text-kov-steel text-[10px] uppercase tracking-widest">
+            {step === TOTAL_STEPS - 1 ? "Dernière étape" : `Encore ${TOTAL_STEPS - step - 1}`}
+          </span>
+        </div>
+        <div
+          role="progressbar"
+          aria-label="Progression du formulaire"
+          aria-valuemin={1}
+          aria-valuemax={TOTAL_STEPS}
+          aria-valuenow={step + 1}
+          aria-valuetext={`Étape ${step + 1} sur ${TOTAL_STEPS}`}
+          className="h-0.5 w-full overflow-hidden"
+          style={{ background: "var(--kov-border)", borderRadius: "var(--radius-pill)" }}
+        >
+          <div
+            className="h-full"
+            style={{
+              width: `${((step + 1) / TOTAL_STEPS) * 100}%`,
+              background: "var(--kov-red)",
+              borderRadius: "var(--radius-pill)",
+              transition: `width 420ms ${REVEAL_EASE}`,
+            }}
+          />
+        </div>
+      </div>
+
       <div className="space-y-2 mb-6">
         {step > 0 && (
           <StepDone label="Besoin principal" value={answers.focus} onEdit={() => goToStep(0)} />
@@ -371,7 +468,11 @@ export function ContactWizard() {
         {step === 3 && (
           <div>
             <StepHeader number={4}>Sous quel délai ?</StepHeader>
-            <div className="grid grid-cols-2 gap-3">
+            {/* Same grid as the other two choice steps. On two columns the
+                third option sat alone on its own row, which reads as a
+                different kind of control rather than the third of three
+                (loi de similarité). */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {TIMELINES.map((timeline) => (
                 <button
                   key={timeline.value}
@@ -395,26 +496,47 @@ export function ContactWizard() {
         {step === 4 && (
           <div>
             <StepHeader number={5}>Vos coordonnées</StepHeader>
+            {/* autoComplete on all four — loi de Tesler. The browser already
+                knows this visitor's name, email, company and number; making
+                them retype it is complexity moved onto the person for no
+                reason. inputMode gets a phone keypad instead of a full
+                keyboard on mobile. */}
             <div className="space-y-4">
               <input
                 autoFocus
+                ref={nameRef}
                 type="text"
+                name="name"
+                autoComplete="name"
+                aria-label="Votre nom"
+                aria-invalid={errorField === "name"}
                 placeholder="Votre nom"
                 value={answers.name}
                 onChange={(e) => setAnswers((a) => ({ ...a, name: e.target.value }))}
                 className={FIELD_CLASS}
-                style={{ borderColor: "var(--kov-border)" }}
+                style={{ borderColor: errorField === "name" ? "var(--kov-red)" : "var(--kov-border)" }}
               />
               <input
+                ref={emailRef}
                 type="email"
+                name="email"
+                autoComplete="email"
+                inputMode="email"
+                autoCapitalize="off"
+                spellCheck={false}
+                aria-label="Votre email"
+                aria-invalid={errorField === "email"}
                 placeholder="Votre email"
                 value={answers.email}
                 onChange={(e) => setAnswers((a) => ({ ...a, email: e.target.value }))}
                 className={FIELD_CLASS}
-                style={{ borderColor: "var(--kov-border)" }}
+                style={{ borderColor: errorField === "email" ? "var(--kov-red)" : "var(--kov-border)" }}
               />
               <input
                 type="text"
+                name="organization"
+                autoComplete="organization"
+                aria-label="Votre entreprise (facultatif)"
                 placeholder="Votre entreprise (facultatif)"
                 value={answers.company}
                 onChange={(e) => setAnswers((a) => ({ ...a, company: e.target.value }))}
@@ -422,15 +544,27 @@ export function ContactWizard() {
                 style={{ borderColor: "var(--kov-border)" }}
               />
               <input
+                ref={phoneRef}
                 type="tel"
+                name="tel"
+                autoComplete="tel"
+                inputMode="tel"
+                aria-label="Votre téléphone (facultatif)"
+                aria-invalid={errorField === "phone"}
                 placeholder="Votre téléphone (facultatif)"
                 value={answers.phone}
                 onChange={(e) => setAnswers((a) => ({ ...a, phone: e.target.value }))}
                 className={FIELD_CLASS}
-                style={{ borderColor: "var(--kov-border)" }}
+                style={{ borderColor: errorField === "phone" ? "var(--kov-red)" : "var(--kov-border)" }}
               />
             </div>
-            {detailsError && <p className="text-kov-red text-sm mt-4">{detailsError}</p>}
+            {/* role="alert" so the message is announced rather than only
+                drawn; focus has already moved to the field it concerns. */}
+            {detailsError && (
+              <p role="alert" className="text-kov-red text-sm mt-4">
+                {detailsError}
+              </p>
+            )}
             <div className="flex justify-end mt-8">
               <Button type="button" variant="primary" onClick={handleDetailsContinue} disabled={verifying}>
                 {verifying ? "Vérification…" : "Continuer →"}
@@ -475,7 +609,9 @@ export function ContactWizard() {
               style={{ borderColor: "var(--kov-border)" }}
             />
             {submitStatus === "error" && (
-              <p className="text-kov-red text-sm mt-4">Une erreur est survenue. Réessayez dans un instant.</p>
+              <p role="alert" className="text-kov-red text-sm mt-4">
+                Une erreur est survenue. Réessayez dans un instant.
+              </p>
             )}
             <div className="flex justify-end mt-8">
               <Button type="button" variant="primary" onClick={handleSubmit} disabled={submitStatus === "submitting"}>

@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <main className="min-h-screen relative">
+    <main id="kov-main" tabIndex={-1} className="min-h-screen relative">
       <div className="fixed inset-0" style={{ zIndex: "var(--z-canvas)", pointerEvents: "none" }}>
         {/* colors: KOV bone → red → soft red-tint, in place of the demo's
             purple/pink defaults — closest on-brand read of the color0/1/2

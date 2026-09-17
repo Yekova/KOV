@@ -56,6 +56,14 @@ function SiteChromeInner({ pathname, children }: { pathname: string | null; chil
 
   return (
     <>
+      {/* First focusable element on the page, on purpose. Without it a
+          keyboard visitor tabs through the nav pill, both of its dropdowns,
+          the search trigger and the CTA before reaching a word of content —
+          on every single page, every single time. Invisible until focused
+          (see .kov-skip-link), so nothing changes for anyone else. */}
+      <a href="#kov-main" className="kov-skip-link">
+        Aller au contenu
+      </a>
       <SmoothScroll />
       {!isHome && <Nav />}
       {children}

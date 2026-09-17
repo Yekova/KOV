@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 
 export default function ExpertisePage() {
   return (
-    <main className="min-h-screen pb-32">
+    <main id="kov-main" tabIndex={-1} className="min-h-screen pb-32">
       <section className="relative overflow-hidden px-6 pt-40 pb-24 md:pb-32">
         <ParticleImage src="/kov/menu/bureau-moderne.jpg" />
         <div

@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function MerciPage() {
   return (
-    <main className="min-h-screen flex items-center justify-center px-6">
+    <main id="kov-main" tabIndex={-1} className="min-h-screen flex items-center justify-center px-6">
       <div className="max-w-xl text-center">
         <p className="text-xs uppercase tracking-widest text-kov-steel mb-6">Message envoyé</p>
         <h1
@@ -20,7 +20,9 @@ export default function MerciPage() {
         <p className="mt-6 text-kov-concrete text-sm leading-relaxed">
           On revient vers vous rapidement. En attendant, vous pouvez continuer à explorer ce qu&apos;on construit.
         </p>
-        <div className="mt-10 flex items-center justify-center gap-4">
+        {/* flex-wrap: two buttons at px-6 side by side clear 320px only just.
+            Wrapping is free insurance and changes nothing above that. */}
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
           <Button href="/" variant="primary">
             Retour à l&apos;accueil
           </Button>

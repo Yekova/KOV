@@ -10,7 +10,7 @@ import { NewTaskModal } from "./NewTaskModal";
 import type { PickerOption, TaskRow } from "./types";
 
 const FILTER_SELECT_CLASS =
-  "bg-transparent border px-3 py-2 text-kov-bone text-xs uppercase tracking-widest focus:outline-none";
+ "bg-transparent border px-3 py-2 text-kov-bone text-xs uppercase tracking-widest";
 
 export function TaskManagerView({
   initialTasks,

@@ -44,7 +44,7 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
   };
 
   return (
-    <main className="min-h-screen px-6 pt-40 pb-32 max-w-[1600px] mx-auto">
+    <main id="kov-main" tabIndex={-1} className="min-h-screen px-6 pt-40 pb-32 max-w-[1600px] mx-auto">
       {/* Static, hardcoded JSON, no user input — dangerouslySetInnerHTML is the only way to emit raw JSON-LD. */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 

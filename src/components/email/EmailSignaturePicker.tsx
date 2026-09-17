@@ -22,7 +22,7 @@ export function EmailSignaturePicker({
       onChange={(v) => onChange(v || null)}
       placeholder="— Aucune signature —"
       options={signatures.map((s) => ({ value: s.id, label: s.isDefault ? `${s.name} (par défaut)` : s.name }))}
-      className="bg-transparent border px-3 py-2 text-kov-bone text-sm focus:outline-none w-full"
+      className="bg-transparent border px-3 py-2 text-kov-bone text-sm w-full"
       style={{ borderRadius: "var(--radius-sm)", borderColor: "var(--kov-border)" }}
     />
   );

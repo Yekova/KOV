@@ -108,7 +108,7 @@ export function GlobalAdminSearch({ items }: { items: AdminSearchItem[] }) {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Rechercher un client, projet, lead, devis…"
-                className="flex-1 bg-transparent text-kov-bone placeholder:text-kov-steel focus:outline-none"
+                className="flex-1 bg-transparent text-kov-bone placeholder:text-kov-steel"
               />
               <span
                 className="text-kov-steel text-[10px] uppercase tracking-widest border px-1.5 py-0.5"

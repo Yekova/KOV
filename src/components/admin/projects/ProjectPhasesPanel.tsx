@@ -46,14 +46,14 @@ export function ProjectPhasesPanel({ projectId, phases }: { projectId: string; p
                   }
                 }}
                 disabled={isPending}
-                className="flex-1 min-w-[160px] bg-transparent border-none text-kov-bone text-sm focus:outline-none disabled:opacity-50"
+                className="flex-1 min-w-[160px] bg-transparent border-none text-kov-bone text-sm disabled:opacity-50"
               />
               <Select
                 value={phase.status}
                 disabled={isPending}
                 onChange={(value) => run(() => updatePhaseStatus(phase.id, projectId, value))}
                 options={PROJECT_PHASE_STATUSES.map((s) => ({ value: s, label: PROJECT_PHASE_STATUS_LABELS[s] }))}
-                className="bg-transparent border px-3 py-1.5 text-kov-bone text-xs uppercase tracking-widest focus:outline-none disabled:opacity-50"
+                className="bg-transparent border px-3 py-1.5 text-kov-bone text-xs uppercase tracking-widest disabled:opacity-50"
                 style={{ borderRadius: "var(--radius-sm)", borderColor: "var(--kov-border)" }}
               />
               <button

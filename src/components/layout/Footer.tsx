@@ -203,7 +203,11 @@ export function Footer({ isHome = false }: { isHome?: boolean }) {
                 href={social.href}
                 aria-label={social.name}
                 title={social.name}
-                className="w-10 h-10 flex items-center justify-center border text-kov-bone hover:text-kov-red hover:border-kov-red transition-colors"
+                // 44px, not 40 — loi de Fitts. Three small round targets in a
+                // row at the bottom of a phone screen is exactly where the
+                // last few pixels are worth having. The icon inside is
+                // unchanged, so the row reads the same.
+                className="w-11 h-11 flex items-center justify-center border text-kov-bone hover:text-kov-red hover:border-kov-red transition-colors"
                 style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-pill)" }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">

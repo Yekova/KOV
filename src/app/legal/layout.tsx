@@ -10,7 +10,7 @@ import LightPillar from "@/components/legal/LightPillarLazy";
 // either now — LightPillar's ambient glow is the only visual here.
 export default function LegalLayout({ children }: { children: ReactNode }) {
   return (
-    <main className="relative min-h-screen pb-32">
+    <main id="kov-main" tabIndex={-1} className="relative min-h-screen pb-32">
       {/* Ambient backdrop for the whole /legal hub — same `fixed` +
           `--z-canvas` pattern as LineWaves on the homepage (src/app/page.tsx):
           pinned to the viewport so it stays behind every route's content as

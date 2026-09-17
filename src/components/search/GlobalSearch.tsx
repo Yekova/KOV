@@ -166,7 +166,11 @@ export function GlobalSearch() {
             <GlassCard className="w-full max-w-4xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
               <div className="flex flex-col md:flex-row">
                 <div className="flex-1 min-w-0 p-6">
-                  <div className="flex items-center gap-3 border-b pb-4" style={{ borderColor: "var(--glass-border)" }}>
+                  {/* Ring on the row rather than the input — see FaqEngine. */}
+                  <div
+                    className="flex items-center gap-3 border-b pb-4 focus-within:outline-2 focus-within:outline-kov-red focus-within:outline-offset-2"
+                    style={{ borderColor: "var(--glass-border)" }}
+                  >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-kov-steel shrink-0">
                       <circle cx="11" cy="11" r="7" />
                       <line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -175,8 +179,9 @@ export function GlobalSearch() {
                       ref={inputRef}
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
+                      aria-label="Rechercher sur le site"
                       placeholder="Rechercher…"
-                      className="flex-1 bg-transparent text-kov-bone placeholder:text-kov-steel focus:outline-none text-base"
+                      className="flex-1 bg-transparent text-kov-bone placeholder:text-kov-steel text-base focus:outline-none"
                     />
                     <span className="text-kov-steel text-[10px] uppercase tracking-widest border px-1.5 py-0.5" style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}>
                       Esc

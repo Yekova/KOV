@@ -20,7 +20,7 @@ export default async function LoginPage(props: PageProps<"/login">) {
   const justReset = searchParams.reset === "success";
 
   return (
-    <main className="min-h-screen relative" style={{ background: "var(--kov-black)" }}>
+    <main id="kov-main" tabIndex={-1} className="min-h-screen relative" style={{ background: "var(--kov-black)" }}>
       <MouseFrameBackdrop
         basePath="/kov/character/login-frames"
         frameCount={LOGIN_FRAME_COUNT}

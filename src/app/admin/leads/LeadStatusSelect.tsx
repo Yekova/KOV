@@ -5,7 +5,7 @@ import { updateLeadStatus } from "./actions";
 import { Select } from "@/components/ui/Select";
 import type { LeadStatusRow } from "@/lib/leads/statuses";
 
-const TRIGGER_CLASS = "bg-transparent border text-xs uppercase tracking-widest px-3 py-2 focus:outline-none disabled:opacity-50";
+const TRIGGER_CLASS = "bg-transparent border text-xs uppercase tracking-widest px-3 py-2 disabled:opacity-50";
 
 export function LeadStatusSelect({ leadId, status, statuses }: { leadId: string; status: string; statuses: LeadStatusRow[] }) {
   const [isPending, startTransition] = useTransition();

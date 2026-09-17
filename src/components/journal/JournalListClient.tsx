@@ -67,7 +67,7 @@ export function JournalListClient({ posts }: { posts: JournalPostSummary[] }) {
 
   if (posts.length === 0) {
     return (
-      <main className="min-h-screen px-6 pt-40 pb-32 max-w-[1600px] mx-auto">
+      <main id="kov-main" tabIndex={-1} className="min-h-screen px-6 pt-40 pb-32 max-w-[1600px] mx-auto">
         <p className="text-xs uppercase tracking-widest text-kov-steel mb-4">Journal</p>
         <h1 className="font-display text-kov-bone uppercase max-w-4xl" style={{ fontSize: "var(--display-lg)" }}>
           Études de cas et notes de studio<span className="text-kov-red">.</span>
@@ -78,7 +78,7 @@ export function JournalListClient({ posts }: { posts: JournalPostSummary[] }) {
   }
 
   return (
-    <main className="relative min-h-screen">
+    <main id="kov-main" tabIndex={-1} className="relative min-h-screen">
       {/* ── Hero ─────────────────────────────────────────────── */}
       <section className="relative px-6 pt-40 pb-24 overflow-hidden isolate">
         <div className="absolute inset-0 -z-10 pointer-events-none opacity-80">

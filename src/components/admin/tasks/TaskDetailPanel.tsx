@@ -28,7 +28,7 @@ const FIELD_CLASS =
   "w-full bg-transparent border px-3 py-2 text-kov-bone text-sm focus:outline-none focus:border-kov-red transition-colors";
 
 const SELECT_CLASS =
-  "w-full bg-transparent border px-3 py-2 text-kov-bone text-sm focus:outline-none disabled:opacity-50";
+ "w-full bg-transparent border px-3 py-2 text-kov-bone text-sm disabled:opacity-50";
 
 export function TaskDetailPanel({ taskId, onClose }: { taskId: string; onClose: () => void }) {
   const [loadedTaskId, setLoadedTaskId] = useState(taskId);
@@ -142,7 +142,7 @@ export function TaskDetailPanel({ taskId, onClose }: { taskId: string; onClose: 
                       setTitleDraft(detail.title);
                     }
                   }}
-                  className="font-display text-kov-bone text-lg uppercase bg-transparent border-none focus:outline-none w-full mt-1"
+                  className="font-display text-kov-bone text-lg uppercase bg-transparent border-none w-full mt-1"
                 />
               </div>
               <button

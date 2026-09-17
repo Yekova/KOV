@@ -94,7 +94,7 @@ function LinkClientInline({ quoteId, clients }: { quoteId: string; clients: { id
         onChange={setClientId}
         placeholder="Lier un client…"
         options={clients.map((c) => ({ value: c.id, label: c.label }))}
-        className="bg-transparent border text-kov-bone text-xs px-3 py-2 focus:outline-none disabled:opacity-50 w-44"
+        className="bg-transparent border text-kov-bone text-xs px-3 py-2 disabled:opacity-50 w-44"
         style={{ borderRadius: "var(--radius-sm)", borderColor: "var(--kov-border)" }}
         disabled={isPending}
       />

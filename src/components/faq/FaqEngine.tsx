@@ -17,7 +17,9 @@ const SORT_OPTIONS = [
   { value: "alpha", label: "Alphabétique (A → Z)" },
 ];
 
-const SORT_TRIGGER_CLASS = "bg-transparent border text-xs uppercase tracking-widest px-3 py-1.5 focus:outline-none";
+// No here: it removed the only focus indicator this
+// control had. It now takes the sitewide :focus-visible ring (globals.css).
+const SORT_TRIGGER_CLASS = "bg-transparent border text-xs uppercase tracking-widest px-3 py-1.5";
 const SORT_TRIGGER_STYLE = { borderRadius: "var(--radius-pill)", borderColor: "var(--kov-border)", color: "var(--kov-bone)" } as const;
 
 const GLASS_STYLE = {
@@ -118,7 +120,15 @@ export function FaqEngine() {
 
       <div className="relative">
         <Reveal variant="blur" delay={0.15}>
-          <div className="flex items-center gap-3 border px-5 py-4" style={{ ...GLASS_STYLE, borderRadius: "var(--radius-glass)" }}>
+          {/* The ring sits on the container, not the input: this whole bar
+              reads as one field, and the input's own outline was suppressed
+              with nothing put back — a keyboard visitor saw no focus at all.
+              focus-within also survives the inline borderColor that a class
+              could not override. */}
+          <div
+            className="flex items-center gap-3 border px-5 py-4 focus-within:outline-2 focus-within:outline-kov-red focus-within:outline-offset-2"
+            style={{ ...GLASS_STYLE, borderRadius: "var(--radius-glass)" }}
+          >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-kov-steel shrink-0">
               <circle cx="11" cy="11" r="7" />
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -127,8 +137,9 @@ export function FaqEngine() {
               ref={inputRef}
               value={query}
               onChange={(event) => setQuery(event.target.value)}
+              aria-label="Rechercher dans la FAQ"
               placeholder="Rechercher une question, un mot-clé, un sujet…"
-              className="flex-1 bg-transparent text-kov-bone placeholder:text-kov-steel focus:outline-none text-sm"
+              className="flex-1 bg-transparent text-kov-bone placeholder:text-kov-steel text-sm focus:outline-none"
             />
             <kbd
               aria-hidden="true"

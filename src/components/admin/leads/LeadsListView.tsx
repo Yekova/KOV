@@ -17,7 +17,7 @@ import { LeadBoard } from "./LeadBoard";
 import type { LeadStatusRow } from "@/lib/leads/statuses";
 import type { LeadRow, PickerOption } from "./types";
 
-const FILTER_SELECT_CLASS = "bg-transparent border px-3 py-2 text-kov-bone text-xs uppercase tracking-widest focus:outline-none";
+const FILTER_SELECT_CLASS = "bg-transparent border px-3 py-2 text-kov-bone text-xs uppercase tracking-widest";
 const PAGE_SIZE = 25;
 
 type SortKey = "recent" | "oldest" | "score_desc" | "value_desc";
