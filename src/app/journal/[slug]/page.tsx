@@ -39,7 +39,7 @@ export async function generateMetadata(props: PageProps<"/journal/[slug]">): Pro
 export default async function JournalPostPage(props: PageProps<"/journal/[slug]">) {
   const { slug } = await props.params;
 
-  const { data: post } = await supabaseAdmin
+  const { data: post, error } = await supabaseAdmin
     .from("posts")
     .select(
       "id, slug, title, excerpt, body, cover_image_path, client_display_name, published_at, tag, reading_time, author_name, audio_url, views, likes, related_post_ids"
@@ -47,6 +47,16 @@ export default async function JournalPostPage(props: PageProps<"/journal/[slug]"
     .eq("slug", slug)
     .eq("status", "published")
     .maybeSingle();
+
+  // A failed query and a slug that doesn't exist are different facts and
+  // deserve different answers. Both used to end in notFound(), which told
+  // every reader — and every crawler — that a perfectly real article was
+  // gone whenever Supabase hiccuped. An error is a 500: honest, retryable,
+  // and it doesn't get the page dropped from the index.
+  if (error) {
+    console.error(`[journal] query failed for slug "${slug}":`, error.message);
+    throw new Error("Le journal est momentanément indisponible.");
+  }
 
   if (!post) notFound();
 
