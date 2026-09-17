@@ -43,3 +43,6 @@ next-env.d.ts
 # python (skill scripts)
 __pycache__/
 *.pyc
+
+# Supabase CLI scratch state, not project config
+supabase/.temp/
