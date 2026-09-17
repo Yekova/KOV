@@ -147,17 +147,19 @@ export const STUDIO_NODES: Record<string, StudioNode> = {
     subtitle: "Concevoir demain",
     description: "L'atelier où les idées prennent forme. Chaque projet affiché ici est une conversation entre stratégie, design et développement.",
     panorama: "/studio/panoramas/p02.webp",
-    // The reception desk / glass facade sits at the texture's horizontal
-    // center, symmetric portrait walls to either side — the natural
-    // "face forward" arrival framing, same reasoning as P01's yaw 0. The
-    // seam falls at the image's left/right edges, off in the peripheral
-    // plant/glass area rather than across the gallery walls themselves.
+    // Kept at 0 with the new panorama, but unverified: the previous value
+    // was derived from the old texture's own geometry (reception desk at
+    // the horizontal centre, symmetric walls either side) and that reasoning
+    // does not carry over to a different photograph. If the arrival framing
+    // reads off once walked through, StudioDebugPanel's yaw/pitch readout is
+    // where to correct it.
     initialYaw: 0,
     initialPitch: 0,
-    // AI-upscaled source (8x, same honest-upscale caveat as P01's own
-    // panorama) — zoom re-enabled per explicit request (same as every
-    // other room) despite the upscale, rather than the earlier
-    // conservative default.
+    // AI-upscaled source (Upscayl), downsampled to 6144x3072 like every other
+    // room: the file arrived at 8870 wide, above the 8192 MAX_TEXTURE_SIZE a
+    // lot of integrated GPUs report, where the upload either fails or gets
+    // silently downscaled by the driver. Zoom stays enabled, same as every
+    // other room, despite the upscale.
     zoomEnabled: true,
     available: true,
     connections: [
@@ -171,19 +173,16 @@ export const STUDIO_NODES: Record<string, StudioNode> = {
         label: "Portal",
       },
     ],
-    // Four framed pieces on the gallery walls, wired to PROJECTS in
-    // arrival order (Kanti is live; the other three are the honest
-    // "Projet à venir" placeholders already used on the homepage — see
-    // KovProjectCard.tsx). The panorama also shows a few more painted
-    // frames ("KOV — Creative Studio", "H Capital — Investment") than
-    // PROJECTS has real entries for; those are left as plain decoration
-    // rather than wired to fabricated project content.
-    artworks: [
-      { position: [-300, 80, 362], project: PROJECTS[0] },
-      { position: [-447, 80, 145], project: PROJECTS[1] },
-      { position: [-350, 80, -314], project: PROJECTS[2] },
-      { position: [456, 80, 114], project: PROJECTS[3] },
-    ],
+    // Removed by request. These were four hotspots on the gallery walls,
+    // each opening a project panel — three of them on "Projet à venir"
+    // placeholders rather than real work. Their coordinates were derived
+    // from the *previous* panorama's own geometry anyway, so they would
+    // have pointed at nothing in particular on this one.
+    //
+    // The machinery is untouched (ArtworkHotspotLayer renders nothing on an
+    // empty array): re-enabling them is a matter of putting entries back
+    // here, which is what the scaffolded Galerie Projets room will want.
+    artworks: [],
     infoHotspots: [],
   },
   // Scaffolded so StudioRoomPanel/StudioRoomCarousel have all 6 real
