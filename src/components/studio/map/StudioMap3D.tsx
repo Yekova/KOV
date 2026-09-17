@@ -4,7 +4,7 @@ import { Component, useEffect, useState, type ReactNode } from "react";
 import { Canvas } from "@react-three/fiber";
 import * as THREE from "three";
 import { Maximize2 } from "lucide-react";
-import { prefersReducedMotion } from "@/lib/motion";
+import { prefersReducedMotion } from "@/lib/motion/reducedMotion";
 import { StudioMapScene } from "@/components/studio/map/StudioMapScene";
 import { StudioMapAccessibleNav } from "@/components/studio/map/StudioMapAccessibleNav";
 import { StudioMapExpanded } from "@/components/studio/map/StudioMapExpanded";

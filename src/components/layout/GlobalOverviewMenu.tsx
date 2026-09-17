@@ -5,7 +5,8 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
 import dynamic from "next/dynamic";
-import { motion, LIQUID_EASE } from "@/lib/motion";
+import { motion } from "@/lib/motion/timing";
+import { LIQUID_EASE } from "@/lib/motion/easing";
 import type { InfiniteMenuItem } from "@/components/layout/InfiniteMenu";
 import { SITE_SECTIONS } from "@/data/siteSections";
 

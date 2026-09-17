@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import { motion, LIQUID_EASE, REVEAL_EASE } from "@/lib/motion";
+import { motion } from "@/lib/motion/timing";
+import { LIQUID_EASE, REVEAL_EASE } from "@/lib/motion/easing";
 
 export type RevealVariant = "fade" | "blur" | "zoom";
 

@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { animate } from "framer-motion";
@@ -12,7 +13,6 @@ import { StudioProjectPanel } from "@/components/studio/StudioProjectPanel";
 import { StudioInfoPanel } from "@/components/studio/StudioInfoPanel";
 import { StudioRoomPanel } from "@/components/studio/StudioRoomPanel";
 import { StudioRoomCarousel } from "@/components/studio/StudioRoomCarousel";
-import { StudioMap3D } from "@/components/studio/map/StudioMap3D";
 import { StudioFooter } from "@/components/studio/StudioFooter";
 import { StudioMusicPlayer } from "@/components/studio/StudioMusicPlayer";
 import { HandTrackingController } from "@/components/studio/HandTrackingController";
@@ -32,6 +32,16 @@ import {
   type StudioArtwork,
   type StudioInfoHotspot,
 } from "@/config/studio/studioNodes";
+
+// The HUD map is a second WebGL scene — ~1 500 lines of building geometry
+// plus drei's OrbitControls/Environment/ContactShadows on top of it — and it
+// is already held back until `mapReady`, which waits for an idle frame after
+// the room itself is up. Statically imported, all of that still sat in the
+// studio's first bundle, competing with the panorama the visitor is actually
+// waiting on. Dynamic, the fetch now starts on the same beat the render does.
+const StudioMap3D = dynamic(() => import("@/components/studio/map/StudioMap3D").then((m) => m.StudioMap3D), {
+  ssr: false,
+});
 
 // idle/loading collapse into "intro" (the intro screen itself carries a
 // `textureReady` sub-state for its button) — a smaller state set than the

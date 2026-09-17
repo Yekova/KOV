@@ -1,6 +1,7 @@
 "use client";
 
-import { motion, LIQUID_EASE } from "@/lib/motion";
+import { motion } from "@/lib/motion/timing";
+import { LIQUID_EASE } from "@/lib/motion/easing";
 import type { LiquidRect } from "@/lib/useLiquidRect";
 
 interface LiquidBlobProps {

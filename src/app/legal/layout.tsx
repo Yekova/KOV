@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { LegalSidebar } from "@/components/legal/LegalSidebar";
-import LightPillar from "@/components/legal/LightPillar";
+import LightPillar from "@/components/legal/LightPillarLazy";
 
 // Shared shell for the whole /legal hub (mentions, cgv, confidentialité,
 // cookies, conditions d'utilisation, gestion des cookies) — the hero and

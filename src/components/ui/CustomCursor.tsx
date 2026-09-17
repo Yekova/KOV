@@ -19,9 +19,25 @@ export function CustomCursor() {
     const dot = dotRef.current;
     if (!dot) return;
 
-    function handleMove(event: MouseEvent) {
+    // mousemove fires faster than the compositor can paint, and every
+    // handler that writes `transform` synchronously invalidates style on
+    // its own. Record the coordinates on the event, write them once per
+    // frame — the cursor lands in exactly the same place, but a burst of
+    // twelve events between two frames now costs one write, not twelve.
+    let pending = 0;
+    let nextX = 0;
+    let nextY = 0;
+
+    function flush() {
+      pending = 0;
       if (!dot) return;
-      dot.style.transform = `translate3d(${event.clientX}px, ${event.clientY}px, 0) translate(-50%, -50%)`;
+      dot.style.transform = `translate3d(${nextX}px, ${nextY}px, 0) translate(-50%, -50%)`;
+    }
+
+    function handleMove(event: MouseEvent) {
+      nextX = event.clientX;
+      nextY = event.clientY;
+      if (!pending) pending = requestAnimationFrame(flush);
     }
 
     function handleOver(event: MouseEvent) {
@@ -40,12 +56,15 @@ export function CustomCursor() {
       }
     }
 
-    window.addEventListener("mousemove", handleMove);
-    document.addEventListener("mouseover", handleOver);
-    document.addEventListener("mouseout", handleOut);
+    // passive: none of the three ever calls preventDefault, and saying so
+    // lets the browser stop waiting on them before it scrolls.
+    window.addEventListener("mousemove", handleMove, { passive: true });
+    document.addEventListener("mouseover", handleOver, { passive: true });
+    document.addEventListener("mouseout", handleOut, { passive: true });
 
     return () => {
       document.documentElement.classList.remove("kov-custom-cursor");
+      if (pending) cancelAnimationFrame(pending);
       window.removeEventListener("mousemove", handleMove);
       document.removeEventListener("mouseover", handleOver);
       document.removeEventListener("mouseout", handleOut);

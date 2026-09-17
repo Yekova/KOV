@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Archivo_Black, Inter, Geist_Mono } from "next/font/google";
 import { SiteChrome } from "@/components/layout/SiteChrome";
 import { CustomCursor } from "@/components/ui/CustomCursor";
-import { AosInit } from "@/components/ui/AosInit";
 import { OrganizationJsonLd } from "@/components/seo/OrganizationJsonLd";
 import "./globals.css";
 
@@ -51,7 +50,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <OrganizationJsonLd />
         <CustomCursor />
-        <AosInit />
         <SiteChrome>{children}</SiteChrome>
         {/* CookieConsent temporarily disabled — a live report of the
             banner not responding to clicks at all (not even hover) needs

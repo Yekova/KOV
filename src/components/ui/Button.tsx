@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRef, type ReactNode, type ButtonHTMLAttributes, type RefObject } from "react";
-import { SpecularButtonEffect } from "@/components/ui/SpecularButtonEffect";
+import { SpecularButtonEffect } from "@/components/ui/SpecularButtonEffectLazy";
 
 type Variant = "primary" | "secondary" | "ghost" | "pill";
 

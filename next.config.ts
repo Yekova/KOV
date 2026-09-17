@@ -19,6 +19,16 @@ const nextConfig: NextConfig = {
     },
   },
   images: {
+    // Default is WebP alone. AVIF is ~20% smaller again, and this site is
+    // image-heavy (brand plates, studio panoramas, journal covers), so it is
+    // worth the slower first encode — Vercel caches each format afterwards.
+    // Order matters: the first entry the browser's Accept header matches wins,
+    // and anything too old for AVIF still falls through to WebP.
+    formats: ["image/avif", "image/webp"],
+    // minimumCacheTTL deliberately left at its 4h default: journal covers are
+    // uploaded with upsert:true to a deterministic storage path, so replacing
+    // an article's cover reuses its URL. A long TTL here would serve the old
+    // picture for as long as it lasted.
     remotePatterns: [
       {
         protocol: "https",

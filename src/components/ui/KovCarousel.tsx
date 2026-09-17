@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
-import { motion, LIQUID_EASE } from "@/lib/motion";
+import { motion } from "@/lib/motion/timing";
+import { LIQUID_EASE } from "@/lib/motion/easing";
 
 interface KovCarouselProps {
   items: ReactNode[];

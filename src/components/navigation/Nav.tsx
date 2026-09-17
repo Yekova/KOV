@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { GlobalSearch } from "@/components/search/GlobalSearch";
 import { NavLinks, type NavLinkItem } from "@/components/navigation/NavLinks";
 import { MobileNavMenu } from "@/components/navigation/MobileNavMenu";
-import { REVEAL_EASE } from "@/lib/motion";
+import { REVEAL_EASE } from "@/lib/motion/easing";
 import { useScrolled } from "@/hooks/useScrolled";
 import { useOnLightZone } from "@/hooks/useOnLightZone";
 import { GlassSurface } from "@/components/ui/GlassSurface";

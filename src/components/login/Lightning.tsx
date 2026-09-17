@@ -8,7 +8,7 @@
 // types and the prefers-reduced-motion gate, same convention already used
 // for LightPillar.tsx/LiquidEther.tsx elsewhere in this codebase.
 import { useEffect, useRef, useState } from "react";
-import { prefersReducedMotion } from "@/lib/motion";
+import { prefersReducedMotion } from "@/lib/motion/reducedMotion";
 import "./Lightning.css";
 
 export interface LightningProps {

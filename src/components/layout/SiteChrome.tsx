@@ -3,10 +3,20 @@
 import { usePathname } from "next/navigation";
 import { Nav } from "@/components/navigation/Nav";
 import { Footer } from "@/components/layout/Footer";
-import { SmoothScroll } from "@/components/layout/SmoothScroll";
+import dynamic from "next/dynamic";
 import { GlobalMenuButton } from "@/components/layout/GlobalMenuButton";
 import { GlobalOverviewMenu } from "@/components/layout/GlobalOverviewMenu";
 import { GlobalMenuProvider, useGlobalMenu } from "@/components/layout/GlobalMenuContext";
+
+// Lenis + GSAP's ticker is ~160 KB, and SmoothScroll renders null — there is
+// nothing of it in the server HTML to preserve. Statically imported it sat
+// in the critical bundle of every marketing page, delaying the hydration
+// that has to finish before the scroll can be smooth in the first place.
+// Deferred, it starts a chunk-fetch later; on a slow connection that is
+// still sooner than the old bundle finished parsing.
+const SmoothScroll = dynamic(() => import("@/components/layout/SmoothScroll").then((m) => m.SmoothScroll), {
+  ssr: false,
+});
 
 // The client portal (/client/*) and the admin back-office (/admin/*) each
 // have their own sidebar+topbar shell (src/app/client/layout.tsx,

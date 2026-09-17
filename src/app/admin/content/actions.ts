@@ -173,6 +173,8 @@ export async function createPost(
 
   revalidatePath("/admin/content");
   revalidatePath("/journal");
+  // The homepage hero renders the most recent published post too.
+  revalidatePath("/");
   return { error: null, id: postId };
 }
 
@@ -214,6 +216,8 @@ export async function updatePost(
 
   revalidatePath("/admin/content");
   revalidatePath("/journal");
+  // The homepage hero renders the most recent published post too.
+  revalidatePath("/");
   revalidatePath(`/journal/${existing.slug}`);
   if (slug !== existing.slug) revalidatePath(`/journal/${slug}`);
   return { error: null };
@@ -242,6 +246,8 @@ export async function setPostStatus(postId: string, status: "draft" | "published
 
   revalidatePath("/admin/content");
   revalidatePath("/journal");
+  // The homepage hero renders the most recent published post too.
+  revalidatePath("/");
   revalidatePath(`/journal/${existing.slug}`);
 }
 
@@ -256,6 +262,8 @@ export async function deletePost(postId: string) {
 
   revalidatePath("/admin/content");
   revalidatePath("/journal");
+  // The homepage hero renders the most recent published post too.
+  revalidatePath("/");
   revalidatePath(`/journal/${existing.slug}`);
 }
 

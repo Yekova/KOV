@@ -20,9 +20,7 @@ export function initGsap() {
 
 export { gsap, ScrollTrigger };
 
-// Lazy initializer pattern (see Reveal.tsx) — read once, not in an effect,
-// so components can bail out of building a ScrollTrigger timeline entirely
-// rather than building one and immediately neutering it.
-export function prefersReducedMotion() {
-  return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
+// Re-exported, not defined here: it lives in its own import-free module so
+// that components needing only the media-query check don't drag GSAP in
+// with it. Kept exported from this path so existing callers still resolve.
+export { prefersReducedMotion } from "./reducedMotion";

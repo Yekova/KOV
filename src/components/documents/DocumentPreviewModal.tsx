@@ -5,7 +5,8 @@ import { createPortal } from "react-dom";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Button } from "@/components/ui/Button";
 import { DocumentTypeIcon, documentKindFromMime, formatFileSize } from "@/lib/documentIcons";
-import { motion, LIQUID_EASE } from "@/lib/motion";
+import { motion } from "@/lib/motion/timing";
+import { LIQUID_EASE } from "@/lib/motion/easing";
 import type { DocumentGridItem } from "./DocumentGrid";
 
 interface DocumentPreviewModalProps {

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export interface PostViewData {
   title: string;
@@ -22,6 +23,14 @@ export interface PostViewData {
 // editor existed have a plain-text body — that's still valid HTML (bare
 // text inside a container), it just won't have any rich formatting until
 // re-edited.
+// Covers live in this project's own Supabase storage in the normal case —
+// those are the ones next.config.ts authorizes the image optimizer to fetch.
+function isOptimizableCover(url: string) {
+  const supabaseOrigin = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!supabaseOrigin) return false;
+  return url.startsWith(`${supabaseOrigin.replace(/\/$/, "")}/storage/v1/object/public/`);
+}
+
 export function PostView({ post, backHref, backLabel }: { post: PostViewData; backHref: string; backLabel: string }) {
   return (
     <main className="min-h-screen px-6 pt-40 pb-32">
@@ -50,8 +59,35 @@ export function PostView({ post, backHref, backLabel }: { post: PostViewData; ba
         </div>
 
         {post.coverUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={post.coverUrl} alt="" className="w-full aspect-[16/9] object-cover mt-12" style={{ borderRadius: "var(--radius-md)" }} />
+          <div
+            className="relative w-full aspect-[16/9] mt-12 overflow-hidden"
+            style={{ borderRadius: "var(--radius-md)" }}
+          >
+            {isOptimizableCover(post.coverUrl) ? (
+              // The article's LCP element. Through next/image it becomes
+              // AVIF/WebP at the width this 768px column actually renders,
+              // instead of whatever full-resolution file was uploaded.
+              <Image
+                src={post.coverUrl}
+                alt=""
+                fill
+                // max-w-3xl (768px) inside px-6 gutters.
+                sizes="(min-width: 816px) 768px, 100vw"
+                className="object-cover"
+                priority
+              />
+            ) : (
+              // resolvePostImageUrl passes through any value already starting
+              // with "http", so a cover can be an arbitrary external URL that
+              // next.config's remotePatterns doesn't allow — and the image
+              // optimizer answers 400 for those, which would take the whole
+              // article down. Deliberately not widening remotePatterns to fix
+              // that: an open image proxy is worth more to an attacker than
+              // this optimization is to us.
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={post.coverUrl} alt="" className="w-full h-full object-cover" />
+            )}
+          </div>
         )}
 
         {post.audioUrl && (

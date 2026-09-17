@@ -7,7 +7,8 @@ import Link from "next/link";
 import type { SearchItem } from "@/data/searchIndex";
 import { searchKov } from "@/lib/search";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { motion, LIQUID_EASE } from "@/lib/motion";
+import { motion } from "@/lib/motion/timing";
+import { LIQUID_EASE } from "@/lib/motion/easing";
 
 const REVEAL_DURATION_MS = motion.slow * 1000;
 

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { gsap, initGsap, pinAndTrack, GSAP_REVEAL_EASE } from "@/lib/motion";
+import { useLazyVideoSrc } from "@/hooks/useLazyVideoSrc";
 
 // Extra scroll distance (vh) for the desktop pinned runway — the video
 // scrubs across the first VIDEO_SPLIT share of it (the portal also grows
@@ -11,6 +12,12 @@ import { gsap, initGsap, pinAndTrack, GSAP_REVEAL_EASE } from "@/lib/motion";
 // while the outro (black + KOV mark + spark) fades in over the rest —
 // alongside the text column and photo strip, which recede with it rather
 // than sitting frozen next to a faded-out video.
+// Both breakpoint variants point at the same file — the 7 MB showreel is
+// attached at runtime by useLazyVideoSrc, never as a JSX `src`, so only the
+// variant that is actually visible ever downloads it.
+const SHOWREEL_SRC = "/home/studio-showreel.mp4";
+const SHOWREEL_POSTER = "/home/studio-showreel-poster.webp";
+
 const RUNWAY_VH = 180;
 const VIDEO_SPLIT = 0.85;
 const GROWTH_SCALE = 0.04; // 1.00 -> 1.04 across the runway
@@ -116,6 +123,7 @@ export function StudioShowcase() {
   const entranceRef = useRef<HTMLDivElement>(null);
   const shellRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const mobileVideoRef = useRef<HTMLVideoElement>(null);
   const reflectionRef = useRef<HTMLDivElement>(null);
   const outroRef = useRef<HTMLDivElement>(null);
   const filmstripRef = useRef<HTMLDivElement>(null);
@@ -124,6 +132,13 @@ export function StudioShowcase() {
   const [reducedMotion] = useState(
     () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
   );
+
+  // The showreel is 7 MB and sits five sections down the homepage. Only the
+  // breakpoint variant CSS is actually showing ever fetches it, and only as
+  // the viewer approaches — see useLazyVideoSrc. The poster holds the frame
+  // until then, so this section looks the same at every point.
+  useLazyVideoSrc(videoRef, SHOWREEL_SRC);
+  useLazyVideoSrc(mobileVideoRef, SHOWREEL_SRC, "150% 0px");
 
   function applyShellTransform() {
     const shell = shellRef.current;
@@ -337,8 +352,7 @@ export function StudioShowcase() {
                     >
                       <video
                         ref={videoRef}
-                        src="/home/studio-showreel.mp4"
-                        poster="/home/studio-showreel-poster.webp"
+                        poster={SHOWREEL_POSTER}
                         muted
                         playsInline
                         preload="auto"
@@ -423,8 +437,8 @@ export function StudioShowcase() {
           }}
         >
           <video
-            src="/home/studio-showreel.mp4"
-            poster="/home/studio-showreel-poster.webp"
+            ref={mobileVideoRef}
+            poster={SHOWREEL_POSTER}
             muted
             playsInline
             loop

@@ -16,6 +16,17 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://kov-agency.site" },
 };
 
+// HeroScene reads the most recent published article straight from Supabase.
+// Without this the homepage was a pure build-time prerender: the hero's
+// journal widget froze at whatever was published on the day of the last
+// deploy, forever. The admin's publish actions now call revalidatePath("/")
+// for the instant case; this is the backstop for a post published any other
+// way — directly in Supabase, say — which the app has no way to hear about.
+//
+// It costs nothing at read time: visitors are still served the cached page
+// immediately, and the regeneration happens behind them.
+export const revalidate = 300;
+
 // KOV's own tokens, not the upstream demo's arbitrary reds — same "mostly
 // red, one muted channel" structure the demo's own defaults used.
 const WAVE_COLOR_1 = "#777774"; // --kov-steel

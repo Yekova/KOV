@@ -113,7 +113,17 @@ export function LegalSidebar() {
       </nav>
 
       <div className="relative mt-6 overflow-hidden p-6" style={{ borderRadius: 20, border: "1px solid var(--glass-border)" }}>
-        <Image src="/legal/contact-glow.webp" alt="" fill className="object-cover" style={{ opacity: 0.55 }} />
+        {/* The sidebar column is a fixed 300px from lg: up (see legal/layout.tsx's
+            grid), full width below it. Without `sizes`, next/image assumes 100vw
+            and hands a desktop visitor the full-width candidate for a 300px box. */}
+        <Image
+          src="/legal/contact-glow.webp"
+          alt=""
+          fill
+          sizes="(min-width: 1024px) 300px, 100vw"
+          className="object-cover"
+          style={{ opacity: 0.55 }}
+        />
         <div
           aria-hidden="true"
           className="absolute inset-0"

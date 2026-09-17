@@ -13,7 +13,7 @@ import {
   MOBILE_HERO_WIDGET_ORDER,
   type HeroWidgetId,
 } from "@/data/heroWidgets";
-import { prefersReducedMotion } from "@/lib/motion";
+import { prefersReducedMotion } from "@/lib/motion/reducedMotion";
 import { WidgetShell, DragHandle } from "@/components/home/hero-widgets/WidgetShell";
 import { ProjectSpotlightContent } from "@/components/home/hero-widgets/ProjectSpotlightContent";
 import { ResponsivePreviewContent } from "@/components/home/hero-widgets/ResponsivePreviewContent";

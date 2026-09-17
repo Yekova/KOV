@@ -7,13 +7,21 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { resolvePostImageUrl } from "@/lib/portal/storage";
 
 async function getLatestJournalPost(): Promise<HeroJournalPost | null> {
-  const { data } = await supabaseAdmin
+  const { data, error } = await supabaseAdmin
     .from("posts")
     .select("slug, title, tag, excerpt, cover_image_path, published_at, reading_time")
     .eq("status", "published")
     .order("published_at", { ascending: false })
     .limit(1)
     .maybeSingle();
+
+  // Destructuring only `data` made a failed query indistinguishable from "no
+  // articles yet" — the hero widget just quietly disappeared, and nothing
+  // anywhere said why. The page still renders without it; it just says so now.
+  if (error) {
+    console.error("[home] latest-post query failed, hero journal widget omitted:", error.message);
+    return null;
+  }
 
   if (!data) return null;
   return {

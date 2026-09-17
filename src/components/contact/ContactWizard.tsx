@@ -4,7 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { GlassSurface } from "@/components/ui/GlassSurface";
 import { Button } from "@/components/ui/Button";
-import { REVEAL_EASE } from "@/lib/motion";
+import { REVEAL_EASE } from "@/lib/motion/easing";
 import { BudgetSlider, formatBudget, BUDGET_MIN } from "@/components/contact/BudgetSlider";
 
 type ContactMethod = "phone" | "video" | "in_person";

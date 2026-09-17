@@ -2,7 +2,8 @@
 
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { motion, REVEAL_EASE } from "@/lib/motion";
+import { motion } from "@/lib/motion/timing";
+import { REVEAL_EASE } from "@/lib/motion/easing";
 
 interface NavDropdownPanelProps {
   visible: boolean;

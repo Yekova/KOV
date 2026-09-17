@@ -8,7 +8,7 @@
 // prefers-reduced-motion gate, same convention already used for LiquidEther.tsx.
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { prefersReducedMotion } from "@/lib/motion";
+import { prefersReducedMotion } from "@/lib/motion/reducedMotion";
 import "./LightPillar.css";
 
 export interface LightPillarProps {
