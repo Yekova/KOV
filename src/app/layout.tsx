@@ -31,7 +31,18 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "KOV — On construit ce que les gens retiennent.",
+  // Le <title> de l'accueil, donc le lien bleu dans Google — et aussi, par
+  // héritage, og:title et twitter:title.
+  //
+  // L'ancienne valeur était la baseline de marque seule ("On construit ce que
+  // les gens retiennent."). Belle ligne, mais elle ne disait nulle part ce que
+  // fait KOV ni où : rien à quoi rattacher une recherche, et c'est exactement
+  // le cas où Google réécrit le titre lui-même. Celui-ci nomme le métier et la
+  // ville, en 49 caractères — sous la limite d'affichage.
+  //
+  // La baseline n'a pas disparu pour autant : elle reste le <h1> de la page
+  // (HeroScene) et la ligne de la carte sociale.
+  title: "KOV Studio Design et Développement Web à Bordeaux",
   description: "KOV transforme les idées en expériences numériques.",
   openGraph: {
     siteName: "KOV",
