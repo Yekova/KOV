@@ -3,8 +3,14 @@
 import { useState } from "react";
 import { Send, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { EmailComposer } from "./EmailComposer";
+import dynamic from "next/dynamic";
 import { EmailHistory } from "./EmailHistory";
+
+// The composer carries TipTap and its extensions (~300 KB). It is already
+// rendered only while `composerOpen`, but a static import put all of it in
+// the lead detail page's bundle for everyone who just came to read a lead.
+// Loaded on the click that opens it instead.
+const EmailComposer = dynamic(() => import("./EmailComposer").then((m) => m.EmailComposer), { ssr: false });
 
 // Owns the composer's open/closed state and a refresh counter so the
 // history list re-fetches right after a send closes the composer, without
