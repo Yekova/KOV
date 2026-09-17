@@ -1,44 +1,45 @@
 import type { ReactNode } from "react";
 import { LegalSidebar } from "@/components/legal/LegalSidebar";
-import LightPillar from "@/components/legal/LightPillarLazy";
 
 // Shared shell for the whole /legal hub (mentions, cgv, confidentialité,
 // cookies, conditions d'utilisation, gestion des cookies) — the hero and
 // sidebar render once here; only `children` (the document panel) swaps
 // per route. No grid-line backdrop (LegalDoc's old GridParallaxBackdrop) —
 // removed by request, not carried over into this redesign. No hero photo
-// either now — LightPillar's ambient glow is the only visual here.
+// either; a soft red wash is the only visual here.
 export default function LegalLayout({ children }: { children: ReactNode }) {
   return (
     <main id="kov-main" tabIndex={-1} className="relative min-h-screen pb-32">
-      {/* Ambient backdrop for the whole /legal hub — same `fixed` +
-          `--z-canvas` pattern as LineWaves on the homepage (src/app/page.tsx):
-          pinned to the viewport so it stays behind every route's content as
-          you scroll. `--z-canvas` is a negative z-index specifically so it
-          never fights the actual page content's own stacking, only the root
-          background. Confined to the right half on desktop (md:) rather
-          than the full width — pinned to the right edge specifically (was
-          left-anchored before) so it sits clear of the hero copy/sidebar,
-          which are both left-aligned. Props match the spec's own example
-          values (pillarWidth 3.0, pillarHeight 0.4, glowAmount 0.005,
-          intensity 1.0) — an earlier pass shrank pillarWidth/intensity to
-          try to "reveal both colors", which instead made the shape read as
-          too zoomed-in; the example's own values are what actually produce
-          the recognizable ribbon shape shown in reactbits.dev's own demo. */}
-      <div className="fixed inset-y-0 right-0 w-full md:w-[55%] pointer-events-none" style={{ zIndex: "var(--z-canvas)" }}>
-        <LightPillar
-          topColor="#ff0000"
-          bottomColor="#FF9FFC"
-          intensity={1.0}
-          rotationSpeed={0.3}
-          glowAmount={0.005}
-          pillarWidth={3.0}
-          pillarHeight={0.4}
-          noiseIntensity={0.5}
-          quality="medium"
-          mixBlendMode="screen"
-        />
-      </div>
+      {/* Ambient backdrop for the whole /legal hub. Same `fixed` +
+          `--z-canvas` placement as before: pinned to the viewport so it stays
+          put behind every route's content as you scroll, and on a negative
+          z-index so it never competes with the page's own stacking.
+
+          This used to be LightPillar — a WebGL ribbon that brought the whole
+          of Three.js with it, ~700 KB ahead of the text of the CGV. It is two
+          radial gradients now. No canvas, no shader, no runtime cost at all,
+          and nothing to fail on a weak GPU.
+
+          Confined to the right half on desktop and anchored past the right
+          edge, so it stays clear of the hero copy and the sidebar, which are
+          both left-aligned. Two overlapping ellipses rather than one: a
+          single radial reads as a flat coloured blob, an offset pair reads as
+          depth. Alphas are deliberately low — 0.18 peak on a #0a0a0a ground
+          is a glow you notice without ever reading it as a red panel.
+
+          The rgba literals mirror --kov-red and --kov-red-signal; a gradient
+          stop cannot take a hex custom property directly, same reason
+          CursorGrid keeps its own copy of the red. */}
+      <div
+        aria-hidden="true"
+        className="fixed inset-y-0 right-0 w-full md:w-[55%] pointer-events-none"
+        style={{
+          zIndex: "var(--z-canvas)",
+          background:
+            "radial-gradient(ellipse 70% 55% at 108% 26%, rgba(227, 30, 36, 0.18), transparent 68%)," +
+            "radial-gradient(ellipse 46% 40% at 94% 76%, rgba(255, 77, 77, 0.07), transparent 70%)",
+        }}
+      />
 
       <div className="px-6">
         <div className="relative max-w-[1400px] mx-auto">

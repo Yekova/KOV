@@ -6,7 +6,7 @@
 // from scratch. Kept close to the upstream source (shader and render-loop
 // logic unchanged); the only deliberate deviations are the TypeScript
 // types and the prefers-reduced-motion gate, same convention already used
-// for LightPillar.tsx/LiquidEther.tsx elsewhere in this codebase.
+// for LiquidEther.tsx elsewhere in this codebase.
 import { useEffect, useRef, useState } from "react";
 import { prefersReducedMotion } from "@/lib/motion/reducedMotion";
 import "./Lightning.css";
@@ -24,7 +24,7 @@ export default function Lightning({ hue = 230, xOffset = 0, speed = 1, intensity
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Same reduced-motion convention as every other WebGL effect in this
-  // codebase (see LiquidEther.tsx, LightPillar.tsx) — a continuously
+  // codebase (see LiquidEther.tsx) — a continuously
   // rendering shader is exactly the kind of motion that gate exists for.
   // Lazy initializer, not a setState-in-effect call.
   const [reducedMotion] = useState(() => prefersReducedMotion());

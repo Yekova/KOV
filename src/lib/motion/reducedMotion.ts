@@ -2,7 +2,7 @@
 //
 // This used to live in scroll.ts next to the GSAP setup, which meant that a
 // component wanting nothing but this one-line media-query check — Nav,
-// LightPillar, Lightning, the studio map — pulled GSAP + ScrollTrigger +
+// Lightning, the studio map — pulled GSAP + ScrollTrigger +
 // CustomEase into its chunk to get it. ~118 KB for a boolean.
 //
 // Read it once, during render, rather than in an effect (see Reveal.tsx):
