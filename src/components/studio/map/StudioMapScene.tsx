@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { PerspectiveCamera, OrbitControls, ContactShadows, Environment, Lightformer } from "@react-three/drei";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
@@ -10,6 +10,9 @@ import { STUDIO_MAP_LAYOUT, STUDIO_MAP_CENTER, STUDIO_BUILDING_BOUNDS } from "@/
 import { StudioMapRoom } from "@/components/studio/map/StudioMapRoom";
 import { StudioMapBuilding } from "@/components/studio/map/StudioMapBuilding";
 import { useStudioMaterials } from "@/components/studio/map/StudioMapMaterials";
+import { StudioMapConnections } from "@/components/studio/map/StudioMapConnections";
+import { StudioMapViewCone } from "@/components/studio/map/StudioMapViewCone";
+import type { CameraState } from "@/components/studio/CameraController";
 
 // 3/4 architectural view: ~39° in plan, ~50° above the horizon. Only the
 // direction is fixed — the distance is solved for at runtime (CameraRig
@@ -212,6 +215,15 @@ interface StudioMapSceneProps {
   focusId?: string | null;
   resetToken?: number;
   margin?: number;
+  /** Which room the pointer is currently over, so the arc leading to it can
+   * be emphasised. Owned by the parent because the tooltip and side panel
+   * need it too. */
+  hoveredId?: string | null;
+  /** The panorama's live camera state. Drives the view cone; absent in any
+   * context where the map is shown without a tour running behind it. */
+  cameraStateRef?: RefObject<CameraState>;
+  /** Rooms the visitor has already been in. */
+  visitedIds?: ReadonlySet<string>;
 }
 
 export function StudioMapScene({
@@ -224,6 +236,9 @@ export function StudioMapScene({
   selectedLevel = null,
   focusId = null,
   resetToken = 0,
+  hoveredId = null,
+  cameraStateRef,
+  visitedIds,
   // Fraction of the frame the building is fitted inside. Raised from
   // 0.82: the model was sitting small in a lot of empty black, which the
   // brief called out. These put it at roughly 85% of the expanded canvas
@@ -327,9 +342,15 @@ export function StudioMapScene({
             dimmedByLevel={layout.level === 0 ? renderDim.level0 : renderDim.level1}
             shadows={shadows}
             showTooltip={!detailed}
+            visited={visitedIds?.has(id) ?? false}
           />
         );
       })}
+
+      {/* Drawn after the rooms so the arcs and the cone read as an overlay
+          on the model rather than as parts of it. */}
+      <StudioMapConnections currentRoomId={currentRoomId} hoveredId={hoveredId} />
+      <StudioMapViewCone currentRoomId={currentRoomId} cameraStateRef={cameraStateRef} />
 
       <LevelDimmer level0Dim={targetDim0} level1Dim={targetDim1} />
 

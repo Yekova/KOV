@@ -204,6 +204,18 @@ function StudioExperienceInner() {
   });
   const [phase, setPhase] = useState<EnginePhase>("intro");
   const [currentNodeId, setCurrentNodeId] = useState(STUDIO_ENTRY_NODE_ID);
+  // Rooms entered during this visit, for the map's "already seen" marks.
+  // Deliberately not persisted: it describes this visit, and a returning
+  // visitor finding every room pre-ticked would be told their tour was over
+  // before it began. The entry node counts from the start — you are in it.
+  const [visitedIds, setVisitedIds] = useState<ReadonlySet<string>>(() => new Set([STUDIO_ENTRY_NODE_ID]));
+  // Adjusted during render rather than in an effect — React's documented
+  // "adjusting state when a prop changes" pattern, the same idiom Nav.tsx
+  // uses for its pathname. The guard makes it self-terminating: once the id
+  // is in the set the condition is false, so it runs exactly once per room.
+  if (!visitedIds.has(currentNodeId)) {
+    setVisitedIds(new Set(visitedIds).add(currentNodeId));
+  }
   const [texture, setTexture] = useState<THREE.Texture | null>(null);
   const [loadProgress, setLoadProgress] = useState(0);
   const [introReady, setIntroReady] = useState(false);
@@ -282,6 +294,7 @@ function StudioExperienceInner() {
   useEffect(() => {
     diag("room:active", currentNodeId);
   }, [currentNodeId]);
+
 
   // The studio map is a second WebGL context with a couple of hundred
   // meshes behind it. Mounting it in the same commit that reveals the
@@ -661,6 +674,10 @@ function StudioExperienceInner() {
               isExpanded={mapExpanded}
               onExpand={() => setMapExpanded(true)}
               onCollapse={() => setMapExpanded(false)}
+              // The same ref CameraController writes every frame — the map
+              // reads it for its view cone without any re-render here.
+              cameraStateRef={cameraStateRef}
+              visitedIds={visitedIds}
             />
           )}
           <StudioRoomPanel

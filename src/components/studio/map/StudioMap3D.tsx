@@ -1,6 +1,6 @@
 "use client";
 
-import { Component, useEffect, useState, type ReactNode } from "react";
+import { Component, useEffect, useState, type ReactNode, type RefObject } from "react";
 import { Canvas } from "@react-three/fiber";
 import * as THREE from "three";
 import { Maximize2 } from "lucide-react";
@@ -9,6 +9,7 @@ import { StudioMapScene } from "@/components/studio/map/StudioMapScene";
 import { StudioMapAccessibleNav } from "@/components/studio/map/StudioMapAccessibleNav";
 import { StudioMapExpanded } from "@/components/studio/map/StudioMapExpanded";
 import { StudioMapMaterialsProvider } from "@/components/studio/map/StudioMapMaterials";
+import type { CameraState } from "@/components/studio/CameraController";
 
 interface StudioMap3DProps {
   currentRoomId: string;
@@ -16,6 +17,10 @@ interface StudioMap3DProps {
   isExpanded: boolean;
   onExpand: () => void;
   onCollapse: () => void;
+  /** The panorama's live camera state, for the view cone. */
+  cameraStateRef?: RefObject<CameraState>;
+  /** Rooms already entered during this visit. */
+  visitedIds?: ReadonlySet<string>;
 }
 
 class StudioMapErrorBoundary extends Component<{ children: ReactNode; fallback: ReactNode }, { hasError: boolean }> {
@@ -35,7 +40,18 @@ class StudioMapErrorBoundary extends Component<{ children: ReactNode; fallback: 
 // directly, never a parallel nav path). An error boundary around the
 // Canvas falls back to the plain accessible room list if the 3D scene
 // ever fails to render, so Studio navigation can never actually break.
-export function StudioMap3D({ currentRoomId, onNavigate, isExpanded, onExpand, onCollapse }: StudioMap3DProps) {
+export function StudioMap3D({
+  currentRoomId,
+  onNavigate,
+  isExpanded,
+  onExpand,
+  onCollapse,
+  cameraStateRef,
+  visitedIds,
+}: StudioMap3DProps) {
+  // Hover was discarded here before (onHoverChange was a no-op). It is now
+  // the thing that lights the arc leading to the room under the pointer.
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [reducedMotion] = useState(() => prefersReducedMotion());
   // This component only ever renders once StudioExperience.tsx reaches
   // its "exploring" phase (well past the intro, purely client-side —
@@ -100,6 +116,12 @@ export function StudioMap3D({ currentRoomId, onNavigate, isExpanded, onExpand, o
               {/* Mini LOD: dpr 1, no shadow map, no furniture beyond the
                   few pieces flagged `mini`, no labels — the expanded view
                   is where the full model lives. */}
+              {/* Unmounted while the expanded map is open. It used to keep
+                  running behind the full-screen modal — a live WebGL context
+                  rendering something nobody could see, on top of the
+                  expanded map's own and the panorama's. Three contexts where
+                  two will do, on the machine already driving a 360° scene. */}
+              {!isExpanded && (
               <Canvas
                 dpr={1}
                 gl={{
@@ -114,13 +136,17 @@ export function StudioMap3D({ currentRoomId, onNavigate, isExpanded, onExpand, o
                 <StudioMapMaterialsProvider>
                   <StudioMapScene
                     currentRoomId={currentRoomId}
-                    onHoverChange={() => {}}
+                    onHoverChange={setHoveredId}
+                    hoveredId={hoveredId}
                     onSelect={onNavigate}
                     reducedMotion={reducedMotion}
+                    cameraStateRef={cameraStateRef}
+                    visitedIds={visitedIds}
                     margin={0.95}
                   />
                 </StudioMapMaterialsProvider>
               </Canvas>
+              )}
             </StudioMapErrorBoundary>
           </div>
           <StudioMapAccessibleNav currentRoomId={currentRoomId} onSelect={onNavigate} />
@@ -160,7 +186,13 @@ export function StudioMap3D({ currentRoomId, onNavigate, isExpanded, onExpand, o
             </div>
           }
         >
-          <StudioMapExpanded currentRoomId={currentRoomId} onNavigate={onNavigate} onCollapse={onCollapse} />
+          <StudioMapExpanded
+            currentRoomId={currentRoomId}
+            onNavigate={onNavigate}
+            onCollapse={onCollapse}
+            cameraStateRef={cameraStateRef}
+            visitedIds={visitedIds}
+          />
         </StudioMapErrorBoundary>
       )}
     </>

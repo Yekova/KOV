@@ -160,6 +160,9 @@ interface StudioMapRoomProps {
   /** Mini mode only: expanded mode has real labels, so showing a hover
    * tooltip there duplicated the room name on screen. */
   showTooltip: boolean;
+  /** The visitor has already been in this room. On a seven-room tour it is
+   * the thing you open a map to find out. */
+  visited: boolean;
 }
 
 export function StudioMapRoom({
@@ -174,6 +177,7 @@ export function StudioMapRoom({
   dimmedByLevel,
   shadows,
   showTooltip,
+  visited,
 }: StudioMapRoomProps) {
   const groupRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
@@ -298,6 +302,17 @@ export function StudioMapRoom({
         <Html position={[0, topOfRoom + 0.28, 0]} center zIndexRange={[6, 0]} occlude={false}>
           <div className="kov-studio-map-pin" aria-hidden="true" />
         </Html>
+      )}
+
+      {/* Already seen. Deliberately a mark on the floor rather than a badge
+          over the roof: the roofline is where the active pin and the labels
+          live, and a third floating element up there would turn the model
+          into a pincushion. Not drawn on the active room — you are in it. */}
+      {visited && !isActive && node.available && (
+        <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={1}>
+          <ringGeometry args={[0.2, 0.26, 24]} />
+          <meshBasicMaterial color="#e7e7e5" transparent opacity={0.3} depthWrite={false} />
+        </mesh>
       )}
 
       {showTooltip && hovered && node.available && (

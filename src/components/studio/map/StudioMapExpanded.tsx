@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import { Canvas } from "@react-three/fiber";
 import * as THREE from "three";
@@ -16,6 +16,7 @@ import { StudioMapScene } from "@/components/studio/map/StudioMapScene";
 import { StudioMapLabels } from "@/components/studio/map/StudioMapLabels";
 import { StudioMapAccessibleNav } from "@/components/studio/map/StudioMapAccessibleNav";
 import { StudioMapMaterialsProvider } from "@/components/studio/map/StudioMapMaterials";
+import type { CameraState } from "@/components/studio/CameraController";
 
 const GLASS_PANEL = {
   background: "var(--glass-bg)",
@@ -34,6 +35,8 @@ interface StudioMapExpandedProps {
   currentRoomId: string;
   onNavigate: (id: string) => void;
   onCollapse: () => void;
+  cameraStateRef?: RefObject<CameraState>;
+  visitedIds?: ReadonlySet<string>;
 }
 
 // The "grande fenêtre" mode — a portal-mounted overlay (same pattern as
@@ -41,7 +44,13 @@ interface StudioMapExpandedProps {
 // room here only *selects* it; navigation still goes through the exact
 // same `onNavigate` (StudioExperience.tsx's real navigateToNode) that the
 // mini map and room carousel use, via the CTA below.
-export function StudioMapExpanded({ currentRoomId, onNavigate, onCollapse }: StudioMapExpandedProps) {
+export function StudioMapExpanded({
+  currentRoomId,
+  onNavigate,
+  onCollapse,
+  cameraStateRef,
+  visitedIds,
+}: StudioMapExpandedProps) {
   const [visible, setVisible] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -180,6 +189,9 @@ export function StudioMapExpanded({ currentRoomId, onNavigate, onCollapse }: Stu
                 <StudioMapScene
                   currentRoomId={currentRoomId}
                   onHoverChange={setHoveredId}
+                  hoveredId={hoveredId}
+                  cameraStateRef={cameraStateRef}
+                  visitedIds={visitedIds}
                   onSelect={setSelectedId}
                   reducedMotion={reducedMotion}
                   interactive
