@@ -2,35 +2,49 @@
 
 .kov-veil {
   position: absolute;
-  inset: 0;
+  top: 0;
+  bottom: 0;
   pointer-events: none;
 
-  /* Fades in at the top and out at the bottom so the black block joins the
-     page rather than being pasted onto it. The stops are deliberately deep —
-     the whole middle of the section is solid, and only the last ~15% at each
-     end is doing the blending. */
+  /* Full-bleed, not inset:0.
+     These sections are max-w-[1600px] mx-auto, so `inset: 0` stopped the
+     black at the content column and left the shader running down both
+     margins on any screen wider than that. Anchoring to the parent's centre
+     and spanning 100vw escapes the max-width. The page sets overflow-x: clip
+     on html/body, so the few pixels of scrollbar this overshoots by are
+     clipped rather than producing a horizontal scrollbar — the same trick
+     ActivationWindow already uses for its own full-bleed frame. */
+  left: 50%;
+  width: 100vw;
+  margin-left: -50vw;
+
+  /* Fades in at the top and out at the bottom so the block joins the page
+     rather than being pasted onto it. Kept to 10% at each end: these four
+     sections are consecutive, so a deeper fade would leave a wide band of
+     bare shader at every junction instead of a clean seam between blocks. */
   background: linear-gradient(
     to bottom,
     rgba(10, 10, 10, 0) 0%,
-    rgba(10, 10, 10, 0.97) 15%,
-    rgba(10, 10, 10, 0.97) 85%,
+    rgba(10, 10, 10, 0.98) 10%,
+    rgba(10, 10, 10, 0.98) 90%,
     rgba(10, 10, 10, 0) 100%
   );
 
   --halo-x: -9999px;
   --halo-y: -9999px;
-  --halo-r: 190px;
+  --halo-r: 300px;
 }
 
 /* The hole, and the reason it is a mask rather than a second gradient laid
    on top: nothing else can *subtract* the veil to let the shader behind the
    page show through.
 
-   Mask alpha is "how much of the veil survives". 0.42 at the centre, not 0:
-   a full hole puts a moving shader directly behind running text wherever the
-   cursor is, which is exactly the readability problem the black is here to
-   solve. A glimpse, not a window. That number and --halo-r are the two dials
-   if it reads too strong or too weak.
+   Mask alpha is "how much of the veil survives". 0.1 at the centre: the
+   shader comes through almost fully under the cursor, fading back to solid
+   black over a 300px radius. Opened up from 0.42 on request — the trade is
+   that text caught inside the halo now sits on a moving ground rather than
+   on black, which is worth knowing but is the effect that was asked for.
+   That number and --halo-r are the two dials.
 
    Only applied once the section is on screen and the pointer is being
    tracked (kov-veil--live). Before that the veil is plain black, which is
@@ -38,14 +52,16 @@
 .kov-veil--live {
   -webkit-mask-image: radial-gradient(
     circle var(--halo-r) at var(--halo-x) var(--halo-y),
-    rgba(0, 0, 0, 0.42) 0%,
-    rgba(0, 0, 0, 0.74) 42%,
+    rgba(0, 0, 0, 0.1) 0%,
+    rgba(0, 0, 0, 0.34) 38%,
+    rgba(0, 0, 0, 0.78) 70%,
     rgba(0, 0, 0, 1) 100%
   );
   mask-image: radial-gradient(
     circle var(--halo-r) at var(--halo-x) var(--halo-y),
-    rgba(0, 0, 0, 0.42) 0%,
-    rgba(0, 0, 0, 0.74) 42%,
+    rgba(0, 0, 0, 0.1) 0%,
+    rgba(0, 0, 0, 0.34) 38%,
+    rgba(0, 0, 0, 0.78) 70%,
     rgba(0, 0, 0, 1) 100%
   );
 }
