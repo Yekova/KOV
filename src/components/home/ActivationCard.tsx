@@ -29,7 +29,8 @@ interface ActivationCardProps {
   total: number;
   title: string;
   body: string;
-  /** Only card 4 ("Performance durable") passes this. */
+  /** Two or three micro-proofs, rendered as one metadata line under the
+   * body and faded in when the card becomes the active one. */
   features?: string[];
   /** One of the six visual compositions (see ActivationCharts.tsx). */
   visual: ReactNode;
@@ -39,6 +40,11 @@ interface ActivationCardProps {
   visualAsset?: string;
   /** True while this is the coverflow's current card. */
   active?: boolean;
+  /** Narrow viewport. Drives the well height and the visual's scale through
+   * CSS custom properties — the well used to be a hardcoded 200px regardless
+   * of card size, which left 84px for everything below it on a phone and
+   * clipped every card. */
+  compact?: boolean;
   href?: string;
 }
 
@@ -61,10 +67,18 @@ export function ActivationCard({
   visual,
   visualAsset,
   active = false,
+  compact = false,
   href,
 }: ActivationCardProps) {
   const inner = (
-    <div className={`kov-fcard${active ? " kov-fcard--active" : ""}`} style={CARD_TOKENS}>
+    <div
+      className={`kov-fcard${active ? " kov-fcard--active" : ""}`}
+      style={
+        compact
+          ? ({ ...CARD_TOKENS, "--fc-well-h": "150px", "--fc-visual-scale": "0.78" } as React.CSSProperties)
+          : CARD_TOKENS
+      }
+    >
       <div className="flex items-center justify-between shrink-0" style={{ padding: "22px 22px 0" }}>
         {/* The number as a red capsule, which is the one place a solid
             block of the accent is allowed. */}
@@ -96,7 +110,7 @@ export function ActivationCard({
         </span>
       </div>
 
-      <div className="kov-fcard__well shrink-0" style={{ margin: "18px 22px 0", height: 200 }}>
+      <div className="kov-fcard__well shrink-0" style={{ margin: "18px 22px 0" }}>
         {visualAsset ? (
           // eslint-disable-next-line @next/next/no-img-element -- a supplied decorative asset sized by its container, not a content image worth next/image's wrapper
           <img src={visualAsset} alt="" className="w-full h-full object-cover" />
@@ -106,26 +120,42 @@ export function ActivationCard({
       </div>
 
       <div className="flex flex-col flex-1 min-h-0" style={{ padding: "20px 22px 22px" }}>
-        <p style={{ fontSize: 21, fontWeight: 650, lineHeight: 1.22, color: "var(--fc-ink)" }}>{title}</p>
-        <p style={{ marginTop: 9, fontSize: 14, lineHeight: 1.5, color: "var(--fc-muted)", maxWidth: "30ch" }}>
+        {/* Ordering matters here, and it is a repair as much as a layout.
+            The body used to have flex's default min-height:auto, so it
+            refused to shrink and the CTA pill was what fell out of the card's
+            overflow:hidden. With the body as the only flexible item, any
+            miscalculation at any viewport degrades to a truncated sentence
+            instead of an amputated button. */}
+        <p className="shrink-0" style={{ fontSize: 21, fontWeight: 650, lineHeight: 1.22, color: "var(--fc-ink)" }}>
+          {title}
+        </p>
+        <p
+          className="flex-1 min-h-0 overflow-hidden line-clamp-3"
+          style={{ marginTop: 9, fontSize: 14, lineHeight: 1.5, color: "var(--fc-muted)", maxWidth: "30ch" }}
+        >
           {body}
         </p>
 
+        {/* One metadata line, not a bulleted list. Three bullets stacked
+            vertically cost ~93px in a card that is already over budget, and
+            they read as an offer checklist — the opposite of the "discreet
+            micro-proof" this is meant to be. Inline, the same three terms
+            cost ~39px and read as a specification. */}
         {features && features.length > 0 && (
-          <ul className="space-y-1.5" style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--fc-line)" }}>
+          <ul
+            className="kov-fcard__proof shrink-0 flex flex-wrap"
+            style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--fc-line)", columnGap: 8, rowGap: 2 }}
+          >
             {features.map((feature) => (
-              <li key={feature} className="flex items-center gap-2" style={{ fontSize: 12.5, color: "var(--fc-muted)" }}>
-                <span aria-hidden="true" className="w-1 h-1 rounded-full shrink-0" style={{ background: "var(--fc-red)" }} />
+              <li key={feature} style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fc-muted)" }}>
                 {feature}
               </li>
             ))}
           </ul>
         )}
 
-        <div className="flex-1 min-h-3" />
-
         {href && (
-          <span className="kov-fcard__cta">
+          <span className="kov-fcard__cta shrink-0" style={{ marginTop: "auto" }}>
             En savoir plus
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
               <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
@@ -139,7 +169,11 @@ export function ActivationCard({
   // The whole card is the link when it has a destination, so the pill and
   // the visual share one target rather than competing for the click.
   return href ? (
-    <Link href={href} className="block w-full h-full" aria-label={`${title} — en savoir plus`}>
+    // No aria-label: it would override the link's own content as the
+    // accessible name, which is why neither the body nor the micro-proofs
+    // were announced on any of these cards. The visible "En savoir plus"
+    // pill already supplies the affordance.
+    <Link href={href} className="block w-full h-full">
       {inner}
     </Link>
   ) : (

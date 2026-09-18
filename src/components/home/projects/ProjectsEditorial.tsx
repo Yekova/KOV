@@ -13,7 +13,7 @@ export function ProjectsEditorial() {
       <div className="flex items-center gap-3">
         <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--kov-red)" }} />
         <p className="font-mono text-kov-steel" style={{ fontSize: 11, letterSpacing: "0.22em" }}>
-          01 — NOS PROJETS
+          NOS PROJETS
         </p>
       </div>
 

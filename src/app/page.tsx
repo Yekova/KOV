@@ -74,7 +74,7 @@ export default function Home() {
           canvas itself avoids needing this kind of wrapper at all.) */}
       <HeroScene />
       <ImmersiveShowcase />
-      <ScreenShowcase screenshotSrc="/kov/home/dashboard-showcase.png" />
+      <ScreenShowcase />
       <ExpertiseTeaser />
       <StudioShowcase />
       <WorkGallery />

@@ -53,6 +53,12 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  /* Driven by the card so a narrow viewport can shrink it. It used to be a
+     hardcoded 200px in the JSX regardless of card size, which left 84px for
+     the title, body, proofs and button on a phone — every card was clipped.
+     Do not take the desktop value below ~190px: RadarChart is ~176px tall
+     with its wrapping legend and is the binding constraint. */
+  height: var(--fc-well-h, 200px);
   border-radius: 24px;
   background: var(--fc-well);
   box-shadow:
@@ -75,11 +81,14 @@
   filter:
     drop-shadow(3px 4px 5px rgba(17, 18, 23, 0.13))
     drop-shadow(-2px -2px 4px rgba(255, 255, 255, 0.95));
+  transform: scale(var(--fc-visual-scale, 1));
   transition: transform 460ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* Multiplies the variable rather than replacing it — a bare scale(1.035)
+   here would silently cancel the compact down-scale on hover. */
 .kov-fcard:hover .kov-fcard__visual {
-  transform: scale(1.035);
+  transform: scale(calc(var(--fc-visual-scale, 1) * 1.035));
 }
 
 /* Level 3: the pill. Raised at rest, pressed in on hover - the standard
@@ -128,7 +137,41 @@
   outline-offset: 3px;
 }
 
+/* The micro-proofs arrive with the card, not before it. Only opacity and
+   transform — never height: a state-dependent height would make the card
+   reflow while a scroll-driven transform owns it, and would reopen the
+   clipping question on every frame. The space is reserved permanently. */
+.kov-fcard__proof {
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.kov-fcard--active .kov-fcard__proof {
+  opacity: 1;
+  transform: none;
+}
+
+/* A middot before every term but the first — CSS, not a DOM node, so a
+   screen reader reads a list of three terms and not "STRATÉGIE middot". */
+.kov-fcard__proof li + li::before {
+  content: "·";
+  color: var(--fc-red);
+  margin-right: 8px;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  /* Load-bearing. ActivationWindow's reduced-motion branch renders all six
+     cards WITHOUT an `active` prop, so .kov-fcard--active never appears and
+     the proofs would be invisible forever for these users. */
+  .kov-fcard__proof {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
   .kov-fcard,
   .kov-fcard__well,
   .kov-fcard__visual,

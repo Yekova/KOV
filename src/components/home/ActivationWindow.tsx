@@ -27,7 +27,11 @@ const CARD_REST_HEIGHT = 640;
 // clamped at 1 (i.e. cards 2+ away from active look the same as cards
 // exactly 1 away don't get scaled/blurred further past that point).
 const CARD_WIDTH = 320;
-const CARD_HEIGHT = 500;
+// 530, not 500: the proof line needs ~39px and the card was already ~50px
+// over budget before it (the CTA pill was being eaten by overflow:hidden).
+// Ceiling is ~540 — at a 700px viewport the available area is 574px against
+// CARD_HEIGHT * ACTIVE_SCALE, so anything taller clips during the dive.
+const CARD_HEIGHT = 530;
 const CARD_SPACING = 356;
 // Cards are read as objects now, so they barely shrink and barely blur —
 // the brief's point being that you should still be able to tell what the
@@ -58,36 +62,41 @@ interface ApproachCardData {
 const CARDS: ApproachCardData[] = [
   {
     title: "Une base solide",
+    features: ["Stratégie", "Architecture", "Parcours"],
     body: "Une stratégie claire pour un site qui a du sens.",
     Visual: FoundationStack,
     href: "/expertise#strategie",
   },
   {
     title: "Design sur mesure",
+    features: ["Direction artistique", "Design system", "Identité"],
     body: "Une identité unique qui vous ressemble vraiment.",
     Visual: RadarChart,
     href: "/expertise#design",
   },
   {
     title: "Responsive par nature",
+    features: ["Mobile first", "Touch optimisé", "Layout adaptatif"],
     body: "Une expérience parfaite sur tous les écrans, mobile, tablette, desktop.",
     Visual: DeviceFrames,
     href: "/expertise#developpement",
   },
   {
     title: "Performance durable",
+    features: ["Core Web Vitals", "SEO technique", "Chargement"],
     body: "Des sites rapides, optimisés et pensés pour la croissance.",
-    features: ["Core Web Vitals", "SEO technique", "Chargement ultra-rapide", "Infrastructure fiable"],
     Visual: PerformanceGauge,
     href: "/expertise#systemes",
   },
   {
     title: "Un vrai accompagnement",
+    features: ["Cadrage", "Suivi", "Évolution"],
     body: "À vos côtés, de l'idée aux résultats, et bien au-delà.",
     Visual: JourneyPath,
   },
   {
     title: "Des résultats concrets",
+    features: ["Clarté", "Engagement", "Conversion"],
     body: "Plus de visibilité. Plus d'engagement. Plus d'opportunités.",
     Visual: GrowthBars,
     href: "/#work-gallery",
@@ -128,7 +137,7 @@ export function ActivationWindow() {
   // live resize mid-scroll.
   const [compact] = useState(() => typeof window !== "undefined" && window.innerWidth < 768);
   const cardW = compact ? 228 : CARD_WIDTH;
-  const cardH = compact ? 396 : CARD_HEIGHT;
+  const cardH = compact ? 430 : CARD_HEIGHT;
   const cardGap = compact ? 262 : CARD_SPACING;
 
   // Pins the window (via CSS position:sticky on its wrapper below — the
@@ -239,7 +248,7 @@ export function ActivationWindow() {
         <div ref={entranceRef} className="w-full flex justify-center">
           <div
             ref={cardRef}
-            className="relative w-[92vw] overflow-hidden min-h-[560px] md:min-h-[640px] flex flex-col"
+            className="relative w-[92vw] overflow-hidden min-h-[600px] md:min-h-[680px] flex flex-col"
             style={{
               maxWidth: 1440,
               borderRadius: 28,
@@ -326,6 +335,7 @@ export function ActivationWindow() {
                     {CARDS.map((card, i) => (
                       <div key={card.title} style={{ aspectRatio: "9 / 16" }}>
                         <ActivationCard
+                          compact={compact}
                           number={String(i + 1).padStart(2, "0")}
                           total={CARDS.length}
                           title={card.title}
@@ -350,6 +360,7 @@ export function ActivationWindow() {
                       style={{ left: "50%", top: "50%", width: cardW, height: cardH }}
                     >
                       <ActivationCard
+                        compact={compact}
                         number={String(i + 1).padStart(2, "0")}
                         total={CARDS.length}
                         title={card.title}

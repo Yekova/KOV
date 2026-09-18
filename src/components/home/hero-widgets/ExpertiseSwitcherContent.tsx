@@ -71,7 +71,9 @@ export function ExpertiseSwitcherContent() {
             transition={{ duration: 0.25 }}
             className="text-kov-steel text-[10px] leading-snug"
           >
-            {pillar.tagline}.
+            {/* No trailing period added here: the taglines are full
+                sentences and punctuate themselves. */}
+            {pillar.tagline}
           </motion.p>
         </AnimatePresence>
       </div>

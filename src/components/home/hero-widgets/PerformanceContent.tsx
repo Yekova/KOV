@@ -2,11 +2,20 @@
 
 import { useRef, useState } from "react";
 
-// Explicitly NOT a real analytics claim (spec §14: "si les statistiques ne
-// sont pas réelles, elles doivent rester clairement démonstratives") — the
-// small "Aperçu" tag keeps that honest without cluttering the "Impact" /
-// "+62%" / "Engagement" headline the brief asked for verbatim.
+// This widget used to headline "+62%" under "Impact / Engagement", with an
+// 8px 40%-opacity "Aperçu" tag as its disclaimer. That is not a disclaimer —
+// it is a number a visitor reads as a result KOV has produced for someone,
+// and no such number exists: VALUES below was invented, and the site has no
+// readable analytics at all (see src/app/admin/analytics/page.tsx, which says
+// so outright).
+//
+// The curve stays — it is a shape, not a claim, and the month hover is a real
+// interaction. What is gone is the figure. The same call this codebase
+// already made in ActivationCharts' PerformanceGauge, which prints the word
+// "Optimisé" rather than a fabricated score.
 const MONTHS = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin"];
+// Curve shape only. These drive the SVG path and nothing is printed from
+// them — deliberately, so no one can read a value off the widget.
 const VALUES = [24, 31, 38, 45, 48, 62];
 const POINTS = VALUES.map((v, i) => ({ x: (i / (VALUES.length - 1)) * 100, y: 92 - (v / 62) * 74 }));
 
@@ -59,17 +68,16 @@ export function PerformanceContent() {
       <div className="relative z-10 flex items-start justify-between">
         <p className="flex items-center gap-2 text-kov-steel text-[10px] uppercase tracking-widest">
           <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-kov-red" />
-          Impact
+          Performance
         </p>
-        <span className="text-kov-steel text-[8px] uppercase tracking-widest opacity-40">Aperçu</span>
       </div>
 
       <div className="relative z-10 mt-1">
         <span className="font-display text-kov-bone" style={{ fontSize: "clamp(24px, 2.6vw, 34px)" }}>
-          +{VALUES[activeIndex]}%
+          Mesurée
         </span>
         <p className="text-kov-steel text-[10px] uppercase tracking-widest mt-0.5">
-          Engagement{!isDefault && <span className="text-kov-red"> · {MONTHS[activeIndex]}</span>}
+          Après la mise en ligne{!isDefault && <span className="text-kov-red"> · {MONTHS[activeIndex]}</span>}
         </p>
       </div>
 

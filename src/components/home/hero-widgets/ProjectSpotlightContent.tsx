@@ -41,7 +41,9 @@ export function ProjectSpotlightContent() {
             <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-kov-red" />
             Projet featured
           </p>
-          <span className="text-kov-steel text-[10px] tabular-nums">01 / 07</span>
+          {/* PROJECTS has six entries, not seven, and this widget shows the
+              first of them. The counter said 01 / 07. */}
+          <span className="text-kov-steel text-[10px] tabular-nums">01 / {String(PROJECTS.length).padStart(2, "0")}</span>
         </div>
 
         <div>

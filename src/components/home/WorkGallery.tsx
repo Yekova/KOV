@@ -1,5 +1,6 @@
 import { ProjectsEditorial } from "@/components/home/projects/ProjectsEditorial";
 import { ProjectsGrid } from "@/components/home/projects/ProjectsGrid";
+import { ProjectsProof } from "@/components/home/projects/ProjectsProof";
 
 // The projects section: an editorial column beside an aligned grid of six
 // cards. The background stays the page's own; the only thing added here is
@@ -22,6 +23,13 @@ export function WorkGallery() {
       <div className="relative grid grid-cols-1 lg:grid-cols-[minmax(0,34fr)_minmax(0,66fr)] gap-14 lg:gap-16">
         <ProjectsEditorial />
         <ProjectsGrid />
+      </div>
+
+      {/* The grid shows what exists; this says what it took. Full width under
+          both columns, and it renders only the projects that actually have a
+          story — today two of six. */}
+      <div className="relative">
+        <ProjectsProof />
       </div>
     </section>
   );

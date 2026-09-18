@@ -11,6 +11,23 @@
 
 export type ProjectStatus = "live" | "upcoming" | "invitation";
 
+/** Problème → système → résultat, pour les projets qui ont réellement une
+ *  histoire à raconter.
+ *
+ *  Un objet nullable unique, et non trois champs optionnels : la règle
+ *  d'honnêteté est tout-ou-rien. Un récit à moitié rempli — un problème sans
+ *  résultat — est exactement le rendu bricolé qu'on veut rendre impossible,
+ *  alors le type le rend inexprimable.
+ *
+ *  Aucun chiffre ici tant qu'il n'est pas mesuré et attribuable. Le résultat
+ *  est qualitatif par défaut, même règle que `image` et `href` : rien ne
+ *  prétend exister avant d'exister. */
+export interface ProjectNarrative {
+  problem: string;
+  system: string;
+  result: string;
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -27,6 +44,10 @@ export interface Project {
   image: string | null;
   /** Short line laid over the image. Kept to a few words. */
   tagline: string | null;
+  /** Rendered by ProjectsProof below the grid. Null for anything without a
+   * real story — those entries are simply absent from that band rather than
+   * padded out with a placeholder. */
+  narrative: ProjectNarrative | null;
 }
 
 export const PROJECTS: Project[] = [
@@ -42,6 +63,11 @@ export const PROJECTS: Project[] = [
     href: null,
     image: "/work/kanti-mockup.webp",
     tagline: "Clarté et confiance",
+    narrative: {
+      problem: "Une offre patrimoniale complexe à structurer.",
+      system: "Architecture, design system, responsive, contenu.",
+      result: "Une expérience plus claire, cohérente et évolutive.",
+    },
   },
   {
     id: "02",
@@ -52,7 +78,14 @@ export const PROJECTS: Project[] = [
     caseStudyHref: null,
     href: "/studio",
     image: "/studio/thumbnails/p02.webp",
-    tagline: "Sept salles à parcourir",
+    // Four rooms, not seven: studioNodes.ts defines p01–p07 but only four
+    // carry `available: true` and only four panoramas exist on disk.
+    tagline: "Quatre salles à parcourir",
+    narrative: {
+      problem: "Montrer un studio sans photographier des bureaux.",
+      system: "Panoramas 360°, navigation WebGL, plan interactif.",
+      result: "Une visite qu'on parcourt au lieu d'une page qu'on lit.",
+    },
   },
   {
     id: "03",
@@ -64,6 +97,7 @@ export const PROJECTS: Project[] = [
     href: null,
     image: null,
     tagline: null,
+    narrative: null,
   },
   {
     id: "04",
@@ -75,6 +109,7 @@ export const PROJECTS: Project[] = [
     href: null,
     image: null,
     tagline: null,
+    narrative: null,
   },
   {
     id: "05",
@@ -86,6 +121,7 @@ export const PROJECTS: Project[] = [
     href: null,
     image: null,
     tagline: null,
+    narrative: null,
   },
   {
     // Not a project and not pretending to be one. The network's argument is
@@ -100,5 +136,6 @@ export const PROJECTS: Project[] = [
     href: "/contact",
     image: null,
     tagline: null,
+    narrative: null,
   },
 ];

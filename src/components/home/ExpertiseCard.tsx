@@ -25,7 +25,11 @@ const TITLE_SIZE: Record<ExpertiseCardProps["size"], string> = {
 // transition — a discrete on/off the parent flips per scroll frame's
 // rounded active index, not something scrubbed continuously per pixel.
 export function ExpertiseCard({ pillar, visual, active, size }: ExpertiseCardProps) {
-  const showBody = size !== "sm";
+  // Only the hero tile keeps the long paragraph. Every card now carries a
+  // real promise in `tagline`, so showing `body` on some and not others left
+  // three cards with two text blocks and three with one — the unevenness this
+  // pass exists to fix. `lg` is the one tile with the room for both.
+  const showBody = size === "lg";
 
   return (
     <div
@@ -47,8 +51,11 @@ export function ExpertiseCard({ pillar, visual, active, size }: ExpertiseCardPro
         <p className="text-kov-red font-mono text-xs shrink-0">{pillar.number}</p>
         <div className={size === "wide" ? "min-w-0" : "mt-2"}>
           <p className={`font-display text-kov-bone uppercase ${TITLE_SIZE[size]}`}>{pillar.title}</p>
-          <p className="text-kov-steel text-xs uppercase tracking-wide mt-1">{pillar.tagline}</p>
-          {showBody && size !== "wide" && <p className="text-kov-concrete text-xs leading-relaxed mt-3 line-clamp-3">{pillar.body}</p>}
+          {/* Sentence case, not capitals: these are full sentences now, and
+              "CONNECTER VOTRE SITE AU RESTE DE VOTRE ACTIVITÉ." in 12px
+              tracked capitals is a wall rather than a promise. */}
+          <p className="text-kov-steel text-xs leading-snug mt-1">{pillar.tagline}</p>
+          {showBody && <p className="text-kov-concrete text-xs leading-relaxed mt-3 line-clamp-3">{pillar.body}</p>}
         </div>
       </div>
     </div>

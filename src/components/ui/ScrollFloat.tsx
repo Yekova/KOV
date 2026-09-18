@@ -40,15 +40,32 @@ export function ScrollFloat({
     () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
   );
 
-  const chars = useMemo(
-    () =>
-      children.split("").map((char, index) => (
-        <span className="char" key={index}>
-          {char === " " ? " " : char}
+  // Words, then characters — and the nesting is load-bearing, not tidiness.
+  // Every .char is an inline-block, and a line can break between any two
+  // inline-blocks, so a title longer than one line used to break mid-word.
+  // The only caller's old title fit on one line and hid the defect. Wrapping
+  // each word in an inline-block that cannot break internally fixes it, and
+  // GSAP still queries ".char", so the tween is untouched.
+  //
+  // A \n in the string forces a hard break, which is how a caller controls
+  // where a two-line title splits rather than leaving it to the viewport.
+  const chars = useMemo(() => {
+    let key = 0;
+    return children.split("\n").flatMap((line, lineIndex) => {
+      const words = line.split(" ").map((word, wordIndex) => (
+        <span className="word" key={`w${key++}`}>
+          {word.split("").map((char, charIndex) => (
+            <span className="char" key={`c${charIndex}`}>
+              {char}
+            </span>
+          ))}
+          {wordIndex < line.split(" ").length - 1 && <span className="char">&#160;</span>}
         </span>
-      )),
-    [children]
-  );
+      ));
+      return lineIndex === 0 ? words : [<br key={`b${key++}`} />, ...words];
+    });
+  }, [children]);
+
 
   useEffect(() => {
     if (reducedMotion) return;
