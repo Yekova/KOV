@@ -105,7 +105,7 @@ export function ScreenShowcase() {
 
         <div className="px-6 md:px-12 py-10 md:py-14" style={{ background: "var(--kov-carbon)" }}>
           <div className="hidden md:grid grid-cols-[1fr_auto_1.15fr] items-center pb-5">
-            <p className="text-kov-steel text-[10px] uppercase" style={{ letterSpacing: "0.2em" }}>
+            <p className="text-kov-concrete text-[10px] uppercase" style={{ letterSpacing: "0.2em" }}>
               Site standard
             </p>
             <span aria-hidden="true" />
@@ -125,9 +125,10 @@ export function ScreenShowcase() {
                 className="kov-sysrow grid grid-cols-1 md:grid-cols-[1fr_auto_1.15fr] md:items-center gap-1.5 md:gap-0 py-4 md:py-0"
                 style={{ borderTop: index === 0 ? "none" : "1px solid var(--kov-border)" }}
               >
-                {/* Deliberately inert: no relief, no tracking, dimmed. The
-                    flatness is the argument. */}
-                <span className="kov-sysrow__flat text-kov-steel text-sm md:py-5">{row.standard}</span>
+                {/* Deliberately inert: no surface, no rim, no index, no
+                    capitals. The flatness is the argument — made by what this
+                    side lacks, not by making it hard to read. */}
+                <span className="kov-sysrow__flat text-kov-concrete text-sm md:py-5">{row.standard}</span>
 
                 <span aria-hidden="true" className="hidden md:flex items-center px-7">
                   <span className="kov-sysrow__rule" />

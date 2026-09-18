@@ -53,7 +53,12 @@ const MODULES = [
 // Stays a Server Component — the hover is group-hover: and needs no state.
 export function WorkSpotlight() {
   return (
-    <section id="spotlight" className="px-6 py-32 max-w-[1600px] mx-auto scroll-mt-40">
+    <section id="spotlight" className="relative px-6 py-32 max-w-[1600px] mx-auto scroll-mt-40">
+      {/* See .kov-reading-ground in globals.css: a scrim, not a card. The
+          content below has to be wrapped in its own `relative` element that
+          comes after it in the DOM, or the scrim paints over the text. */}
+      <div aria-hidden="true" className="kov-reading-ground" />
+      <div className="relative">
       <Reveal variant="blur">
         <SectionHeading
           eyebrow="Ce que vous obtenez"
@@ -89,7 +94,7 @@ export function WorkSpotlight() {
                 className={`group flex items-start gap-4 p-6 lg:p-8 transition-colors duration-300 ${
                   span === 2 ? "sm:col-span-2" : ""
                 }`}
-                style={{ background: "rgba(10,10,10,0.55)" }}
+                style={{ background: "rgba(10,10,10,0.86)" }}
               >
                 <Icon
                   size={18}
@@ -99,7 +104,7 @@ export function WorkSpotlight() {
                 />
                 <div className="min-w-0">
                   <h3 className="text-kov-bone text-sm uppercase tracking-wide">{title}</h3>
-                  <p className="text-kov-steel text-xs leading-relaxed mt-1.5">{body}</p>
+                  <p className="text-kov-concrete text-xs leading-relaxed mt-1.5">{body}</p>
                 </div>
               </li>
             ))}
@@ -109,12 +114,13 @@ export function WorkSpotlight() {
               it gives the panel a base and keeps it a single object. */}
           <p
             className="px-6 lg:px-8 py-7 text-kov-concrete text-sm leading-relaxed"
-            style={{ borderTop: "1px solid var(--kov-border)", background: "rgba(10,10,10,0.55)" }}
+            style={{ borderTop: "1px solid var(--kov-border)", background: "rgba(10,10,10,0.86)" }}
           >
             Chaque projet est différent. Le système que nous construisons aussi.
           </p>
         </div>
       </Reveal>
+      </div>
     </section>
   );
 }

@@ -1,16 +1,17 @@
 /* The comparison ladder in ScreenShowcase.tsx.
    Interaction is CSS-only: the rows are inside a GSAP timeline that owns
    their entrance transform, so hover has to touch different properties than
-   the tween does. It only moves the KOV slab on X and dims the standard term
-   — nothing here competes with `y`. */
+   the tween does. It only moves the KOV slab on X and scales the red node —
+   nothing here competes with `y`. */
 
+/* This column used to sit at opacity 0.55, dimming to 0.3 on hover, because
+   "the flatness is the argument". It is — but the argument only lands if the
+   reader can read it, and dimmed steel measured barely 2:1 against the card.
+   The inertness now comes entirely from what the left side LACKS: no surface,
+   no rim, no index, no capitals, no motion. The right side is lit; this one
+   simply is not. Nothing here is hard to see. */
 .kov-sysrow__flat {
-  opacity: 0.55;
-  transition: opacity 400ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.kov-sysrow:hover .kov-sysrow__flat {
-  opacity: 0.3;
+  letter-spacing: 0;
 }
 
 /* The connector: a hairline carrying a single red node. It is the only red
@@ -78,7 +79,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .kov-sysrow__flat,
   .kov-sysrow__node,
   .kov-sysrow__kov {
     transition: none;

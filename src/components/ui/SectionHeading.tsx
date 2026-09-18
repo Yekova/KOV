@@ -71,9 +71,13 @@ export function SectionHeading({
         {title}
       </h2>
 
+      {/* concrete, not steel. --kov-steel is 4.41:1 on #0a0a0a — under the
+          4.5:1 AA floor for text this size, before the animated background
+          lifts it further. Steel stays for the short uppercase eyebrow above,
+          where it is a hierarchy signal on two or three words. */}
       {lede && (
         <p
-          className={`mt-7 text-kov-steel text-sm leading-relaxed ${centered ? "mx-auto" : ""}`}
+          className={`mt-7 text-kov-concrete text-sm leading-relaxed ${centered ? "mx-auto" : ""}`}
           style={{ maxWidth: "54ch" }}
         >
           {lede}

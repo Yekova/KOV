@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { gsap } from "gsap";
 import { NavDropdownPanel } from "@/components/navigation/NavDropdownPanel";
-import { ExpertiseDropdown, StudioDropdown } from "@/components/navigation/NavDropdownContent";
+import { StudioDropdown } from "@/components/navigation/NavDropdownContent";
 
 export interface NavLinkItem {
   href: string;
@@ -14,7 +14,6 @@ export interface NavLinkItem {
 }
 
 const DROPDOWNS: Record<string, { width: number; render: (onNavigate: () => void) => ReactNode }> = {
-  expertise: { width: 480, render: (onNavigate) => <ExpertiseDropdown onNavigate={onNavigate} /> },
   studio: { width: 380, render: (onNavigate) => <StudioDropdown onNavigate={onNavigate} /> },
 };
 

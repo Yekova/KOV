@@ -15,7 +15,7 @@ import { GlassSurface } from "@/components/ui/GlassSurface";
 
 const LINKS: NavLinkItem[] = [
   { href: "/#work-gallery", label: "Projets" },
-  { href: "/expertise", label: "Expertise", dropdownKey: "expertise" },
+  { href: "/#expertise", label: "Expertise" },
   { href: "/journal", label: "Journal" },
   { href: "/studio", label: "Studio", dropdownKey: "studio" },
 ];

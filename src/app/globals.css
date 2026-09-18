@@ -80,6 +80,37 @@ body {
   outline-offset: 3px;
 }
 
+/* Reading ground.
+   LineWaves is a fixed full-screen shader running behind every section of the
+   homepage, and the four sections rebuilt at the bottom of the page put text
+   straight onto it — no card, no panel, nothing between moving lines and a
+   paragraph. That was fine for the sections above, which all sit on real
+   surfaces (the activation window, the comparison card, the project cards).
+
+   The fix is a scrim, not a card: a soft radial that mutes the lines where
+   the text is and fades out long before the section's edges, so it reads as
+   depth of field rather than as another dark panel — "dark cards everywhere"
+   being exactly what the design direction rules out.
+
+   Painting order matters and is easy to get wrong. This element is absolutely
+   positioned with z-index:auto, so it paints in step 8 — ABOVE ordinary
+   in-flow content, which paints in step 4. The content therefore has to be
+   wrapped in its own `relative` element that comes later in the DOM, which is
+   the same arrangement WorkGallery already uses for its rule grid. Do not
+   reach for a negative z-index instead: that would put it in the same band as
+   --z-canvas, competing with the shader itself. */
+.kov-reading-ground {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 78% 62% at 50% 50%,
+    rgba(10, 10, 10, 0.92),
+    rgba(10, 10, 10, 0.6) 56%,
+    transparent 84%
+  );
+}
+
 /* Skip link — the site's first focusable element, visible only once focused.
    A keyboard visitor landing on any page otherwise has to tab past the whole
    nav pill, its dropdowns and the search before reaching the content. */

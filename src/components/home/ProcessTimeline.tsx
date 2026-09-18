@@ -33,7 +33,12 @@ export function ProcessTimeline() {
   const step = PROCESS[active] ?? PROCESS[0];
 
   return (
-    <section id="process" className="px-6 py-32 max-w-[1600px] mx-auto scroll-mt-40">
+    <section id="process" className="relative px-6 py-32 max-w-[1600px] mx-auto scroll-mt-40">
+      {/* See .kov-reading-ground in globals.css: a scrim, not a card. The
+          content below has to be wrapped in its own `relative` element that
+          comes after it in the DOM, or the scrim paints over the text. */}
+      <div aria-hidden="true" className="kov-reading-ground" />
+      <div className="relative">
       <Reveal variant="blur">
         <SectionHeading
           eyebrow="Processus"
@@ -95,7 +100,7 @@ export function ProcessTimeline() {
                   <span
                     aria-hidden="true"
                     className="font-mono text-[11px] tracking-widest transition-colors duration-300"
-                    style={{ color: isActive ? "var(--kov-red)" : "var(--kov-steel)" }}
+                    style={{ color: isActive ? "var(--kov-red)" : "var(--kov-concrete)" }}
                   >
                     {entry.number}
                   </span>
@@ -106,7 +111,7 @@ export function ProcessTimeline() {
                   />
                   <span
                     className="font-display uppercase text-sm transition-colors duration-300"
-                    style={{ color: isActive ? "var(--kov-bone)" : "var(--kov-steel)" }}
+                    style={{ color: isActive ? "var(--kov-bone)" : "var(--kov-concrete)" }}
                   >
                     {entry.title}
                   </span>
@@ -166,14 +171,14 @@ export function ProcessTimeline() {
                   aria-expanded={isOpen}
                   className="w-full flex items-center gap-3 py-3 text-left"
                 >
-                  <span className="font-mono text-[11px] text-kov-steel shrink-0">{entry.number}</span>
+                  <span className="font-mono text-[11px] text-kov-concrete shrink-0">{entry.number}</span>
                   <span
                     className="font-display uppercase text-sm flex-1 transition-colors duration-300"
-                    style={{ color: isOpen ? "var(--kov-bone)" : "var(--kov-steel)" }}
+                    style={{ color: isOpen ? "var(--kov-bone)" : "var(--kov-concrete)" }}
                   >
                     {entry.title}
                   </span>
-                  <span aria-hidden="true" className="text-kov-steel text-lg leading-none shrink-0">
+                  <span aria-hidden="true" className="text-kov-concrete text-lg leading-none shrink-0">
                     {isOpen ? "−" : "+"}
                   </span>
                 </button>
@@ -196,6 +201,7 @@ export function ProcessTimeline() {
             );
           })}
         </ol>
+      </div>
       </div>
     </section>
   );

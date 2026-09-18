@@ -40,7 +40,12 @@ const CONSTATS = [
 // Server Component may render it (same arrangement as src/app/faq/page.tsx).
 export function PhilosophyStatement() {
   return (
-    <section id="philosophy" className="px-6 py-32 max-w-[1600px] mx-auto scroll-mt-40">
+    <section id="philosophy" className="relative px-6 py-32 max-w-[1600px] mx-auto scroll-mt-40">
+      {/* See .kov-reading-ground in globals.css: a scrim, not a card. The
+          content below has to be wrapped in its own `relative` element that
+          comes after it in the DOM, or the scrim paints over the text. */}
+      <div aria-hidden="true" className="kov-reading-ground" />
+      <div className="relative">
       <Reveal variant="blur">
         <SectionHeading
           eyebrow="Constats"
@@ -77,7 +82,7 @@ export function PhilosophyStatement() {
                 fontSize: "clamp(44px, 14vw, 132px)",
                 color: "transparent",
                 WebkitTextStroke:
-                  constat.number === "04" ? "1px rgba(227,30,36,0.5)" : "1px rgba(231,231,229,0.16)",
+                  constat.number === "04" ? "1px rgba(227,30,36,0.62)" : "1px rgba(231,231,229,0.26)",
               }}
             >
               {constat.number}
@@ -90,12 +95,13 @@ export function PhilosophyStatement() {
               {constat.title}
             </h3>
 
-            <p className="text-kov-steel text-sm leading-relaxed" style={{ maxWidth: "46ch" }}>
+            <p className="text-kov-concrete text-sm leading-relaxed" style={{ maxWidth: "46ch" }}>
               {constat.body}
             </p>
           </Reveal>
         ))}
       </ol>
+      </div>
     </section>
   );
 }

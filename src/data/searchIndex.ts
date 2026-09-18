@@ -3,8 +3,6 @@
 // enough that this goes stale, generate it from the actual page content
 // instead of hand-maintaining it further.
 
-import { SERVICES } from "@/data/services";
-
 export interface SearchItem {
   title: string;
   category: "Expertise" | "Studio" | "Projets" | "Contact";
@@ -17,60 +15,54 @@ export const searchIndex: SearchItem[] = [
   {
     title: "Stratégie",
     category: "Expertise",
-    href: "/expertise",
+    href: "/#expertise",
     description: "Positionnement, structure et parcours utilisateurs, décidés avant de designer quoi que ce soit.",
   },
   {
     title: "Design",
     category: "Expertise",
-    href: "/expertise",
+    href: "/#expertise",
     description: "Des interfaces pensées comme de l'architecture. La structure d'abord, le style ensuite.",
   },
   {
     title: "Développement",
     category: "Expertise",
-    href: "/expertise",
+    href: "/#expertise",
     description: "Du code de production dès le premier jour, conçu pour tenir face au vrai trafic.",
   },
   {
     title: "Motion",
     category: "Expertise",
-    href: "/expertise",
+    href: "/#expertise",
     description: "Un mouvement qui explique, jamais qui joue un rôle.",
   },
   {
     title: "Systèmes",
     category: "Expertise",
-    href: "/expertise",
+    href: "/#expertise",
     description: "Une architecture numérique conçue pour évoluer.",
   },
   {
     title: "Intégration",
     category: "Expertise",
-    href: "/expertise",
+    href: "/#expertise",
     description: "Outils, données et automatisations, connectés.",
     keywords: ["crm", "automatisation", "api"],
   },
   {
     title: "Notre processus",
     category: "Expertise",
-    href: "/expertise",
+    href: "/#expertise",
     description: "Sept étapes : Découvrir, Structurer, Design, Développer, Motion, Lancer, Évoluer.",
     keywords: ["comment travaillez-vous", "processus", "méthodologie"],
   },
   {
     title: "Ce qu'on construit",
     category: "Expertise",
-    href: "/expertise",
+    href: "/#expertise",
     description: "Sites corporate, sites immersifs, applications web, dashboards, espaces clients, systèmes numériques.",
     keywords: ["services", "quels services proposez-vous", "crm", "application web"],
   },
-  ...SERVICES.map((service) => ({
-    title: service.title,
-    category: "Expertise" as const,
-    href: `/expertise/${service.slug}`,
-    description: service.tagline,
-  })),
   {
     title: "FAQ",
     category: "Contact",

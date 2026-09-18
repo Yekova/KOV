@@ -7,13 +7,7 @@ KOV pense chaque projet comme un seul système : stratégie, design, développem
 ## Pages
 
 - [Accueil](https://kov-agency.site/): présentation du studio et de son approche.
-- [Expertise](https://kov-agency.site/expertise): les six disciplines (stratégie, design, développement, motion, systèmes, intégration) et le processus en sept étapes.
-- [Sites corporate](https://kov-agency.site/expertise/sites-corporate)
-- [Sites immersifs](https://kov-agency.site/expertise/sites-immersifs)
-- [Applications web](https://kov-agency.site/expertise/applications-web)
-- [Dashboards](https://kov-agency.site/expertise/dashboards)
-- [Espaces clients](https://kov-agency.site/expertise/espaces-clients)
-- [Systèmes numériques](https://kov-agency.site/expertise/systemes-numeriques)
+- [Expertise, processus et prestations](https://kov-agency.site/#expertise) : les six disciplines, le processus en sept étapes et ce que comprend un projet — désormais sur la page d'accueil, l'ancienne page /expertise ayant été retirée.
 - [Studio](https://kov-agency.site/studio): la philosophie et les principes du studio.
 - [Journal](https://kov-agency.site/journal): études de cas et notes de studio.
 - [FAQ](https://kov-agency.site/faq): réponses aux questions fréquentes (délais, processus, budget, maintenance).

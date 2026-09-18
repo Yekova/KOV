@@ -44,8 +44,11 @@ const LEFT_COLUMN = (
       le réel par le digital.
     </p>
     <div className="mt-8 flex flex-col items-start gap-3">
-      <Button variant="primary" href="/expertise">
-        Découvrir nos expertises →
+      {/* Pointed at /expertise, which no longer exists. The section it now
+          opens is the one that answers the question this column raises —
+          what a project with KOV actually includes. */}
+      <Button variant="primary" href="/#spotlight">
+        Ce que vous obtenez →
       </Button>
       <Button variant="secondary" href="/contact">
         Parler à l&apos;équipe

@@ -1,14 +1,22 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/Button";
-import { PILLARS } from "@/data/expertisePillars";
 
 const NAV_LINKS = [
   { href: "/", label: "Accueil" },
-  { href: "/expertise", label: "Expertise" },
   { href: "/studio", label: "Studio" },
   { href: "/journal", label: "Journal" },
   { href: "/contact", label: "Contact" },
+];
+
+// The homepage sections that carry what /expertise used to. Real anchors,
+// four distinct destinations — the previous column listed the six pillars,
+// which after the page's removal would all have resolved to one.
+const APPROACH_LINKS = [
+  { href: "/#expertise", label: "Nos expertises" },
+  { href: "/#process", label: "Notre processus" },
+  { href: "/#spotlight", label: "Ce que vous obtenez" },
+  { href: "/#work-gallery", label: "Nos projets" },
 ];
 
 const RESOURCE_LINKS = [
@@ -148,12 +156,12 @@ export function Footer({ isHome = false }: { isHome?: boolean }) {
         </div>
 
         <div>
-          <p className="text-kov-steel text-xs uppercase tracking-widest mb-4">Expertise</p>
+          <p className="text-kov-steel text-xs uppercase tracking-widest mb-4">Notre approche</p>
           <ul className="space-y-3 list-none">
-            {PILLARS.map((pillar) => (
-              <li key={pillar.slug}>
-                <Link href={`/expertise#${pillar.slug}`} className="text-kov-bone text-sm hover:text-kov-red transition-colors">
-                  {pillar.title}
+            {APPROACH_LINKS.map((link) => (
+              <li key={link.href}>
+                <Link href={link.href} className="text-kov-bone text-sm hover:text-kov-red transition-colors">
+                  {link.label}
                 </Link>
               </li>
             ))}

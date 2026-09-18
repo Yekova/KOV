@@ -36,7 +36,7 @@ export function ProjectsProof() {
       <div className="mt-20 pt-14 border-t" style={{ borderColor: "var(--kov-border)" }}>
         <div className="flex items-center gap-3">
           <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--kov-red)" }} />
-          <p className="font-mono text-kov-steel" style={{ fontSize: 11, letterSpacing: "0.22em" }}>
+          <p className="font-mono text-kov-concrete" style={{ fontSize: 11, letterSpacing: "0.22em" }}>
             LA MÉTHODE, SUR UN CAS RÉEL
           </p>
         </div>
@@ -47,7 +47,7 @@ export function ProjectsProof() {
               <h3 className="font-display text-kov-bone uppercase" style={{ fontSize: 19, letterSpacing: "-0.01em" }}>
                 {project.name}
               </h3>
-              <p className="text-kov-steel text-[11px] uppercase tracking-widest mt-1.5">{project.category}</p>
+              <p className="text-kov-concrete text-[11px] uppercase tracking-widest mt-1.5">{project.category}</p>
 
               {/* <dl> is the correct element for label→value pairs and is
                   well supported by assistive tech. Always-visible real HTML

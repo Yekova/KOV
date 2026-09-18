@@ -14,7 +14,7 @@ export const SITE_SECTIONS = [
     image: "/kov/menu/atrium-brutaliste.jpg",
   },
   {
-    href: "/expertise",
+    href: "/#expertise",
     label: "Expertise",
     description: "Stratégie, design, développement, motion, systèmes, intégration.",
     image: "/kov/menu/bureau-moderne.jpg",

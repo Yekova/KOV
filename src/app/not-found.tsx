@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 };
 
 const SUGGESTIONS = [
-  { href: "/expertise", label: "Expertise", hint: "Ce qu'on construit" },
+  { href: "/#expertise", label: "Expertise", hint: "Ce qu'on construit" },
   { href: "/studio", label: "Studio", hint: "La visite en 360°" },
   { href: "/journal", label: "Journal", hint: "Ce qu'on publie" },
   { href: "/faq", label: "FAQ", hint: "Les questions fréquentes" },

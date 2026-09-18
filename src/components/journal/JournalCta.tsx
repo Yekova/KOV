@@ -11,7 +11,7 @@ export function JournalCta() {
           <Button href="/contact" variant="primary">
             Prendre rendez-vous
           </Button>
-          <Button href="/expertise" variant="secondary">
+          <Button href="/#expertise" variant="secondary">
             Voir nos expertises
           </Button>
         </div>

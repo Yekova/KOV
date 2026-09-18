@@ -21,7 +21,12 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 // is what keeps the CTAs clear of that band — trim it and they drift into it.
 export function ClosingCta() {
   return (
-    <section id="contact" className="px-6 py-40 md:py-56 max-w-[1600px] mx-auto scroll-mt-40">
+    <section id="contact" className="relative px-6 py-40 md:py-56 max-w-[1600px] mx-auto scroll-mt-40">
+      {/* See .kov-reading-ground in globals.css: a scrim, not a card. The
+          content below has to be wrapped in its own `relative` element that
+          comes after it in the DOM, or the scrim paints over the text. */}
+      <div aria-hidden="true" className="kov-reading-ground" />
+      <div className="relative">
       <Reveal variant="blur">
         <div className="max-w-[1000px] mx-auto">
           <SectionHeading
@@ -61,6 +66,7 @@ export function ClosingCta() {
           </div>
         </div>
       </Reveal>
+      </div>
     </section>
   );
 }

@@ -9,6 +9,13 @@ const nextConfig: NextConfig = {
       { source: "/cgv", destination: "/legal/cgv", permanent: true },
       { source: "/terms", destination: "/legal/conditions-utilisation", permanent: true },
       { source: "/privacy", destination: "/legal/confidentialite", permanent: true },
+      // /expertise and its six service pages were removed — the homepage now
+      // carries that content across #expertise, #process and #spotlight.
+      // Both were indexed and linked from the sitemap, so they redirect
+      // rather than 404. The fragment is for humans with a bookmark; Google
+      // only sees the redirect to "/", which is what we want.
+      { source: "/expertise", destination: "/#expertise", permanent: true },
+      { source: "/expertise/:slug", destination: "/#expertise", permanent: true },
     ];
   },
   experimental: {
