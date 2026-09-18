@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/Button";
 import { KovCTA } from "@/components/ui/KovCTA";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { SectionVeil } from "@/components/home/SectionVeil";
 
 // The end of the page, and the half of "peak-end" that the homepage was
 // missing entirely — this section used to render the single word "Contact".
@@ -22,10 +23,12 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 export function ClosingCta() {
   return (
     <section id="contact" className="relative px-6 py-40 md:py-56 max-w-[1600px] mx-auto scroll-mt-40">
-      {/* See .kov-reading-ground in globals.css: a scrim, not a card. The
-          content below has to be wrapped in its own `relative` element that
-          comes after it in the DOM, or the scrim paints over the text. */}
-      <div aria-hidden="true" className="kov-reading-ground" />
+      {/* Black ground with a cursor-lit hole in it — see SectionVeil. It
+          replaces the radial scrim that was here: an opaque block reads
+          better behind text, and the halo gives back a glimpse of the
+          animated background it covers. The content below must stay inside
+          its own `relative` wrapper, or the veil paints over it. */}
+      <SectionVeil />
       <div className="relative">
       <Reveal variant="blur">
         <div className="max-w-[1000px] mx-auto">

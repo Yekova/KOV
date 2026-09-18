@@ -1,0 +1,61 @@
+/* The veil in SectionVeil.tsx. See that file for why it carries no z-index. */
+
+.kov-veil {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+
+  /* Fades in at the top and out at the bottom so the black block joins the
+     page rather than being pasted onto it. The stops are deliberately deep —
+     the whole middle of the section is solid, and only the last ~15% at each
+     end is doing the blending. */
+  background: linear-gradient(
+    to bottom,
+    rgba(10, 10, 10, 0) 0%,
+    rgba(10, 10, 10, 0.97) 15%,
+    rgba(10, 10, 10, 0.97) 85%,
+    rgba(10, 10, 10, 0) 100%
+  );
+
+  --halo-x: -9999px;
+  --halo-y: -9999px;
+  --halo-r: 190px;
+}
+
+/* The hole, and the reason it is a mask rather than a second gradient laid
+   on top: nothing else can *subtract* the veil to let the shader behind the
+   page show through.
+
+   Mask alpha is "how much of the veil survives". 0.42 at the centre, not 0:
+   a full hole puts a moving shader directly behind running text wherever the
+   cursor is, which is exactly the readability problem the black is here to
+   solve. A glimpse, not a window. That number and --halo-r are the two dials
+   if it reads too strong or too weak.
+
+   Only applied once the section is on screen and the pointer is being
+   tracked (kov-veil--live). Before that the veil is plain black, which is
+   also what a touch device and a reduced-motion visitor get permanently. */
+.kov-veil--live {
+  -webkit-mask-image: radial-gradient(
+    circle var(--halo-r) at var(--halo-x) var(--halo-y),
+    rgba(0, 0, 0, 0.42) 0%,
+    rgba(0, 0, 0, 0.74) 42%,
+    rgba(0, 0, 0, 1) 100%
+  );
+  mask-image: radial-gradient(
+    circle var(--halo-r) at var(--halo-x) var(--halo-y),
+    rgba(0, 0, 0, 0.42) 0%,
+    rgba(0, 0, 0, 0.74) 42%,
+    rgba(0, 0, 0, 1) 100%
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Belt and braces: the component already declines to attach its listener,
+     so .kov-veil--live is never added. This makes the intent explicit for
+     anyone reading the stylesheet on its own. */
+  .kov-veil--live {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+}
