@@ -6,6 +6,7 @@ import { Canvas } from "@react-three/fiber";
 import { animate } from "framer-motion";
 import * as THREE from "three";
 import { StudioIntro } from "@/components/studio/StudioIntro";
+import { StudioIntroFlight } from "@/components/studio/StudioIntroFlight";
 import { StudioHUD } from "@/components/studio/StudioHUD";
 import { StudioCanvasContent } from "@/components/studio/StudioCanvasContent";
 import { StudioNavigationOverlay, NAV_COVER_MS } from "@/components/studio/StudioNavigationOverlay";
@@ -49,7 +50,7 @@ const StudioMap3D = dynamic(() => import("@/components/studio/map/StudioMap3D").
 // spec's suggested six, but it maps to the same real UI states without a
 // phase that never has distinct rendering. transitioning still fully
 // blocks input, same guarantee (studio spec §31).
-type EnginePhase = "intro" | "revealing" | "exploring" | "transitioning" | "error";
+type EnginePhase = "intro" | "flying" | "revealing" | "exploring" | "transitioning" | "error";
 
 // Entry reveal. Shorter than the old 1200ms: it used to animate a
 // full-screen CSS blur on the live WebGL canvas, which needs a real hold to
@@ -409,6 +410,13 @@ function StudioExperienceInner() {
 
   function handleEnter() {
     if (!texture) return;
+    // The descent sits between the button and the room. The panorama is
+    // already decoded by this point — `ready` gates the button on it — so
+    // the flight is staging, never a loading screen wearing a costume.
+    setPhase("flying");
+  }
+
+  function handleFlightDone() {
     setPhase("revealing");
     timersRef.current.push(setTimeout(() => setPhase("exploring"), REVEAL_DURATION_MS));
   }
@@ -638,13 +646,18 @@ function StudioExperienceInner() {
         </Canvas>
       </div>
 
+      {phase === "flying" && <StudioIntroFlight onDone={handleFlightDone} />}
+
       {(phase === "intro" || phase === "revealing") && (
         <StudioIntro
           onEnter={handleEnter}
           ready={introReady}
           loadProgress={loadProgress}
           totalRooms={STUDIO_NODE_ORDER.length}
-          backdropSrc={`/studio/thumbnails/${STUDIO_ENTRY_NODE_ID}-blur.webp`}
+          // The flight's own first frame, not a blur of the entry room: this
+          // screen hands straight over to that video, and sharing the image
+          // makes the handover a frame that starts moving rather than a cut.
+          backdropSrc="/studio/intro/flight-poster.webp"
           roomCode={STUDIO_NODES[STUDIO_ENTRY_NODE_ID].room}
           roomName={STUDIO_NODES[STUDIO_ENTRY_NODE_ID].name}
           revealing={phase === "revealing"}

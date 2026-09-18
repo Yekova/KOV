@@ -74,13 +74,21 @@ export const STUDIO_NODES: Record<string, StudioNode> = {
     subtitle: "Entrée du studio",
     description: "Un seuil entre les idées et le réel. Le Portal vous accueille dans l'univers KOV, une expérience immersive au cœur de la création digitale.",
     panorama: "/studio/panoramas/p01.webp",
-    // The texture's horizontal center already frames the lit passage/arch
-    // — the natural "face forward" direction — so yaw 0 needs no offset.
-    // The panorama's seam (±180° longitude) falls at the texture's left/
-    // right edges, i.e. directly behind this orientation, well away from
-    // the passage that draws the eye on arrival.
-    initialYaw: 0,
-    initialPitch: 0,
+    // Arrival faces the KOV letters on the reception wall, not the lit
+    // passage at the texture's centre.
+    //
+    // Derived, not eyeballed: the lettering is centred at x ≈ 1775 of the
+    // 6144px panorama, and the texture's horizontal centre is yaw 0 (the
+    // convention this file already follows), so the offset is
+    // (1775/6144 − 0.5) × 2π = −1.33 rad ≈ −76°, i.e. to the left. Pitch
+    // lifts a little for the same reason: the sign sits above eye level, at
+    // v ≈ 0.44 rather than the horizon's 0.5.
+    //
+    // The passage to P02 is still straight ahead at yaw 0 — its hotspot did
+    // not move — so finding it now means turning right, which is the whole
+    // point: you land on the mark, then go looking.
+    initialYaw: -1.33,
+    initialPitch: 0.17,
     zoomEnabled: true,
     available: true,
     connections: [

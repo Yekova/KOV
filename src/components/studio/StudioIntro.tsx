@@ -47,6 +47,31 @@ const LOADING_STAGES = [
 
 const EASE_OUT = [0.22, 1, 0.36, 1] as const;
 
+// The loading screen is in the palette of the flight video's first frame,
+// sampled from the file rather than guessed: a sea of white cloud under a
+// pale blue sky. Every colour below is a real pixel out of that frame.
+//
+// It matters because this screen hands straight over to the video. Cutting
+// from a near-black card to a white sky would be a flash in the face at the
+// exact moment the experience is meant to open; matching them means the
+// video simply starts moving.
+//
+// Re-pointing the tokens rather than rewriting every class is the same
+// device ActivationCard uses to invert its six SVG charts: globals.css
+// declares the palette with `@theme inline`, so `text-kov-bone` compiles to
+// `color: var(--kov-bone)` and redefining it here cascades through the whole
+// subtree. --kov-red is deliberately untouched — it is the one colour that
+// reads on both grounds.
+const SKY_TOKENS = {
+  "--kov-bone": "#1b2733",
+  "--kov-steel": "#5a6b7a",
+  "--kov-concrete": "#3d4b59",
+  "--glass-bg": "linear-gradient(160deg, rgba(255,255,255,0.74), rgba(255,255,255,0.52))",
+  "--glass-border": "rgba(27,39,51,0.16)",
+  "--glass-shadow-full":
+    "inset 0 1px 0 rgba(255,255,255,0.9), inset 0 0 0 1px rgba(255,255,255,0.35), 0 18px 50px rgba(52,73,94,0.22)",
+} as React.CSSProperties;
+
 // The very first thing /studio shows — no marketing hero, just a single
 // card over a real, heavily blurred glimpse of the room being prepared.
 // `ready` gates its two states: the panorama loads underneath while this is
@@ -65,7 +90,7 @@ export function StudioIntro({
   return (
     <motion.div
       className="absolute inset-0 flex flex-col items-center justify-center gap-7 overflow-hidden px-6"
-      style={{ background: "#050505", zIndex: "var(--z-modal)" as unknown as number }}
+      style={{ ...SKY_TOKENS, background: "#c5d1d9", zIndex: "var(--z-modal)" as unknown as number }}
       animate={{ opacity: revealing ? 0 : 1, scale: revealing ? 1.015 : 1 }}
       transition={{ duration: revealDurationMs / 1000, ease: EASE_OUT }}
     >
@@ -81,13 +106,13 @@ export function StudioIntro({
           // edges an upscale leaves behind.
           style={{ transform: "scale(1.08)" }}
         />
+        {/* A pale scrim rather than the dark one this used to carry: enough
+            to settle the cloud detail under the card without washing the sky
+            out. The red radial that was here is gone — a red glow over a
+            white sky reads as a colour cast, not as an accent. */}
         <div
           className="absolute inset-0"
-          style={{ background: "radial-gradient(60% 50% at 72% 38%, rgba(227,30,36,0.2), transparent 72%)" }}
-        />
-        <div
-          className="absolute inset-0"
-          style={{ background: "linear-gradient(180deg, rgba(5,5,5,0.55), rgba(5,5,5,0.78))" }}
+          style={{ background: "linear-gradient(180deg, rgba(232,238,243,0.30), rgba(186,199,211,0.58))" }}
         />
       </div>
 
@@ -177,7 +202,7 @@ function LoadingState({ loadProgress }: { loadProgress: number }) {
           <span className="text-kov-steel text-sm ml-0.5">%</span>
         </p>
       </div>
-      <div className="h-[3px] w-full overflow-hidden" style={{ background: "rgba(255,255,255,0.09)", borderRadius: 2 }}>
+      <div className="h-[3px] w-full overflow-hidden" style={{ background: "rgba(27,39,51,0.13)", borderRadius: 2 }}>
         <div
           className="h-full"
           style={{
