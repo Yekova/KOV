@@ -82,10 +82,20 @@ interface StudioTourProps {
 // fails to cut its hole shows the visitor a blurred smear where the point
 // was supposed to be. Four rectangles work everywhere.
 export function StudioTour({ onClose }: StudioTourProps) {
-  // Resolved once, at mount: a step whose control isn't in the DOM has
+  // Resolved once, at mount: a step whose control isn't on screen has
   // nothing to point at, so it isn't part of this tour.
+  //
+  // Presence in the DOM is not enough. Several controls are display:none
+  // below md — hand tracking wants a webcam, and the room strip starts
+  // collapsed on a phone — and a hidden element still answers
+  // querySelector while its rect is all zeros, which would put the
+  // highlight and its card in the top-left corner pointing at nothing.
   const [steps] = useState(() =>
-    TOUR_STEPS.filter((step) => !step.target || document.querySelector(`[data-tour="${step.target}"]`))
+    TOUR_STEPS.filter((step) => {
+      if (!step.target) return true;
+      const el = document.querySelector(`[data-tour="${step.target}"]`);
+      return Boolean(el && el.getBoundingClientRect().width > 0);
+    })
   );
   const [index, setIndex] = useState(0);
   const [measurement, setMeasurement] = useState<Measurement>({ rect: null, vw: 0, vh: 0 });

@@ -22,7 +22,7 @@ import { Nav } from "@/components/navigation/Nav";
 import { StudioTour } from "@/components/studio/StudioTour";
 import { StudioDiagnosticsPanel } from "@/components/studio/StudioDiagnosticsPanel";
 import { initDiagnostics, diag, registerRendererProbe } from "@/lib/studioDiagnostics";
-import { DEFAULT_FOV, type CameraState } from "@/components/studio/CameraController";
+import { DEFAULT_FOV, MAX_FOV, type CameraState } from "@/components/studio/CameraController";
 import { GlobalMenuProvider, useGlobalMenu } from "@/components/layout/GlobalMenuContext";
 import { GlobalOverviewMenu } from "@/components/layout/GlobalOverviewMenu";
 import {
@@ -32,6 +32,7 @@ import {
   type StudioArtwork,
   type StudioInfoHotspot,
 } from "@/config/studio/studioNodes";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 // The HUD map is a second WebGL scene — ~1 500 lines of building geometry
 // plus drei's OrbitControls/Environment/ContactShadows on top of it — and it
@@ -182,6 +183,22 @@ function StudioExperienceInner() {
     return null;
   });
   const [handTrackingEnabled, setHandTrackingEnabled] = useState(false);
+  // A phone gets the widest view the engine allows, and no zoom at all.
+  //
+  // Two reasons, and the second is the one that matters. A narrow field of
+  // view on a 390px screen is claustrophobic — `fov` is the vertical angle,
+  // and a portrait phone is already narrow horizontally, so the room only
+  // reads if the vertical opens right up. And pinch-to-zoom competes with
+  // the one-finger drag that turns the view: on a touch screen those two
+  // gestures are close enough that the zoom mostly fires by accident.
+  const isPhone = useMediaQuery("(max-width: 767px)");
+  const viewFov = isPhone ? MAX_FOV : DEFAULT_FOV;
+  useEffect(() => {
+    // Covers the first paint and the rotation that follows it. Assigning to
+    // the ref rather than to state: CameraController damps toward this value
+    // every frame, so the change reads as a move rather than a jump.
+    cameraStateRef.current.fov = viewFov;
+  }, [viewFov]);
   const [mapExpanded, setMapExpanded] = useState(false);
   // A WebGL context can be taken away from the page at any moment — a
   // driver reset, GPU memory pressure, the browser's GPU process being
@@ -457,7 +474,7 @@ function StudioExperienceInner() {
           setCurrentNodeId(targetId);
           cameraStateRef.current.yaw = targetNode.initialYaw;
           cameraStateRef.current.pitch = targetNode.initialPitch;
-          cameraStateRef.current.fov = DEFAULT_FOV;
+          cameraStateRef.current.fov = viewFov;
           setPhase("exploring");
 
           // Two frames, deliberately: the first lets React commit the new
@@ -483,7 +500,7 @@ function StudioExperienceInner() {
           setPhase("exploring");
         });
     },
-    [phase, currentNode, reducedMotion]
+    [phase, currentNode, reducedMotion, viewFov]
   );
 
   const handleSelectArtwork = useCallback((artwork: StudioArtwork) => {
@@ -609,6 +626,7 @@ function StudioExperienceInner() {
               domElement={canvasEl}
               cameraStateRef={cameraStateRef}
               controlsEnabled={controlsEnabled}
+              zoomAllowed={!isPhone}
               reducedMotion={reducedMotion}
               debug={DEBUG}
               onDragStateChange={setDragging}
@@ -646,8 +664,6 @@ function StudioExperienceInner() {
             onToggleMenu={toggleMenu}
             menuOpen={menuOpen}
             cameraStateRef={cameraStateRef}
-            handTrackingEnabled={handTrackingEnabled}
-            onToggleHandTracking={() => setHandTrackingEnabled((v) => !v)}
             onReplayTour={() => setTourState("open")}
           />
           {/* Sitewide (any room), opt-in only — writes into the same
@@ -659,7 +675,7 @@ function StudioExperienceInner() {
           <HandTrackingController
             cameraStateRef={cameraStateRef}
             enabled={handTrackingEnabled}
-            zoomEnabled={currentNode.zoomEnabled}
+            zoomEnabled={currentNode.zoomEnabled && !isPhone}
           />
           {/* Room-scoped, not sitewide — the Lounge (p06) is the one room
               this was actually asked for. Self-positioned bottom-right
@@ -699,7 +715,10 @@ function StudioExperienceInner() {
             // lets a track carry on playing from one room into the next.
             trailing={musicDisabled ? undefined : <StudioMusicPlayer />}
           />
-          <StudioFooter />
+          <StudioFooter
+            handTrackingEnabled={handTrackingEnabled}
+            onToggleHandTracking={() => setHandTrackingEnabled((v) => !v)}
+          />
         </>
       )}
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { Hand } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const CLOCK_FORMATTER = new Intl.DateTimeFormat("fr-FR", {
@@ -47,7 +48,20 @@ function useFullscreen() {
 // monde plus créatif") — a live Paris clock (ticks client-side, avoided
 // rendering a server-mismatched time by starting at null and filling in
 // on mount) and a real Fullscreen API toggle, not a decorative icon.
-export function StudioFooter() {
+interface StudioFooterProps {
+  handTrackingEnabled: boolean;
+  onToggleHandTracking: () => void;
+}
+
+// Hand tracking lives here now rather than in the HUD's top row.
+//
+// Two reasons. It was one of five items on a single flex line that measured
+// ~420px on a 390px phone, and it is the only one of the five that needs a
+// webcam — so it belongs with the other "how you are viewing this" control,
+// fullscreen, not with the room's own chrome. And it is hidden below md: it
+// would want the front camera of the phone you are holding in the hand it
+// is trying to watch.
+export function StudioFooter({ handTrackingEnabled, onToggleHandTracking }: StudioFooterProps) {
   const time = useParisClock();
   const { isFullscreen, toggle } = useFullscreen();
 
@@ -63,6 +77,23 @@ export function StudioFooter() {
 
       <div className="flex items-center gap-4">
         <p className="text-kov-steel text-[10px] uppercase tracking-widest font-mono">{time ? `Paris · ${time}` : "Paris"}</p>
+        <button
+          type="button"
+          data-tour="hand"
+          onClick={onToggleHandTracking}
+          aria-pressed={handTrackingEnabled}
+          aria-label={
+            handTrackingEnabled ? "Désactiver le contrôle par la main" : "Activer le contrôle par la main (caméra)"
+          }
+          className="hidden md:flex items-center justify-center w-8 h-8 transition-colors"
+          style={{
+            borderRadius: "var(--radius-pill)",
+            background: handTrackingEnabled ? "var(--kov-red)" : "transparent",
+            color: handTrackingEnabled ? "var(--kov-white)" : "var(--kov-bone)",
+          }}
+        >
+          <Hand size={15} />
+        </button>
         <button
           type="button"
           data-tour="fullscreen"

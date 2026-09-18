@@ -3,6 +3,7 @@
 import type { RefObject } from "react";
 import type * as THREE from "three";
 import { PanoramaSphere } from "@/components/studio/PanoramaSphere";
+import { StudioFloorMark } from "@/components/studio/StudioFloorMark";
 import { CameraController, type CameraState } from "@/components/studio/CameraController";
 import { HotspotLayer } from "@/components/studio/HotspotLayer";
 import { ArtworkHotspotLayer } from "@/components/studio/ArtworkHotspotLayer";
@@ -16,6 +17,9 @@ interface StudioCanvasContentProps {
   domElement: HTMLElement | null;
   cameraStateRef: RefObject<CameraState>;
   controlsEnabled: boolean;
+  /** False forces zoom off whatever the room allows — a phone locks the
+   * field of view wide open (see StudioExperience). */
+  zoomAllowed?: boolean;
   reducedMotion: boolean;
   debug: boolean;
   onDragStateChange: (dragging: boolean) => void;
@@ -33,6 +37,7 @@ export function StudioCanvasContent({
   domElement,
   cameraStateRef,
   controlsEnabled,
+  zoomAllowed = true,
   reducedMotion,
   debug,
   onDragStateChange,
@@ -43,13 +48,16 @@ export function StudioCanvasContent({
   return (
     <>
       {texture && <PanoramaSphere texture={texture} />}
+      {/* Under the visitor in every room — the nadir is the one part of an
+          equirectangular panorama that always needs covering. */}
+      {texture && <StudioFloorMark />}
 
       <CameraController
         domElement={domElement}
         stateRef={cameraStateRef}
         enabled={controlsEnabled}
         reducedMotion={reducedMotion}
-        zoomEnabled={node.zoomEnabled}
+        zoomEnabled={node.zoomEnabled && zoomAllowed}
         onDragStateChange={onDragStateChange}
       />
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type RefObject } from "react";
-import { Hand, HelpCircle } from "lucide-react";
+import { HelpCircle } from "lucide-react";
 import { StudioCompass } from "@/components/studio/StudioCompass";
 import type { CameraState } from "@/components/studio/CameraController";
 
@@ -12,8 +12,6 @@ interface StudioHUDProps {
   onToggleMenu: () => void;
   menuOpen: boolean;
   cameraStateRef: RefObject<CameraState>;
-  handTrackingEnabled: boolean;
-  onToggleHandTracking: () => void;
   /** Re-opens the guided tour. It runs itself once per visitor; this is how
    * anyone gets it back afterwards. */
   onReplayTour: () => void;
@@ -33,8 +31,6 @@ export function StudioHUD({
   onToggleMenu,
   menuOpen,
   cameraStateRef,
-  handTrackingEnabled,
-  onToggleHandTracking,
   onReplayTour,
 }: StudioHUDProps) {
   const [showHint, setShowHint] = useState(
@@ -74,26 +70,6 @@ export function StudioHUD({
             Mode exploration · {totalRooms} salles
           </span>
         </div>
-        <button
-          type="button"
-          data-tour="hand"
-          onClick={onToggleHandTracking}
-          aria-pressed={handTrackingEnabled}
-          aria-label={
-            handTrackingEnabled ? "Désactiver le contrôle par la main" : "Activer le contrôle par la main (caméra)"
-          }
-          className="pointer-events-auto flex items-center justify-center w-8 h-8 transition-colors"
-          style={{
-            borderRadius: "var(--radius-pill)",
-            background: handTrackingEnabled ? "var(--kov-red)" : "var(--glass-bg)",
-            backdropFilter: "blur(var(--glass-blur)) saturate(180%)",
-            WebkitBackdropFilter: "blur(var(--glass-blur)) saturate(180%)",
-            border: "1px solid var(--glass-border)",
-            color: handTrackingEnabled ? "var(--kov-white)" : "var(--kov-bone)",
-          }}
-        >
-          <Hand size={14} />
-        </button>
         <button
           type="button"
           onClick={onReplayTour}
