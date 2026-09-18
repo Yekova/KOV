@@ -10,6 +10,7 @@ import { StudioMapAccessibleNav } from "@/components/studio/map/StudioMapAccessi
 import { StudioMapExpanded } from "@/components/studio/map/StudioMapExpanded";
 import { StudioMapMaterialsProvider } from "@/components/studio/map/StudioMapMaterials";
 import type { CameraState } from "@/components/studio/CameraController";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 interface StudioMap3DProps {
   currentRoomId: string;
@@ -62,20 +63,7 @@ export function StudioMap3D({
   // small 3D preview; mobile skips mounting the Canvas entirely (not
   // just CSS-hiding it) rather than paying for a WebGL context nobody
   // can usefully see or aim a cursor at on a phone screen.
-  // Re-evaluated on change, not read once at mount. The previous version
-  // sampled window.innerWidth in a lazy initialiser and never looked again,
-  // so rotating a tablet or resizing a window left the component on the
-  // wrong side of the breakpoint until a full remount. matchMedia's change
-  // event is the cheap way to watch one breakpoint — no resize handler
-  // firing on every pixel.
-  const [isDesktop, setIsDesktop] = useState(() => typeof window !== "undefined" && window.innerWidth >= 768);
-  useEffect(() => {
-    const query = window.matchMedia("(min-width: 768px)");
-    const sync = () => setIsDesktop(query.matches);
-    sync();
-    query.addEventListener("change", sync);
-    return () => query.removeEventListener("change", sync);
-  }, []);
+  const isDesktop = useMediaQuery("(min-width: 768px)");
   // This component is mounted late on purpose (StudioExperience waits for
   // an idle frame before building a second WebGL scene), so it fades itself
   // in rather than appearing out of nowhere a beat after the room does.

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { ActivationCard } from "@/components/home/ActivationCard";
 import { ActivationBackdrop } from "@/components/home/ActivationBackdrop";
 import { RadarChart, GrowthBars, PerformanceGauge, FoundationStack, DeviceFrames, JourneyPath } from "@/components/home/ActivationCharts";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 // Scroll distance (vh), split into three consecutive phases within one
 // pinned runway: grow the window to fullscreen, coverflow through the
@@ -135,20 +136,7 @@ export function ActivationWindow() {
   // so the neighbours fall outside the frame instead of crowding it. Read
   // once — which card size to use is not something that needs to react to a
   // live resize mid-scroll.
-  // Re-evaluated on change, not read once at mount. The previous version
-  // sampled window.innerWidth in a lazy initialiser and never looked again,
-  // so rotating a tablet or resizing a window left the component on the
-  // wrong side of the breakpoint until a full remount. matchMedia's change
-  // event is the cheap way to watch one breakpoint — no resize handler
-  // firing on every pixel.
-  const [compact, setCompact] = useState(() => typeof window !== "undefined" && window.innerWidth < 768);
-  useEffect(() => {
-    const query = window.matchMedia("(max-width: 767px)");
-    const sync = () => setCompact(query.matches);
-    sync();
-    query.addEventListener("change", sync);
-    return () => query.removeEventListener("change", sync);
-  }, []);
+  const compact = useMediaQuery("(max-width: 767px)");
   const cardW = compact ? 228 : CARD_WIDTH;
   const cardH = compact ? 430 : CARD_HEIGHT;
   const cardGap = compact ? 262 : CARD_SPACING;

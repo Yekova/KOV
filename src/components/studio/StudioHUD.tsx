@@ -54,8 +54,13 @@ export function StudioHUD({
     <div className="absolute inset-0 pointer-events-none" style={{ zIndex: "var(--z-nav)" }}>
       <div className="flex items-start justify-end gap-3 p-6 md:p-8 pointer-events-none">
         <StudioCompass stateRef={cameraStateRef} />
+        {/* Hidden below md. The top row is one flex line — compass, badge,
+            hand, help, Menu — and this badge carries whitespace-nowrap, so it
+            could not shrink: the row measured ~420px on a 390px phone and
+            pushed itself left, under the nav pill. It is the one item in that
+            row that is decorative rather than a control. */}
         <div
-          className="pointer-events-auto flex items-center gap-2 px-3 py-1.5"
+          className="pointer-events-auto hidden md:flex items-center gap-2 px-3 py-1.5"
           style={{
             borderRadius: "var(--radius-pill)",
             background: "var(--glass-bg)",

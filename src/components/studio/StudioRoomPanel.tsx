@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { X, Info } from "lucide-react";
 import type { StudioNode } from "@/config/studio/studioNodes";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 interface StudioRoomPanelProps {
   node: StudioNode;
@@ -51,6 +53,39 @@ export function StudioRoomPanel({
   videoSrc,
 }: StudioRoomPanelProps) {
   const [videoOpen, setVideoOpen] = useState(false);
+  const isMobile = useMediaQuery("(max-width: 767px)");
+  // Dismissible, and closed by default on a phone. On a 390px screen this
+  // panel covered about 60% of the viewport, over a 360° view that is the
+  // entire reason for the page — the explanation was hiding the thing it
+  // explains. On desktop it has room and stays open, as before.
+  // null means "whatever this breakpoint's default is", so someone who has
+  // not touched it gets the panel open when they rotate to landscape and
+  // closed again when they rotate back. Once they choose, their choice wins.
+  const [override, setOverride] = useState<boolean | null>(null);
+  const open = override ?? !isMobile;
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        data-tour="room-panel"
+        onClick={() => setOverride(true)}
+        aria-label={`Informations sur la salle ${node.name}`}
+        className="absolute left-6 top-32 md:top-28 pointer-events-auto flex items-center gap-2 px-3 py-2 text-kov-bone"
+        style={{
+          borderRadius: "var(--radius-pill)",
+          background: "var(--glass-bg)",
+          backdropFilter: "blur(var(--glass-blur)) saturate(180%)",
+          WebkitBackdropFilter: "blur(var(--glass-blur)) saturate(180%)",
+          border: "1px solid var(--glass-border)",
+        }}
+      >
+        <Info size={13} aria-hidden="true" />
+        <span className="font-mono text-[10px] tracking-widest">{node.room}</span>
+        <span className="text-[10px] uppercase tracking-widest">{node.name}</span>
+      </button>
+    );
+  }
 
   return (
     <div
@@ -86,6 +121,15 @@ export function StudioRoomPanel({
           {String(roomIndex + 1).padStart(2, "0")} / {String(totalRooms).padStart(2, "0")}
         </p>
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setOverride(false)}
+            aria-label="Masquer les informations de la salle"
+            className="w-7 h-7 flex items-center justify-center text-kov-steel hover:text-kov-red transition-colors"
+          >
+            <X size={14} />
+          </button>
+          <span aria-hidden="true" className="w-px h-3.5" style={{ background: "var(--glass-border)" }} />
           <button
             type="button"
             onClick={onPrev}

@@ -1,8 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
+import { ChevronDown } from "lucide-react";
 import type { StudioNode } from "@/config/studio/studioNodes";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 interface StudioRoomCarouselProps {
   nodes: StudioNode[];
@@ -22,15 +24,42 @@ interface StudioRoomCarouselProps {
 // unavailable ones are dimmed with an honest "Bientôt" badge instead of
 // a fabricated preview, and aren't clickable at all.
 export function StudioRoomCarousel({ nodes, activeId, onSelectRoom, trailing }: StudioRoomCarouselProps) {
+  const isMobile = useMediaQuery("(max-width: 767px)");
+  // Same contract as the room panel: null defers to the breakpoint's own
+  // default, so rotating a phone to landscape opens the strip for anyone who
+  // has not expressed a preference. On a portrait phone the strip plus its
+  // header ate a third of the screen before anyone asked for it.
+  const [override, setOverride] = useState<boolean | null>(null);
+  const stripOpen = override ?? !isMobile;
+
   return (
     <div className="absolute bottom-16 md:bottom-20 inset-x-0 px-6">
       <div className="max-w-[1600px] mx-auto">
         <div className="flex items-baseline justify-between mb-3">
-          <p className="text-kov-bone text-sm">Explorer le studio</p>
+          {/* A button on a phone, a heading on a desktop: the strip is worth
+              its space on a wide screen and is worth a tap on a narrow one. */}
+          <button
+            type="button"
+            onClick={() => setOverride(!stripOpen)}
+            aria-expanded={stripOpen}
+            className="md:pointer-events-none flex items-center gap-2 text-kov-bone text-sm"
+          >
+            Explorer le studio
+            <ChevronDown
+              size={14}
+              aria-hidden="true"
+              className="md:hidden transition-transform duration-300"
+              style={{ transform: stripOpen ? "rotate(180deg)" : "none" }}
+            />
+          </button>
           <p className="text-kov-steel text-[10px] uppercase tracking-widest">{nodes.length} salles · une même vision</p>
         </div>
         <div className="flex items-end gap-3">
-          <div data-tour="rooms" className="flex gap-3 overflow-x-auto pb-1 min-w-0" style={{ scrollbarWidth: "none" }}>
+          <div
+            data-tour="rooms"
+            className="flex gap-3 overflow-x-auto pb-1 min-w-0"
+            style={{ scrollbarWidth: "none", display: stripOpen ? undefined : "none" }}
+          >
             {nodes.map((node, i) => {
               const active = node.id === activeId;
               return (
