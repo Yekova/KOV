@@ -62,7 +62,20 @@ export function StudioMap3D({
   // small 3D preview; mobile skips mounting the Canvas entirely (not
   // just CSS-hiding it) rather than paying for a WebGL context nobody
   // can usefully see or aim a cursor at on a phone screen.
-  const [isDesktop] = useState(() => typeof window !== "undefined" && window.innerWidth >= 768);
+  // Re-evaluated on change, not read once at mount. The previous version
+  // sampled window.innerWidth in a lazy initialiser and never looked again,
+  // so rotating a tablet or resizing a window left the component on the
+  // wrong side of the breakpoint until a full remount. matchMedia's change
+  // event is the cheap way to watch one breakpoint — no resize handler
+  // firing on every pixel.
+  const [isDesktop, setIsDesktop] = useState(() => typeof window !== "undefined" && window.innerWidth >= 768);
+  useEffect(() => {
+    const query = window.matchMedia("(min-width: 768px)");
+    const sync = () => setIsDesktop(query.matches);
+    sync();
+    query.addEventListener("change", sync);
+    return () => query.removeEventListener("change", sync);
+  }, []);
   // This component is mounted late on purpose (StudioExperience waits for
   // an idle frame before building a second WebGL scene), so it fades itself
   // in rather than appearing out of nowhere a beat after the room does.

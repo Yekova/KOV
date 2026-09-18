@@ -55,8 +55,24 @@ export function StudioRoomPanel({
   return (
     <div
       data-tour="room-panel"
-      className="absolute left-6 top-24 md:top-28 w-[300px] max-w-[85vw] p-6"
+      // top-32 below md, not top-24: under 430px the panel is wide enough to
+      // reach the "Carte" button in the top-right corner, and the two
+      // overlapped in a 14px band. Above md the map is a 280px panel on the
+      // far right instead and there is no contact.
+      className="absolute left-6 top-32 md:top-28 w-[300px] max-w-[85vw] p-6 overflow-y-auto overscroll-contain"
       style={{
+        // The panel had no height bound and no awareness of what sits below
+        // it. Measured: it runs ~430px from a top of 96/112px, and the room
+        // carousel plus footer occupy ~195/211px up from the bottom — so the
+        // two collided on any viewport shorter than ~750px. That is not an
+        // edge case: it is every 1366×768 laptop once browser chrome is
+        // subtracted, every landscape phone, and any half-height window.
+        //
+        // dvh rather than vh so a mobile browser's collapsing address bar
+        // doesn't leave the panel running under the carousel it was sized
+        // to clear.
+        maxHeight: "calc(100dvh - 8rem - 13rem)",
+        scrollbarWidth: "thin",
         borderRadius: 18,
         background: "var(--glass-bg)",
         backdropFilter: "blur(var(--glass-blur)) saturate(180%)",

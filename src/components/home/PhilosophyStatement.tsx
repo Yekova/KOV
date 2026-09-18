@@ -67,7 +67,7 @@ export function PhilosophyStatement() {
             as="li"
             key={constat.number}
             delay={index * 0.08}
-            className="grid grid-cols-1 md:grid-cols-[88px_1fr] lg:grid-cols-[minmax(110px,0.55fr)_minmax(0,1.35fr)_minmax(0,1.6fr)] gap-y-3 gap-x-10 xl:gap-x-16 lg:items-baseline py-10 md:py-12 lg:py-14 border-b"
+            className="grid grid-cols-1 md:grid-cols-[104px_1fr] lg:grid-cols-[minmax(110px,0.55fr)_minmax(0,1.35fr)_minmax(0,1.6fr)] gap-y-3 gap-x-10 xl:gap-x-16 lg:items-baseline py-10 md:py-12 lg:py-14 border-b"
             style={{ borderColor: "var(--kov-border)" }}
           >
             {/* Outlined, not filled: reads editorial at this size, and can
@@ -79,7 +79,12 @@ export function PhilosophyStatement() {
               aria-hidden="true"
               className="font-display leading-none select-none"
               style={{
-                fontSize: "clamp(44px, 14vw, 132px)",
+                // 8vw, not 14vw. Between md and lg the numeral sits in a
+                // fixed gutter: at 768px, 14vw was a 108px glyph in an 88px
+                // column, so every row overflowed its own gutter. 8vw gives
+                // 61px there and still reaches the 132px cap on a wide
+                // screen, where the lg layout gives it a flexible column.
+                fontSize: "clamp(44px, 8vw, 132px)",
                 color: "transparent",
                 WebkitTextStroke:
                   constat.number === "04" ? "1px rgba(227,30,36,0.62)" : "1px rgba(231,231,229,0.26)",

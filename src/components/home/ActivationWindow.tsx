@@ -135,7 +135,20 @@ export function ActivationWindow() {
   // so the neighbours fall outside the frame instead of crowding it. Read
   // once — which card size to use is not something that needs to react to a
   // live resize mid-scroll.
-  const [compact] = useState(() => typeof window !== "undefined" && window.innerWidth < 768);
+  // Re-evaluated on change, not read once at mount. The previous version
+  // sampled window.innerWidth in a lazy initialiser and never looked again,
+  // so rotating a tablet or resizing a window left the component on the
+  // wrong side of the breakpoint until a full remount. matchMedia's change
+  // event is the cheap way to watch one breakpoint — no resize handler
+  // firing on every pixel.
+  const [compact, setCompact] = useState(() => typeof window !== "undefined" && window.innerWidth < 768);
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 767px)");
+    const sync = () => setCompact(query.matches);
+    sync();
+    query.addEventListener("change", sync);
+    return () => query.removeEventListener("change", sync);
+  }, []);
   const cardW = compact ? 228 : CARD_WIDTH;
   const cardH = compact ? 430 : CARD_HEIGHT;
   const cardGap = compact ? 262 : CARD_SPACING;
@@ -266,10 +279,15 @@ export function ActivationWindow() {
 
             <BrowserChrome className="relative shrink-0" showUrlBar={false} />
 
-            <div className="relative flex-1 overflow-hidden flex px-8 md:px-14 py-10">
-              {/* Left column — stays put; the coverflow to its right
-                  is what the scroll effect above actually drives. */}
-              <div className="w-[30%] shrink-0 flex flex-col justify-center pr-8 text-left">
+            <div className="relative flex-1 overflow-hidden flex flex-col md:flex-row px-6 md:px-14 py-8 md:py-10">
+              {/* Left column — stays put; the coverflow to its right is what
+                  the scroll effect above actually drives.
+
+                  w-[30%] used to apply at every width. On a 390px phone the
+                  card is 92vw, so after padding that column was ~88px wide,
+                  holding a 24px heading and two buttons. It stacks above the
+                  cards below md now instead. */}
+              <div className="w-full md:w-[30%] shrink-0 flex flex-col justify-center pr-0 md:pr-8 mb-8 md:mb-0 text-left">
                 <div className="flex items-center gap-3 mb-5">
                   <span aria-hidden="true" className="w-1 shrink-0" style={{ height: 16, background: "var(--kov-red)" }} />
                   <p className="text-xs uppercase tracking-widest text-kov-steel">Notre approche</p>
@@ -299,7 +317,7 @@ export function ActivationWindow() {
                     driven by scroll (see the effect above), not decorative:
                     hidden under reducedMotion since that state never moves
                     there (the scroll effect bails out entirely). */}
-                {!reducedMotion && (
+                {!reducedMotion && !compact && (
                   <div className="flex items-center gap-2 mt-8" aria-hidden="true">
                     {CARDS.map((card, i) => (
                       <span
@@ -314,7 +332,7 @@ export function ActivationWindow() {
                   </div>
                 )}
 
-                <div className="mt-auto pt-10">
+                <div className="mt-auto pt-10 hidden md:block">
                   <p className="text-[10px] uppercase tracking-widest text-kov-steel">
                     Des sites pour des marques qui comptent
                   </p>
@@ -329,9 +347,16 @@ export function ActivationWindow() {
                   get its transforms set at all — a plain wrapping grid
                   instead, every card simply visible, no scroll-driven
                   motion needed to see any of them. */}
-              {reducedMotion ? (
+              {/* The coverflow is a desktop gesture: its cards are 228px wide
+                  and overflow their container by design, which needs room on
+                  both sides that a phone does not have — they were being
+                  clipped horizontally and vertically at once. A narrow
+                  viewport takes the same plain grid reduced-motion already
+                  used, which works because it never depended on the scroll
+                  effect in the first place. */}
+              {reducedMotion || compact ? (
                 <div className="flex-1 min-w-0 overflow-y-auto">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {CARDS.map((card, i) => (
                       <div key={card.title} style={{ aspectRatio: "9 / 16" }}>
                         <ActivationCard
