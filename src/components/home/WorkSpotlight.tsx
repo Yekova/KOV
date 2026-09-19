@@ -1,3 +1,4 @@
+import type { LucideIcon } from "lucide-react";
 import {
   ChartLine,
   CodeXml,
@@ -10,119 +11,242 @@ import {
   Plug,
   Search,
 } from "lucide-react";
+import { KovCTA } from "@/components/ui/KovCTA";
 import { Reveal } from "@/components/ui/Reveal";
-import { SectionHeading } from "@/components/ui/SectionHeading";
 import { SectionVeil } from "@/components/home/SectionVeil";
+import "./WorkSpotlight.css";
 
-// Icons live alongside the copy rather than in src/data — data files in this
-// repo are pure .ts with no JSX, so moving these out would force an
-// icon-name→component map for no gain. Same call ExpertiseTeaser's VISUALS
-// already makes. Icon names verified against the installed lucide-react@1.38
-// (Code2 and LineChart do not exist in this major).
-//
-// Every line is deliberately figure-free: this section describes what is
-// built, and there is no measured number in this product that could honestly
-// qualify any of it.
-const MODULES = [
-  { Icon: Palette, title: "Direction artistique", body: "Une identité qui vous appartient, pas un thème repeint.", span: 2 },
-  { Icon: LayoutGrid, title: "UX & architecture", body: "Une structure où l'on trouve sans chercher.", span: 1 },
-  { Icon: CodeXml, title: "Développement", body: "Du code de production, pas une maquette animée.", span: 1 },
-  { Icon: MonitorSmartphone, title: "Responsive", body: "Pensé pour le mobile dès la première maquette.", span: 1 },
-  { Icon: Orbit, title: "Motion", body: "Du mouvement là où il explique quelque chose.", span: 1 },
-  { Icon: Search, title: "SEO technique", body: "Un site que les moteurs lisent correctement.", span: 1 },
-  { Icon: ChartLine, title: "Analytics", body: "Comprendre ce qui fonctionne après le lancement.", span: 1 },
-  { Icon: PenLine, title: "CMS / autonomie", body: "Modifier vos contenus sans dépendre de nous.", span: 1 },
-  { Icon: Plug, title: "Intégrations", body: "Relié à vos outils, pas isolé à côté d'eux.", span: 1 },
-  { Icon: LifeBuoy, title: "Accompagnement", body: "La mise en ligne n'est pas la fin du projet.", span: 2 },
-] as const;
+interface Brick {
+  Icon: LucideIcon;
+  title: string;
+  body: string;
+}
 
-// What you actually get. Placed after #process on purpose: the visitor has
-// just been reassured about how a project runs, and this answers the question
-// that follows — what is in it.
+interface Axis {
+  key: string;
+  label: string;
+  claim: string;
+  bricks: Brick[];
+}
+
+// The ten capabilities, grouped under the four axes the lead block names.
 //
-// One chassis, ten bays. The gaps in the grid ARE the rules: a 1px gap over a
-// --kov-border background draws continuous hairlines between semi-transparent
-// bays, so the panel reads as one machined object rather than ten cards. That
-// distinction is the whole brief for this section — a card grid here is a
-// pricing checklist, which it must not be.
+// The grouping is the whole idea, and the reason this is no longer ten equal
+// tiles: ten equal cards is a list, and a list says these are ten separate
+// things you could buy. Four axes with their own bricks says they are one
+// system doing four jobs — which is the sentence the section exists to make.
 //
-// No backdrop-filter on the chassis: it is a large element sitting over an
-// already-running WebGL shader (LineWaves), and glass is meant to be a
-// punctual layer, not a section-wide default. Tint + border + hairlines give
-// the same lightness for no per-frame GPU cost.
+// The grouping is also load-bearing for the layout. The two axes carrying
+// three bricks take the wider column on their row, so the composition is
+// asymmetric because the content is, not because asymmetry looks designed.
+const AXES: Axis[] = [
+  {
+    key: "image",
+    label: "Image",
+    claim: "Ce qu'on retient de vous.",
+    bricks: [
+      { Icon: Palette, title: "Direction artistique", body: "Une identité claire, cohérente et mémorable." },
+      { Icon: Orbit, title: "Motion utile", body: "Des interactions au service du message." },
+    ],
+  },
+  {
+    key: "structure",
+    label: "Structure",
+    claim: "Ce qui tient debout.",
+    bricks: [
+      { Icon: LayoutGrid, title: "UX & architecture", body: "Un parcours lisible, pensé pour convertir." },
+      { Icon: CodeXml, title: "Développement", body: "Du code propre, rapide et prêt à évoluer." },
+      { Icon: MonitorSmartphone, title: "Responsive", body: "Une expérience fluide sur tous les écrans." },
+    ],
+  },
+  {
+    key: "performance",
+    label: "Performance",
+    claim: "Ce qui se mesure.",
+    bricks: [
+      { Icon: Search, title: "SEO technique", body: "Une structure que les moteurs lisent correctement." },
+      { Icon: ChartLine, title: "Analytics", body: "Des décisions guidées par ce qui se passe vraiment." },
+    ],
+  },
+  {
+    key: "autonomie",
+    label: "Autonomie",
+    claim: "Ce qui vous reste.",
+    bricks: [
+      { Icon: PenLine, title: "CMS / autonomie", body: "Vous gardez la main sur vos contenus." },
+      { Icon: Plug, title: "Intégrations", body: "Relié à vos outils, pas isolé à côté d'eux." },
+      { Icon: LifeBuoy, title: "Accompagnement", body: "La mise en ligne n'est pas la fin du projet." },
+    ],
+  },
+];
+
+const TOTAL_BRICKS = AXES.reduce((n, axis) => n + axis.bricks.length, 0);
+const MAX_BRICKS = Math.max(...AXES.map((axis) => axis.bricks.length));
+
+// One axis: a head, a claim, then its bricks as rows.
+function AxisPanel({ axis }: { axis: Axis }) {
+  return (
+    <div className="kov-sys-axis">
+      <div className="kov-sys-axis__head">
+        <span className="kov-sys-axis__label">{axis.label}</span>
+        <span aria-hidden="true" className="kov-sys-axis__rule" />
+        {/* A real count. The only figures anywhere in this section are counts
+            of what is drawn directly beneath them — nothing here is a claim
+            about results that cannot be checked. */}
+        <span aria-hidden="true" className="kov-sys-axis__count">
+          {String(axis.bricks.length).padStart(2, "0")}
+        </span>
+      </div>
+      <p className="kov-sys-axis__claim">{axis.claim}</p>
+
+      <ul className="kov-sys-bricks">
+        {axis.bricks.map((brick) => (
+          <li key={brick.title} className="kov-sys-brick">
+            <span aria-hidden="true" className="kov-sys-brick__ico">
+              <brick.Icon size={16} strokeWidth={1.6} />
+            </span>
+            <span className="kov-sys-brick__text">
+              <span className="kov-sys-brick__title">{brick.title}</span>
+              <span className="kov-sys-brick__body">{brick.body}</span>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+// "On ne livre pas un site, on construit un système."
 //
-// Stays a Server Component — the hover is group-hover: and needs no state.
+// Editorial column on the left, the system itself on the right: a lead block
+// naming the four axes, the four axes with their bricks, then the invitation.
+// A map of an offer rather than a listing of it — which is why it has a
+// centre and edges instead of a uniform pitch.
+//
+// Stays a Server Component. The hover states are group-hover:, which is CSS,
+// and the entrance is Reveal's IntersectionObserver — no state, no animation
+// library, nothing that needs a client boundary.
 export function WorkSpotlight() {
   return (
     <section id="spotlight" className="relative px-6 py-32 max-w-[1600px] mx-auto scroll-mt-40">
-      {/* Black ground with a cursor-lit hole in it — see SectionVeil. It
-          replaces the radial scrim that was here: an opaque block reads
-          better behind text, and the halo gives back a glimpse of the
-          animated background it covers. The content below must stay inside
-          its own `relative` wrapper, or the veil paints over it. */}
+      {/* Black ground with a cursor-lit hole in it — see SectionVeil. The
+          content below must stay inside its own `relative` wrapper, or the
+          veil paints over it. */}
       <SectionVeil />
       <div className="relative">
-      <Reveal variant="blur">
-        <SectionHeading
-          eyebrow="Ce que vous obtenez"
-          title={
-            <>
-              Pas juste
-              <br />
-              un site<span className="text-kov-red">.</span>
-            </>
-          }
-          lede="Un système digital pensé pour votre marque et votre croissance."
-        />
-      </Reveal>
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,34fr)_minmax(0,66fr)] gap-14 lg:gap-16 xl:gap-20">
+          {/* ── Editorial column ─────────────────────────────────────── */}
+          <Reveal variant="blur">
+            <div className="lg:sticky lg:top-32">
+              <p className="kov-sys-eyebrow">
+                <span aria-hidden="true" className="kov-sys-eyebrow__dot" />
+                Ce qu&apos;on construit
+              </p>
 
-      {/* One Reveal around the whole chassis, not ten staggered ones. A
-          system that arrives in ten pieces isn't one — and a Reveal per <li>
-          would put a transform on each grid item and fight the col-spans
-          that bookend the layout. */}
-      <Reveal variant="fade">
-        <div
-          className="mt-20 overflow-hidden"
-          style={{ border: "1px solid var(--kov-border)", borderRadius: "var(--radius-glass)" }}
-        >
-          {/* 2+1+3+3+1+2 = 12 units = exactly 4 rows at lg, bookended by the
-              two widest bays. No filler cell, no hole. */}
-          <ul
-            className="list-none grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-            style={{ gap: 1, background: "var(--kov-border)" }}
-          >
-            {MODULES.map(({ Icon, title, body, span }) => (
-              <li
-                key={title}
-                className={`group flex items-start gap-4 p-6 lg:p-8 transition-colors duration-300 ${
-                  span === 2 ? "sm:col-span-2" : ""
-                }`}
-                style={{ background: "rgba(10,10,10,0.86)" }}
-              >
-                <Icon
-                  size={18}
-                  strokeWidth={1.5}
-                  aria-hidden="true"
-                  className="shrink-0 mt-0.5 text-kov-steel group-hover:text-kov-red transition-colors duration-300"
-                />
-                <div className="min-w-0">
-                  <h3 className="text-kov-bone text-sm uppercase tracking-wide">{title}</h3>
-                  <p className="text-kov-concrete text-xs leading-relaxed mt-1.5">{body}</p>
+              <h2 className="kov-sys-title">
+                Pas juste un site.
+                <br />
+                <span className="text-kov-red">Un système digital.</span>
+              </h2>
+
+              <p className="kov-sys-lede">
+                Chaque projet combine direction artistique, structure, développement, performance et autonomie. Le
+                résultat n&apos;est pas une page isolée, mais un environnement cohérent, pensé pour durer.
+              </p>
+
+              <div aria-hidden="true" className="kov-sys-sep" />
+
+              <p className="kov-sys-triad">
+                <span>Stratégie</span>
+                <span aria-hidden="true" className="kov-sys-triad__x">
+                  ×
+                </span>
+                <span>Création</span>
+                <span aria-hidden="true" className="kov-sys-triad__x">
+                  ×
+                </span>
+                <span>Technologie</span>
+              </p>
+              <p className="kov-sys-note">Un tout, pas des morceaux.</p>
+            </div>
+          </Reveal>
+
+          {/* ── The system ───────────────────────────────────────────── */}
+          <div className="flex flex-col gap-4 lg:gap-5">
+            {/* Lead block. It names the four axes the panels below are
+                grouped by, so the composition explains its own structure
+                before anyone has to infer it. */}
+            <Reveal variant="fade">
+              <div className="kov-sys-lead">
+                <div className="kov-sys-lead__head">
+                  <div className="min-w-0">
+                    <p className="kov-sys-lead__kicker">Le système</p>
+                    <h3 className="kov-sys-lead__title">
+                      Quatre axes, {TOTAL_BRICKS} briques, un seul ensemble.
+                    </h3>
+                  </div>
+                  <span aria-hidden="true" className="kov-sys-lead__index">
+                    {String(AXES.length).padStart(2, "0")} / {TOTAL_BRICKS}
+                  </span>
                 </div>
-              </li>
-            ))}
-          </ul>
 
-          {/* The closing line as a footer bay rather than loose text below:
-              it gives the panel a base and keeps it a single object. */}
-          <p
-            className="px-6 lg:px-8 py-7 text-kov-concrete text-sm leading-relaxed"
-            style={{ borderTop: "1px solid var(--kov-border)", background: "rgba(10,10,10,0.86)" }}
-          >
-            Chaque projet est différent. Le système que nous construisons aussi.
-          </p>
+                <ul className="kov-sys-strip">
+                  {AXES.map((axis, i) => (
+                    <li key={axis.key} className="kov-sys-strip__item">
+                      <span aria-hidden="true" className="kov-sys-strip__num">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <span className="kov-sys-strip__label">{axis.label}</span>
+                      {/* The one chart in the section, and it plots something
+                          real: this axis's share of the bricks, all of which
+                          are drawn a block below. */}
+                      <span
+                        aria-hidden="true"
+                        className="kov-sys-strip__bar"
+                        style={{ ["--fill" as string]: `${(axis.bricks.length / MAX_BRICKS) * 100}%` }}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </Reveal>
+
+            {/* Two rows of two, wider column to the axis carrying more. */}
+            <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)] gap-4 lg:gap-5">
+              <Reveal variant="fade" delay={0.05}>
+                <AxisPanel axis={AXES[0]} />
+              </Reveal>
+              <Reveal variant="fade" delay={0.1}>
+                <AxisPanel axis={AXES[1]} />
+              </Reveal>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)] gap-4 lg:gap-5">
+              <Reveal variant="fade" delay={0.15}>
+                <AxisPanel axis={AXES[2]} />
+              </Reveal>
+              <Reveal variant="fade" delay={0.2}>
+                <AxisPanel axis={AXES[3]} />
+              </Reveal>
+            </div>
+
+            <Reveal variant="fade" delay={0.25}>
+              <div className="kov-sys-cta">
+                <div className="min-w-0">
+                  <p className="kov-sys-cta__title">Construisons un système qui vous ressemble.</p>
+                  <p className="kov-sys-cta__body">
+                    Chaque projet est différent. Le système que nous construisons aussi.
+                  </p>
+                </div>
+                {/* `flat` skips KovCTA's ShapeBlur halo, so this adds no WebGL
+                    context to a page already running LineWaves. */}
+                <KovCTA href="/contact" flat emphasis className="shrink-0">
+                  Démarrer un projet
+                </KovCTA>
+              </div>
+            </Reveal>
+          </div>
         </div>
-      </Reveal>
       </div>
     </section>
   );
