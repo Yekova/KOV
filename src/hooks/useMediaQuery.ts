@@ -1,6 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useSyncExternalStore } from "react";
+
+// Hydration reads this, so the client's first pass reproduces the server's
+// markup exactly and React re-renders with the real answer instead of
+// reporting a mismatch. Every caller treats false as its narrow case.
+const getServerSnapshot = () => false;
 
 // A breakpoint you can read in JS, that actually keeps up.
 //
@@ -11,21 +16,23 @@ import { useEffect, useState } from "react";
 // the cheap way to watch one query: it fires when the answer changes, not on
 // every pixel of a drag.
 //
-// The initial value is still read during render rather than in an effect, so
-// there is no frame of wrong layout before the first paint. On the server it
-// resolves false, which every caller treats as its narrow case.
+// useSyncExternalStore rather than useState + effect, because half the
+// callers are inside prerendered pages: it is the one React primitive that
+// knows the difference between "the first render of a hydrating tree" and
+// "the first render of a component that mounted later", and answers each
+// correctly. A lazy useState initialiser cannot — it reports the true
+// viewport during hydration and so contradicts the HTML React is hydrating.
 export function useMediaQuery(query: string) {
-  const [matches, setMatches] = useState(
-    () => typeof window !== "undefined" && window.matchMedia(query).matches
+  const subscribe = useCallback(
+    (onStoreChange: () => void) => {
+      const media = window.matchMedia(query);
+      media.addEventListener("change", onStoreChange);
+      return () => media.removeEventListener("change", onStoreChange);
+    },
+    [query]
   );
 
-  useEffect(() => {
-    const media = window.matchMedia(query);
-    const sync = () => setMatches(media.matches);
-    sync();
-    media.addEventListener("change", sync);
-    return () => media.removeEventListener("change", sync);
-  }, [query]);
+  const getSnapshot = useCallback(() => window.matchMedia(query).matches, [query]);
 
-  return matches;
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }

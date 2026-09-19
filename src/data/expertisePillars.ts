@@ -4,18 +4,21 @@
 // Two description fields, deliberately, doing two different jobs:
 //
 //   tagline — the promise. One short sentence saying what the discipline is
-//             FOR. Rendered on every homepage bento card (ExpertiseCard) at
-//             every size, and in the hero's expertise widget. It used to hold
-//             poetic noun phrases ("Éclairer les possibles") that read well
-//             but told a visitor nothing about the result they get.
+//             FOR. It is the single line each card of the homepage's
+//             #expertise sequence carries, and it also feeds the hero's
+//             expertise widget. It used to hold poetic noun phrases
+//             ("Éclairer les possibles") that read well but told a visitor
+//             nothing about the result they get.
 //   body    — the method. The longer paragraph, canonical on /expertise.
 //             Only the largest homepage tile shows it; the others would
 //             clamp it to three lines anyway.
 //
-// `slug` and the array ORDER are load-bearing: ExpertiseTeaser's VISUALS,
-// GRID_AREAS and SIZES are positional arrays and gridTemplateAreas hardcodes
-// the slug strings; services.ts `focus` and ActivationWindow's /expertise#…
-// links resolve against them too. Rewriting copy is safe; reordering is not.
+// `slug` and the array ORDER are load-bearing. The order is the order the
+// #expertise sequence assembles in, and every slug is a key in that section's
+// LAYOUT map (expertise/expertiseLayout.ts), which is typed against this list
+// — so a renamed slug fails the build rather than losing a card. services.ts
+// `focus` and ActivationWindow's links resolve against them too. Rewriting
+// copy is safe; reordering is not.
 export const PILLARS = [
   {
     number: "01",

@@ -1,0 +1,445 @@
+/* The assembling-expertises sequence. Nothing here touches the page
+   background: LineWaves and the ground of the section are untouched. */
+
+/* ── Runway and frame ───────────────────────────────────────────────── */
+
+.kov-xp-runway {
+  position: relative;
+}
+
+.kov-xp-viewport {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 24px;
+}
+
+/* Everything that makes the sequence a sequence — the tall runway, the
+   sticky frame, the absolutely-placed pieces — lives behind the same
+   breakpoint the component branches on.
+
+   That is deliberate belt-and-braces: the sequenced markup is what the
+   server renders, so a phone reproduces it for exactly one render before
+   React swaps in the plain version. Gated this way, that one render is an
+   ordinary block of content rather than a 660vh empty shaft. */
+@media (min-width: 1024px) {
+  .kov-xp-runway {
+    /* Set inline by the component, from RUNWAY_VH — one constant, and no
+       second copy of the number here to drift out of sync with it. */
+    height: var(--kov-xp-runway-h);
+  }
+
+  /* CSS does the pinning; GSAP only reports progress (pin:false). That is
+     the convention the rest of this codebase already follows, and it means
+     no pin-spacer is ever injected into the page. */
+  .kov-xp-viewport {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* Absolute, so that fading the title out cannot shift the stage
+     underneath — the composition must never move because a heading left. */
+  .kov-xp-intro {
+    position: absolute;
+    z-index: 3;
+    text-align: center;
+    pointer-events: none;
+    will-change: opacity, transform;
+  }
+
+  /* A fixed-ratio frame the cards are laid out inside as percentages, so
+     the whole composition scales with the viewport and the sequence never
+     has to measure anything. */
+  .kov-xp-stage {
+    position: relative;
+    width: min(1180px, 92vw);
+    aspect-ratio: 16 / 9;
+    max-height: 74vh;
+    transform-origin: 50% 50%;
+    will-change: transform;
+  }
+
+  /* will-change lists transform ONLY. Naming `filter` here would make each
+     slot a Backdrop Root, and the glass card inside would then have nothing
+     left to sample — the blur would be gone permanently, not just while a
+     card is mid-transition. */
+  .kov-xp-slot {
+    position: absolute;
+    will-change: transform;
+  }
+
+  .kov-xp-progress {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .kov-xp-outro {
+    position: absolute;
+    bottom: 74px;
+    left: 50%;
+    transform: translateX(-50%);
+    will-change: opacity, transform;
+  }
+}
+
+/* ── Opening title ──────────────────────────────────────────────────── */
+
+.kov-xp-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 10px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--kov-steel);
+}
+
+.kov-xp-intro .kov-xp-eyebrow {
+  justify-content: center;
+}
+
+.kov-xp-eyebrow__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--kov-red);
+  box-shadow: 0 0 10px rgba(227, 30, 36, 0.7);
+}
+
+.kov-xp-title {
+  margin-top: 22px;
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(30px, 4.4vw, 70px);
+  line-height: 0.95;
+  letter-spacing: -0.015em;
+  text-transform: uppercase;
+  color: var(--kov-bone);
+}
+
+/* ── Card ───────────────────────────────────────────────────────────── */
+
+/* The house glass, from the house tokens — docs/KOV-MOTION.md lists project
+   cards as one of its proper uses, and matching GlassCard is what keeps this
+   section reading as KOV rather than as a visiting design. */
+.kov-xp-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  padding: 18px;
+  border-radius: var(--radius-glass);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  box-shadow: var(--glass-shadow-full);
+  transition:
+    border-color 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* A single red edge, on the left, catching the light — one lit border
+   rather than a glow wrapped around the whole card. */
+.kov-xp-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 18%;
+  bottom: 18%;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(227, 30, 36, 0.55), transparent);
+  opacity: 0.65;
+  transition: opacity 420ms ease;
+}
+
+.kov-xp-card:hover,
+.kov-xp-card:focus-visible {
+  border-color: rgba(227, 30, 36, 0.42);
+  box-shadow:
+    var(--glass-shadow-full),
+    0 0 36px -14px rgba(227, 30, 36, 0.55);
+}
+
+.kov-xp-card:hover::before {
+  opacity: 1;
+}
+
+.kov-xp-card__num {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--kov-red);
+}
+
+.kov-xp-card__visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 0;
+  margin-bottom: 12px;
+}
+
+.kov-xp-svg {
+  width: 100%;
+  height: 100%;
+  max-width: 132px;
+  max-height: 132px;
+}
+
+.kov-xp-card__text {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.kov-xp-card__title {
+  font-family: var(--font-display), sans-serif;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--kov-bone);
+}
+
+/* --kov-concrete, not --kov-steel: steel is 4.41:1 on #0a0a0a and this is
+   body copy, so it has to clear 4.5:1. */
+.kov-xp-card__claim {
+  margin-top: 5px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--kov-concrete);
+}
+
+/* Present at rest, sharper on hover — rather than appearing from nothing.
+   A control that materialises under the cursor is a control nobody knew was
+   there, and a touch screen has no cursor to materialise it with. */
+.kov-xp-card__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--kov-steel);
+  opacity: 0.85;
+  transition: opacity 360ms ease, color 360ms ease, gap 360ms ease;
+}
+
+.kov-xp-card:hover .kov-xp-card__cta,
+.kov-xp-card:focus-visible .kov-xp-card__cta {
+  opacity: 1;
+  gap: 10px;
+  color: var(--kov-red);
+}
+
+/* The wide short card lays its mark beside the text instead of above it. */
+.kov-xp-card--strip {
+  flex-direction: row;
+  align-items: center;
+  gap: 22px;
+  padding: 16px 22px;
+}
+
+.kov-xp-card--strip .kov-xp-card__visual {
+  flex: 0 0 auto;
+  width: 88px;
+  height: 88px;
+  margin-bottom: 0;
+}
+
+.kov-xp-card--strip .kov-xp-card__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.kov-xp-card--strip .kov-xp-card__cta {
+  margin-top: 8px;
+}
+
+/* ── Visual reactions ───────────────────────────────────────────────── */
+/* Transform only, on a group inside the SVG — the compositor handles these
+   and React never hears about them. */
+
+.kov-xp-spin,
+.kov-xp-nest,
+.kov-xp-cube,
+.kov-xp-rings,
+.kov-xp-nodes,
+.kov-xp-layer {
+  transform-origin: 60px 60px;
+  transition: transform 620ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.kov-xp-card:hover .kov-xp-spin {
+  transform: rotate(38deg);
+}
+
+.kov-xp-card:hover .kov-xp-nest {
+  transform: translateX(5px);
+}
+
+.kov-xp-card:hover .kov-xp-cube {
+  transform: translateY(-4px) scale(1.04);
+}
+
+.kov-xp-card:hover .kov-xp-rings {
+  transform: translateX(-7px);
+}
+
+.kov-xp-card:hover .kov-xp-nodes {
+  transform: rotate(26deg);
+}
+
+/* The layers come apart, which is the only hover here that states
+   something: a system is made of parts. */
+.kov-xp-card:hover .kov-xp-layer--1 {
+  transform: translateY(-7px);
+}
+
+.kov-xp-card:hover .kov-xp-layer--3 {
+  transform: translateY(7px);
+}
+
+/* ── Progress and outro ─────────────────────────────────────────────── */
+
+.kov-xp-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--kov-bone);
+}
+
+.kov-xp-progress__sep,
+.kov-xp-progress__num--total {
+  color: var(--kov-steel);
+}
+
+.kov-xp-progress__dots {
+  display: flex;
+  gap: 5px;
+  margin-left: 10px;
+}
+
+.kov-xp-progress__dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--kov-red);
+  opacity: 0.22;
+  transition: opacity 320ms ease;
+}
+
+.kov-xp-outro__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 24px;
+  border-radius: 999px;
+  border: 1px solid rgba(227, 30, 36, 0.45);
+  background: rgba(227, 30, 36, 0.12);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--kov-bone);
+  white-space: nowrap;
+  transition: background-color 320ms ease, border-color 320ms ease;
+}
+
+.kov-xp-outro__link:hover {
+  background: rgba(227, 30, 36, 0.22);
+  border-color: rgba(227, 30, 36, 0.7);
+}
+
+/* ── The plain version ──────────────────────────────────────────────── */
+/* Tablet, phone and reduced motion. Same cards, same order, no runway: the
+   progression 01 to 06 survives as scroll reveals rather than as a
+   sequence. A 560vh pinned shaft on a phone is a scroll trap, and someone
+   who asked the OS for less motion has already declined this kind of
+   thing. */
+
+.kov-xp-plain {
+  display: flex;
+  flex-direction: column;
+  /* The section shell carries no padding — the sequenced branch pads its
+     own sticky viewport, so the plain branch has to pad itself. */
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 96px 24px;
+}
+
+.kov-xp-plain__list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-top: 46px;
+}
+
+@media (min-width: 640px) {
+  .kov-xp-plain__list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Height comes from the content here, not from a percentage of a stage. */
+.kov-xp-plain .kov-xp-card {
+  min-height: 240px;
+}
+
+.kov-xp-plain .kov-xp-card--strip {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  padding: 18px;
+}
+
+.kov-xp-plain .kov-xp-card--strip .kov-xp-card__visual {
+  width: 100%;
+  height: auto;
+  flex: 1;
+  margin-bottom: 12px;
+}
+
+.kov-xp-outro--plain {
+  margin-top: 34px;
+  align-self: flex-start;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kov-xp-card,
+  .kov-xp-card::before,
+  .kov-xp-card__cta,
+  .kov-xp-spin,
+  .kov-xp-nest,
+  .kov-xp-cube,
+  .kov-xp-rings,
+  .kov-xp-nodes,
+  .kov-xp-layer,
+  .kov-xp-progress__dot,
+  .kov-xp-outro__link {
+    transition: none;
+  }
+
+  .kov-xp-card:hover .kov-xp-spin,
+  .kov-xp-card:hover .kov-xp-nest,
+  .kov-xp-card:hover .kov-xp-cube,
+  .kov-xp-card:hover .kov-xp-rings,
+  .kov-xp-card:hover .kov-xp-nodes,
+  .kov-xp-card:hover .kov-xp-layer--1,
+  .kov-xp-card:hover .kov-xp-layer--3 {
+    transform: none;
+  }
+}

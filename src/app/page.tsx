@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { HeroScene } from "@/scenes/HeroScene";
 import { ScreenShowcase } from "@/components/home/ScreenShowcase";
 import { ImmersiveShowcase } from "@/components/home/ImmersiveShowcase";
-import { ExpertiseTeaser } from "@/components/home/ExpertiseTeaser";
+import { ExpertiseSection } from "@/components/home/expertise/ExpertiseSection";
 import { StudioShowcase } from "@/components/home/StudioShowcase";
 import { WorkGallery } from "@/components/home/WorkGallery";
 import { PhilosophyStatement } from "@/components/home/PhilosophyStatement";
@@ -75,7 +75,7 @@ export default function Home() {
       <HeroScene />
       <ImmersiveShowcase />
       <ScreenShowcase />
-      <ExpertiseTeaser />
+      <ExpertiseSection />
       <StudioShowcase />
       <WorkGallery />
       <PhilosophyStatement />
