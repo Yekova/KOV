@@ -7,7 +7,6 @@ import { StudioShowcase } from "@/components/home/StudioShowcase";
 import { WorkGallery } from "@/components/home/WorkGallery";
 import { PhilosophyStatement } from "@/components/home/PhilosophyStatement";
 import { ProcessTimeline } from "@/components/home/ProcessTimeline";
-import { WorkSpotlight } from "@/components/home/WorkSpotlight";
 import { ClosingCta } from "@/components/home/ClosingCta";
 import GradualBlur from "@/components/home/GradualBlur";
 import LineWaves from "@/components/home/LineWavesLazy";
@@ -80,7 +79,6 @@ export default function Home() {
       <WorkGallery />
       <PhilosophyStatement />
       <ProcessTimeline />
-      <WorkSpotlight />
       <ClosingCta />
 
       {/* A page-wide top blur, present through the whole scroll — content

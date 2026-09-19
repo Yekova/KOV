@@ -48,11 +48,12 @@ function Heading() {
   );
 }
 
-// Where the section hands over: #spotlight is the section that answers the
-// question six expertises raise — what a project with KOV actually includes.
+// Where the section hands over. It used to be #spotlight; with that section
+// gone, the projects are the honest answer to what six assembled expertises
+// produce — and they are the next thing down the page either way.
 function Outro() {
   return (
-    <Link href="/#spotlight" className="kov-xp-outro__link">
+    <Link href="/#work-gallery" className="kov-xp-outro__link">
       Voir ce que cela donne
       <ArrowRight size={14} strokeWidth={2} aria-hidden="true" />
     </Link>

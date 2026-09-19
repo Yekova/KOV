@@ -15,7 +15,7 @@ export function ExpertiseCompilationCard({ step }: { step: ExpertiseStep }) {
   const strip = step.shape === "strip";
 
   return (
-    <Link href="/#spotlight" className={`kov-xp-card${strip ? " kov-xp-card--strip" : ""}`}>
+    <Link href="/#work-gallery" className={`kov-xp-card${strip ? " kov-xp-card--strip" : ""}`}>
       <span aria-hidden="true" className="kov-xp-card__num">
         {step.number}
       </span>

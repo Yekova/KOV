@@ -10,12 +10,15 @@ const NAV_LINKS = [
 ];
 
 // The homepage sections that carry what /expertise used to. Real anchors,
-// four distinct destinations — the previous column listed the six pillars,
-// which after the page's removal would all have resolved to one.
+// three distinct destinations — the previous column listed the six pillars,
+// which after that page's removal would all have resolved to one.
+//
+// "Ce que vous obtenez" pointed at #spotlight, which no longer exists. It is
+// not repointed at a neighbour: a footer link whose label no longer matches
+// where it lands is worse than one fewer link.
 const APPROACH_LINKS = [
   { href: "/#expertise", label: "Nos expertises" },
   { href: "/#process", label: "Notre processus" },
-  { href: "/#spotlight", label: "Ce que vous obtenez" },
   { href: "/#work-gallery", label: "Nos projets" },
 ];
 
