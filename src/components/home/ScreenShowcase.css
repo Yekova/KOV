@@ -1,91 +1,537 @@
-/* The comparison ladder in ScreenShowcase.tsx.
-   Interaction is CSS-only: the rows are inside a GSAP timeline that owns
-   their entrance transform, so hover has to touch different properties than
-   the tween does. It only moves the KOV slab on X and scales the red node —
-   nothing here competes with `y`. */
+/* The comparison window in ScreenShowcase.tsx.
+   Nothing in here touches the section's background: LineWaves, the shader
+   and the page's own gradient are all outside this file's reach on purpose.
 
-/* This column used to sit at opacity 0.55, dimming to 0.3 on hover, because
-   "the flatness is the argument". It is — but the argument only lands if the
-   reader can read it, and dimmed steel measured barely 2:1 against the card.
-   The inertness now comes entirely from what the left side LACKS: no surface,
-   no rim, no index, no capitals, no motion. The right side is lit; this one
-   simply is not. Nothing here is hard to see. */
-.kov-sysrow__flat {
-  letter-spacing: 0;
+   Interaction is CSS-only and deliberately avoids `transform` on the rows:
+   a GSAP timeline owns their entrance `y`, and a hover that also wrote
+   transform would fight it mid-tween. Colour, border, shadow — and the
+   chevron, which GSAP never touches. */
+
+/* ── The window ─────────────────────────────────────────────────────── */
+
+.kov-cmp-window {
+  position: relative;
+  overflow: hidden;
+  border-radius: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  /* Graphite over the shader rather than flat black: at this alpha the waves
+     stay faintly readable through the window, which keeps it sitting in the
+     page instead of punched out of it. */
+  background: linear-gradient(168deg, rgba(20, 22, 25, 0.9), rgba(10, 10, 10, 0.94));
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 40px 100px -30px rgba(0, 0, 0, 0.8);
 }
 
-/* The connector: a hairline carrying a single red node. It is the only red
-   on the row at rest, and it points. */
-.kov-sysrow__rule {
-  display: block;
-  width: 56px;
-  height: 1px;
-  background: var(--kov-border);
+/* ── Chrome ─────────────────────────────────────────────────────────── */
+
+.kov-cmp-chrome {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.kov-sysrow__node {
-  display: block;
-  width: 4px;
-  height: 4px;
-  margin-left: -2px;
+.kov-cmp-dots {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.kov-cmp-dots i {
+  width: 9px;
+  height: 9px;
   border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* One lit dot, and it is red: the window belongs to this studio rather than
+   to an operating system. */
+.kov-cmp-dots i:first-child {
   background: var(--kov-red);
-  transition: transform 400ms cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0.85;
 }
 
-.kov-sysrow:hover .kov-sysrow__node {
-  transform: scale(1.6);
+.kov-cmp-handle {
+  flex: 1;
+  max-width: 180px;
+  height: 5px;
+  margin: 0 auto;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
 }
 
-/* The KOV side sits on a lit pane with a red left edge. The edge is per-row
-   but flush with the rows above and below — with no gap between list items
-   the six edges join into one continuous 2px line down the column, which is
-   what makes the right-hand side read as a single object with depth rather
-   than six separate pills. */
-.kov-sysrow__kov {
+.kov-cmp-chrome__label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--kov-steel);
+}
+
+.kov-cmp-rule {
+  display: block;
+  width: 34px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--kov-red));
+}
+
+/* ── Body ───────────────────────────────────────────────────────────── */
+
+.kov-cmp-body {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: stretch;
+  padding: 30px 26px 26px;
+}
+
+.kov-cmp-col {
+  display: flex;
+  flex-direction: column;
+  border-radius: 20px;
+  padding: 26px 24px 24px;
+}
+
+/* The left side is one flat surface. No rim light, no gradient, no accent —
+   its flatness is the argument, and every property it does NOT have is
+   doing work. */
+.kov-cmp-col--flat {
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* The right side has somewhere to stand: a red rim, a faint floor glow, an
+   inner highlight. Three cheap properties, and together they are the whole
+   "before you read it" difference. */
+.kov-cmp-col--lit {
+  border: 1px solid rgba(227, 30, 36, 0.32);
+  background:
+    radial-gradient(120% 65% at 50% 100%, rgba(227, 30, 36, 0.1), transparent 70%),
+    linear-gradient(180deg, rgba(227, 30, 36, 0.045), rgba(10, 10, 10, 0.2));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 0 40px -12px rgba(227, 30, 36, 0.28);
+}
+
+/* ── Column heads ───────────────────────────────────────────────────── */
+
+.kov-cmp-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.kov-cmp-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--kov-steel);
+}
+
+.kov-cmp-eyebrow--red {
+  color: var(--kov-concrete);
+}
+
+.kov-cmp-dot {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.kov-cmp-dot--red {
+  background: var(--kov-red);
+  box-shadow: 0 0 10px rgba(227, 30, 36, 0.7);
+}
+
+.kov-cmp-badge {
+  flex-shrink: 0;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--kov-steel);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.kov-cmp-badge--red {
+  color: #ffd9da;
+  background: rgba(227, 30, 36, 0.16);
+  border-color: rgba(227, 30, 36, 0.45);
+}
+
+.kov-cmp-title {
+  font-size: clamp(21px, 1.9vw, 29px);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--kov-concrete);
+}
+
+/* Bone rather than concrete — the one weight difference between the two
+   headings, and enough to say which side is the offer. */
+.kov-cmp-title--lit {
+  color: var(--kov-bone);
+}
+
+.kov-cmp-sub {
+  margin-top: 9px;
+  margin-bottom: 22px;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--kov-steel);
+}
+
+/* ── Rows ───────────────────────────────────────────────────────────── */
+
+.kov-cmp-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+}
+
+.kov-cmp-row {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding-left: 18px;
-  padding-right: 18px;
-  border-left: 2px solid var(--kov-red);
-  background: var(--glass-bg);
-  box-shadow: var(--glass-shadow-full);
-  transition: transform 400ms cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 13px 14px;
+  border-radius: 13px;
+  transition:
+    background-color 320ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 320ms cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 320ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.kov-sysrow:hover .kov-sysrow__kov {
-  transform: translateX(2px);
+.kov-cmp-row--flat {
+  background: rgba(255, 255, 255, 0.022);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.kov-sysrow__index {
+.kov-cmp-row--lit {
+  background: rgba(227, 30, 36, 0.04);
+  border: 1px solid rgba(227, 30, 36, 0.2);
+}
+
+.kov-cmp-row__text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.kov-cmp-row__title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--kov-concrete);
+}
+
+.kov-cmp-row__title--lit {
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--kov-bone);
+}
+
+.kov-cmp-index {
   flex-shrink: 0;
-  font-size: 10px;
-  letter-spacing: 0.16em;
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
   color: var(--kov-red);
 }
 
-/* Below md the connector is gone and each row stacks: the standard term on
-   top with a small downward rule, the KOV term under it. Still one <li>. */
-@media (max-width: 767px) {
-  .kov-sysrow__flat {
-    font-size: 12px;
+.kov-cmp-row__body {
+  margin-top: 4px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--kov-steel);
+}
+
+/* ── Icon squares ───────────────────────────────────────────────────── */
+
+.kov-cmp-ico {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--kov-steel);
+  transition: color 320ms ease, background-color 320ms ease, border-color 320ms ease;
+}
+
+.kov-cmp-ico--red {
+  background: linear-gradient(160deg, rgba(227, 30, 36, 0.3), rgba(227, 30, 36, 0.12));
+  border-color: rgba(227, 30, 36, 0.4);
+  color: #ffe3e4;
+}
+
+.kov-cmp-chev {
+  flex-shrink: 0;
+  color: rgba(227, 30, 36, 0.55);
+  transition: transform 320ms cubic-bezier(0.4, 0, 0.2, 1), color 320ms ease;
+}
+
+/* ── Hover, and the cross-link ──────────────────────────────────────── */
+/* `is-linked` is set by React on BOTH rows of a pair, so pointing at either
+   column lights its counterpart in the other. That relationship is the point
+   of the section: these are not two lists, they are one list answered twice.
+   Styled identically to hover, so the pair reads as a single state rather
+   than as a thing and its echo. */
+
+.kov-cmp-row--flat:hover,
+.kov-cmp-row--flat.is-linked {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.11);
+}
+
+.kov-cmp-row--flat:hover .kov-cmp-ico,
+.kov-cmp-row--flat.is-linked .kov-cmp-ico {
+  color: var(--kov-concrete);
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.kov-cmp-row--lit:hover,
+.kov-cmp-row--lit.is-linked {
+  background: rgba(227, 30, 36, 0.09);
+  border-color: rgba(227, 30, 36, 0.55);
+  box-shadow: inset 0 0 22px -8px rgba(227, 30, 36, 0.55);
+}
+
+.kov-cmp-row--lit:hover .kov-cmp-ico--red,
+.kov-cmp-row--lit.is-linked .kov-cmp-ico--red {
+  color: #fff;
+  border-color: rgba(227, 30, 36, 0.7);
+}
+
+.kov-cmp-row--lit:hover .kov-cmp-chev,
+.kov-cmp-row--lit.is-linked .kov-cmp-chev {
+  transform: translateX(3px);
+  color: var(--kov-red);
+}
+
+/* ── Divider ────────────────────────────────────────────────────────── */
+
+.kov-cmp-divider {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 0 22px;
+}
+
+.kov-cmp-divider__line {
+  flex: 1;
+  width: 1px;
+  min-height: 40px;
+}
+
+/* Pale above, red below: the line itself travels from one side's language to
+   the other's. */
+.kov-cmp-divider__line--pale {
+  background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.16));
+}
+
+.kov-cmp-divider__line--red {
+  background: linear-gradient(180deg, rgba(227, 30, 36, 0.55), transparent);
+}
+
+.kov-cmp-divider__vs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--kov-bone);
+  background: rgba(10, 10, 10, 0.86);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 0 6px rgba(10, 10, 10, 0.5);
+}
+
+/* ── Foot ───────────────────────────────────────────────────────────── */
+
+.kov-cmp-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 26px 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.kov-cmp-foot__label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--kov-steel);
+}
+
+.kov-cmp-foot__label .kov-cmp-rule {
+  background: linear-gradient(90deg, var(--kov-red), transparent);
+}
+
+/* ── Tilted asides ──────────────────────────────────────────────────── */
+/* Hidden below xl: they restate what the columns already say, and under
+   1280px there is no room beside the window — only on top of it. */
+
+.kov-cmp-aside {
+  display: none;
+  position: absolute;
+  z-index: 2;
+  align-items: center;
+  gap: 11px;
+  padding: 13px 16px;
+  border-radius: 14px;
+  background: rgba(14, 15, 17, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 50px -20px rgba(0, 0, 0, 0.9);
+  color: var(--kov-steel);
+}
+
+@media (min-width: 1280px) {
+  .kov-cmp-aside {
+    display: flex;
+  }
+}
+
+.kov-cmp-aside--left {
+  left: -74px;
+  top: 52%;
+  transform: rotate(-6deg);
+}
+
+.kov-cmp-aside--right {
+  right: -74px;
+  top: 30%;
+  transform: rotate(5deg);
+  border-color: rgba(227, 30, 36, 0.28);
+}
+
+.kov-cmp-aside__title {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--kov-bone);
+}
+
+.kov-cmp-aside__body {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--kov-steel);
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────── */
+
+@media (max-width: 1023px) {
+  .kov-cmp-body {
+    padding: 22px 16px 18px;
   }
 
-  .kov-sysrow__kov {
-    padding: 12px 14px;
-    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  .kov-cmp-col {
+    padding: 20px 16px 18px;
+  }
+
+  .kov-cmp-divider {
+    padding: 0 10px;
+  }
+
+  .kov-cmp-row {
+    gap: 11px;
+    padding: 11px;
+  }
+
+  .kov-cmp-ico {
+    width: 34px;
+    height: 34px;
+  }
+}
+
+/* Stacked, in the order the argument is made: standard, VS, KOV. The divider
+   turns on its side and keeps its gradient, so the line still travels from
+   one language to the other — horizontally now. */
+@media (max-width: 767px) {
+  .kov-cmp-body {
+    grid-template-columns: 1fr;
+    padding: 18px 14px 16px;
+  }
+
+  .kov-cmp-divider {
+    flex-direction: row;
+    gap: 14px;
+    padding: 20px 0;
+  }
+
+  .kov-cmp-divider__line {
+    width: auto;
+    height: 1px;
+    min-width: 40px;
+    min-height: 0;
+  }
+
+  .kov-cmp-divider__line--pale {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.16));
+  }
+
+  .kov-cmp-divider__line--red {
+    background: linear-gradient(90deg, rgba(227, 30, 36, 0.55), transparent);
+  }
+
+  .kov-cmp-chrome__label,
+  .kov-cmp-foot__label {
+    font-size: 9px;
+    letter-spacing: 0.14em;
+  }
+
+  .kov-cmp-handle {
+    max-width: 90px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .kov-sysrow__node,
-  .kov-sysrow__kov {
+  .kov-cmp-row,
+  .kov-cmp-ico,
+  .kov-cmp-chev {
     transition: none;
   }
 
-  .kov-sysrow:hover .kov-sysrow__node,
-  .kov-sysrow:hover .kov-sysrow__kov {
+  .kov-cmp-row--lit:hover .kov-cmp-chev,
+  .kov-cmp-row--lit.is-linked .kov-cmp-chev {
     transform: none;
   }
 }
