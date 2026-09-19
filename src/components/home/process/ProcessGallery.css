@@ -1,0 +1,427 @@
+/* The seven steps, as an accordion gallery.
+ *
+ * One set of markup, two layouts. Below 1024px it is an ordinary stacked
+ * accordion; above, the same panels become a row of folded spines with one
+ * open. Everything below the breakpoint block is shared by both. */
+
+.kov-proc-gallery {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 56px;
+}
+
+.kov-proc-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--radius-glass);
+  border: 1px solid var(--kov-border);
+  background: rgba(18, 18, 20, 0.55);
+  transition: border-color 420ms ease, background-color 420ms ease;
+}
+
+.kov-proc-panel.is-open {
+  border-color: rgba(227, 30, 36, 0.32);
+  background: rgba(10, 10, 10, 0.72);
+}
+
+.kov-proc-panel:not(.is-open):hover {
+  border-color: rgba(231, 231, 229, 0.18);
+  background: rgba(26, 26, 29, 0.66);
+}
+
+/* Not a box below the breakpoint: its two children take their place directly
+   among the panel's flex children, so the media frame can sit between the
+   label and the paragraph without either of them moving in the DOM. */
+.kov-proc-panel__content {
+  display: contents;
+}
+
+/* ── Label: number, title, sign ──────────────────────────────────────── */
+
+.kov-proc-panel__label {
+  order: 0;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 62px;
+  padding: 0 18px;
+}
+
+.kov-proc-panel__num {
+  flex: 0 0 auto;
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--kov-steel);
+  transition: color 320ms ease;
+}
+
+.kov-proc-panel.is-open .kov-proc-panel__num {
+  color: var(--kov-red);
+}
+
+.kov-proc-panel__title {
+  flex: 1;
+  font-family: var(--font-display), sans-serif;
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--kov-concrete);
+  transition: color 320ms ease;
+}
+
+.kov-proc-panel.is-open .kov-proc-panel__title,
+.kov-proc-panel:hover .kov-proc-panel__title {
+  color: var(--kov-bone);
+}
+
+/* Drawn from two rules rather than typed as + and −, so the change is a
+   rotation instead of a glyph swap. */
+.kov-proc-panel__sign {
+  position: relative;
+  flex: 0 0 12px;
+  width: 12px;
+  height: 12px;
+}
+
+.kov-proc-panel__sign::before,
+.kov-proc-panel__sign::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 12px;
+  height: 1.5px;
+  margin-top: -0.75px;
+  background: var(--kov-steel);
+  transition: transform 380ms cubic-bezier(0.22, 1, 0.36, 1), background-color 320ms ease;
+}
+
+.kov-proc-panel__sign::after {
+  transform: rotate(90deg);
+}
+
+.kov-proc-panel.is-open .kov-proc-panel__sign::after {
+  transform: rotate(0deg);
+}
+
+.kov-proc-panel.is-open .kov-proc-panel__sign::before,
+.kov-proc-panel.is-open .kov-proc-panel__sign::after {
+  background: var(--kov-red);
+}
+
+/* ── The plate ───────────────────────────────────────────────────────── */
+
+.kov-proc-panel__frame {
+  order: 1;
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 440ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.kov-proc-panel.is-open .kov-proc-panel__frame {
+  grid-template-rows: 1fr;
+}
+
+.kov-proc-panel__frameInner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.kov-proc-panel__plate {
+  position: relative;
+  margin: 2px 18px 0;
+  /* The same 2:1 the drawings are composed in, so the plate IS the drawing's
+     box and there is no letterboxing at any width. A photograph dropped in
+     later gets a perfectly ordinary gallery ratio. */
+  aspect-ratio: 2 / 1;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid rgba(231, 231, 229, 0.08);
+  background:
+    linear-gradient(180deg, rgba(231, 231, 229, 0.05), rgba(10, 10, 10, 0.92) 72%),
+    repeating-linear-gradient(0deg, rgba(231, 231, 229, 0.035) 0 1px, transparent 1px 28px),
+    repeating-linear-gradient(90deg, rgba(231, 231, 229, 0.035) 0 1px, transparent 1px 28px),
+    #0a0a0a;
+}
+
+.kov-proc-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.kov-proc-photo {
+  object-fit: cover;
+}
+
+/* ── The paragraph ───────────────────────────────────────────────────── */
+
+.kov-proc-panel__reveal {
+  order: 2;
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 440ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.kov-proc-panel.is-open .kov-proc-panel__reveal {
+  grid-template-rows: 1fr;
+}
+
+.kov-proc-panel__revealInner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.kov-proc-panel__artefact {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 18px 0;
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--kov-red);
+}
+
+.kov-proc-panel__artefact::before {
+  content: "";
+  width: 18px;
+  height: 1px;
+  background: var(--kov-red);
+  opacity: 0.6;
+}
+
+/* --kov-concrete, not --kov-steel: steel measures 4.41:1 on #0a0a0a and this
+   is body copy, which has to clear 4.5:1. */
+.kov-proc-panel__body {
+  max-width: 62ch;
+  padding: 9px 18px 20px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--kov-concrete);
+}
+
+/* ── The control ─────────────────────────────────────────────────────── */
+
+.kov-proc-panel__hit {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 62px;
+  cursor: pointer;
+  border-radius: var(--radius-glass);
+}
+
+.kov-proc-panel__hit:focus-visible {
+  outline: 2px solid var(--kov-red);
+  outline-offset: -3px;
+}
+
+/* ── 1024px and up: the folded row ───────────────────────────────────── */
+
+@media (min-width: 1024px) {
+  .kov-proc-gallery {
+    flex-direction: row;
+    gap: 10px;
+    /* Fixed, and this is the load-bearing decision of the section: a gallery
+       that grew and shrank would change the document height mid-scroll,
+       shove #spotlight and #contact around, and churn Lenis' own
+       ResizeObserver. The row reserves its space once. */
+    height: clamp(430px, 56vh, 560px);
+    margin-top: 72px;
+  }
+
+  .kov-proc-panel {
+    display: block;
+    /* Drives both the plate's width and where the text block starts, so the
+       two can never disagree about the gutter between them. */
+    --kov-proc-plate: clamp(300px, 50%, 560px);
+    /* flex-grow is a number and therefore interpolates; animating flex-basis
+       to `auto` would not animate at all. The basis stays at the spine width
+       and the open panel simply absorbs the free space. */
+    flex: 0 1 clamp(60px, 5.2vw, 88px);
+    min-width: 0;
+    transition:
+      flex-grow 660ms cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 420ms ease,
+      background-color 420ms ease;
+  }
+
+  .kov-proc-panel.is-open {
+    flex-grow: 1;
+  }
+
+  .kov-proc-panel__content {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+
+  .kov-proc-panel__label {
+    min-height: 0;
+    padding: 0;
+  }
+
+  .kov-proc-panel__sign {
+    display: none;
+  }
+
+  /* Folded: number at the top, title running up the spine. */
+  .kov-proc-panel:not(.is-open) .kov-proc-panel__content {
+    padding: 22px 0;
+  }
+
+  .kov-proc-panel:not(.is-open) .kov-proc-panel__label {
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0;
+  }
+
+  .kov-proc-panel:not(.is-open) .kov-proc-panel__title {
+    flex: 0 0 auto;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    white-space: nowrap;
+    font-size: 13px;
+    letter-spacing: 0.15em;
+  }
+
+  /* Folded to 80px, a paragraph would wrap to twenty lines and fight the
+     spine for height. display:none also keeps it out of the accessibility
+     tree without needing the inert attribute to do it. */
+  .kov-proc-panel:not(.is-open) .kov-proc-panel__reveal {
+    display: none;
+  }
+
+  .kov-proc-panel:not(.is-open) .kov-proc-panel__frame {
+    opacity: 0;
+  }
+
+  /* Open. */
+  /* Open: the plate on the left, the text beside it rather than under it.
+     A 2:1 drawing stretched across the full width of a 1000px panel would be
+     a thin strip with a field of empty plate on either side. */
+  .kov-proc-panel.is-open .kov-proc-panel__content {
+    left: calc(var(--kov-proc-plate) + 52px);
+    justify-content: center;
+    padding: 30px 36px 30px 0;
+  }
+
+  .kov-proc-panel.is-open .kov-proc-panel__label {
+    flex: 0 0 auto;
+    gap: 16px;
+  }
+
+  .kov-proc-panel.is-open .kov-proc-panel__title {
+    flex: 0 0 auto;
+    font-size: clamp(20px, 1.6vw, 26px);
+    letter-spacing: 0.03em;
+  }
+
+  /* The plate stops short of the text block rather than sliding under a
+     scrim: these are drawings, and a drawing half-hidden behind a gradient
+     reads as a mistake rather than as a photograph. */
+  .kov-proc-panel__frame {
+    position: absolute;
+    inset: 26px auto 26px 26px;
+    width: var(--kov-proc-plate);
+    display: block;
+    z-index: 1;
+    transition: opacity 560ms ease 140ms;
+  }
+
+  .kov-proc-panel__frameInner {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+  }
+
+  .kov-proc-panel__plate {
+    position: relative;
+    width: 100%;
+    max-height: 100%;
+    margin: 0;
+    border-radius: 14px;
+  }
+
+  .kov-proc-panel__reveal {
+    display: block;
+  }
+
+  .kov-proc-panel__revealInner {
+    overflow: visible;
+  }
+
+  /* display:none to block restarts a CSS animation, which is what gives the
+     text its entrance without any JavaScript knowing the panel changed. */
+  .kov-proc-panel.is-open .kov-proc-panel__revealInner {
+    animation: kovProcIn 520ms cubic-bezier(0.22, 1, 0.36, 1) 160ms both;
+  }
+
+  .kov-proc-panel__artefact {
+    padding: 16px 0 0;
+  }
+
+  .kov-proc-panel__body {
+    max-width: 56ch;
+    padding: 10px 0 0;
+    font-size: 14px;
+  }
+
+  .kov-proc-panel__hit {
+    inset: 0;
+    height: auto;
+  }
+
+  /* Once open, the control steps aside so the paragraph under it stays
+     selectable. It is still focusable, and hovering a folded neighbour is
+     what moves the gallery on. */
+  .kov-proc-panel.is-open .kov-proc-panel__hit {
+    pointer-events: none;
+  }
+}
+
+@keyframes kovProcIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kov-proc-panel,
+  .kov-proc-panel__frame,
+  .kov-proc-panel__reveal,
+  .kov-proc-panel__num,
+  .kov-proc-panel__title,
+  .kov-proc-panel__sign::before,
+  .kov-proc-panel__sign::after {
+    transition: none;
+  }
+
+  .kov-proc-panel.is-open .kov-proc-panel__revealInner {
+    animation: none;
+  }
+}

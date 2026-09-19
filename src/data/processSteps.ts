@@ -1,4 +1,8 @@
-// Shared by /expertise (full page) and the homepage's ProcessTimeline teaser.
+// The canonical seven steps. /expertise no longer exists, so the homepage's
+// #process section is the only consumer today — but this stays a data file
+// rather than moving into the component: the `number` values are the keys
+// that ProcessGallery's panel map is typed against, and the copy is content,
+// not layout.
 export const PROCESS = [
   { number: "01", title: "Découvrir", body: "Comprendre le projet avant de chercher à le décorer : objectifs, contexte, utilisateurs, contraintes et opportunités." },
   { number: "02", title: "Structurer", body: "Transformer les idées en architecture. Contenus, parcours, priorités et hiérarchie, définis avant le design." },
