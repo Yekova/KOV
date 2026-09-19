@@ -11,6 +11,7 @@ import { MobileNavMenu } from "@/components/navigation/MobileNavMenu";
 import { REVEAL_EASE } from "@/lib/motion/easing";
 import { useScrolled } from "@/hooks/useScrolled";
 import { useOnLightZone } from "@/hooks/useOnLightZone";
+import { useLogoEasterEgg } from "@/hooks/useLogoEasterEgg";
 import { GlassSurface } from "@/components/ui/GlassSurface";
 
 const LINKS: NavLinkItem[] = [
@@ -47,6 +48,12 @@ export function Nav({ variant = "fixed", flat = false }: NavProps) {
   // search/lock icons, the Contact CTA) to black in one place via the CSS
   // cascade, instead of threading a color prop through each of them.
   const onLight = useOnLightZone(pillRef);
+
+  // Five clicks on the wordmark open /badge. The link keeps working as a
+  // link throughout — only the fifth click is intercepted — so nothing about
+  // the everyday behaviour of a logo is traded for the hidden one.
+  const { onLogoClick, streak } = useLogoEasterEgg();
+  const onTheScent = streak >= 3;
 
   // No per-navigation reveal/unfurl on the pill anymore — it just stays put
   // across route changes now. Still closes the mobile menu on navigation, a
@@ -85,7 +92,7 @@ export function Nav({ variant = "fixed", flat = false }: NavProps) {
         transitionTimingFunction: REVEAL_EASE,
       }}
     >
-      <Link href="/" className="flex items-center px-2.5">
+      <Link href="/" className="flex items-center px-2.5" onClick={onLogoClick}>
         <Image
           src={onLight ? "/kov/brand/kov-wordmark-black.png" : "/kov/brand/kov-wordmark-bone.png"}
           alt="KOV"
@@ -93,6 +100,14 @@ export function Nav({ variant = "fixed", flat = false }: NavProps) {
           height={209}
           className="h-4 w-auto"
           priority
+          // The faint tell, from the third click on. Without it someone who
+          // clicks three times and stops learns nothing, and someone who
+          // succeeds cannot tell a secret from a bug.
+          style={{
+            transition: "filter 240ms ease, transform 240ms ease",
+            filter: onTheScent ? "drop-shadow(0 0 7px rgba(227,30,36,0.75))" : "none",
+            transform: onTheScent ? "scale(1.05)" : "none",
+          }}
         />
       </Link>
 

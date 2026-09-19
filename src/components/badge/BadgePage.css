@@ -1,0 +1,177 @@
+/* The reward page. Two columns on a wide screen — read on the left, play on
+   the right — stacking to one on anything narrower. */
+
+.kov-badge-page {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 128px 24px 96px;
+  min-height: 100vh;
+}
+
+@media (min-width: 1024px) {
+  .kov-badge-page {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    gap: 48px;
+    padding-block: 120px;
+  }
+}
+
+/* On a phone the badge comes first: it is the thing that was just won, and
+   burying it under four paragraphs wastes the moment. On a wide screen the
+   copy leads, because the eye starts left. */
+.kov-badge-stage {
+  order: -1;
+  height: min(62vh, 520px);
+}
+
+@media (min-width: 1024px) {
+  .kov-badge-stage {
+    order: 0;
+    height: min(78vh, 720px);
+  }
+}
+
+.kov-badge-copy {
+  max-width: 34rem;
+}
+
+.kov-badge-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 10px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--kov-steel);
+}
+
+.kov-badge-eyebrow__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--kov-red);
+  box-shadow: 0 0 10px rgba(227, 30, 36, 0.7);
+}
+
+.kov-badge-title {
+  margin-top: 22px;
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(38px, 6vw, 84px);
+  line-height: 0.95;
+  letter-spacing: -0.015em;
+  text-transform: uppercase;
+  color: var(--kov-bone);
+}
+
+.kov-badge-lede {
+  margin-top: 26px;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--kov-concrete);
+}
+
+.kov-badge-lede + .kov-badge-lede {
+  margin-top: 14px;
+}
+
+.kov-badge-lede strong {
+  color: var(--kov-bone);
+  font-weight: 600;
+}
+
+/* ── The code ───────────────────────────────────────────────────────── */
+
+.kov-badge-code {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  margin-top: 30px;
+  border: 1px solid rgba(227, 30, 36, 0.4);
+  border-radius: var(--radius-glass);
+  background: rgba(227, 30, 36, 0.08);
+  overflow: hidden;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.kov-badge-code__value {
+  display: flex;
+  align-items: center;
+  padding: 14px 20px;
+  font-family: var(--font-mono), monospace;
+  font-size: 15px;
+  letter-spacing: 0.16em;
+  color: var(--kov-bone);
+  user-select: all;
+}
+
+.kov-badge-code__copy {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 18px;
+  border-left: 1px solid rgba(227, 30, 36, 0.4);
+  background: rgba(227, 30, 36, 0.14);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--kov-bone);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 260ms ease;
+}
+
+.kov-badge-code__copy:hover {
+  background: rgba(227, 30, 36, 0.26);
+}
+
+.kov-badge-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-top: 34px;
+}
+
+.kov-badge-hint {
+  margin-top: 28px;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--kov-steel);
+}
+
+/* ── Locked ─────────────────────────────────────────────────────────── */
+
+.kov-badge-locked {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 128px 24px;
+  text-align: center;
+}
+
+.kov-badge-locked .kov-badge-copy {
+  max-width: 30rem;
+}
+
+.kov-badge-locked .kov-badge-eyebrow {
+  justify-content: center;
+}
+
+.kov-badge-locked .kov-badge-actions {
+  justify-content: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kov-badge-code__copy {
+    transition: none;
+  }
+}
