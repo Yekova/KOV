@@ -1,0 +1,406 @@
+/* /projets — the delivered work, at full width.
+ *
+ * Built from the vocabulary the rest of the site already uses: the mono
+ * eyebrow with its red dot, the display heading with a red terminal period,
+ * hairline rules on --kov-border, and the light plate on black that the
+ * homepage cards established. Nothing new is invented here; it is the same
+ * language spoken at page scale instead of card scale. */
+
+/* ── Head ────────────────────────────────────────────────────────────── */
+
+.kov-work-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--kov-steel);
+}
+
+.kov-work-eyebrow__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--kov-red);
+  box-shadow: 0 0 10px rgba(227, 30, 36, 0.7);
+}
+
+.kov-work-lede {
+  margin-top: 26px;
+  max-width: 54ch;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--kov-concrete);
+}
+
+/* Counted from the data, never typed by hand — the one number on this page
+   that could embarrass anyone is a number that disagrees with the list under
+   it. */
+.kov-work-count {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin-top: 34px;
+  padding-top: 20px;
+  border-top: 1px solid var(--kov-border);
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--kov-steel);
+  font-variant-numeric: tabular-nums;
+}
+
+.kov-work-count b {
+  font-weight: 500;
+  color: var(--kov-bone);
+}
+
+.kov-work-count span[aria-hidden] {
+  color: var(--kov-red);
+  opacity: 0.7;
+}
+
+/* ── The cases ───────────────────────────────────────────────────────── */
+
+.kov-work-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 96px;
+  margin-top: 88px;
+}
+
+.kov-case {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+  align-items: center;
+}
+
+@media (min-width: 1024px) {
+  .kov-work-list {
+    gap: 140px;
+    margin-top: 110px;
+  }
+
+  .kov-case {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    gap: 72px;
+  }
+
+  /* The plate leads on the first entry, the text on the second. Two rows of
+     identical shape read as a table; alternating them reads as a rhythm. */
+  .kov-case__plate--flip {
+    order: 2;
+  }
+
+  .kov-case__body--flip {
+    order: 1;
+  }
+}
+
+/* The plate — the light object on the black field, which is the move the
+   homepage cards established and the only thing that ties this page to
+   them visually. */
+.kov-case__frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  background: #f5f3ef;
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.3),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.kov-case__img {
+  object-fit: cover;
+}
+
+.kov-case__reserved {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(160deg, rgba(38, 38, 42, 0.9), rgba(12, 12, 13, 0.95));
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(231, 231, 229, 0.38);
+}
+
+.kov-case__tagline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 44px 18px 14px;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #f5f3ef;
+  background: linear-gradient(180deg, transparent, rgba(8, 8, 9, 0.85));
+}
+
+/* ── The text column ─────────────────────────────────────────────────── */
+
+.kov-case__meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--kov-steel);
+}
+
+.kov-case__index {
+  color: var(--kov-red);
+  font-variant-numeric: tabular-nums;
+}
+
+.kov-case__rule {
+  width: 34px;
+  height: 1px;
+  background: var(--kov-border);
+}
+
+.kov-case__name {
+  margin-top: 18px;
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(32px, 3.6vw, 56px);
+  line-height: 0.98;
+  letter-spacing: -0.015em;
+  text-transform: uppercase;
+  color: var(--kov-bone);
+}
+
+.kov-case__tags {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.kov-case__tags li {
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--kov-border);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--kov-concrete);
+}
+
+.kov-case__story {
+  margin-top: 30px;
+}
+
+.kov-case__row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+  padding: 16px 0;
+}
+
+.kov-case__row + .kov-case__row {
+  border-top: 1px solid var(--kov-border);
+}
+
+@media (min-width: 640px) {
+  .kov-case__row {
+    grid-template-columns: 96px 1fr;
+    gap: 20px;
+  }
+}
+
+.kov-case__row dt {
+  padding-top: 2px;
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--kov-red);
+}
+
+/* --kov-concrete rather than --kov-steel: steel is 4.41:1 on #0a0a0a, under
+   the 4.5:1 floor for body copy. */
+.kov-case__row dd {
+  max-width: 58ch;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--kov-concrete);
+}
+
+.kov-case__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.kov-case__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 20px;
+  border-radius: 999px;
+  border: 1px solid var(--kov-border);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--kov-bone);
+  transition: border-color 300ms ease, background-color 300ms ease, color 300ms ease;
+}
+
+.kov-case__link:hover {
+  border-color: rgba(231, 231, 229, 0.34);
+  background: rgba(231, 231, 229, 0.05);
+}
+
+.kov-case__link--primary {
+  border-color: rgba(227, 30, 36, 0.45);
+  background: rgba(227, 30, 36, 0.1);
+}
+
+.kov-case__link--primary:hover {
+  border-color: rgba(227, 30, 36, 0.75);
+  background: rgba(227, 30, 36, 0.2);
+}
+
+/* ── À venir ─────────────────────────────────────────────────────────── */
+
+.kov-soon {
+  margin-top: 120px;
+  padding-top: 48px;
+  border-top: 1px solid var(--kov-border);
+}
+
+.kov-soon__head {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (min-width: 768px) {
+  .kov-soon__head {
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 32px;
+  }
+}
+
+.kov-soon__title {
+  font-family: var(--font-display), sans-serif;
+  font-size: 20px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--kov-bone);
+}
+
+.kov-soon__note {
+  max-width: 46ch;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--kov-steel);
+}
+
+.kov-soon__list {
+  list-style: none;
+  margin-top: 28px;
+}
+
+.kov-soon__row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 20px 0;
+  border-top: 1px solid var(--kov-border);
+}
+
+.kov-soon__index {
+  flex: 0 0 auto;
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--kov-steel);
+  font-variant-numeric: tabular-nums;
+}
+
+.kov-soon__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  flex: 1;
+  min-width: 0;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--kov-concrete);
+}
+
+.kov-soon__state {
+  flex: 0 0 auto;
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--kov-steel);
+  opacity: 0.7;
+}
+
+/* ── Close ───────────────────────────────────────────────────────────── */
+
+.kov-work-cta {
+  margin-top: 120px;
+  padding-top: 64px;
+  border-top: 1px solid var(--kov-border);
+  text-align: center;
+}
+
+.kov-work-cta__title {
+  margin-top: 22px;
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(30px, 4vw, 62px);
+  line-height: 0.98;
+  letter-spacing: -0.015em;
+  text-transform: uppercase;
+  color: var(--kov-bone);
+}
+
+.kov-work-cta .kov-work-eyebrow {
+  justify-content: center;
+}
+
+.kov-work-cta__lede {
+  margin: 20px auto 0;
+  max-width: 46ch;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--kov-concrete);
+}
+
+.kov-work-cta__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 34px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kov-case__link {
+    transition: none;
+  }
+}

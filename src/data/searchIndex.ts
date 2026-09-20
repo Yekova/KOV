@@ -71,11 +71,18 @@ export const searchIndex: SearchItem[] = [
     keywords: ["questions", "faq", "combien ça coûte", "combien de temps"],
   },
   {
+    title: "Réalisations",
+    category: "Projets",
+    href: "/projets",
+    description: "Tous les projets livrés : le problème, le système construit, et ce qui a changé.",
+    keywords: ["projets", "portfolio", "réalisations", "montrez-moi vos projets", "références"],
+  },
+  {
     title: "Kanti · Gestion de patrimoine",
     category: "Projets",
-    href: "/#work-gallery",
+    href: "/projets",
     description: "Stratégie, design et développement pour une expérience numérique de gestion de patrimoine.",
-    keywords: ["étude de cas", "projet", "portfolio", "montrez-moi vos projets"],
+    keywords: ["étude de cas", "projet", "kanti", "patrimoine"],
   },
   {
     title: "Philosophie",

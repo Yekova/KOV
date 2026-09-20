@@ -1,12 +1,6 @@
 import Link from "next/link";
-import { PROJECTS } from "@/data/projects";
+import { NARRATIVE_ROWS, PROJECTS } from "@/data/projects";
 import { Reveal } from "@/components/ui/Reveal";
-
-const ROWS = [
-  { label: "Problème", key: "problem" },
-  { label: "Système", key: "system" },
-  { label: "Résultat", key: "result" },
-] as const;
 
 // Turns the grid above from a portfolio into an argument: for the projects
 // that have a real story, what the problem was, what was built, and what
@@ -54,7 +48,7 @@ export function ProjectsProof() {
                   text: no hover, no disclosure — which is simultaneously the
                   most accessible option and the best one for crawlers. */}
               <dl className="mt-7">
-                {ROWS.map((row, index) => (
+                {NARRATIVE_ROWS.map((row, index) => (
                   <div
                     key={row.key}
                     className="grid grid-cols-1 md:grid-cols-[88px_1fr] gap-1.5 md:gap-5 py-4"

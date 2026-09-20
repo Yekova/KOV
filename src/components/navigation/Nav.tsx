@@ -15,7 +15,7 @@ import { useLogoEasterEgg } from "@/hooks/useLogoEasterEgg";
 import { GlassSurface } from "@/components/ui/GlassSurface";
 
 const LINKS: NavLinkItem[] = [
-  { href: "/#work-gallery", label: "Projets" },
+  { href: "/projets", label: "Projets" },
   { href: "/journal", label: "Journal" },
   { href: "/studio", label: "Studio", dropdownKey: "studio" },
 ];

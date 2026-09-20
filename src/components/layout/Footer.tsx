@@ -19,7 +19,7 @@ const NAV_LINKS = [
 const APPROACH_LINKS = [
   { href: "/#expertise", label: "Nos expertises" },
   { href: "/#process", label: "Notre processus" },
-  { href: "/#work-gallery", label: "Nos projets" },
+  { href: "/projets", label: "Nos projets" },
 ];
 
 const RESOURCE_LINKS = [

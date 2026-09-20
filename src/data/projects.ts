@@ -28,6 +28,15 @@ export interface ProjectNarrative {
   result: string;
 }
 
+/** How a narrative is read out, in order. One definition: the homepage band
+ *  and the /projets page both render from this, so the three labels cannot
+ *  drift apart. */
+export const NARRATIVE_ROWS = [
+  { label: "Problème", key: "problem" },
+  { label: "Système", key: "system" },
+  { label: "Résultat", key: "result" },
+] as const satisfies readonly { label: string; key: keyof ProjectNarrative }[];
+
 export interface Project {
   id: string;
   name: string;
@@ -77,7 +86,7 @@ export const PROJECTS: Project[] = [
     tags: ["Immersif", "360°", "Technologie"],
     caseStudyHref: null,
     href: "/studio",
-    image: "/studio/thumbnails/p02.webp",
+    image: "/studio/covers/p01-cover.webp",
     // Four rooms, not seven: studioNodes.ts defines p01–p07 but only four
     // carry `available: true` and only four panoramas exist on disk.
     tagline: "Quatre salles à parcourir",

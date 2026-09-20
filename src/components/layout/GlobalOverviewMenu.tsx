@@ -27,7 +27,7 @@ const MENU_ITEMS: InfiniteMenuItem[] = SITE_SECTIONS.map((section) => ({
 // destinations only (no fabricated "Ressources"/"Paramètres" pages).
 const QUICK_LINKS = [
   {
-    href: "/#work-gallery",
+    href: "/projets",
     label: "Projets",
     description: "Voir tous les projets",
     icon: (

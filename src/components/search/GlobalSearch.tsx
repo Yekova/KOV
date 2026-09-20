@@ -20,7 +20,7 @@ const QUICK_LINKS = [
   { title: "Démarrer un projet", href: "/contact" },
   { title: "Voir l'expertise", href: "/#expertise" },
   { title: "À propos du studio", href: "/studio" },
-  { title: "Voir les projets", href: "/#work-gallery" },
+  { title: "Voir les projets", href: "/projets" },
 ];
 
 // Staggered cascade-in for whatever's showing when the modal opens

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 
 // The left column. Deliberately no statistics block: the brief's own rule
@@ -48,6 +49,18 @@ export function ProjectsEditorial() {
           Visiter le studio ↗
         </Button>
       </div>
+
+      {/* A text link rather than a third button: the grid beside this column
+          is the teaser, /projets is where the reasoning behind each project
+          is actually written out. Three buttons of equal weight would make
+          the reader choose between them instead. */}
+      <Link
+        href="/projets"
+        className="inline-flex items-center gap-2 mt-7 text-kov-bone text-xs uppercase tracking-widest hover:text-kov-red transition-colors"
+      >
+        Toutes les réalisations
+        <span aria-hidden="true">→</span>
+      </Link>
     </div>
   );
 }
