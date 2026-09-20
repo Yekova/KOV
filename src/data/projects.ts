@@ -100,9 +100,12 @@ export const PROJECTS: Project[] = [
     caseStudyHref: null,
     href: "/studio",
     image: "/studio/covers/p01-cover.webp",
-    // Four rooms, not seven: studioNodes.ts defines p01–p07 but only four
-    // carry `available: true` and only four panoramas exist on disk.
-    tagline: "Quatre salles à parcourir",
+    // Five rooms, not seven: studioNodes.ts defines p01–p07 but only five
+    // carry `available: true` and only five panoramas exist on disk. This
+    // cannot be derived — studioNodes imports PROJECTS, so reading it back
+    // here would be a cycle — so it has to be corrected by hand whenever a
+    // room goes live.
+    tagline: "Cinq salles à parcourir",
     narrative: {
       problem: "Montrer un studio sans photographier des bureaux.",
       system: "Panoramas 360°, navigation WebGL, plan interactif.",

@@ -1,300 +1,322 @@
-/* /projets — the delivered work, at full width.
+/* /projets — three full-width bands: statement, work, invitation.
  *
- * Built from the vocabulary the rest of the site already uses: the mono
- * eyebrow with its red dot, the display heading with a red terminal period,
- * hairline rules on --kov-border, and the light plate on black that the
- * homepage cards established. Nothing new is invented here; it is the same
- * language spoken at page scale instead of card scale. */
+ * <main> carries no container. Each band bleeds to the viewport edge and
+ * pads itself back to the site's own 1600px measure, which is the only way
+ * to get an edge-to-edge ground whose content still lines up with every
+ * other page. */
 
-/* ── Hero ────────────────────────────────────────────────────────────── */
-
-.kov-work-hero {
-  position: relative;
-  padding-bottom: 8px;
+.kov-work {
+  min-height: 100vh;
 }
 
-/* The same faint rule grid the homepage projects section sits on, masked to
-   a soft centre so it never reaches an edge and turns into a border. */
-.kov-work-hero__grid {
-  position: absolute;
-  inset: -40px -24px;
-  pointer-events: none;
-  background-image:
-    linear-gradient(to right, rgba(231, 231, 229, 0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(231, 231, 229, 0.03) 1px, transparent 1px);
-  background-size: 78px 78px;
-  mask-image: radial-gradient(72% 70% at 40% 45%, #000 20%, transparent 80%);
-  -webkit-mask-image: radial-gradient(72% 70% at 40% 45%, #000 20%, transparent 80%);
+.kov-band {
+  position: relative;
+  overflow: hidden;
 }
 
-.kov-work-hero__cols {
+.kov-band__inner {
   position: relative;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 48px;
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* A red dash, then a mono label. The page's one repeated signature, used
+   once per band. */
+.kov-rule-label {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--kov-red);
+}
+
+.kov-rule-label::before {
+  content: "";
+  width: 34px;
+  height: 2px;
+  background: var(--kov-red);
+}
+
+/* ── Statement ───────────────────────────────────────────────────────── */
+
+.kov-band--hero {
+  padding: 168px 0 96px;
+  border-bottom: 1px solid var(--kov-border);
 }
 
 @media (min-width: 1024px) {
-  .kov-work-hero__cols {
-    grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
-    gap: 72px;
-    align-items: end;
+  .kov-band--hero {
+    padding: 196px 0 120px;
   }
 }
 
-.kov-work-eyebrow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-family: var(--font-mono), monospace;
-  font-size: 11px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--kov-steel);
+.kov-hero__inner {
+  z-index: 1;
 }
 
-.kov-work-eyebrow__dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background: var(--kov-red);
-  box-shadow: 0 0 10px rgba(227, 30, 36, 0.7);
+/* The faint rule grid the homepage projects section already sits on. */
+.kov-hero__grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(231, 231, 229, 0.028) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(231, 231, 229, 0.028) 1px, transparent 1px);
+  background-size: 78px 78px;
+  mask-image: radial-gradient(64% 80% at 28% 50%, #000 15%, transparent 78%);
+  -webkit-mask-image: radial-gradient(64% 80% at 28% 50%, #000 15%, transparent 78%);
 }
 
-.kov-work-title {
-  margin-top: 26px;
-  max-width: 16ch;
+/* A dark body lit from behind on its inner edge — a rim, not a glow around
+   a disc. The inset shadow is what does the work; the circle itself is
+   nearly the page's own black. */
+.kov-hero__body {
+  position: absolute;
+  top: 50%;
+  right: -16%;
+  width: min(78vw, 860px);
+  aspect-ratio: 1;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, #121214 0 57%, rgba(10, 10, 10, 0) 60%);
+  box-shadow:
+    inset 74px 0 120px -74px rgba(227, 30, 36, 0.95),
+    inset 30px 0 40px -30px rgba(255, 210, 200, 0.5),
+    0 0 180px -40px rgba(227, 30, 36, 0.3);
+}
+
+/* One drifting band of light across the lower right, so the corner is not
+   an empty circle on an empty ground. */
+.kov-hero__streak {
+  position: absolute;
+  right: -8%;
+  bottom: -30%;
+  width: min(70vw, 780px);
+  height: 46%;
+  transform: rotate(-24deg);
+  background: radial-gradient(60% 50% at 50% 50%, rgba(227, 30, 36, 0.22), transparent 70%);
+  filter: blur(26px);
+}
+
+.kov-hero__title {
+  margin-top: 30px;
+  max-width: 14ch;
   font-family: var(--font-display), sans-serif;
-  letter-spacing: -0.015em;
-  text-transform: uppercase;
+  font-size: clamp(42px, 6.4vw, 104px);
+  line-height: 0.94;
+  letter-spacing: -0.022em;
   color: var(--kov-bone);
 }
 
-.kov-work-lede {
-  margin-top: 26px;
-  max-width: 50ch;
+.kov-hero__lede {
+  margin-top: 28px;
+  max-width: 52ch;
   font-size: 15px;
-  line-height: 1.7;
+  line-height: 1.75;
   color: var(--kov-concrete);
 }
 
-/* ── The table of contents ───────────────────────────────────────────── */
-
-.kov-work-index__label {
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--kov-border);
-  font-family: var(--font-mono), monospace;
-  font-size: 10px;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: var(--kov-steel);
-}
-
-.kov-work-index__list {
-  list-style: none;
-}
-
-.kov-work-index__item {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: baseline;
-  gap: 8px 16px;
-  padding: 18px 0;
-  border-bottom: 1px solid var(--kov-border);
-  transition: border-color 300ms ease;
-}
-
-.kov-work-index__item:hover {
-  border-color: rgba(227, 30, 36, 0.45);
-}
-
-.kov-work-index__num {
-  font-family: var(--font-mono), monospace;
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  color: var(--kov-red);
-  font-variant-numeric: tabular-nums;
-}
-
-.kov-work-index__name {
-  font-family: var(--font-display), sans-serif;
-  font-size: 17px;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: var(--kov-bone);
-}
-
-.kov-work-index__cat {
-  grid-column: 2;
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--kov-steel);
-}
-
-.kov-work-index__arrow {
-  grid-row: 1 / span 2;
-  grid-column: 3;
-  align-self: center;
-  color: var(--kov-steel);
-  transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1), color 300ms ease;
-}
-
-.kov-work-index__item:hover .kov-work-index__arrow {
-  transform: translateY(3px);
-  color: var(--kov-red);
-}
-
-/* Counted from the data, never typed by hand — the one number on this page
-   that could embarrass anyone is a number that disagrees with the list under
-   it. */
-.kov-work-count {
+.kov-hero__triad {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
-  margin-top: 20px;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin-top: 40px;
   font-family: var(--font-mono), monospace;
   font-size: 11px;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
+  color: var(--kov-concrete);
+}
+
+.kov-hero__triad-rule {
+  width: 34px;
+  height: 2px;
+  background: var(--kov-red);
+}
+
+.kov-hero__triad span[aria-hidden]:not(.kov-hero__triad-rule) {
   color: var(--kov-steel);
-  font-variant-numeric: tabular-nums;
+  opacity: 0.6;
 }
 
-.kov-work-count b {
-  font-weight: 500;
-  color: var(--kov-bone);
-}
+/* ── The work ────────────────────────────────────────────────────────── */
 
-.kov-work-count span[aria-hidden] {
-  color: var(--kov-red);
-  opacity: 0.7;
-}
-
-/* ── The cases ───────────────────────────────────────────────────────── */
-
-.kov-work-list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 96px;
-  margin-top: 96px;
-}
-
-.kov-case {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 28px;
-  /* The page's top blur runs 8rem down; without this an anchor jump from
-     the table of contents lands the project's name inside it. */
-  scroll-margin-top: 140px;
+.kov-band--work {
+  padding: 72px 0 96px;
 }
 
 @media (min-width: 1024px) {
+  .kov-band--work {
+    padding: 88px 0 120px;
+  }
+}
+
+.kov-work-list {
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+@media (min-width: 1280px) {
   .kov-work-list {
-    gap: 150px;
-    margin-top: 120px;
-  }
-
-  .kov-case {
-    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-    gap: 44px 72px;
-    align-items: start;
-  }
-
-  /* The name spans the spread, above both columns: the eye starts on the
-     word and the plate confirms it, rather than meeting an unlabelled
-     picture and looking around for what it is. */
-  .kov-case__head {
-    grid-column: 1 / -1;
-  }
-
-  /* Sides alternate, so two entries read as a rhythm and not as a table. */
-  .kov-case__plate--flip {
-    order: 2;
-  }
-
-  .kov-case__body--flip {
-    order: 1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-.kov-case__head {
+/* ── The card ────────────────────────────────────────────────────────── */
+
+.kov-pcard {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid var(--kov-border);
+  background: linear-gradient(120deg, rgba(20, 20, 23, 0.9), rgba(12, 12, 13, 0.92));
+  /* The anchors survive from the previous layout; the page's top blur runs
+     8rem down, so a deep link needs the margin. */
+  scroll-margin-top: 140px;
+  transition: border-color 420ms ease, transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (min-width: 640px) {
+  .kov-pcard {
+    /* Text and picture side by side, the picture running off the card's own
+       right edge — the left column stays the fixed part so two cards of
+       different name lengths still line up. */
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  }
+}
+
+.kov-pcard:hover {
+  border-color: rgba(227, 30, 36, 0.4);
+  transform: translateY(-3px);
+}
+
+.kov-pcard__text {
+  position: relative;
+  z-index: 2;
   display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 10px 18px;
-  padding-top: 20px;
-  border-top: 1px solid var(--kov-border);
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 26px 22px 24px;
 }
 
-.kov-case__index {
-  font-family: var(--font-mono), monospace;
-  font-size: 11px;
-  letter-spacing: 0.18em;
+@media (min-width: 1024px) {
+  .kov-pcard__text {
+    padding: 34px 26px 30px 32px;
+  }
+}
+
+.kov-pcard__num {
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(30px, 3vw, 42px);
+  line-height: 1;
+  letter-spacing: -0.02em;
   color: var(--kov-red);
   font-variant-numeric: tabular-nums;
 }
 
-.kov-case__name {
-  font-family: var(--font-display), sans-serif;
-  font-size: clamp(30px, 3.4vw, 54px);
-  line-height: 0.98;
-  letter-spacing: -0.015em;
+.kov-pcard__name {
+  margin-top: 4px;
+  font-size: clamp(22px, 2.1vw, 30px);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--kov-bone);
+}
+
+/* The field the work is in, on a red edge — the reference's own device, and
+   the reason the card needs no subtitle. */
+.kov-pcard__cat {
+  margin-top: 20px;
+  padding-left: 12px;
+  border-left: 2px solid var(--kov-red);
+  max-width: 15ch;
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  line-height: 1.7;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--kov-concrete);
+}
+
+.kov-pcard__tagline {
+  margin-top: 26px;
+  max-width: 22ch;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.45;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--kov-bone);
 }
 
-.kov-case__cat {
-  margin-left: auto;
+.kov-pcard__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto;
+  padding: 12px 20px;
+  border-radius: 4px;
+  border: 1px solid rgba(231, 231, 229, 0.28);
   font-family: var(--font-mono), monospace;
-  font-size: 11px;
-  letter-spacing: 0.18em;
+  font-size: 10px;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--kov-steel);
+  color: var(--kov-bone);
+  white-space: nowrap;
+  transition: background-color 320ms ease, border-color 320ms ease;
 }
 
-/* ── The plate ───────────────────────────────────────────────────────── */
-/* The light object on the black field — the move the homepage cards
-   established, and the only thing tying this page to them visually. */
+/* margin-top:auto needs something above it to push against on a short
+   card; this keeps the pill off the tagline when there is room. */
+.kov-pcard__tagline + .kov-pcard__pill {
+  margin-top: 30px;
+}
 
-.kov-case__trigger {
-  display: block;
+.kov-pcard__pill-arrow {
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.kov-pcard:hover .kov-pcard__pill {
+  border-color: var(--kov-red);
+  background: rgba(227, 30, 36, 0.14);
+}
+
+.kov-pcard:hover .kov-pcard__pill-arrow {
+  transform: translate(2px, -2px);
+}
+
+/* ── The card's picture ──────────────────────────────────────────────── */
+
+.kov-pcard__media {
   position: relative;
-  width: 100%;
-  cursor: pointer;
-  border-radius: 22px;
-}
-
-.kov-case__trigger:focus-visible {
-  outline: 2px solid var(--kov-red);
-  outline-offset: 5px;
-}
-
-.kov-case__frame {
-  position: relative;
-  aspect-ratio: 16 / 9;
+  min-height: 210px;
   overflow: hidden;
-  border-radius: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.72);
-  background: #f5f3ef;
-  box-shadow:
-    0 24px 60px rgba(0, 0, 0, 0.3),
-    inset 1px 1px 0 rgba(255, 255, 255, 0.5);
 }
 
-.kov-case__img {
+@media (min-width: 640px) {
+  .kov-pcard__media {
+    min-height: 100%;
+  }
+}
+
+.kov-pcard__img {
   object-fit: cover;
-  transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 800ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.kov-case__trigger:hover .kov-case__img,
-.kov-case__trigger:focus-visible .kov-case__img {
-  transform: scale(1.03);
+.kov-pcard:hover .kov-pcard__img {
+  transform: scale(1.04);
 }
 
-.kov-case__reserved {
+.kov-pcard__reserved {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -307,147 +329,245 @@
   color: rgba(231, 231, 229, 0.38);
 }
 
-.kov-case__tagline {
+/* Dissolves the picture into the card instead of butting it against the
+   text with a seam. Vertical below 640px, where the picture sits under the
+   text rather than beside it. */
+.kov-pcard__fade {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  padding: 44px 18px 14px;
-  font-size: 11px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: #f5f3ef;
-  background: linear-gradient(180deg, transparent, rgba(8, 8, 9, 0.85));
+  inset: 0;
+  background: linear-gradient(to top, rgba(14, 14, 16, 0.96) 0%, rgba(14, 14, 16, 0) 42%);
 }
 
-.kov-case__play {
+@media (min-width: 640px) {
+  .kov-pcard__fade {
+    background: linear-gradient(to right, rgba(14, 14, 16, 0.96) 0%, rgba(14, 14, 16, 0) 38%);
+  }
+}
+
+.kov-pcard__play {
   position: absolute;
   top: 50%;
-  left: 50%;
+  left: 54%;
   transform: translate(-50%, -50%);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 62px;
-  height: 62px;
+  width: 54px;
+  height: 54px;
   padding-left: 3px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  background: rgba(10, 10, 10, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(10, 10, 10, 0.5);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   color: #f5f3ef;
   transition: background-color 320ms ease, border-color 320ms ease, transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.kov-case__trigger:hover .kov-case__play,
-.kov-case__trigger:focus-visible .kov-case__play {
+.kov-pcard:hover .kov-pcard__play {
   background: var(--kov-red);
   border-color: var(--kov-red);
-  transform: translate(-50%, -50%) scale(1.07);
+  transform: translate(-50%, -50%) scale(1.08);
 }
 
-/* ── The text column ─────────────────────────────────────────────────── */
-
-.kov-case__tags {
+.kov-pcard__tags {
+  position: absolute;
+  right: 18px;
+  bottom: 16px;
   list-style: none;
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
+  justify-content: flex-end;
+  gap: 4px 12px;
+  font-family: var(--font-mono), monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(245, 243, 239, 0.82);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.9);
 }
 
-.kov-case__tags li {
-  padding: 5px 12px;
-  border-radius: 999px;
-  border: 1px solid var(--kov-border);
-  font-size: 10px;
+.kov-pcard__tags li + li::before {
+  content: "|";
+  margin-right: 12px;
+  color: rgba(245, 243, 239, 0.34);
+}
+
+/* One control for the whole card. */
+.kov-pcard__hit {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  cursor: pointer;
+  border-radius: 18px;
+}
+
+.kov-pcard__hit:focus-visible {
+  outline: 2px solid var(--kov-red);
+  outline-offset: -3px;
+}
+
+/* ── À venir ─────────────────────────────────────────────────────────── */
+
+.kov-soon {
+  margin-top: 88px;
+  padding-top: 44px;
+  border-top: 1px solid var(--kov-border);
+}
+
+.kov-soon__head {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (min-width: 768px) {
+  .kov-soon__head {
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 32px;
+  }
+}
+
+.kov-soon__title {
+  font-family: var(--font-display), sans-serif;
+  font-size: 18px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--kov-bone);
+}
+
+.kov-soon__note {
+  max-width: 46ch;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--kov-steel);
+}
+
+.kov-soon__list {
+  list-style: none;
+  margin-top: 24px;
+}
+
+.kov-soon__row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 0;
+  border-top: 1px solid var(--kov-border);
+}
+
+.kov-soon__index {
+  flex: 0 0 auto;
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--kov-steel);
+  font-variant-numeric: tabular-nums;
+}
+
+.kov-soon__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  flex: 1;
+  min-width: 0;
+  font-size: 11px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--kov-concrete);
 }
 
-.kov-case__story {
-  margin-top: 26px;
-}
-
-.kov-case__row {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 6px;
-  padding: 16px 0;
-}
-
-.kov-case__row + .kov-case__row {
-  border-top: 1px solid var(--kov-border);
-}
-
-@media (min-width: 640px) {
-  .kov-case__row {
-    grid-template-columns: 96px 1fr;
-    gap: 20px;
-  }
-}
-
-.kov-case__row dt {
-  padding-top: 2px;
+.kov-soon__state {
+  flex: 0 0 auto;
   font-family: var(--font-mono), monospace;
   font-size: 10px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--kov-red);
+  color: var(--kov-steel);
+  opacity: 0.7;
 }
 
-/* --kov-concrete rather than --kov-steel: steel is 4.41:1 on #0a0a0a, under
-   the 4.5:1 floor for body copy. */
-.kov-case__row dd {
-  max-width: 58ch;
-  font-size: 14px;
-  line-height: 1.65;
+/* ── Invitation ──────────────────────────────────────────────────────── */
+
+.kov-band--cta {
+  padding: 96px 0 104px;
+  border-top: 1px solid var(--kov-border);
+  background: linear-gradient(180deg, rgba(16, 12, 13, 0.6), rgba(10, 10, 10, 0));
+}
+
+@media (min-width: 1024px) {
+  .kov-band--cta {
+    padding: 120px 0 130px;
+  }
+}
+
+.kov-cta__glow {
+  position: absolute;
+  top: 50%;
+  width: min(48vw, 520px);
+  aspect-ratio: 1;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, rgba(227, 30, 36, 0.18), transparent 66%);
+  filter: blur(18px);
+}
+
+.kov-cta__glow--left {
+  left: -18%;
+}
+
+.kov-cta__glow--right {
+  right: -18%;
+}
+
+.kov-cta__inner {
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 36px;
+  align-items: end;
+}
+
+@media (min-width: 1024px) {
+  .kov-cta__inner {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    gap: 72px;
+  }
+}
+
+.kov-cta__title {
+  margin-top: 26px;
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(30px, 4.2vw, 68px);
+  line-height: 0.98;
+  letter-spacing: -0.02em;
+  color: var(--kov-bone);
+}
+
+.kov-cta__aside {
+  max-width: 40ch;
+}
+
+.kov-cta__lede {
+  font-size: 14.5px;
+  line-height: 1.75;
   color: var(--kov-concrete);
 }
 
-.kov-case__links {
+.kov-cta__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 26px;
-}
-
-/* Used on both <a> and <button>, so it resets what a button brings with it. */
-.kov-case__link {
-  display: inline-flex;
   align-items: center;
-  gap: 9px;
-  padding: 12px 20px;
-  border-radius: 999px;
-  border: 1px solid var(--kov-border);
-  background: none;
-  font-family: inherit;
-  font-size: 10px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--kov-bone);
-  cursor: pointer;
-  transition: border-color 300ms ease, background-color 300ms ease, color 300ms ease;
-}
-
-.kov-case__link:hover {
-  border-color: rgba(231, 231, 229, 0.34);
-  background: rgba(231, 231, 229, 0.05);
-}
-
-.kov-case__link--primary {
-  border-color: rgba(227, 30, 36, 0.45);
-  background: rgba(227, 30, 36, 0.1);
-}
-
-.kov-case__link--primary:hover {
-  border-color: rgba(227, 30, 36, 0.75);
-  background: rgba(227, 30, 36, 0.2);
+  gap: 14px;
+  margin-top: 28px;
 }
 
 /* ── The modal ───────────────────────────────────────────────────────── */
+/* Where the reasoning lives. The card carries what you scan; this carries
+   what you read — the film, the longer description, and problem / system /
+   result laid out with room to breathe. */
 
 .kov-modal {
   width: 100%;
@@ -574,9 +694,6 @@
 
 .kov-modal__story {
   margin-top: 24px;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0;
 }
 
 .kov-modal__story > div {
@@ -603,6 +720,8 @@
   color: var(--kov-red);
 }
 
+/* --kov-concrete rather than --kov-steel: steel is 4.41:1 on this ground,
+   under the 4.5:1 floor for body copy. */
 .kov-modal__story dd {
   max-width: 62ch;
   font-size: 14px;
@@ -617,143 +736,59 @@
   margin-top: 26px;
 }
 
-/* ── À venir ─────────────────────────────────────────────────────────── */
-
-.kov-soon {
-  margin-top: 120px;
-  padding-top: 48px;
-  border-top: 1px solid var(--kov-border);
-}
-
-.kov-soon__head {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-@media (min-width: 768px) {
-  .kov-soon__head {
-    flex-direction: row;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 32px;
-  }
-}
-
-.kov-soon__title {
-  font-family: var(--font-display), sans-serif;
-  font-size: 20px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--kov-bone);
-}
-
-.kov-soon__note {
-  max-width: 46ch;
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--kov-steel);
-}
-
-.kov-soon__list {
-  list-style: none;
-  margin-top: 28px;
-}
-
-.kov-soon__row {
-  display: flex;
+.kov-modal__link {
+  display: inline-flex;
   align-items: center;
-  gap: 18px;
-  padding: 20px 0;
-  border-top: 1px solid var(--kov-border);
-}
-
-.kov-soon__index {
-  flex: 0 0 auto;
-  font-family: var(--font-mono), monospace;
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  color: var(--kov-steel);
-  font-variant-numeric: tabular-nums;
-}
-
-.kov-soon__tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 18px;
-  flex: 1;
-  min-width: 0;
-  font-size: 11px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--kov-concrete);
-}
-
-.kov-soon__state {
-  flex: 0 0 auto;
+  gap: 9px;
+  padding: 12px 20px;
+  border-radius: 4px;
+  border: 1px solid var(--kov-border);
   font-family: var(--font-mono), monospace;
   font-size: 10px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--kov-steel);
-  opacity: 0.7;
-}
-
-/* ── Close ───────────────────────────────────────────────────────────── */
-
-.kov-work-cta {
-  margin-top: 120px;
-  padding-top: 64px;
-  border-top: 1px solid var(--kov-border);
-  text-align: center;
-}
-
-.kov-work-cta .kov-work-eyebrow {
-  justify-content: center;
-}
-
-.kov-work-cta__title {
-  margin-top: 22px;
-  font-family: var(--font-display), sans-serif;
-  font-size: clamp(30px, 4vw, 62px);
-  line-height: 0.98;
-  letter-spacing: -0.015em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--kov-bone);
+  transition: border-color 300ms ease, background-color 300ms ease;
 }
 
-.kov-work-cta__lede {
-  margin: 20px auto 0;
-  max-width: 46ch;
-  font-size: 14px;
-  line-height: 1.7;
-  color: var(--kov-concrete);
+.kov-modal__link:hover {
+  border-color: rgba(231, 231, 229, 0.34);
+  background: rgba(231, 231, 229, 0.05);
 }
 
-.kov-work-cta__actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  margin-top: 34px;
+.kov-modal__link--primary {
+  border-color: rgba(227, 30, 36, 0.45);
+  background: rgba(227, 30, 36, 0.12);
+}
+
+.kov-modal__link--primary:hover {
+  border-color: rgba(227, 30, 36, 0.75);
+  background: rgba(227, 30, 36, 0.22);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .kov-case__link,
-  .kov-case__img,
-  .kov-case__play,
-  .kov-work-index__item,
-  .kov-work-index__arrow,
-  .kov-modal__close {
+  .kov-pcard,
+  .kov-pcard__img,
+  .kov-pcard__play,
+  .kov-pcard__pill,
+  .kov-pcard__pill-arrow {
     transition: none;
   }
 
-  .kov-case__trigger:hover .kov-case__img {
+  .kov-pcard:hover {
+    transform: none;
+  }
+
+  .kov-pcard:hover .kov-pcard__img {
     transform: none;
   }
 
   .kov-modal__panel {
     animation: none;
+  }
+
+  .kov-modal__close,
+  .kov-modal__link {
+    transition: none;
   }
 }

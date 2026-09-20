@@ -17,7 +17,7 @@ export interface FurnitureItem {
   mini?: boolean;
 }
 
-export type StudioRoomType = "portal" | "design" | "gallery" | "motion" | "devlab" | "lounge" | "rooftop";
+export type StudioRoomType = "portal" | "design" | "gallery" | "motion" | "bureau" | "lounge" | "rooftop";
 
 // --- small composition helpers -------------------------------------------
 // Furniture is built from a handful of primitives rather than one box per
@@ -128,20 +128,29 @@ export const STUDIO_MAP_FURNITURE: Record<StudioRoomType, FurnitureItem[]> = {
   ],
 
   // P05 — two workbenches facing each other, monitors, a small rack.
-  devlab: [
-    ...desk(-0.1, -0.9, 1.7, 0.5, "graphite", true),
-    ...desk(-0.1, 0.45, 1.7, 0.5, "graphite"),
-    monitor(-0.55, 0.58, -1.05),
-    monitor(0.35, 0.58, -1.05),
-    monitor(-0.55, 0.58, 0.3, 0.42, Math.PI),
-    monitor(0.35, 0.58, 0.3, 0.42, Math.PI),
-    ...chair(-0.55, -0.42, Math.PI),
-    ...chair(0.35, -0.42, Math.PI),
-    ...chair(-0.1, 0.98),
-    { shape: { kind: "box", size: [0.4, 0.95, 0.4] }, position: [0.82, 0.47, 1.2], material: "graphite", mini: true },
-    { shape: { kind: "box", size: [0.3, 0.02, 0.02] }, position: [0.82, 0.32, 1.0], material: "coolEmissive" },
-    { shape: { kind: "box", size: [0.3, 0.02, 0.02] }, position: [0.82, 0.52, 1.0], material: "coolEmissive" },
-    { shape: { kind: "box", size: [0.3, 0.02, 0.02] }, position: [0.82, 0.72, 1.0], material: "coolEmissive" },
+  // Rebuilt from the room's own panorama rather than inherited from the
+  // "Dev Lab" placeholder this slot used to be. That version was two
+  // benches, four monitors and a server rack; the photograph is a single
+  // sculpted desk facing a bay window, two armchairs in front of it, a
+  // linear fireplace and a wall of shelving. The mini-map claims to be the
+  // floor plan, so it has to show the room that is actually there.
+  bureau: [
+    // The desk runs along the east wall, facing the bay window.
+    ...desk(0.45, 0, 0.55, 1.5, "warmMetal", true),
+    ...chair(0.84, 0, -Math.PI / 2),
+    // The two seats across it.
+    ...chair(-0.05, -0.36, Math.PI / 2),
+    ...chair(-0.05, 0.36, Math.PI / 2),
+    // Linear fireplace, north wall.
+    { shape: { kind: "box", size: [0.95, 0.32, 0.14] }, position: [-0.25, 0.16, -1.36], material: "blackStone", mini: true },
+    { shape: { kind: "box", size: [0.62, 0.03, 0.03] }, position: [-0.25, 0.25, -1.3], material: "warmEmissive" },
+    // Shelving, south wall.
+    { shape: { kind: "box", size: [1.5, 0.86, 0.2] }, position: [0.05, 0.43, 1.38], material: "darkWood", mini: true },
+    { shape: { kind: "box", size: [1.3, 0.02, 0.02] }, position: [0.05, 0.6, 1.27], material: "warmEmissive" },
+    // The reading corner opposite the fireplace.
+    { shape: { kind: "box", size: [0.56, 0.3, 0.56] }, position: [-0.82, 0.16, -0.7], material: "fabricLight" },
+    { shape: { kind: "box", size: [0.56, 0.16, 0.16] }, position: [-0.82, 0.38, -0.92], material: "fabricLight" },
+    ...plant(-0.88, 0.75, 0, 0.9),
   ],
 
   // P06 — the warm room: modular sofa, armchairs, rug, linear fireplace.
@@ -212,9 +221,9 @@ export const STUDIO_ROOM_TYPE_INFO: Record<StudioRoomType, { label: string; feat
     label: "Salle motion",
     features: ["Grand écran", "Éclairage indirect", "Poste de travail", "Assises basses"],
   },
-  devlab: {
-    label: "Lab développement",
-    features: ["Deux plans de travail", "Quatre moniteurs", "Baie technique", "Éclairage fonctionnel"],
+  bureau: {
+    label: "Bureau",
+    features: ["Plan de travail sculpté", "Baie panoramique", "Cheminée linéaire", "Coin lecture", "Bibliothèque"],
   },
   lounge: {
     label: "Lounge",

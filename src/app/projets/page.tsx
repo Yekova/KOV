@@ -18,16 +18,21 @@ export const metadata: Metadata = {
 
 // The work, in full.
 //
-// The homepage section shows the cards; this page shows the reasoning. It is
-// built from the same PROJECTS data, so it can never list a project the rest
-// of the site does not know about, and it cannot drift out of date on its
-// own.
+// Three bands — statement, work, invitation — each running the full width of
+// the viewport with its own ground, separated by hairlines. <main> carries no
+// container of its own; each band pads itself, which is the only way to get a
+// band that bleeds to the edge while its content still lines up with every
+// other page on the site.
+//
+// The homepage section shows the cards; this page shows the reasoning. Both
+// render from PROJECTS, so this page cannot list work the rest of the site
+// does not know about, and it cannot drift out of date on its own.
 //
 // Two things it deliberately does not do. It does not filter — a category
-// filter over two delivered projects is a control with nothing to control.
-// And it does not pad: the three unpublished entries appear as an index of
-// rows, not as three reserved cards with "Bientôt" in them, because a
-// portfolio's worst tell is empty frames dressed up as work.
+// control over two delivered projects controls nothing. And it does not pad:
+// the unpublished entries are an index of rows, not reserved cards with
+// "Bientôt" in them, because a portfolio's worst tell is empty frames dressed
+// up as work.
 export default function ProjetsPage() {
   const delivered = PROJECTS.filter((project) => project.status === "live");
   const upcoming = PROJECTS.filter((project) => project.status === "upcoming");
@@ -44,117 +49,113 @@ export default function ProjetsPage() {
   };
 
   return (
-    <main id="kov-main" tabIndex={-1} className="min-h-screen px-6 pt-36 pb-32 max-w-[1600px] mx-auto">
+    <main id="kov-main" tabIndex={-1} className="kov-work">
       {/* Static, hardcoded JSON, no user input — dangerouslySetInnerHTML is
           the only way to emit raw JSON-LD. */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      {/* The head used to be a title, a paragraph and a count stacked in a
-          column — correct, and completely inert. It is now a spread: the
-          statement on the left, and on the right a real table of contents
-          that jumps into the page. A work page whose first screen cannot
-          name the work on it is a cover, not an opening. */}
-      <header className="kov-work-hero">
-        <div aria-hidden="true" className="kov-work-hero__grid" />
+      {/* ── Statement ──────────────────────────────────────────────── */}
+      <header className="kov-band kov-band--hero">
+        {/* Drawn, not photographed. The reference for this page opens on a
+            lit planet; nothing of the sort exists in the repository, and a
+            stock render would be the one dishonest object on a page whose
+            whole argument is that it shows real work. Two gradients and a
+            circle get the same light for nothing. */}
+        <div aria-hidden="true" className="kov-hero__grid" />
+        <div aria-hidden="true" className="kov-hero__body" />
+        <div aria-hidden="true" className="kov-hero__streak" />
 
-        <div className="kov-work-hero__cols">
+        <div className="kov-band__inner kov-hero__inner">
           <Reveal variant="blur">
-            <p className="kov-work-eyebrow">
-              <span aria-hidden="true" className="kov-work-eyebrow__dot" />
-              Réalisations
-            </p>
+            <p className="kov-rule-label">Projets</p>
 
-            <h1
-              className="kov-work-title"
-              style={{ fontSize: "var(--display-lg)", lineHeight: "var(--line-height-display)" }}
-            >
-              Chaque projet, de bout en bout<span className="text-kov-red">.</span>
+            <h1 className="kov-hero__title">
+              Chaque projet,
+              <br />
+              de bout en bout<span className="text-kov-red">.</span>
             </h1>
 
-            <p className="kov-work-lede">
+            <p className="kov-hero__lede">
               Le problème de départ, le système construit pour y répondre, et ce qui a changé. Pas une galerie
-              d&apos;images : le raisonnement derrière chaque projet, écrit.
+              d&apos;images : le raisonnement derrière chaque projet.
             </p>
-          </Reveal>
 
-          <Reveal variant="fade" delay={0.12}>
-            <nav className="kov-work-index" aria-label="Sommaire des réalisations">
-              <p className="kov-work-index__label">Au sommaire</p>
-
-              <ol className="kov-work-index__list">
-                {delivered.map((project) => (
-                  <li key={project.id}>
-                    <a href={`#projet-${project.id}`} className="kov-work-index__item">
-                      <span aria-hidden="true" className="kov-work-index__num">
-                        {project.id}
-                      </span>
-                      <span className="kov-work-index__name">{project.name}</span>
-                      <span className="kov-work-index__cat">{project.category}</span>
-                      <span aria-hidden="true" className="kov-work-index__arrow">
-                        ↓
-                      </span>
-                    </a>
-                  </li>
-                ))}
-              </ol>
-
-              {/* Counted from the data. A portfolio that says "six projets"
-                  above a list of two is the one mistake this page cannot
-                  afford, so the number is never typed by hand. */}
-              <p className="kov-work-count">
-                <span>
-                  <b>{String(delivered.length).padStart(2, "0")}</b> en ligne
-                </span>
-                <span aria-hidden="true">/</span>
-                <span>
-                  <b>{String(upcoming.length).padStart(2, "0")}</b> à venir
-                </span>
-              </p>
-            </nav>
+            <p className="kov-hero__triad">
+              <span aria-hidden="true" className="kov-hero__triad-rule" />
+              <span>Concevoir</span>
+              <span aria-hidden="true">|</span>
+              <span>Développer</span>
+              <span aria-hidden="true">|</span>
+              <span>Faire grandir</span>
+            </p>
           </Reveal>
         </div>
       </header>
 
-      <ol className="kov-work-list">
-        {delivered.map((project, index) => (
-          <Reveal as="li" key={project.id} variant="fade" className="kov-case" id={`projet-${project.id}`}>
-            <ProjectCase project={project} index={index} />
+      {/* ── The work ───────────────────────────────────────────────── */}
+      <section className="kov-band kov-band--work" aria-label="Projets livrés">
+        <div className="kov-band__inner">
+          <ol className="kov-work-list">
+            {delivered.map((project, index) => (
+              <Reveal
+                as="li"
+                key={project.id}
+                variant="fade"
+                delay={index * 0.08}
+                className="kov-pcard"
+                id={`projet-${project.id}`}
+              >
+                <ProjectCase project={project} />
+              </Reveal>
+            ))}
+          </ol>
+
+          {upcoming.length > 0 && (
+            <Reveal variant="fade">
+              <ProjectsUpcoming />
+            </Reveal>
+          )}
+        </div>
+      </section>
+
+      {/* ── Invitation ─────────────────────────────────────────────── */}
+      <section className="kov-band kov-band--cta" aria-labelledby="projets-cta">
+        <div aria-hidden="true" className="kov-cta__glow kov-cta__glow--left" />
+        <div aria-hidden="true" className="kov-cta__glow kov-cta__glow--right" />
+
+        <div className="kov-band__inner kov-cta__inner">
+          <Reveal variant="blur">
+            <p className="kov-rule-label">Un futur à construire</p>
+
+            <h2 id="projets-cta" className="kov-cta__title">
+              Et si le prochain projet
+              <br />
+              c&apos;était le vôtre<span className="text-kov-red"> ?</span>
+            </h2>
           </Reveal>
-        ))}
-      </ol>
 
-      <Reveal variant="fade">
-        <ProjectsUpcoming />
-      </Reveal>
+          <Reveal variant="fade" delay={0.12}>
+            <div className="kov-cta__aside">
+              <p className="kov-cta__lede">
+                Dites-nous où vous en êtes. On revient avec une lecture du problème avant de parler de design.
+              </p>
 
-      <Reveal variant="blur">
-        <section className="kov-work-cta" aria-labelledby="projets-cta">
-          <p className="kov-work-eyebrow">
-            <span aria-hidden="true" className="kov-work-eyebrow__dot" />
-            La suite
-          </p>
-
-          <h2 id="projets-cta" className="kov-work-cta__title">
-            Le prochain, c&apos;est le vôtre<span className="text-kov-red">.</span>
-          </h2>
-
-          <p className="kov-work-cta__lede">
-            Dites-nous où vous en êtes. On revient avec une lecture du problème avant de parler de design.
-          </p>
-
-          {/* KovCTA `flat` skips ShapeBlur's WebGL halo and Button `ghost` is
-              the one variant excluded from the specular effect — so the page
-              closes without mounting a single GL context. */}
-          <div className="kov-work-cta__actions">
-            <KovCTA href="/contact" flat emphasis>
-              Démarrer un projet
-            </KovCTA>
-            <Button href="/studio" variant="ghost">
-              Visiter le studio ↗
-            </Button>
-          </div>
-        </section>
-      </Reveal>
+              {/* KovCTA `flat` skips ShapeBlur's WebGL halo and Button
+                  `ghost` is the one variant excluded from the specular
+                  effect — so the page closes without mounting a GL
+                  context. */}
+              <div className="kov-cta__actions">
+                <KovCTA href="/contact" flat emphasis>
+                  Échanger sur mon projet
+                </KovCTA>
+                <Button href="/studio" variant="ghost">
+                  Visiter le studio ↗
+                </Button>
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </section>
     </main>
   );
 }

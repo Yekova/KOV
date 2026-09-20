@@ -179,7 +179,7 @@ export const STUDIO_MAP_LAYOUT: Record<string, StudioMapLayoutEntry> = {
     position: [3, 0, -3.1],
     footprint: [2.4, 3],
     level: 0,
-    type: "devlab",
+    type: "bureau",
     floorMaterial: "floorConcrete",
     lighting: "neutral",
     labelAnchor: [6.6, 1.6, -4.2],

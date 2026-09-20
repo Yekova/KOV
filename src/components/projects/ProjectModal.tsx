@@ -140,13 +140,13 @@ export function ProjectModal({
 
           <div className="kov-modal__actions">
             {project.href && (
-              <Link href={project.href} className="kov-case__link kov-case__link--primary">
+              <Link href={project.href} className="kov-modal__link kov-modal__link--primary">
                 Voir le projet
                 <span aria-hidden="true">↗</span>
               </Link>
             )}
             {project.caseStudyHref && (
-              <Link href={project.caseStudyHref} className="kov-case__link">
+              <Link href={project.caseStudyHref} className="kov-modal__link">
                 Lire l&apos;étude de cas
                 <span aria-hidden="true">→</span>
               </Link>

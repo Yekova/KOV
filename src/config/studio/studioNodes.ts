@@ -180,6 +180,17 @@ export const STUDIO_NODES: Record<string, StudioNode> = {
         position: [0, -30, 480],
         label: "Portal",
       },
+      {
+        targetNodeId: "p05",
+        // Invented placement, same latitude P01's own Lounge and Rooftop
+        // hotspots were given: there is no second-passage geometry in this
+        // photograph to derive a yaw from. The floor plan puts the Bureau
+        // to this room's east, so the hotspot goes to the right of the
+        // arrival view. StudioDebugPanel's yaw/pitch readout is where to
+        // nudge it once walked through live.
+        position: [420, -20, -260],
+        label: "Bureau",
+      },
     ],
     // Removed by request. These were four hotspots on the gallery walls,
     // each opening a project panel — three of them on "Projet à venir"
@@ -229,20 +240,54 @@ export const STUDIO_NODES: Record<string, StudioNode> = {
     artworks: [],
     infoHotspots: [],
   },
+  // Was the scaffolded "Dev Lab" — the placeholder is now a real room. It
+  // takes that slot rather than becoming a p08 because the mini-map is an
+  // actual floor plan (studioMapLayout.ts): p05 already has a footprint, a
+  // west opening onto the Design Studio and an east window. Adding an
+  // eighth room would have meant carving a new volume into the building.
   p05: {
     id: "p05",
-    name: "Dev Lab",
+    name: "Bureau",
     room: "P05",
-    subtitle: "Builder l'impossible",
-    description: "Bientôt disponible.",
-    panorama: "",
+    subtitle: "Là où ça se décide",
+    description:
+      "Un plan de travail unique face à la baie, une cheminée linéaire, deux fauteuils en vis-à-vis. La pièce la plus calme du studio, et celle où les arbitrages se prennent.",
+    panorama: "/studio/panoramas/p05.webp",
+    // The source frames the desk, the bay window and the valley beyond it
+    // at its own horizontal centre, so yaw 0 already is the "face forward"
+    // arrival — same convention as P06 and P07.
     initialYaw: 0,
     initialPitch: 0,
+    // AI-upscaled source (Upscayl), downsampled from 8870 to 6144x3072 like
+    // every other room: above the 8192 MAX_TEXTURE_SIZE a lot of integrated
+    // GPUs report, the upload either fails or the driver silently
+    // downscales it.
     zoomEnabled: true,
-    available: false,
-    connections: [],
+    available: true,
+    connections: [
+      {
+        targetNodeId: "p02",
+        // Back the way the visitor came — the floor plan puts this room's
+        // only opening on its west side, onto the Design Studio, so the
+        // return hotspot sits behind the arrival orientation exactly as
+        // every other room's does.
+        position: [0, -30, 480],
+        label: "Design Studio",
+      },
+    ],
     artworks: [],
-    infoHotspots: [],
+    // The Systèmes pillar's own copy, verbatim (src/data/expertisePillars.ts)
+    // — same convention as P01 and P07, which reuse the Design and Stratégie
+    // lines rather than inventing a backstory per room. An office is where
+    // "will this still work when the company is twice the size" gets asked.
+    infoHotspots: [
+      {
+        position: [-260, -10, -180],
+        label: "Construire pour évoluer",
+        title: "Construire pour évoluer",
+        body: "Un site ne doit pas devenir une contrainte quand l'entreprise grandit. On conçoit une architecture capable d'évoluer, d'accueillir du nouveau contenu et de rester maintenable dans le temps.",
+      },
+    ],
   },
   p06: {
     id: "p06",
