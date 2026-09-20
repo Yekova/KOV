@@ -10,7 +10,7 @@ import { StudioDropdown } from "@/components/navigation/NavDropdownContent";
 export interface NavLinkItem {
   href: string;
   label: string;
-  dropdownKey?: "expertise" | "studio";
+  dropdownKey?: "studio";
 }
 
 const DROPDOWNS: Record<string, { width: number; render: (onNavigate: () => void) => ReactNode }> = {
