@@ -47,10 +47,14 @@ export function Reveal({
   as: Tag = "div",
   style,
   variant = "fade",
+  id,
 }: {
   children: ReactNode;
   delay?: number;
   className?: string;
+  /** Forwarded so a revealed element can be an anchor target — /projets
+   *  links each case from its own table of contents. */
+  id?: string;
   // The only two tags this is ever rendered as — a narrow literal union
   // (not `ElementType`) so `<Tag>` resolves against just these two JSX
   // intrinsics. A fully generic `ElementType` collapses to `never` once
@@ -98,7 +102,7 @@ export function Reveal({
   // from, but TS still wants a ref satisfying both tags' exact ref types at
   // once for a two-member union tag — hence the cast.
   return (
-    <Tag ref={ref as never} className={className} style={{ ...style, ...state, transition }}>
+    <Tag ref={ref as never} id={id} className={className} style={{ ...style, ...state, transition }}>
       {children}
     </Tag>
   );

@@ -57,6 +57,17 @@ export interface Project {
    * real story — those entries are simply absent from that band rather than
    * padded out with a placeholder. */
   narrative: ProjectNarrative | null;
+  /** A screen recording of the work, shown in the project's modal on
+   * /projets. width and height are the file's real pixel dimensions: the
+   * modal reserves the box from them, so opening it never reflows.
+   *
+   * Null until something is actually filmed. The modal is then simply not
+   * offered for that project — no empty player, no "vidéo bientôt". */
+  video: { src: string; poster: string; width: number; height: number } | null;
+  /** A longer description, for the modal only. The three narrative lines are
+   * the summary the page itself carries; this is the room to say more once
+   * there is more to say. Null renders nothing. */
+  detail: string | null;
 }
 
 export const PROJECTS: Project[] = [
@@ -77,6 +88,8 @@ export const PROJECTS: Project[] = [
       system: "Architecture, design system, responsive, contenu.",
       result: "Une expérience plus claire, cohérente et évolutive.",
     },
+    video: null,
+    detail: null,
   },
   {
     id: "02",
@@ -95,6 +108,15 @@ export const PROJECTS: Project[] = [
       system: "Panoramas 360°, navigation WebGL, plan interactif.",
       result: "Une visite qu'on parcourt au lieu d'une page qu'on lit.",
     },
+    // Already in the repository, and already a recording of this very
+    // project — StudioShowcase plays the same file on the homepage.
+    video: {
+      src: "/home/studio-showreel.mp4",
+      poster: "/home/studio-showreel-poster.webp",
+      width: 1280,
+      height: 560,
+    },
+    detail: null,
   },
   {
     id: "03",
@@ -107,6 +129,8 @@ export const PROJECTS: Project[] = [
     image: null,
     tagline: null,
     narrative: null,
+    video: null,
+    detail: null,
   },
   {
     id: "04",
@@ -119,6 +143,8 @@ export const PROJECTS: Project[] = [
     image: null,
     tagline: null,
     narrative: null,
+    video: null,
+    detail: null,
   },
   {
     id: "05",
@@ -131,6 +157,8 @@ export const PROJECTS: Project[] = [
     image: null,
     tagline: null,
     narrative: null,
+    video: null,
+    detail: null,
   },
   {
     // Not a project and not pretending to be one. The network's argument is
@@ -146,5 +174,7 @@ export const PROJECTS: Project[] = [
     image: null,
     tagline: null,
     narrative: null,
+    video: null,
+    detail: null,
   },
 ];

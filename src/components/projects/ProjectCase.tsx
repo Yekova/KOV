@@ -1,66 +1,88 @@
+"use client";
+
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { Play } from "lucide-react";
 import { NARRATIVE_ROWS, type Project } from "@/data/projects";
+import { ProjectModal } from "./ProjectModal";
 
 // One delivered project, at full page width.
 //
 // Not a bigger card. The homepage already has the cards, and a page that
 // repeated them larger would add size without adding anything to read. What
-// this adds is the reasoning: the problem, the system built for it, and what
-// changed — the same three rows the homepage band uses, given the room to
-// actually be read.
+// this adds is the reasoning — the problem, the system built for it, and
+// what changed — and, where one has been filmed, the thing itself moving.
 //
-// Everything is real HTML from the first byte: no disclosure, no hover, no
-// carousel. This is the page a prospect sends to someone else, and the page
-// a crawler has to be able to read in one pass.
+// Everything is real HTML from the first byte. The modal's contents are the
+// only exception, and they are additional rather than a place the page's own
+// content went to hide.
 export function ProjectCase({ project, index }: { project: Project; index: number }) {
-  // Alternating sides. The plate leads on the first, the text leads on the
-  // second — so two entries read as a rhythm rather than as a repeated row.
+  const [open, setOpen] = useState(false);
+
+  // The name leads, then the plate — so the eye starts on the word and the
+  // image confirms it, rather than meeting an unlabelled picture. Sides
+  // alternate below, so two entries read as a rhythm and not as a table.
   const flipped = index % 2 === 1;
 
-  const plate = (
-    <div className={`kov-case__plate${flipped ? " kov-case__plate--flip" : ""}`}>
-      <div className="kov-case__frame">
-        {project.image ? (
-          <Image
-            src={project.image}
-            alt={`${project.name} — ${project.category}`}
-            fill
-            sizes="(max-width: 1023px) 92vw, 48vw"
-            className="kov-case__img"
-          />
-        ) : (
-          // A delivered project with no photograph yet gets a reserved panel,
-          // never a stand-in image. Same rule as the homepage cards.
-          <div className="kov-case__reserved">
-            <span>Visuel à venir</span>
-          </div>
-        )}
+  // Offered only where there is something more to show. No empty player, no
+  // modal that opens onto the same three lines already on the page.
+  const hasModal = Boolean(project.video || project.detail);
 
-        {project.tagline && <span className="kov-case__tagline">{project.tagline}</span>}
-      </div>
+  const frame = (
+    <div className="kov-case__frame">
+      {project.image ? (
+        <Image
+          src={project.image}
+          alt={`${project.name} — ${project.category}`}
+          fill
+          sizes="(max-width: 1023px) 92vw, 48vw"
+          className="kov-case__img"
+        />
+      ) : (
+        // A delivered project with no photograph yet gets a reserved panel,
+        // never a stand-in image. Same rule as the homepage cards.
+        <div className="kov-case__reserved">
+          <span>Visuel à venir</span>
+        </div>
+      )}
+
+      {project.tagline && <span className="kov-case__tagline">{project.tagline}</span>}
     </div>
   );
 
-  // A fragment, not an <li>. The list item is Reveal's own element on the
-  // page — <ol> admits nothing but <li>, so wrapping this in a Reveal <div>
-  // would be invalid, and rendering an <li> inside Reveal's <li> would nest
-  // two of them and apply the case grid twice.
   return (
     <>
-      {plate}
+      <header className="kov-case__head">
+        <span aria-hidden="true" className="kov-case__index">
+          {project.id}
+        </span>
+        <h2 className="kov-case__name">{project.name}</h2>
+        <span className="kov-case__cat">{project.category}</span>
+      </header>
+
+      <div className={`kov-case__plate${flipped ? " kov-case__plate--flip" : ""}`}>
+        {hasModal ? (
+          // The image is the obvious thing to click, so it is the control.
+          // The button in the text column is the same action stated in
+          // words, for anyone who does not think to try the picture.
+          <button
+            type="button"
+            className="kov-case__trigger"
+            onClick={() => setOpen(true)}
+            aria-label={`${project.video ? "Voir la vidéo" : "En savoir plus"} — ${project.name}`}
+          >
+            {frame}
+            <span aria-hidden="true" className="kov-case__play">
+              <Play size={17} strokeWidth={2} fill="currentColor" />
+            </span>
+          </button>
+        ) : (
+          frame
+        )}
+      </div>
 
       <div className={`kov-case__body${flipped ? " kov-case__body--flip" : ""}`}>
-        <p className="kov-case__meta">
-          <span aria-hidden="true" className="kov-case__index">
-            {project.id}
-          </span>
-          <span aria-hidden="true" className="kov-case__rule" />
-          {project.category}
-        </p>
-
-        <h2 className="kov-case__name">{project.name}</h2>
-
         <ul className="kov-case__tags">
           {project.tags.map((tag) => (
             <li key={tag}>{tag}</li>
@@ -80,12 +102,18 @@ export function ProjectCase({ project, index }: { project: Project; index: numbe
           </dl>
         )}
 
-        {/* Two links, both conditional, both pointing only at routes that
-            exist. Kanti has neither today and therefore shows neither,
-            rather than a disabled button or a link to nowhere. */}
+        {/* Every link here is conditional and points only at a route that
+            exists. Kanti has neither an href nor a case study today, so it
+            shows neither rather than a dead button. */}
         <div className="kov-case__links">
+          {hasModal && (
+            <button type="button" onClick={() => setOpen(true)} className="kov-case__link kov-case__link--primary">
+              {project.video ? "Voir la vidéo" : "En savoir plus"}
+              <Play size={12} strokeWidth={2} fill="currentColor" aria-hidden="true" />
+            </button>
+          )}
           {project.href && (
-            <Link href={project.href} className="kov-case__link kov-case__link--primary">
+            <Link href={project.href} className="kov-case__link">
               Voir le projet
               <span aria-hidden="true">↗</span>
             </Link>
@@ -98,6 +126,8 @@ export function ProjectCase({ project, index }: { project: Project; index: numbe
           )}
         </div>
       </div>
+
+      {hasModal && <ProjectModal project={project} open={open} onClose={() => setOpen(false)} />}
     </>
   );
 }

@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import Lenis from "lenis";
 import { gsap, ScrollTrigger, initGsap, prefersReducedMotion } from "@/lib/motion";
+import { registerScroller } from "@/lib/scrollLock";
 
 // Sitewide inertia scroll for the marketing pages — mounted from
 // SiteChromeInner, which already excludes /admin and /client (a dampened,
@@ -39,7 +40,12 @@ export function SmoothScroll() {
     const resizeObserver = new ResizeObserver(() => lenis.resize());
     resizeObserver.observe(document.body);
 
+    // Overlays need to be able to stop the page behind them. Without this,
+    // a modal opens and the inertia scroll keeps running underneath it.
+    const unregister = registerScroller(lenis);
+
     return () => {
+      unregister();
       resizeObserver.disconnect();
       gsap.ticker.remove(tick);
       lenis.destroy();

@@ -6,7 +6,41 @@
  * homepage cards established. Nothing new is invented here; it is the same
  * language spoken at page scale instead of card scale. */
 
-/* ── Head ────────────────────────────────────────────────────────────── */
+/* ── Hero ────────────────────────────────────────────────────────────── */
+
+.kov-work-hero {
+  position: relative;
+  padding-bottom: 8px;
+}
+
+/* The same faint rule grid the homepage projects section sits on, masked to
+   a soft centre so it never reaches an edge and turns into a border. */
+.kov-work-hero__grid {
+  position: absolute;
+  inset: -40px -24px;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, rgba(231, 231, 229, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(231, 231, 229, 0.03) 1px, transparent 1px);
+  background-size: 78px 78px;
+  mask-image: radial-gradient(72% 70% at 40% 45%, #000 20%, transparent 80%);
+  -webkit-mask-image: radial-gradient(72% 70% at 40% 45%, #000 20%, transparent 80%);
+}
+
+.kov-work-hero__cols {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 48px;
+}
+
+@media (min-width: 1024px) {
+  .kov-work-hero__cols {
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
+    gap: 72px;
+    align-items: end;
+  }
+}
 
 .kov-work-eyebrow {
   display: flex;
@@ -27,12 +61,88 @@
   box-shadow: 0 0 10px rgba(227, 30, 36, 0.7);
 }
 
+.kov-work-title {
+  margin-top: 26px;
+  max-width: 16ch;
+  font-family: var(--font-display), sans-serif;
+  letter-spacing: -0.015em;
+  text-transform: uppercase;
+  color: var(--kov-bone);
+}
+
 .kov-work-lede {
   margin-top: 26px;
-  max-width: 54ch;
+  max-width: 50ch;
   font-size: 15px;
   line-height: 1.7;
   color: var(--kov-concrete);
+}
+
+/* ── The table of contents ───────────────────────────────────────────── */
+
+.kov-work-index__label {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--kov-border);
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--kov-steel);
+}
+
+.kov-work-index__list {
+  list-style: none;
+}
+
+.kov-work-index__item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: baseline;
+  gap: 8px 16px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--kov-border);
+  transition: border-color 300ms ease;
+}
+
+.kov-work-index__item:hover {
+  border-color: rgba(227, 30, 36, 0.45);
+}
+
+.kov-work-index__num {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--kov-red);
+  font-variant-numeric: tabular-nums;
+}
+
+.kov-work-index__name {
+  font-family: var(--font-display), sans-serif;
+  font-size: 17px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--kov-bone);
+}
+
+.kov-work-index__cat {
+  grid-column: 2;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--kov-steel);
+}
+
+.kov-work-index__arrow {
+  grid-row: 1 / span 2;
+  grid-column: 3;
+  align-self: center;
+  color: var(--kov-steel);
+  transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1), color 300ms ease;
+}
+
+.kov-work-index__item:hover .kov-work-index__arrow {
+  transform: translateY(3px);
+  color: var(--kov-red);
 }
 
 /* Counted from the data, never typed by hand — the one number on this page
@@ -42,10 +152,8 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 14px;
-  margin-top: 34px;
-  padding-top: 20px;
-  border-top: 1px solid var(--kov-border);
+  gap: 12px;
+  margin-top: 20px;
   font-family: var(--font-mono), monospace;
   font-size: 11px;
   letter-spacing: 0.16em;
@@ -71,29 +179,38 @@
   display: flex;
   flex-direction: column;
   gap: 96px;
-  margin-top: 88px;
+  margin-top: 96px;
 }
 
 .kov-case {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 32px;
-  align-items: center;
+  gap: 28px;
+  /* The page's top blur runs 8rem down; without this an anchor jump from
+     the table of contents lands the project's name inside it. */
+  scroll-margin-top: 140px;
 }
 
 @media (min-width: 1024px) {
   .kov-work-list {
-    gap: 140px;
-    margin-top: 110px;
+    gap: 150px;
+    margin-top: 120px;
   }
 
   .kov-case {
     grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-    gap: 72px;
+    gap: 44px 72px;
+    align-items: start;
   }
 
-  /* The plate leads on the first entry, the text on the second. Two rows of
-     identical shape read as a table; alternating them reads as a rhythm. */
+  /* The name spans the spread, above both columns: the eye starts on the
+     word and the plate confirms it, rather than meeting an unlabelled
+     picture and looking around for what it is. */
+  .kov-case__head {
+    grid-column: 1 / -1;
+  }
+
+  /* Sides alternate, so two entries read as a rhythm and not as a table. */
   .kov-case__plate--flip {
     order: 2;
   }
@@ -103,9 +220,58 @@
   }
 }
 
-/* The plate — the light object on the black field, which is the move the
-   homepage cards established and the only thing that ties this page to
-   them visually. */
+.kov-case__head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  padding-top: 20px;
+  border-top: 1px solid var(--kov-border);
+}
+
+.kov-case__index {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--kov-red);
+  font-variant-numeric: tabular-nums;
+}
+
+.kov-case__name {
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(30px, 3.4vw, 54px);
+  line-height: 0.98;
+  letter-spacing: -0.015em;
+  text-transform: uppercase;
+  color: var(--kov-bone);
+}
+
+.kov-case__cat {
+  margin-left: auto;
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--kov-steel);
+}
+
+/* ── The plate ───────────────────────────────────────────────────────── */
+/* The light object on the black field — the move the homepage cards
+   established, and the only thing tying this page to them visually. */
+
+.kov-case__trigger {
+  display: block;
+  position: relative;
+  width: 100%;
+  cursor: pointer;
+  border-radius: 22px;
+}
+
+.kov-case__trigger:focus-visible {
+  outline: 2px solid var(--kov-red);
+  outline-offset: 5px;
+}
+
 .kov-case__frame {
   position: relative;
   aspect-ratio: 16 / 9;
@@ -120,6 +286,12 @@
 
 .kov-case__img {
   object-fit: cover;
+  transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.kov-case__trigger:hover .kov-case__img,
+.kov-case__trigger:focus-visible .kov-case__img {
+  transform: scale(1.03);
 }
 
 .kov-case__reserved {
@@ -148,39 +320,34 @@
   background: linear-gradient(180deg, transparent, rgba(8, 8, 9, 0.85));
 }
 
-/* ── The text column ─────────────────────────────────────────────────── */
-
-.kov-case__meta {
+.kov-case__play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
   align-items: center;
-  gap: 14px;
-  font-family: var(--font-mono), monospace;
-  font-size: 11px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--kov-steel);
+  justify-content: center;
+  width: 62px;
+  height: 62px;
+  padding-left: 3px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  background: rgba(10, 10, 10, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: #f5f3ef;
+  transition: background-color 320ms ease, border-color 320ms ease, transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.kov-case__index {
-  color: var(--kov-red);
-  font-variant-numeric: tabular-nums;
+.kov-case__trigger:hover .kov-case__play,
+.kov-case__trigger:focus-visible .kov-case__play {
+  background: var(--kov-red);
+  border-color: var(--kov-red);
+  transform: translate(-50%, -50%) scale(1.07);
 }
 
-.kov-case__rule {
-  width: 34px;
-  height: 1px;
-  background: var(--kov-border);
-}
-
-.kov-case__name {
-  margin-top: 18px;
-  font-family: var(--font-display), sans-serif;
-  font-size: clamp(32px, 3.6vw, 56px);
-  line-height: 0.98;
-  letter-spacing: -0.015em;
-  text-transform: uppercase;
-  color: var(--kov-bone);
-}
+/* ── The text column ─────────────────────────────────────────────────── */
 
 .kov-case__tags {
   list-style: none;
@@ -188,7 +355,6 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  margin-top: 20px;
 }
 
 .kov-case__tags li {
@@ -202,7 +368,7 @@
 }
 
 .kov-case__story {
-  margin-top: 30px;
+  margin-top: 26px;
 }
 
 .kov-case__row {
@@ -245,9 +411,10 @@
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin-top: 28px;
+  margin-top: 26px;
 }
 
+/* Used on both <a> and <button>, so it resets what a button brings with it. */
 .kov-case__link {
   display: inline-flex;
   align-items: center;
@@ -255,10 +422,13 @@
   padding: 12px 20px;
   border-radius: 999px;
   border: 1px solid var(--kov-border);
+  background: none;
+  font-family: inherit;
   font-size: 10px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--kov-bone);
+  cursor: pointer;
   transition: border-color 300ms ease, background-color 300ms ease, color 300ms ease;
 }
 
@@ -275,6 +445,176 @@
 .kov-case__link--primary:hover {
   border-color: rgba(227, 30, 36, 0.75);
   background: rgba(227, 30, 36, 0.2);
+}
+
+/* ── The modal ───────────────────────────────────────────────────────── */
+
+.kov-modal {
+  width: 100%;
+  max-width: min(1080px, 94vw);
+  max-height: 92vh;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--kov-bone);
+  overflow: visible;
+}
+
+.kov-modal::backdrop {
+  background: rgba(6, 6, 7, 0.84);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.kov-modal__panel {
+  position: relative;
+  max-height: 92vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: var(--radius-glass);
+  border: 1px solid var(--glass-border);
+  background: #0d0d0f;
+  box-shadow: 0 40px 110px rgba(0, 0, 0, 0.72);
+  animation: kovModalIn 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes kovModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.kov-modal__close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(10, 10, 10, 0.68);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: var(--kov-bone);
+  cursor: pointer;
+  transition: background-color 280ms ease, border-color 280ms ease;
+}
+
+.kov-modal__close:hover {
+  background: var(--kov-red);
+  border-color: var(--kov-red);
+}
+
+.kov-modal__video {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: #000;
+  border-bottom: 1px solid var(--kov-border);
+}
+
+.kov-modal__player {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.kov-modal__body {
+  padding: 28px 26px 30px;
+}
+
+@media (min-width: 768px) {
+  .kov-modal__body {
+    padding: 34px 40px 40px;
+  }
+}
+
+.kov-modal__meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--kov-steel);
+}
+
+.kov-modal__index {
+  color: var(--kov-red);
+  font-variant-numeric: tabular-nums;
+}
+
+.kov-modal__title {
+  margin-top: 14px;
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(26px, 3vw, 40px);
+  line-height: 1;
+  letter-spacing: -0.015em;
+  text-transform: uppercase;
+  color: var(--kov-bone);
+}
+
+.kov-modal__detail {
+  margin-top: 18px;
+  max-width: 62ch;
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: var(--kov-concrete);
+}
+
+.kov-modal__story {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+}
+
+.kov-modal__story > div {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 5px;
+  padding: 14px 0;
+  border-top: 1px solid var(--kov-border);
+}
+
+@media (min-width: 640px) {
+  .kov-modal__story > div {
+    grid-template-columns: 96px 1fr;
+    gap: 20px;
+  }
+}
+
+.kov-modal__story dt {
+  padding-top: 2px;
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--kov-red);
+}
+
+.kov-modal__story dd {
+  max-width: 62ch;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--kov-concrete);
+}
+
+.kov-modal__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 26px;
 }
 
 /* ── À venir ─────────────────────────────────────────────────────────── */
@@ -368,6 +708,10 @@
   text-align: center;
 }
 
+.kov-work-cta .kov-work-eyebrow {
+  justify-content: center;
+}
+
 .kov-work-cta__title {
   margin-top: 22px;
   font-family: var(--font-display), sans-serif;
@@ -376,10 +720,6 @@
   letter-spacing: -0.015em;
   text-transform: uppercase;
   color: var(--kov-bone);
-}
-
-.kov-work-cta .kov-work-eyebrow {
-  justify-content: center;
 }
 
 .kov-work-cta__lede {
@@ -400,7 +740,20 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .kov-case__link {
+  .kov-case__link,
+  .kov-case__img,
+  .kov-case__play,
+  .kov-work-index__item,
+  .kov-work-index__arrow,
+  .kov-modal__close {
     transition: none;
+  }
+
+  .kov-case__trigger:hover .kov-case__img {
+    transform: none;
+  }
+
+  .kov-modal__panel {
+    animation: none;
   }
 }

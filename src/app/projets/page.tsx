@@ -44,46 +44,80 @@ export default function ProjetsPage() {
   };
 
   return (
-    <main id="kov-main" tabIndex={-1} className="min-h-screen px-6 pt-40 pb-32 max-w-[1600px] mx-auto">
+    <main id="kov-main" tabIndex={-1} className="min-h-screen px-6 pt-36 pb-32 max-w-[1600px] mx-auto">
       {/* Static, hardcoded JSON, no user input — dangerouslySetInnerHTML is
           the only way to emit raw JSON-LD. */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <Reveal variant="blur">
-        <p className="kov-work-eyebrow">
-          <span aria-hidden="true" className="kov-work-eyebrow__dot" />
-          Réalisations
-        </p>
+      {/* The head used to be a title, a paragraph and a count stacked in a
+          column — correct, and completely inert. It is now a spread: the
+          statement on the left, and on the right a real table of contents
+          that jumps into the page. A work page whose first screen cannot
+          name the work on it is a cover, not an opening. */}
+      <header className="kov-work-hero">
+        <div aria-hidden="true" className="kov-work-hero__grid" />
 
-        <h1
-          className="font-display text-kov-bone uppercase max-w-4xl"
-          style={{ marginTop: 26, fontSize: "var(--display-lg)", lineHeight: "var(--line-height-display)" }}
-        >
-          Chaque projet, de bout en bout<span className="text-kov-red">.</span>
-        </h1>
+        <div className="kov-work-hero__cols">
+          <Reveal variant="blur">
+            <p className="kov-work-eyebrow">
+              <span aria-hidden="true" className="kov-work-eyebrow__dot" />
+              Réalisations
+            </p>
 
-        <p className="kov-work-lede">
-          Le problème de départ, le système construit pour y répondre, et ce qui a changé. Pas une galerie
-          d&apos;images : le raisonnement derrière chaque projet, écrit.
-        </p>
+            <h1
+              className="kov-work-title"
+              style={{ fontSize: "var(--display-lg)", lineHeight: "var(--line-height-display)" }}
+            >
+              Chaque projet, de bout en bout<span className="text-kov-red">.</span>
+            </h1>
 
-        {/* Counted from the data. A portfolio that says "six projets" above a
-            list of two is the one mistake this page cannot afford, so the
-            number is never typed by hand. */}
-        <p className="kov-work-count">
-          <span>
-            <b>{String(delivered.length).padStart(2, "0")}</b> en ligne
-          </span>
-          <span aria-hidden="true">/</span>
-          <span>
-            <b>{String(upcoming.length).padStart(2, "0")}</b> à venir
-          </span>
-        </p>
-      </Reveal>
+            <p className="kov-work-lede">
+              Le problème de départ, le système construit pour y répondre, et ce qui a changé. Pas une galerie
+              d&apos;images : le raisonnement derrière chaque projet, écrit.
+            </p>
+          </Reveal>
+
+          <Reveal variant="fade" delay={0.12}>
+            <nav className="kov-work-index" aria-label="Sommaire des réalisations">
+              <p className="kov-work-index__label">Au sommaire</p>
+
+              <ol className="kov-work-index__list">
+                {delivered.map((project) => (
+                  <li key={project.id}>
+                    <a href={`#projet-${project.id}`} className="kov-work-index__item">
+                      <span aria-hidden="true" className="kov-work-index__num">
+                        {project.id}
+                      </span>
+                      <span className="kov-work-index__name">{project.name}</span>
+                      <span className="kov-work-index__cat">{project.category}</span>
+                      <span aria-hidden="true" className="kov-work-index__arrow">
+                        ↓
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ol>
+
+              {/* Counted from the data. A portfolio that says "six projets"
+                  above a list of two is the one mistake this page cannot
+                  afford, so the number is never typed by hand. */}
+              <p className="kov-work-count">
+                <span>
+                  <b>{String(delivered.length).padStart(2, "0")}</b> en ligne
+                </span>
+                <span aria-hidden="true">/</span>
+                <span>
+                  <b>{String(upcoming.length).padStart(2, "0")}</b> à venir
+                </span>
+              </p>
+            </nav>
+          </Reveal>
+        </div>
+      </header>
 
       <ol className="kov-work-list">
         {delivered.map((project, index) => (
-          <Reveal as="li" key={project.id} variant="fade" className="kov-case">
+          <Reveal as="li" key={project.id} variant="fade" className="kov-case" id={`projet-${project.id}`}>
             <ProjectCase project={project} index={index} />
           </Reveal>
         ))}
