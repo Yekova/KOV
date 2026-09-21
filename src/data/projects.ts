@@ -86,6 +86,10 @@ export interface Project {
      * about length rather than guessing at it. */
     duration?: string;
   } | null;
+  /** A mark that pops out of the card's frame on hover. The client's own
+   * logo where there is one and permission to use it; KOV's monogram for
+   * KOV's own products. Null renders nothing. */
+  hoverLogo: string | null;
   /** Extra real images of this project, for the modal's strip. Only files
    * that actually depict this work — never a neighbouring render pressed
    * into service to make a row of three. */
@@ -101,6 +105,15 @@ export interface Project {
    * `value` is the figure, `label` what it measures. Add a `source` here the
    * day one of these needs defending. */
   metrics: readonly { value: string; label: string }[] | null;
+  /** A paragraph of real context: who the client is, what they do, what
+   * they came with. The sheet is short on reading and this is the slot for
+   * it — null renders nothing rather than filler. */
+  brief: string | null;
+  /** What was actually handed over, item by item: "Site vitrine 8 pages",
+   * "Design system Figma", "Formation à l'administration". Facts about the
+   * delivery, never figures about the client's business. Empty renders
+   * nothing. */
+  deliverables: readonly string[] | null;
   /** Something the client actually said, and who said it. Null until there
    * is a real quote from a real person who agreed to be named — an invented
    * testimonial is the single most damaging thing a page like this can
@@ -133,6 +146,10 @@ export const PROJECTS: Project[] = [
       system: "Architecture, design system, responsive, contenu.",
       result: "Une expérience plus claire, cohérente et évolutive.",
     },
+    brief: null,
+    deliverables: null,
+    // The client's own violet-on-white variant, supplied by them.
+    hoverLogo: "/work/kanti-logo.png",
     gallery: ["/work/kanti-mockup.webp"],
     metrics: null,
     testimonial: null,
@@ -148,16 +165,19 @@ export const PROJECTS: Project[] = [
     caseStudyHref: null,
     href: "/studio",
     location: null,
-    image: "/studio/covers/p01-cover.webp",
-    // The cover is already a render of the experience itself, not a device
-    // mockup, so it goes straight into the frame.
+    // The Bureau's own bay window, cropped from its panorama. The Portal
+    // render that was here showed the entrance; this shows why anyone would
+    // walk through it.
+    image: "/studio/covers/studio-cover.webp",
+    // Already a render of the experience itself, not a device mockup, so it
+    // goes straight into the frame.
     screen: null,
-    // Five rooms, not seven: studioNodes.ts defines p01–p07 but only five
-    // carry `available: true` and only five panoramas exist on disk. This
+    // Six rooms, not seven: studioNodes.ts defines p01–p07 but only six
+    // carry `available: true` and only six panoramas exist on disk. This
     // cannot be derived — studioNodes imports PROJECTS, so reading it back
     // here would be a cycle — so it has to be corrected by hand whenever a
     // room goes live.
-    tagline: "Cinq salles à parcourir",
+    tagline: "Six salles à parcourir",
     narrative: {
       problem: "Montrer un studio sans photographier des bureaux.",
       system: "Panoramas 360°, navigation WebGL, plan interactif.",
@@ -165,6 +185,10 @@ export const PROJECTS: Project[] = [
     },
     // Real crops of three of the rooms — the same files StudioShowcase
     // uses on the homepage, which is to say pictures of this exact project.
+    brief: null,
+    deliverables: null,
+    // KOV's own product, so KOV's own monogram.
+    hoverLogo: "/kov/brand/kov-monogram-k-transparent.png",
     gallery: [
       "/studio/covers/studio-detail-01.webp",
       "/studio/covers/studio-detail-02.webp",
@@ -190,6 +214,9 @@ export const PROJECTS: Project[] = [
     screen: null,
     tagline: null,
     narrative: null,
+    brief: null,
+    deliverables: null,
+    hoverLogo: null,
     gallery: null,
     metrics: null,
     testimonial: null,
@@ -209,6 +236,9 @@ export const PROJECTS: Project[] = [
     screen: null,
     tagline: null,
     narrative: null,
+    brief: null,
+    deliverables: null,
+    hoverLogo: null,
     gallery: null,
     metrics: null,
     testimonial: null,
@@ -228,6 +258,9 @@ export const PROJECTS: Project[] = [
     screen: null,
     tagline: null,
     narrative: null,
+    brief: null,
+    deliverables: null,
+    hoverLogo: null,
     gallery: null,
     metrics: null,
     testimonial: null,
@@ -250,6 +283,9 @@ export const PROJECTS: Project[] = [
     screen: null,
     tagline: null,
     narrative: null,
+    brief: null,
+    deliverables: null,
+    hoverLogo: null,
     gallery: null,
     metrics: null,
     testimonial: null,

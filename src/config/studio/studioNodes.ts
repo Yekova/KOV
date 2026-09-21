@@ -126,6 +126,16 @@ export const STUDIO_NODES: Record<string, StudioNode> = {
         position: [-420, -20, -260],
         label: "Rooftop",
       },
+      {
+        targetNodeId: "p03",
+        // Invented placement, same latitude as the two above. The floor
+        // plan puts the gym to the Portal's west, so the hotspot goes to
+        // the left of the arrival view and further out than the Rooftop's,
+        // so the two do not sit on top of each other. StudioDebugPanel's
+        // yaw/pitch readout is where to nudge it once walked through.
+        position: [-470, -30, 120],
+        label: "Salle de sport",
+      },
     ],
     artworks: [],
     // Copy adapted from the homepage/expertise intro copy — not an
@@ -200,7 +210,7 @@ export const STUDIO_NODES: Record<string, StudioNode> = {
     //
     // The machinery is untouched (ArtworkHotspotLayer renders nothing on an
     // empty array): re-enabling them is a matter of putting entries back
-    // here, which is what the scaffolded Galerie Projets room will want.
+    // here, which is what the one remaining scaffolded room will want.
     artworks: [],
     infoHotspots: [],
   },
@@ -210,20 +220,53 @@ export const STUDIO_NODES: Record<string, StudioNode> = {
   // connects to them). Names/subtitles match the reference concept
   // board; swap `available: true` + fill in the rest once each has a
   // real panorama.
+  // Was the scaffolded "Galerie Projets". The gym takes that slot rather
+  // than becoming an eighth room because the mini-map is a real floor plan
+  // (studioMapLayout.ts): p03 is the largest free volume, it already opens
+  // east onto the Portal corridor and it already has a west window — which
+  // is where the bay windows are in the photograph.
   p03: {
     id: "p03",
-    name: "Galerie Projets",
+    name: "Salle de sport",
     room: "P03",
-    subtitle: "Nos réalisations",
-    description: "Bientôt disponible.",
-    panorama: "",
+    subtitle: "Entretenir la machine",
+    description:
+      "Tapis et vélo face aux baies, un rack de charges, un banc au centre et des tapis de sol. La pièce du studio qui ne produit rien — et qui rend le reste tenable.",
+    panorama: "/studio/panoramas/p03.webp",
+    // The source frames the stone wall and its double doors at its own
+    // horizontal centre, which is the room's entrance: the natural "face
+    // forward" arrival, same convention as every other room here.
     initialYaw: 0,
     initialPitch: 0,
+    // AI-upscaled source (Upscayl), downsampled from 8870 to 6144x3072 like
+    // every other room: above the 8192 MAX_TEXTURE_SIZE a lot of integrated
+    // GPUs report, the upload either fails or the driver silently
+    // downscales it.
     zoomEnabled: true,
-    available: false,
-    connections: [],
+    available: true,
+    connections: [
+      {
+        targetNodeId: "p01",
+        // Back the way the visitor came. The floor plan puts this room's
+        // opening on its east side, onto the Portal corridor, so the return
+        // hotspot sits behind the arrival orientation exactly as every
+        // other room's does.
+        position: [0, -30, 480],
+        label: "Portal",
+      },
+    ],
     artworks: [],
-    infoHotspots: [],
+    // The Motion pillar's own copy, verbatim (src/data/expertisePillars.ts)
+    // — same convention as P01, P05 and P07, which reuse a real pillar line
+    // rather than inventing a backstory per room.
+    infoHotspots: [
+      {
+        position: [-260, -10, -180],
+        label: "Guider le regard et donner du rythme",
+        title: "Guider le regard et donner du rythme",
+        body: "Le mouvement a une fonction. Une transition guide, explique, révèle ou crée une émotion. Si elle n'apporte rien, elle disparaît.",
+      },
+    ],
   },
   p04: {
     id: "p04",

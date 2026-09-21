@@ -165,6 +165,20 @@ function GridView({ projects, onOpen }: { projects: Project[]; onOpen: (id: stri
               </div>
             </div>
 
+            {/* Three of the project's own mark, breaking out of the frame
+                on hover. Purely decorative and entirely aria-hidden: the
+                name is right below in real text. They sit on the card
+                rather than in the window, because the window clips. */}
+            {project.hoverLogo && (
+              <span aria-hidden="true" className="kov-card__pops">
+                {[0, 1, 2].map((i) => (
+                  <span key={i} className={`kov-card__pop kov-card__pop--${i + 1}`}>
+                    <Image src={project.hoverLogo!} alt="" fill sizes="140px" className="kov-card__popImg" />
+                  </span>
+                ))}
+              </span>
+            )}
+
             <div className="kov-card__text">
               {/* What was actually built, before the name — the reference's
                   own order, and the right one: a prospect is looking for

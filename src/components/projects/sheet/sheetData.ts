@@ -30,6 +30,11 @@ export interface ProjectSheetData {
   description: string | null;
   tags: readonly string[];
   heroImage: string | null;
+  /** A paragraph of context under the hero, before the three columns. */
+  brief: string | null;
+  /** What was handed over. Facts about the delivery, never figures about
+   *  the client's business. */
+  deliverables: readonly string[];
   context: string | null;
   response: string | null;
   impact: string | null;
@@ -58,6 +63,11 @@ export function toSheet(project: Project): ProjectSheetData {
     // the slice is here so a fourth never quietly crowds the column.
     tags: project.tags.slice(0, 3),
     heroImage: project.screen ?? project.image,
+    brief: project.brief,
+    // Never derived from `system`: that sentence is already the narrative's
+    // middle column, and splitting it into chips two blocks later would be
+    // the same words twice.
+    deliverables: project.deliverables ?? [],
     context: project.narrative?.problem ?? null,
     response: project.narrative?.system ?? null,
     impact: project.narrative?.result ?? null,

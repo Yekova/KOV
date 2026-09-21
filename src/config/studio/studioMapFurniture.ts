@@ -17,7 +17,7 @@ export interface FurnitureItem {
   mini?: boolean;
 }
 
-export type StudioRoomType = "portal" | "design" | "gallery" | "motion" | "bureau" | "lounge" | "rooftop";
+export type StudioRoomType = "portal" | "design" | "sport" | "motion" | "bureau" | "lounge" | "rooftop";
 
 // --- small composition helpers -------------------------------------------
 // Furniture is built from a handful of primitives rather than one box per
@@ -101,19 +101,30 @@ export const STUDIO_MAP_FURNITURE: Record<StudioRoomType, FurnitureItem[]> = {
     ...plant(1.5, 1.15),
   ],
 
-  // P03 — a walk-through gallery: panels on the two solid walls, a bench
-  // in the middle, small picture lights above each panel.
-  gallery: [
-    { shape: { kind: "box", size: [0.7, 0.58, 0.04] }, position: [-0.45, 0.62, -1.5], material: "fabricLight", mini: true },
-    { shape: { kind: "box", size: [0.7, 0.58, 0.04] }, position: [0.45, 0.62, -1.5], material: "kovRedSoft", mini: true },
-    { shape: { kind: "box", size: [0.7, 0.58, 0.04] }, position: [-0.45, 0.62, 1.5], material: "fabricLight" },
-    { shape: { kind: "box", size: [0.7, 0.58, 0.04] }, position: [0.45, 0.62, 1.5], material: "fabricLight" },
-    { shape: { kind: "box", size: [0.55, 0.03, 0.06] }, position: [-0.45, 0.95, -1.4], material: "warmEmissive" },
-    { shape: { kind: "box", size: [0.55, 0.03, 0.06] }, position: [0.45, 0.95, -1.4], material: "warmEmissive" },
-    { shape: { kind: "box", size: [0.55, 0.03, 0.06] }, position: [-0.45, 0.95, 1.4], material: "warmEmissive" },
-    { shape: { kind: "box", size: [0.55, 0.03, 0.06] }, position: [0.45, 0.95, 1.4], material: "warmEmissive" },
-    { shape: { kind: "box", size: [0.95, 0.1, 0.36] }, position: [0, 0.28, 0.15], material: "fabricLight", mini: true },
-    { shape: { kind: "box", size: [0.85, 0.22, 0.3] }, position: [0, 0.13, 0.15], material: "graphite" },
+  // P03 — rebuilt from the room's own panorama rather than inherited from
+  // the "Galerie Projets" placeholder this slot used to be. That version
+  // was wall panels and picture lights; the photograph is a treadmill and a
+  // bike by the west windows, a rack of weights, a bench in the middle and
+  // mats along the east side. The mini-map claims to be the floor plan, so
+  // it has to show the room that is actually there.
+  sport: [
+    // Treadmill and bike along the west glazing.
+    { shape: { kind: "box", size: [0.42, 0.14, 0.9] }, position: [-1.0, 0.09, -0.75], material: "graphite", mini: true },
+    { shape: { kind: "box", size: [0.4, 0.5, 0.06] }, position: [-1.0, 0.4, -1.15], material: "graphite" },
+    { shape: { kind: "box", size: [0.3, 0.1, 0.62] }, position: [-1.0, 0.1, 0.45], material: "graphite", mini: true },
+    { shape: { kind: "cylinder", radiusTop: 0.05, radiusBottom: 0.05, height: 0.55 }, position: [-1.0, 0.38, 0.22], material: "graphite" },
+    // Bench in the middle, with the weights beside it.
+    { shape: { kind: "box", size: [0.26, 0.09, 0.85] }, position: [0.05, 0.38, 0.1], material: "fabricDark", mini: true },
+    { shape: { kind: "box", size: [0.1, 0.34, 0.1] }, position: [0.05, 0.17, -0.25], material: "graphite" },
+    { shape: { kind: "box", size: [0.1, 0.34, 0.1] }, position: [0.05, 0.17, 0.45], material: "graphite" },
+    { shape: { kind: "cylinder", radiusTop: 0.12, radiusBottom: 0.12, height: 0.24 }, position: [0.6, 0.12, 0.2], material: "blackStone" },
+    // Rack against the north wall.
+    { shape: { kind: "box", size: [1.1, 0.5, 0.26] }, position: [0.1, 0.25, -1.4], material: "graphite", mini: true },
+    { shape: { kind: "box", size: [1.0, 0.03, 0.03] }, position: [0.1, 0.44, -1.3], material: "warmEmissive" },
+    // Mats along the east side.
+    { shape: { kind: "box", size: [0.5, 0.03, 1.0] }, position: [1.0, 0.02, 0.35], material: "fabricDark", mini: true },
+    { shape: { kind: "box", size: [0.5, 0.03, 1.0] }, position: [1.0, 0.02, -0.85], material: "fabricDark" },
+    ...plant(-1.15, 1.3, 0, 0.85),
   ],
 
   // P04 — projection room: big screen, one workstation, soft seating,
@@ -213,8 +224,8 @@ export const STUDIO_ROOM_TYPE_INFO: Record<StudioRoomType, { label: string; feat
     label: "Studio de design",
     features: ["Grande table centrale", "Wall display", "Postes de travail", "Étagère", "Ouverture vitrée"],
   },
-  gallery: {
-    label: "Galerie",
+  sport: {
+    label: "Salle de sport",
     features: ["Panneaux d'exposition", "Éclairage sur cadres", "Banc central", "Circulation traversante"],
   },
   motion: {

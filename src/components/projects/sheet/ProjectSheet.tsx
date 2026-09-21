@@ -55,7 +55,12 @@ export function ProjectSheet({
     if (!dialog) return;
     if (!dialog.open) dialog.showModal();
     lockScroll();
+    // The page blurs itself, for engines that ignore backdrop-filter on
+    // ::backdrop. The sheet lives in the top layer and is not a descendant
+    // of anything this touches, so it stays sharp.
+    document.documentElement.classList.add("kov-sheet-open");
     return () => {
+      document.documentElement.classList.remove("kov-sheet-open");
       unlockScroll();
       if (dialog.open) dialog.close();
     };

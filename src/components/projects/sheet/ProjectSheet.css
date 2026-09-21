@@ -16,13 +16,34 @@
   background: transparent;
   color: var(--kov-bone);
   overflow: visible;
+
+  /* A dialog centres itself through `margin: auto` in the UA stylesheet,
+     and Tailwind's preflight resets the margin on every element — which
+     quietly left the sheet pinned to the top-left. Restoring it here is the
+     whole fix. `inset: 0` gives the auto margins a box to centre inside. */
+  inset: 0;
+  margin: auto;
 }
 
+/* The page behind, blurred and darkened. Lighter than before so the blur
+   is actually visible — at 0.62 alpha the veil was doing the work and the
+   blur had nothing left to show. */
 .ps::backdrop {
-  background: rgba(6, 6, 7, 0.62);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  background: rgba(6, 6, 7, 0.45);
+  backdrop-filter: blur(22px) saturate(90%);
+  -webkit-backdrop-filter: blur(22px) saturate(90%);
   animation: psVeil 420ms ease both;
+}
+
+/* Belt and braces for engines that do not honour backdrop-filter on
+   ::backdrop: ProjectSheet adds this to <html> while a sheet is open, and
+   the page's own content blurs itself. The sheet is in the top layer and
+   is not a descendant of the blurred element, so it stays sharp. */
+.kov-sheet-open #kov-main,
+.kov-sheet-open header,
+.kov-sheet-open footer {
+  filter: blur(6px);
+  transition: filter 420ms ease;
 }
 
 @keyframes psVeil {
@@ -281,9 +302,9 @@
    under the 4.5:1 floor for anything that has to be read. */
 .ps-hero__line {
   margin-top: 22px;
-  max-width: 34ch;
-  font-size: 15px;
-  line-height: 1.7;
+  max-width: 36ch;
+  font-size: 16px;
+  line-height: 1.75;
   color: var(--kov-concrete);
 }
 
@@ -308,28 +329,77 @@
 
 /* ── Narrative ───────────────────────────────────────────────────────── */
 
-.ps-narrative {
+.ps-narrative__lead {
+  font-family: var(--font-sans), sans-serif;
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: rgba(231, 231, 229, 0.38);
+}
+
+.ps-narrative__brief {
+  max-width: 68ch;
+  margin-bottom: 34px;
+  font-size: 16px;
+  line-height: 1.8;
+  color: var(--kov-concrete);
+}
+
+.ps-narrative__cols {
   display: grid;
   grid-template-columns: 1fr;
   gap: 30px;
 }
 
 @media (min-width: 768px) {
-  .ps-narrative {
+  .ps-narrative__cols {
     grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
     gap: 44px;
   }
 }
 
-.ps-narrative > div {
+.ps-narrative__cols > div {
   padding-top: 20px;
   border-top: 1px solid var(--ps-line-soft);
 }
 
+.ps-narrative__head {
+  margin-bottom: 12px;
+  font-family: var(--font-mono), monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--kov-red);
+}
+
 .ps-narrative__text {
   max-width: 38ch;
-  font-size: 14.5px;
-  line-height: 1.75;
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--kov-concrete);
+}
+
+.ps-narrative__deliverables {
+  margin-top: 34px;
+  padding-top: 20px;
+  border-top: 1px solid var(--ps-line-soft);
+}
+
+.ps-narrative__deliverables ul {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+}
+
+.ps-narrative__deliverables li {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--ps-line);
+  font-family: var(--font-mono), monospace;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
   color: var(--kov-concrete);
 }
 

@@ -102,12 +102,12 @@ export const STUDIO_MAP_LAYOUT: Record<string, StudioMapLayoutEntry> = {
       ],
     },
   },
-  // Band B west — gallery, opening onto the corridor.
+  // Band B west — the gym, opening onto the corridor.
   p03: {
     position: [-2.8, 0, 0],
     footprint: [2.8, 3.2],
     level: 0,
-    type: "gallery",
+    type: "sport",
     floorMaterial: "floorConcrete",
     lighting: "accent",
     labelAnchor: [-6.4, 1.3, 1.6],
@@ -214,7 +214,7 @@ export const STUDIO_MAP_LAYOUT: Record<string, StudioMapLayoutEntry> = {
 };
 
 // The circulation spine: lobby → corridor → design studio, with the
-// gallery and lounge opening onto it from either side.
+// the gym and the lounge opening onto it from either side.
 export const STUDIO_CORRIDOR = {
   position: [0, 0, 0] as [number, number, number],
   footprint: [2.8, 3.2] as [number, number],

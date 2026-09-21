@@ -166,8 +166,77 @@
 /* ── One card ────────────────────────────────────────────────────────── */
 
 .kov-card {
+  position: relative;
   display: flex;
   flex-direction: column;
+}
+
+/* The marks break out of the frame, so they live on the card and not in
+   the window — the window clips, which is the whole reason the effect
+   reads as "out of" rather than "inside". */
+.kov-card__pops {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.kov-card__pop {
+  position: absolute;
+  width: 112px;
+  height: 46px;
+  opacity: 0;
+  filter: drop-shadow(0 12px 26px rgba(0, 0, 0, 0.6));
+  transform: scale(0.55) translateY(14px);
+  transition: opacity 420ms ease, transform 620ms cubic-bezier(0.34, 1.32, 0.64, 1);
+}
+
+.kov-card__popImg {
+  object-fit: contain;
+}
+
+/* Out of three different corners, at three sizes, on three delays — what
+   makes it read as a handful thrown rather than one thing repeated. */
+.kov-card__pop--1 {
+  top: -22px;
+  left: -18px;
+}
+
+.kov-card__pop--2 {
+  top: 24%;
+  right: -34px;
+  width: 132px;
+  height: 54px;
+}
+
+.kov-card__pop--3 {
+  bottom: 22%;
+  left: -30px;
+  width: 92px;
+  height: 38px;
+}
+
+.kov-card:hover .kov-card__pop,
+.kov-card:focus-within .kov-card__pop {
+  opacity: 1;
+}
+
+.kov-card:hover .kov-card__pop--1,
+.kov-card:focus-within .kov-card__pop--1 {
+  transform: scale(1) rotate(-7deg);
+  transition-delay: 0ms;
+}
+
+.kov-card:hover .kov-card__pop--2,
+.kov-card:focus-within .kov-card__pop--2 {
+  transform: scale(1) rotate(5deg);
+  transition-delay: 70ms;
+}
+
+.kov-card:hover .kov-card__pop--3,
+.kov-card:focus-within .kov-card__pop--3 {
+  transform: scale(1) rotate(-3deg);
+  transition-delay: 140ms;
 }
 
 .kov-card__window {
@@ -504,9 +573,14 @@
     transition: none;
   }
 
+  .kov-card__pop {
+    transition: none;
+  }
+
   .kov-card:hover .kov-card__window,
   .kov-card:hover .kov-card__img,
   .kov-card:hover .kov-card__play,
+  .kov-card:hover .kov-card__pop,
   .kov-list__row:hover .kov-list__action button {
     transform: none;
   }
