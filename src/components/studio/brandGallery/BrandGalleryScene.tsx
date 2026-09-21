@@ -5,23 +5,39 @@ import * as THREE from "three";
 import type { Brand } from "@/lib/studio/brands";
 import { BrandStand } from "./BrandStand";
 import { BrandGalleryExit } from "./BrandGalleryExit";
-import { GALLERY_BOXES, GALLERY_COVES, GALLERY_HEIGHT, GALLERY_SLOTS, type GalleryMaterial } from "./galleryLayout";
+import {
+  GALLERY_BOXES,
+  GALLERY_COVES,
+  GALLERY_HEIGHT,
+  GALLERY_SLOTS,
+  type GalleryMaterial,
+  type GallerySlot,
+} from "./galleryLayout";
 import { PlayerController } from "./PlayerController";
 
 // The palette. Concrete, graphite, black stone, dark wood, smoked glass,
 // warm light — and red exactly twice in the whole room: the line in the
 // floor and the edge of each plinth.
 const MATERIALS: Record<GalleryMaterial, THREE.Material> = {
-  concrete: new THREE.MeshStandardMaterial({ color: "#16161a", roughness: 0.94, metalness: 0.04 }),
-  graphite: new THREE.MeshStandardMaterial({ color: "#1c1c20", roughness: 0.7, metalness: 0.3 }),
-  // Polished, not matte. The floor is the largest surface in the room and
-  // the only one every light reaches: at roughness 0.82 it swallowed the
-  // pools whole, and a gallery floor that does not hold a reflection of
-  // its own lighting reads as a grey plane with objects standing on it.
-  blackStone: new THREE.MeshStandardMaterial({ color: "#0d0d10", roughness: 0.52, metalness: 0.22 }),
-  darkWood: new THREE.MeshStandardMaterial({ color: "#241c15", roughness: 0.78, metalness: 0.06 }),
+  // Dark grey, not black.
+  //
+  // The first pass painted this room in near-blacks — #16161a walls on a
+  // #0d0d10 floor — and measured against three's own shading that was not
+  // a dark room, it was an invisible one. An albedo of 0.004 linear,
+  // divided by pi for Lambert, under a light at four metres, lands around
+  // 0.001 — and ACES clamps everything below 0.0017 to exactly zero. Every
+  // surface in the room rendered as rgb(0,0,0).
+  //
+  // A real black-box gallery is not painted black either. It is painted
+  // dark grey and lit with hard falloff: the blackness is in the contrast,
+  // not in the pigment. These values are that, checked back through the
+  // same shading maths rather than picked by eye.
+  concrete: new THREE.MeshStandardMaterial({ color: "#4e4e57", roughness: 0.93, metalness: 0.04 }),
+  graphite: new THREE.MeshStandardMaterial({ color: "#5a5a64", roughness: 0.68, metalness: 0.28 }),
+  blackStone: new THREE.MeshStandardMaterial({ color: "#35353c", roughness: 0.5, metalness: 0.22 }),
+  darkWood: new THREE.MeshStandardMaterial({ color: "#43352a", roughness: 0.76, metalness: 0.06 }),
   smokedGlass: new THREE.MeshPhysicalMaterial({
-    color: "#0a0a0c",
+    color: "#1a1a1f",
     roughness: 0.18,
     metalness: 0,
     transmission: 0.45,
@@ -61,8 +77,8 @@ function Wash({
   at,
   intensity,
   color,
-  angle = 0.92,
-  distance = 17,
+  angle = 0.95,
+  distance = 18,
 }: {
   x?: number;
   z: number;
@@ -81,7 +97,7 @@ function Wash({
         position={[x, GALLERY_HEIGHT - 0.28, z]}
         target={target}
         angle={angle}
-        penumbra={0.94}
+        penumbra={0.9}
         intensity={intensity}
         distance={distance}
         decay={2}
@@ -109,6 +125,40 @@ function Wash({
 // grazing light there is almost nothing for a shadow to land on that the
 // ambient occlusion of the geometry does not already imply, and the shadow
 // map would be the single most expensive thing on screen.
+/** A position nobody occupies.
+ *
+ *  Marked rather than lit. A light of its own would read the same on
+ *  screen and cost a shader recompile every time one came into range —
+ *  three rebuilds a material's program whenever the light count changes —
+ *  so the marker emits instead: a warm edge on the form and a ring let
+ *  into the plinth, both visible from down the room at no per-fragment
+ *  cost at all.
+ *
+ *  It also says the right thing. A lit stand is an exhibit; a glowing
+ *  outline is an address waiting for one. */
+function Vacancy({ slot, geometry }: { slot: GallerySlot; geometry: THREE.BufferGeometry }) {
+  return (
+    <group position={slot.position} rotation={[0, slot.rotationY, 0]}>
+      {/* A KOV volume, not a "space available" sign. */}
+      <mesh position={[0, 0.45, 0]} geometry={geometry} material={MATERIALS.blackStone} scale={[1.6, 0.9, 0.7]} />
+      <mesh position={[0, 1.34, 0]} rotation={[0.42, 0.8, 0]}>
+        <octahedronGeometry args={[0.3, 0]} />
+        <meshStandardMaterial
+          color="#2f2f36"
+          roughness={0.42}
+          metalness={0.7}
+          emissive="#ffd2a8"
+          emissiveIntensity={0.12}
+        />
+      </mesh>
+      <mesh position={[0, 0.906, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.46, 0.5, 48]} />
+        <meshBasicMaterial color="#ffd2a8" toneMapped={false} transparent opacity={0.2} side={THREE.DoubleSide} />
+      </mesh>
+    </group>
+  );
+}
+
 export function BrandGalleryScene({
   brands,
   controlsEnabled,
@@ -141,30 +191,41 @@ export function BrandGalleryScene({
     <>
       <PlayerController enabled={controlsEnabled} onLockChange={onLockChange} />
 
-      {/* Sky and bounce, in one light. A flat ambient lifts every face by
-          the same amount, so a box lit only by ambient has no top and no
-          side; a hemisphere gives the room a direction to be dark in —
-          cool from the coves above, a little warm off the floor. */}
-      <hemisphereLight args={["#2a3650", "#1b1209", 0.55]} />
+      {/* Sky and bounce, in one light.
+          
+          Three does not compute a bounce, and in a room whose walls face
+          each other that is most of the light there would be. This stands
+          in for it: cool from the coves above, warm off the floor, and —
+          the part that matters — strong enough that no surface in the
+          room falls under the tone curve's black clamp. It was at 0.55,
+          which contributed nothing measurable to anything. */}
+      <hemisphereLight args={["#8fa2c0", "#6b543c", 2.8]} />
 
-      {/* Four washes down the axis, warming and brightening as they go:
-          the far end of the room is the brightest thing in it, which is
-          what walks a visitor down a gallery without a sign telling them
-          to. */}
-      <Wash z={1.6} at={[0, 0, 1.2]} intensity={13} color="#ffcb9c" angle={0.98} />
-      <Wash z={-4.6} at={[0, 0, -5]} intensity={15} color="#ffd0a2" />
-      <Wash z={-10.4} at={[0, 0, -10.8]} intensity={17} color="#ffd4a8" />
-      <Wash z={-15.4} at={[0, 0.9, -16.9]} intensity={22} color="#ffe0bd" angle={0.8} distance={14} />
+      {/* Four washes down the axis, warming and brightening toward the
+          far recess: the north wall is the brightest surface in the room,
+          which is what walks a visitor down a gallery without a sign
+          telling them to. Intensities are candela over distance squared —
+          the old values were roughly a tenth of what a fixture four
+          metres up has to be. */}
+      <Wash z={1.6} at={[0, 0, 1.2]} intensity={125} color="#ffcb9c" angle={1.0} />
+      <Wash z={-4.6} at={[0, 0, -5]} intensity={140} color="#ffd0a2" />
+      <Wash z={-10.4} at={[0, 0, -10.8]} intensity={155} color="#ffd4a8" />
+      <Wash z={-15.4} at={[0, 0.9, -16.9]} intensity={100} color="#ffe0bd" angle={0.85} distance={16} />
 
-      {/* Two grazing washes down the side walls. Concrete only looks like
-          concrete at a shallow angle — head-on it is a grey rectangle. */}
-      <Wash x={-8.1} z={-4} at={[-8.9, 0.4, -4]} intensity={9} color="#9fb4d6" angle={0.72} distance={11} />
-      <Wash x={8.1} z={-11} at={[8.9, 0.4, -11]} intensity={9} color="#9fb4d6" angle={0.72} distance={11} />
+      {/* Wall washers, two a side, mounted out from the wall rather than
+          against it. Hard against it they grazed at fourteen degrees and
+          the wall stayed black; at a third of the ceiling height out the
+          light lands at about fifty, which is where a real wall washer is
+          hung and why. */}
+      <Wash x={-7.1} z={-3.2} at={[-8.85, 1.6, -2.8]} intensity={75} color="#9fb4d6" angle={0.85} distance={12} />
+      <Wash x={-7.1} z={-11} at={[-8.85, 1.6, -11]} intensity={75} color="#9fb4d6" angle={0.85} distance={12} />
+      <Wash x={7.1} z={-3.2} at={[8.85, 1.6, -2.8]} intensity={75} color="#9fb4d6" angle={0.85} distance={12} />
+      <Wash x={7.1} z={-11} at={[8.85, 1.6, -11]} intensity={75} color="#9fb4d6" angle={0.85} distance={12} />
 
       {/* Cold spill from the doorway behind the visitor, so their own
           corner of the room is not the darkest one and the exit reads as
           an opening rather than as a wall. */}
-      <pointLight position={[0, 2.4, 4.4]} intensity={7} distance={9} decay={2} color="#7d93c4" />
+      <pointLight position={[0, 2.6, 4.2]} intensity={26} distance={10} decay={2} color="#7d93c4" />
 
       {GALLERY_BOXES.map((box) => (
         <mesh
@@ -191,14 +252,7 @@ export function BrandGalleryScene({
       ))}
 
       {vacant.map((slot) => (
-        <group key={slot.id} position={slot.position} rotation={[0, slot.rotationY, 0]}>
-          {/* A KOV volume, not a "space available" sign. */}
-          <mesh position={[0, 0.45, 0]} geometry={geometry} material={MATERIALS.blackStone} scale={[1.6, 0.9, 0.7]} />
-          <mesh position={[0, 1.34, 0]} rotation={[0.42, 0.8, 0]}>
-            <octahedronGeometry args={[0.3, 0]} />
-            <meshStandardMaterial color="#17171b" roughness={0.42} metalness={0.7} />
-          </mesh>
-        </group>
+        <Vacancy key={slot.id} slot={slot} geometry={geometry} />
       ))}
 
       <BrandGalleryExit onNear={onExitZone} />

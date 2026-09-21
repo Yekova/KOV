@@ -42,6 +42,21 @@ export function BrandGalleryHUD({
 
   return (
     <div className="absolute inset-0 pointer-events-none" style={{ zIndex: "var(--z-nav)" }}>
+      {/* Where you are. The studio's own HUD is hidden while a walkable
+          room is mounted, so without this the visitor has left the studio
+          as far as the screen is concerned. */}
+      <p
+        className="absolute left-6 top-24 font-mono"
+        style={{
+          fontSize: 9,
+          letterSpacing: "0.26em",
+          textTransform: "uppercase",
+          color: "var(--kov-steel)",
+        }}
+      >
+        P04 <span style={{ color: "var(--kov-bone)" }}>Brand Gallery</span>
+      </p>
+
       {/* The reticle. One pixel of intent: in a pointer-locked room there
           is no cursor, and without a mark the visitor cannot tell what
           they are pointing at. */}
@@ -170,6 +185,26 @@ export function BrandGalleryHUD({
           }}
         >
           Explorer en liste
+        </button>
+        {/* Always there, not only when standing in the doorway. Walking
+            back across a seventeen-metre room to find the way out is a
+            room holding someone hostage; the doorway prompt stays as the
+            diegetic version of the same thing. */}
+        <button
+          type="button"
+          onClick={onExit}
+          className="pointer-events-auto px-3 py-2 font-mono"
+          style={{
+            ...PANEL,
+            borderRadius: "var(--radius-pill)",
+            fontSize: 9,
+            letterSpacing: "0.2em",
+            textTransform: "uppercase",
+            color: "var(--kov-steel)",
+            cursor: "pointer",
+          }}
+        >
+          Quitter la salle
         </button>
       </div>
 

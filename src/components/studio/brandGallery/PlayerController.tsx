@@ -28,6 +28,7 @@ export function PlayerController({
   onLockChange: (locked: boolean) => void;
 }) {
   const { camera, gl } = useThree();
+  const setEvents = useThree((state) => state.setEvents);
   const input = usePlayerControls(enabled);
   const velocity = useRef({ x: 0, z: 0 });
   const pitch = useRef(0);
@@ -51,6 +52,32 @@ export function PlayerController({
     velocity.current.z = 0;
   }, [camera]);
   /* eslint-enable react-hooks/immutability */
+
+  // Where a click is aimed.
+  //
+  // R3F's default `compute` builds the ray from event.offsetX/offsetY,
+  // and under pointer lock the browser freezes those at wherever the
+  // cursor happened to be when the lock was taken. So every click in the
+  // room was raycast from a stale point on the screen rather than from
+  // the crosshair: you looked straight at a stand, clicked, and activated
+  // whatever was under a cursor you could no longer see. While locked the
+  // ray comes from the centre of the screen, which is the only thing the
+  // reticle can honestly mean.
+  useEffect(() => {
+    setEvents({
+      compute: (event, state) => {
+        if (document.pointerLockElement) {
+          state.pointer.set(0, 0);
+        } else {
+          state.pointer.set(
+            (event.offsetX / state.size.width) * 2 - 1,
+            -(event.offsetY / state.size.height) * 2 + 1
+          );
+        }
+        state.raycaster.setFromCamera(state.pointer, state.camera);
+      },
+    });
+  }, [setEvents]);
 
   useEffect(() => {
     const canvas = gl.domElement;

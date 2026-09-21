@@ -47,14 +47,16 @@ export const EYE_HEIGHT = 1.7;
 export const PLAYER_RADIUS = 0.34;
 
 /** Where the visitor starts, just inside the entrance, facing down the
- *  axis into the room. */
-export const SPAWN: [number, number, number] = [0, EYE_HEIGHT, 2.4];
+ *  axis into the room. Deliberately clear of the exit zone below: at the
+ *  old spawn the visitor arrived already standing in the doorway, so the
+ *  first thing the room offered them was the way out of it. */
+export const SPAWN: [number, number, number] = [0, EYE_HEIGHT, 1];
 export const SPAWN_YAW = Math.PI;
 
 /** The doorway back to the Portal. Standing in it offers the way out. */
 export const EXIT = {
-  position: [0, 0, 3.6] as [number, number, number],
-  radius: 1.9,
+  position: [0, 0, 3.7] as [number, number, number],
+  radius: 1.6,
 };
 
 const W = 0.4; // wall thickness
@@ -131,6 +133,19 @@ export const GALLERY_SLOTS: GallerySlot[] = [
   { id: "featured", position: [0, 0, -16.2], rotationY: 0 },
 ];
 
+/** Colliders with nothing to draw.
+ *
+ *  The south wall has a four-metre gap in it — the doorway — and the
+ *  floor stops a hundred and fifty centimetres behind it. Walking
+ *  backwards out of the room therefore took the visitor off the edge of
+ *  the world, into a black void with no way back but the browser's back
+ *  button. The doorway stays open to look at; this closes it to walk
+ *  through. The way out is the button the exit zone offers, not a hole. */
+const GALLERY_BARRIERS: GalleryBox[] = [
+  { id: "doorway-stop", position: [0, HALF, 4.3], size: [4.8, GALLERY_HEIGHT, 0.3], material: "concrete" },
+];
+
 /** Everything a body can hit. Derived from the same list that is drawn,
- *  so a wall cannot be solid on screen and passable in fact. */
-export const GALLERY_COLLIDERS = GALLERY_BOXES.filter((box) => box.solid !== false);
+ *  so a wall cannot be solid on screen and passable in fact — plus the
+ *  barriers above, which are the one deliberate exception. */
+export const GALLERY_COLLIDERS = [...GALLERY_BOXES.filter((box) => box.solid !== false), ...GALLERY_BARRIERS];

@@ -40,7 +40,7 @@ export function BrandStand({ brand, onInteract }: { brand: Brand; onInteract: (b
           is still architecture. */}
       <mesh position={[0, 0.45, 0]} castShadow={false} receiveShadow={false}>
         <boxGeometry args={[1.6, 0.9, 0.7]} />
-        <meshStandardMaterial color="#121214" roughness={0.85} metalness={0.15} />
+        <meshStandardMaterial color="#3a3a42" roughness={0.8} metalness={0.18} />
       </mesh>
 
       {/* The one red element: a line let into the plinth's top edge, which
@@ -53,7 +53,7 @@ export function BrandStand({ brand, onInteract }: { brand: Brand; onInteract: (b
       {/* Back panel — the wall the brand's image lives on. */}
       <mesh position={[0, 1.85, -0.42]}>
         <boxGeometry args={[2.3, 2.9, 0.12]} />
-        <meshStandardMaterial color="#0d0d0f" roughness={0.9} metalness={0.05} />
+        <meshStandardMaterial color="#2e2e34" roughness={0.9} metalness={0.05} />
       </mesh>
 
       <BrandStandMedia brand={brand} lit={lit} legible={legible} />
@@ -67,7 +67,7 @@ export function BrandStand({ brand, onInteract }: { brand: Brand; onInteract: (b
         <mesh position={[0, 1.26, 0]} rotation={[0.3, 0.6, 0]}>
           <icosahedronGeometry args={[0.28, 0]} />
           <meshStandardMaterial
-            color="#1a1a1d"
+            color="#40404a"
             roughness={0.3}
             metalness={0.8}
             emissive={RED}
@@ -97,14 +97,11 @@ export function BrandStand({ brand, onInteract }: { brand: Brand; onInteract: (b
             target={panelTarget}
             angle={0.62}
             penumbra={0.75}
-            intensity={legible ? 11 : 5}
+            intensity={legible ? 45 : 22}
             distance={6.4}
             decay={2}
             color="#ffdcba"
           />
-          {/* A low warm bounce off the plinth top, so the volume on it is
-              not a silhouette against its own lit panel. */}
-          <pointLight position={[0, 1.15, 0.5]} intensity={legible ? 1.5 : 0.7} distance={2.2} decay={2} color="#ffcfa0" />
         </>
       )}
 

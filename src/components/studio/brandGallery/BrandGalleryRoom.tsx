@@ -104,10 +104,11 @@ export function BrandGalleryRoom({ onExit }: { onExit: () => void }) {
         <color attach="background" args={["#08080a"]} />
         {/* The room's own haze. Cheap, and it is what makes the far end of
             the axis read as far rather than as a wall at arm's length.
-            Starting at nine metres rather than six: with the washes in,
-            fog that close was taking the contrast off the stand the
-            visitor is walking toward. */}
-        <fog attach="fog" args={["#08080a", 9, 38]} />
+            Starting at thirteen metres now that the room is actually
+            lit: any closer and the haze was taking the contrast off the
+            stand the visitor is walking toward, which is the one thing
+            the far end of the axis is for. */}
+        <fog attach="fog" args={["#0d0d10", 13, 44]} />
 
         <BrandGalleryScene
           brands={brands}
