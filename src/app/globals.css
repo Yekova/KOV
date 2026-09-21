@@ -59,8 +59,9 @@ body {
    Before this, the site had focus styling on twelve elements out of several
    hundred. Everything else fell back to the browser default, which on a
    near-black ground is close to invisible — and the site hides the mouse
-   cursor entirely (.kov-custom-cursor), so "where am I" is a question the
-   interface has to answer, not the pointer.
+   cursor (.kov-custom-cursor — everywhere but inside a dialog, see the
+   note on that rule), so "where am I" is a question the interface has to
+   answer, not the pointer.
 
    Three deliberate choices:
 
@@ -145,8 +146,39 @@ body {
    motion-ok devices, so there's no hydration mismatch (server always
    renders without it) and no risk of hiding the cursor on touch. */
 .kov-custom-cursor,
-.kov-custom-cursor * {
+.kov-custom-cursor *:not(:where(dialog, dialog *)) {
   cursor: none;
+}
+
+/* The one place the dot cannot go.
+ *
+ * A <dialog> opened with showModal() is promoted to the browser's top
+ * layer, which paints above the entire normal stacking order — z-index
+ * does not reach it, and neither does a portal. So over an open sheet the
+ * cursor dot painted *behind* the panel while `cursor: none` was still
+ * hiding the real pointer: the cursor appeared to vanish, or to slide
+ * underneath the popup. Reported twice, and not a hit-testing problem at
+ * all — the clicks were landing the whole time, on a pointer nobody could
+ * see.
+ *
+ * So the pointer comes back inside a dialog. The exclusion above uses
+ * `:not(:where(...))` rather than `:not(...)` because :where() carries no
+ * specificity: the reset still weighs exactly what it did before, and
+ * every component's own cursor rule keeps winning. This rule then sets an
+ * explicit value on the dialog itself, since `cursor` inherits and the
+ * root still says none.
+ *
+ * A modal's ::backdrop belongs to the dialog and covers the viewport, so
+ * while a sheet is open the native cursor is the cursor everywhere —
+ * there is no half-state where two cursor languages fight. */
+.kov-custom-cursor dialog {
+  cursor: auto;
+}
+
+/* Below any component rule, above the UA default: a button in a sheet
+   should still say it is a button. */
+:where(.kov-custom-cursor) dialog :where(a, button, summary, [role="button"]) {
+  cursor: pointer;
 }
 
 .kov-cursor-dot {

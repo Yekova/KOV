@@ -56,11 +56,19 @@ export function CustomCursor() {
       }
     }
 
+    // Pointer lock stops reporting clientX/clientY — the Brand Gallery
+    // takes the lock to look around — so the dot would otherwise freeze
+    // wherever it was and sit there for the whole visit.
+    function handleLockChange() {
+      if (dot) dot.style.visibility = document.pointerLockElement ? "hidden" : "";
+    }
+
     // passive: none of the three ever calls preventDefault, and saying so
     // lets the browser stop waiting on them before it scrolls.
     window.addEventListener("mousemove", handleMove, { passive: true });
     document.addEventListener("mouseover", handleOver, { passive: true });
     document.addEventListener("mouseout", handleOut, { passive: true });
+    document.addEventListener("pointerlockchange", handleLockChange);
 
     return () => {
       document.documentElement.classList.remove("kov-custom-cursor");
@@ -68,6 +76,7 @@ export function CustomCursor() {
       window.removeEventListener("mousemove", handleMove);
       document.removeEventListener("mouseover", handleOver);
       document.removeEventListener("mouseout", handleOut);
+      document.removeEventListener("pointerlockchange", handleLockChange);
     };
   }, []);
 
