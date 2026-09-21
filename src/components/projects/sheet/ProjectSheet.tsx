@@ -111,6 +111,17 @@ export function ProjectSheet({
       onClose={handleClose}
       onClick={handleBackdrop}
       aria-labelledby={titleId}
+      // Lenis, stopped, calls preventDefault() on every wheel and touch
+      // event on the page — see its onVirtualScroll: the isStopped branch
+      // cancels the event and returns. Locking the page behind the sheet
+      // therefore also cancelled scrolling inside it, which read as the
+      // pointer passing straight through the popup.
+      //
+      // This attribute is the library's own escape hatch, and it is
+      // checked one branch earlier than isStopped: anything originating
+      // inside this element is handed back to the browser and scrolls
+      // natively.
+      data-lenis-prevent
     >
       <div ref={panelRef} className={`ps__panel${entered ? " is-in" : ""}`}>
         {/* Sticky, so the way out never scrolls away. */}

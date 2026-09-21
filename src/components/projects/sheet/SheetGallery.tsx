@@ -120,6 +120,9 @@ function Lightbox({
       onClose={onClose}
       onClick={onBackdrop}
       aria-label={`Visuel ${index + 1} sur ${images.length}`}
+      // Same reason as the sheet: a stopped Lenis cancels every wheel
+      // event on the page, including the ones over this.
+      data-lenis-prevent
     >
       <button type="button" className="ps-box__close" onClick={onClose} aria-label="Fermer le visuel">
         <X size={18} strokeWidth={1.8} aria-hidden="true" />

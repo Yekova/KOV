@@ -37,11 +37,13 @@
 
 /* Belt and braces for engines that do not honour backdrop-filter on
    ::backdrop: ProjectSheet adds this to <html> while a sheet is open, and
-   the page's own content blurs itself. The sheet is in the top layer and
-   is not a descendant of the blurred element, so it stays sharp. */
-.kov-sheet-open #kov-main,
-.kov-sheet-open header,
-.kov-sheet-open footer {
+   the page's own content blurs itself.
+   
+   Every direct child of <body> except a dialog. The earlier version named
+   `header` and `footer` with a descendant combinator, which also matched
+   the sheet's own sticky header — it was blurring the thing it was
+   supposed to be blurring behind. */
+.kov-sheet-open body > *:not(dialog) {
   filter: blur(6px);
   transition: filter 420ms ease;
 }
