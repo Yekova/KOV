@@ -5,47 +5,37 @@ import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 const SRC = "/work/liquid-16x9.webp";
 
-/** How big the brush is, as a fraction of the viewport width. Scaled
- *  rather than fixed so the gesture feels the same on a laptop and on a
- *  wide monitor. */
-const BRUSH = 0.1;
-/** How fast the trail closes back over. Per frame, at 60fps — low enough
- *  that a sweep leaves a readable path behind it, high enough that the
- *  page is black again a couple of seconds after the pointer stops. */
-const FADE = 0.022;
-/** The mask is a fraction of the viewport. A trail is soft by definition,
- *  so resolving it at full size is paying for detail the blur throws
- *  away — and at full size this would be a 4-megapixel clear per frame. */
-const MASK_SCALE = 0.2;
+/** The lit disc, in pixels of radius, clamped so it is the same gesture
+ *  on a laptop and on a wide monitor. */
+const RADIUS = { min: 150, max: 260, of: 0.2 };
 
-// The page's ground: an image that is only there where the cursor has
-// been.
+// The page's ground: black, except directly under the cursor.
 //
-// Not a picture in a frame — the frame was the mistake. This is a fixed
-// layer the size of the viewport, sitting between the page's black and
-// everything written on it, and nothing of it shows until the pointer
-// moves. One canvas and one mask: the mask accumulates soft white where
-// the pointer passes and loses a little alpha every frame, and the
-// picture is composited through it.
+// Not a picture in a frame and not a trail. One soft disc locked to the
+// pointer — where the cursor is, the image; everywhere else, and the
+// moment the cursor leaves, nothing. There is no history, no decay and
+// no easing, because all three are ways of leaving the picture on screen
+// after the cursor has gone.
 //
-// z-index -1 rather than a positive value with the content pushed above
+// It follows that there is no animation loop either. A frame is drawn
+// when the pointer moves and at no other time, so a still mouse costs
+// exactly nothing, and each frame touches a box the size of the disc
+// rather than the viewport: clear where it was, paint where it is.
+//
+// z-index -1 rather than a positive layer with the content pushed above
 // it: a negative-index child paints after its ancestors' backgrounds and
-// before any in-flow content, which is exactly the layer a background
-// belongs in — and it means not one rule of the page's own stacking has
-// to change.
+// before any in-flow content, which is the layer a background belongs in
+// — and it means not one rule of the page's own stacking has to change.
 //
-// On a touch screen there is no cursor to follow, and under
-// prefers-reduced-motion a trail that fades is motion. Both get the
-// picture as a still ground, low enough to read as texture.
+// A touch screen has no cursor, so it gets no ground. The image is
+// scenery for a gesture that does not exist there, and showing it anyway
+// is showing the one thing this was asked not to show.
 export function LiquidReveal() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-
   const coarse = useMediaQuery("(hover: none)");
-  const reduced = useMediaQuery("(prefers-reduced-motion: reduce)");
-  const still = coarse || reduced;
 
   useEffect(() => {
-    if (still) return;
+    if (coarse) return;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -53,23 +43,28 @@ export function LiquidReveal() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const mask = document.createElement("canvas");
-    const mctx = mask.getContext("2d");
-    if (!mctx) return;
+    // The disc is built here and stamped onto the page layer whole.
+    //
+    // It would look like the obvious thing to clip the visible canvas to
+    // the disc's box and composite in place — but the canvas drawing
+    // model clips the *source* and then composites, so `source-in` would
+    // still clear every pixel outside that box across the whole layer.
+    // Off screen, the operation means what it says, and the stamp lands
+    // with a plain source-over.
+    const sprite = document.createElement("canvas");
+    const sctx = sprite.getContext("2d");
+    if (!sctx) return;
 
     let width = 0;
     let height = 0;
-    let brush = 40;
+    let radius = RADIUS.min;
 
-    // Where the pointer was last frame, so a fast sweep draws a stroke
-    // rather than a row of dots at whatever rate the mouse reports.
-    let last: { x: number; y: number } | null = null;
-    let next: { x: number; y: number } | null = null;
-
+    // The box the last frame painted, so the next one knows what to
+    // clear. A full-viewport clear every frame is the one cost this
+    // design does not need to pay.
+    let dirty: [number, number, number, number] | null = null;
+    let at: { x: number; y: number } | null = null;
     let frame = 0;
-    let idle = 0;
-    let running = false;
-    let painted = false;
 
     const image = new Image();
     let loaded = false;
@@ -81,25 +76,13 @@ export function LiquidReveal() {
       canvas.width = Math.round(width * dpr);
       canvas.height = Math.round(height * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      radius = Math.max(RADIUS.min, Math.min(RADIUS.max, Math.min(width, height) * RADIUS.of));
 
-      mask.width = Math.max(64, Math.round(width * MASK_SCALE));
-      mask.height = Math.max(48, Math.round(height * MASK_SCALE));
-      brush = Math.max(20, mask.width * BRUSH);
-      // A resize invalidates the trail: the mask was drawn in the old
-      // viewport's coordinates and stretching it would smear the path.
-      mctx.clearRect(0, 0, mask.width, mask.height);
-      last = null;
-    };
+      sprite.width = Math.round(radius * 2 * dpr);
+      sprite.height = Math.round(radius * 2 * dpr);
+      sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    const dab = (x: number, y: number) => {
-      const gradient = mctx.createRadialGradient(x, y, 0, x, y, brush);
-      gradient.addColorStop(0, "rgba(255,255,255,0.55)");
-      gradient.addColorStop(0.55, "rgba(255,255,255,0.24)");
-      gradient.addColorStop(1, "rgba(255,255,255,0)");
-      mctx.fillStyle = gradient;
-      mctx.beginPath();
-      mctx.arc(x, y, brush, 0, Math.PI * 2);
-      mctx.fill();
+      dirty = null;
     };
 
     /** The picture, sized to cover the viewport. It is 16:9 and a window
@@ -107,83 +90,78 @@ export function LiquidReveal() {
      *  background-size: cover. */
     const cover = () => {
       const ratio = (image.naturalWidth || 16) / (image.naturalHeight || 9);
-      const w = width / height > ratio ? width : height * ratio;
-      const h = width / height > ratio ? width / ratio : height;
+      const wide = width / height > ratio;
+      const w = wide ? width : height * ratio;
+      const h = wide ? width / ratio : height;
       return { x: (width - w) / 2, y: (height - h) / 2, w, h };
     };
 
     const draw = () => {
-      // Advance the trail: fade what is there, then lay down the segment
-      // the pointer covered since the last frame.
-      mctx.globalCompositeOperation = "destination-out";
-      mctx.fillStyle = `rgba(0,0,0,${FADE})`;
-      mctx.fillRect(0, 0, mask.width, mask.height);
-      mctx.globalCompositeOperation = "source-over";
+      frame = 0;
 
-      if (next) {
-        // The mask is a straight scale of the viewport, so a point maps
-        // by ratio — taken from the real dimensions rather than from the
-        // nominal scale, which rounding has already moved off.
-        const to = { x: (next.x / width) * mask.width, y: (next.y / height) * mask.height };
-        const from = last ?? to;
-        const steps = Math.max(1, Math.ceil(Math.hypot(to.x - from.x, to.y - from.y) / (brush * 0.35)));
-        for (let i = 1; i <= steps; i += 1) {
-          dab(from.x + ((to.x - from.x) * i) / steps, from.y + ((to.y - from.y) * i) / steps);
-        }
-        last = to;
-        next = null;
-        idle = 0;
-        painted = true;
-      } else {
-        idle += 1;
+      if (dirty) {
+        ctx.clearRect(dirty[0], dirty[1], dirty[2], dirty[3]);
+        dirty = null;
       }
+      if (!at || !loaded) return;
 
-      ctx.clearRect(0, 0, width, height);
-      if (loaded && painted) {
-        ctx.globalCompositeOperation = "source-over";
-        ctx.drawImage(mask, 0, 0, width, height);
-        ctx.globalCompositeOperation = "source-in";
-        const box = cover();
-        ctx.drawImage(image, box.x, box.y, box.w, box.h);
-        ctx.globalCompositeOperation = "source-over";
-      }
+      const { x, y } = at;
+      const size = radius * 2;
+      const ox = x - radius;
+      const oy = y - radius;
 
-      // Stopped meaning stopped: once the pointer has been still long
-      // enough for the trail to have faded out, the loop ends rather than
-      // running a clear over a blank canvas for the rest of the visit.
-      if (idle > 1 / FADE + 30) {
-        running = false;
-        painted = false;
-        last = null;
-        ctx.clearRect(0, 0, width, height);
-        return;
-      }
-      frame = requestAnimationFrame(draw);
+      // The disc: a soft mask, then the picture kept only where the mask
+      // is. The picture is drawn in page coordinates offset into the
+      // sprite, so what appears under the cursor is the part of the
+      // background that is actually there — the ground does not move
+      // with the pointer, only the window onto it does.
+      sctx.clearRect(0, 0, size, size);
+      const gradient = sctx.createRadialGradient(radius, radius, 0, radius, radius, radius);
+      gradient.addColorStop(0, "rgba(255,255,255,1)");
+      gradient.addColorStop(0.5, "rgba(255,255,255,0.96)");
+      gradient.addColorStop(0.82, "rgba(255,255,255,0.42)");
+      gradient.addColorStop(1, "rgba(255,255,255,0)");
+      sctx.fillStyle = gradient;
+      sctx.fillRect(0, 0, size, size);
+
+      sctx.globalCompositeOperation = "source-in";
+      const picture = cover();
+      sctx.drawImage(image, picture.x - ox, picture.y - oy, picture.w, picture.h);
+      sctx.globalCompositeOperation = "source-over";
+
+      ctx.drawImage(sprite, ox, oy, size, size);
+
+      dirty = [ox, oy, size, size];
     };
 
-    const start = () => {
-      if (running) return;
-      running = true;
-      idle = 0;
-      frame = requestAnimationFrame(draw);
+    // One draw per frame at most, whatever rate the mouse reports at.
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(draw);
     };
 
     // The layer is fixed, so viewport coordinates are its coordinates —
     // no rect to measure, and it keeps up while the page scrolls under it.
     const onMove = (event: PointerEvent) => {
-      next = { x: event.clientX, y: event.clientY };
-      start();
+      at = { x: event.clientX, y: event.clientY };
+      schedule();
     };
 
-    // A pointer that leaves the window and comes back somewhere else
-    // would otherwise draw the straight line between the two.
+    const clear = () => {
+      at = null;
+      schedule();
+    };
+
+    // Out of the window entirely: relatedTarget is null only when the
+    // pointer has left the document, not when it crosses between two
+    // elements inside it.
     const onOut = (event: PointerEvent) => {
-      if (!event.relatedTarget) last = null;
+      if (!event.relatedTarget) clear();
     };
 
     image.decoding = "async";
     image.onload = () => {
       loaded = true;
+      schedule();
     };
     image.src = SRC;
 
@@ -191,19 +169,21 @@ export function LiquidReveal() {
     window.addEventListener("resize", resize);
     window.addEventListener("pointermove", onMove, { passive: true });
     window.addEventListener("pointerout", onOut);
+    // A tab left with the cursor mid-screen comes back with the disc
+    // still painted where the mouse no longer is.
+    window.addEventListener("blur", clear);
 
     return () => {
       cancelAnimationFrame(frame);
       window.removeEventListener("resize", resize);
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerout", onOut);
+      window.removeEventListener("blur", clear);
       image.onload = null;
     };
-  }, [still]);
+  }, [coarse]);
 
-  if (still) {
-    return <div className="kov-liq kov-liq--still" aria-hidden="true" style={{ backgroundImage: `url(${SRC})` }} />;
-  }
+  if (coarse) return null;
 
   return <canvas ref={canvasRef} className="kov-liq" aria-hidden="true" />;
 }

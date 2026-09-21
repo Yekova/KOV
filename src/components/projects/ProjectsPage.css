@@ -588,11 +588,11 @@
 
 /* ── The page's ground ────────────────────────────────────────────────
  *
- * Fixed, the size of the viewport, and empty until the cursor moves: the
- * picture is the background of the page rather than an image placed on
- * it. z-index -1 puts it after the black and before every word — the
- * layer a background belongs in, and nothing else on the page has to
- * change its stacking to make room. */
+ * Fixed, the size of the viewport, and black everywhere the cursor is
+ * not: the picture is the background of the page rather than an image
+ * placed on it. z-index -1 puts it after the black and before every word
+ * — the layer a background belongs in, and nothing else on the page has
+ * to change its stacking to make room. */
 
 .kov-liq {
   position: fixed;
@@ -600,12 +600,4 @@
   z-index: -1;
   /* It is scenery. Every click, hover and scroll belongs to the page. */
   pointer-events: none;
-}
-
-/* No cursor to follow, or motion turned down: a still ground, low enough
-   to read as texture rather than as a picture nobody asked for. */
-.kov-liq--still {
-  background-position: center;
-  background-size: cover;
-  opacity: 0.16;
 }
