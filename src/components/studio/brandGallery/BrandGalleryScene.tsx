@@ -5,7 +5,7 @@ import * as THREE from "three";
 import type { Brand } from "@/lib/studio/brands";
 import { BrandStand } from "./BrandStand";
 import { BrandGalleryExit } from "./BrandGalleryExit";
-import { GALLERY_BOXES, GALLERY_COVES, GALLERY_SLOTS, type GalleryMaterial } from "./galleryLayout";
+import { GALLERY_BOXES, GALLERY_COVES, GALLERY_HEIGHT, GALLERY_SLOTS, type GalleryMaterial } from "./galleryLayout";
 import { PlayerController } from "./PlayerController";
 
 // The palette. Concrete, graphite, black stone, dark wood, smoked glass,
@@ -14,7 +14,11 @@ import { PlayerController } from "./PlayerController";
 const MATERIALS: Record<GalleryMaterial, THREE.Material> = {
   concrete: new THREE.MeshStandardMaterial({ color: "#16161a", roughness: 0.94, metalness: 0.04 }),
   graphite: new THREE.MeshStandardMaterial({ color: "#1c1c20", roughness: 0.7, metalness: 0.3 }),
-  blackStone: new THREE.MeshStandardMaterial({ color: "#0d0d10", roughness: 0.82, metalness: 0.1 }),
+  // Polished, not matte. The floor is the largest surface in the room and
+  // the only one every light reaches: at roughness 0.82 it swallowed the
+  // pools whole, and a gallery floor that does not hold a reflection of
+  // its own lighting reads as a grey plane with objects standing on it.
+  blackStone: new THREE.MeshStandardMaterial({ color: "#0d0d10", roughness: 0.52, metalness: 0.22 }),
   darkWood: new THREE.MeshStandardMaterial({ color: "#241c15", roughness: 0.78, metalness: 0.06 }),
   smokedGlass: new THREE.MeshPhysicalMaterial({
     color: "#0a0a0c",
@@ -24,17 +28,82 @@ const MATERIALS: Record<GalleryMaterial, THREE.Material> = {
     transparent: true,
     opacity: 0.5,
   }),
-  warmLight: new THREE.MeshBasicMaterial({ color: "#ffd2a4", toneMapped: false }),
-  redLine: new THREE.MeshBasicMaterial({ color: "#e31e24", toneMapped: false }),
+  // Additive, so a strip six centimetres wide still reads as a source
+  // rather than as a pale line drawn on the ceiling. It is the cheapest
+  // glow there is: no bloom pass, no second render target.
+  warmLight: new THREE.MeshBasicMaterial({
+    color: "#ffd2a4",
+    toneMapped: false,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  }),
+  redLine: new THREE.MeshBasicMaterial({
+    color: "#e31e24",
+    toneMapped: false,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  }),
 };
+
+/** A ceiling wash.
+ *
+ *  A spot aimed at the floor, not a bare point light. A point light in a
+ *  black box lights the ceiling and the tops of the walls exactly as much
+ *  as the floor, which is why the first pass read as an evenly grey room;
+ *  what makes a gallery look like a gallery is a pool with a soft edge and
+ *  darkness between pools. The target is a real object in the graph
+ *  because that is how three.js aims a spot — its default target sits at
+ *  the world origin, which would point every one of these at the same
+ *  spot by the entrance. */
+function Wash({
+  x = 0,
+  z,
+  at,
+  intensity,
+  color,
+  angle = 0.92,
+  distance = 17,
+}: {
+  x?: number;
+  z: number;
+  /** Where the cone lands, [x, y, z]. */
+  at: [number, number, number];
+  intensity: number;
+  color: string;
+  angle?: number;
+  distance?: number;
+}) {
+  const target = useMemo(() => new THREE.Object3D(), []);
+  return (
+    <>
+      <primitive object={target} position={at} />
+      <spotLight
+        position={[x, GALLERY_HEIGHT - 0.28, z]}
+        target={target}
+        angle={angle}
+        penumbra={0.94}
+        intensity={intensity}
+        distance={distance}
+        decay={2}
+        color={color}
+      />
+    </>
+  );
+}
 
 // The room.
 //
-// Lit by three fixed lights and a lot of emissive geometry rather than by
+// Lit by seven fixed sources and a lot of emissive geometry rather than by
 // one light per fixture: a dynamic light costs every fragment it reaches,
 // and a gallery with a light in each cove would be paying for an evenly
 // lit room the whole point of which is that it is not evenly lit. The
-// coves are emissive strips — they read as the source without being one.
+// coves are additive strips — they read as the source without being one.
+//
+// The seven are not scattered. Four wash the axis, brightening toward the
+// far recess so the room pulls you down it; two graze the side walls,
+// because concrete only looks like concrete at a shallow angle; one is
+// cold spill from the doorway behind you. Everything else in the room is
+// lit by whichever stand you are standing at.
 //
 // Shadows are off entirely. In a room of matte black boxes under warm
 // grazing light there is almost nothing for a shadow to land on that the
@@ -72,12 +141,30 @@ export function BrandGalleryScene({
     <>
       <PlayerController enabled={controlsEnabled} onLockChange={onLockChange} />
 
-      {/* Barely there — enough that a black box is not a silhouette. */}
-      <ambientLight intensity={0.16} color="#8fa3b8" />
-      {/* Three fixed sources down the axis. Warm, low, and never moved. */}
-      <pointLight position={[0, 4.1, 1]} intensity={16} distance={16} decay={2} color="#ffd0a0" />
-      <pointLight position={[0, 4.1, -8]} intensity={14} distance={18} decay={2} color="#ffc99a" />
-      <pointLight position={[0, 4.1, -16]} intensity={12} distance={14} decay={2} color="#ffd6ae" />
+      {/* Sky and bounce, in one light. A flat ambient lifts every face by
+          the same amount, so a box lit only by ambient has no top and no
+          side; a hemisphere gives the room a direction to be dark in —
+          cool from the coves above, a little warm off the floor. */}
+      <hemisphereLight args={["#2a3650", "#1b1209", 0.55]} />
+
+      {/* Four washes down the axis, warming and brightening as they go:
+          the far end of the room is the brightest thing in it, which is
+          what walks a visitor down a gallery without a sign telling them
+          to. */}
+      <Wash z={1.6} at={[0, 0, 1.2]} intensity={13} color="#ffcb9c" angle={0.98} />
+      <Wash z={-4.6} at={[0, 0, -5]} intensity={15} color="#ffd0a2" />
+      <Wash z={-10.4} at={[0, 0, -10.8]} intensity={17} color="#ffd4a8" />
+      <Wash z={-15.4} at={[0, 0.9, -16.9]} intensity={22} color="#ffe0bd" angle={0.8} distance={14} />
+
+      {/* Two grazing washes down the side walls. Concrete only looks like
+          concrete at a shallow angle — head-on it is a grey rectangle. */}
+      <Wash x={-8.1} z={-4} at={[-8.9, 0.4, -4]} intensity={9} color="#9fb4d6" angle={0.72} distance={11} />
+      <Wash x={8.1} z={-11} at={[8.9, 0.4, -11]} intensity={9} color="#9fb4d6" angle={0.72} distance={11} />
+
+      {/* Cold spill from the doorway behind the visitor, so their own
+          corner of the room is not the darkest one and the exit reads as
+          an opening rather than as a wall. */}
+      <pointLight position={[0, 2.4, 4.4]} intensity={7} distance={9} decay={2} color="#7d93c4" />
 
       {GALLERY_BOXES.map((box) => (
         <mesh

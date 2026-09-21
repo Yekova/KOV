@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Html } from "@react-three/drei";
 import * as THREE from "three";
 import type { Brand } from "@/lib/studio/brands";
@@ -21,6 +21,9 @@ const RED = "#e31e24";
 // re-renders only when one is crossed.
 export function BrandStand({ brand, onInteract }: { brand: Brand; onInteract: (brand: Brand) => void }) {
   const [near, setNear] = useState<Nearness>("far");
+  // What the stand's own light points at. One per stand, created once —
+  // see the fixture below on why a spot needs an object to aim at.
+  const panelTarget = useMemo(() => new THREE.Object3D(), []);
 
   useBrandProximity(brand.position, (level) => setNear(level));
 
@@ -73,12 +76,36 @@ export function BrandStand({ brand, onInteract }: { brand: Brand; onInteract: (b
         </mesh>
       )}
 
-      {/* One light per lit stand, and only while lit. A dozen always-on
-          point lights is a dozen shadow-free draws the renderer still has
-          to solve per fragment; switching them with distance keeps the
-          count at whatever the visitor is actually standing near. */}
+      {/* The picture light, and only while lit. A dozen always-on lights is
+          a dozen shadow-free draws the renderer still has to solve per
+          fragment; switching them with distance keeps the count at
+          whatever the visitor is actually standing near.
+          
+          A spot aimed at the panel rather than a point light floating in
+          front of it: a point light at this distance lit the plinth, the
+          floor and the visitor's own feet as brightly as the work, which
+          is the one thing a gallery fixture is designed not to do. The
+          target has to be a real object in the graph — three.js aims a
+          spot at an Object3D, and the default one sits at the world
+          origin, which for a stand ten metres down the room means every
+          light pointing back at the entrance. */}
       {lit && (
-        <pointLight position={[0, 3.1, 0.7]} intensity={legible ? 5.5 : 2.6} distance={5.5} decay={2} color="#ffd9b8" />
+        <>
+          <primitive object={panelTarget} position={[0, 1.95, -0.35]} />
+          <spotLight
+            position={[0, 3.35, 0.85]}
+            target={panelTarget}
+            angle={0.62}
+            penumbra={0.75}
+            intensity={legible ? 11 : 5}
+            distance={6.4}
+            decay={2}
+            color="#ffdcba"
+          />
+          {/* A low warm bounce off the plinth top, so the volume on it is
+              not a silhouette against its own lit panel. */}
+          <pointLight position={[0, 1.15, 0.5]} intensity={legible ? 1.5 : 0.7} distance={2.2} decay={2} color="#ffcfa0" />
+        </>
       )}
 
       {/* The name, then the invitation. Both are real DOM through drei's

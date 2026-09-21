@@ -585,3 +585,76 @@
     transform: none;
   }
 }
+
+/* ── The opening band ─────────────────────────────────────────────────
+ *
+ * 16:9, the same ratio as the browser windows in the cards below, so the
+ * page opens on the shape it then repeats. Black with the picture just
+ * under the surface; the cursor develops it. Everything moving happens
+ * inside the canvas — the frame itself never animates. */
+
+.kov-liq {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 0 var(--pw-gutter) 56px;
+}
+
+.kov-liq__frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid var(--pw-line);
+  border-radius: 14px;
+  background: #07070a;
+  /* The picture is nearly black itself; a touch of contrast against the
+     page ground is what keeps the frame from reading as a gap. */
+  box-shadow: 0 30px 90px -60px rgba(0, 0, 0, 0.9);
+}
+
+.kov-liq__base,
+.kov-liq__canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.kov-liq__base {
+  background-position: center;
+  background-size: cover;
+  opacity: 0.08;
+}
+
+/* No cursor to follow, or motion turned down: the picture plainly, at a
+   level that reads as an image rather than as a failed effect. */
+.kov-liq__frame.is-still .kov-liq__base {
+  opacity: 0.45;
+}
+
+.kov-liq__hint {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-mono), monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--kov-steel);
+  opacity: 0.75;
+  transition: opacity 600ms ease;
+}
+
+/* Said once. An affordance that stays on top of the thing it describes is
+   in the way of it. */
+.kov-liq__hint.is-gone {
+  opacity: 0;
+}
+
+@media (max-width: 640px) {
+  .kov-liq {
+    padding-bottom: 40px;
+  }
+
+  .kov-liq__frame {
+    border-radius: 10px;
+  }
+}

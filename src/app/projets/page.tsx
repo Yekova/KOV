@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Button } from "@/components/ui/Button";
 import { KovCTA } from "@/components/ui/KovCTA";
+import { LiquidReveal } from "@/components/projects/LiquidReveal";
 import { ProjectsView } from "@/components/projects/ProjectsView";
 import "@/components/projects/ProjectsPage.css";
 
@@ -61,6 +62,8 @@ export default function ProjetsPage() {
           galerie d&apos;images.
         </p>
       </header>
+
+      <LiquidReveal />
 
       <ProjectsView />
 

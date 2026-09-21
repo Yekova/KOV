@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { Brand } from "@/lib/studio/brands";
+import { brandSubtitle } from "./BrandInteractionPanel";
 
 const PANEL: React.CSSProperties = {
   border: "1px solid var(--kov-border)",
@@ -234,7 +235,7 @@ export function BrandGalleryHUD({
                           color: "var(--kov-steel)",
                         }}
                       >
-                        {brand.tier}
+                        {brandSubtitle(brand)}
                       </span>
                     </button>
                   </li>

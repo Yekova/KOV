@@ -6,6 +6,12 @@ import type { Brand } from "@/lib/studio/brands";
 import { trackGallery } from "@/lib/studio/galleryAnalytics";
 
 const PANEL = { width: 2.05, height: 1.2 } as const;
+/** The mark is set to a height and given whatever width its own
+ *  proportions ask for, up to the panel's. A fixed box would squash a
+ *  wordmark and balloon a monogram — and a distorted mark is the one
+ *  thing a brand will notice before anything else in the room. */
+const LOGO_HEIGHT = 0.2;
+const LOGO_MAX_WIDTH = 1.7;
 
 // What a stand actually shows on its panel.
 //
@@ -25,6 +31,7 @@ export function BrandStandMedia({
 }) {
   const [coverTexture, setCoverTexture] = useState<THREE.Texture | null>(null);
   const [logoTexture, setLogoTexture] = useState<THREE.Texture | null>(null);
+  const [logoAspect, setLogoAspect] = useState(3);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [videoTexture, setVideoTexture] = useState<THREE.VideoTexture | null>(null);
 
@@ -50,7 +57,11 @@ export function BrandStandMedia({
     };
 
     load(brand.coverUrl, setCoverTexture);
-    load(brand.logoUrl, setLogoTexture);
+    load(brand.logoUrl, (texture) => {
+      const source = texture.image as { width?: number; height?: number } | null;
+      if (source?.width && source?.height) setLogoAspect(source.width / source.height);
+      setLogoTexture(texture);
+    });
 
     return () => {
       cancelled = true;
@@ -105,6 +116,9 @@ export function BrandStandMedia({
   // enough to have triggered it.
   const panelMap = videoTexture ?? coverTexture;
 
+  const logoWidth = Math.min(LOGO_MAX_WIDTH, LOGO_HEIGHT * logoAspect);
+  const logoHeight = logoWidth / logoAspect;
+
   const panelMaterial = useMemo(() => {
     if (panelMap) {
       return <meshBasicMaterial map={panelMap} toneMapped={false} />;
@@ -124,8 +138,8 @@ export function BrandStandMedia({
       {/* The mark, under the panel, lit from the plinth. Only once the
           visitor is close enough for it to be worth reading. */}
       {logoTexture && lit && (
-        <mesh position={[0, 1.02, -0.34]}>
-          <planeGeometry args={[0.9, 0.28]} />
+        <mesh position={[0, 1.04, -0.34]}>
+          <planeGeometry args={[logoWidth, logoHeight]} />
           <meshBasicMaterial map={logoTexture} transparent toneMapped={false} />
         </mesh>
       )}

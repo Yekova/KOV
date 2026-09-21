@@ -91,7 +91,10 @@ export function BrandGalleryRoom({ onExit }: { onExit: () => void }) {
     <div className="absolute inset-0" style={{ background: "#08080a" }}>
       <Canvas
         dpr={[1, 2]}
-        gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping }}
+        // A little over 1: ACES is a filmic curve and it holds the
+        // highlights of the picture lights back hard, which in a room this
+        // dark reads as underexposed rather than as moody.
+        gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.12 }}
         camera={{ fov: 68, near: 0.05, far: 80, position: SPAWN }}
         // Nothing in this room casts a shadow — see BrandGalleryScene on
         // why. Saying so here keeps the renderer from allocating the maps.
@@ -100,8 +103,11 @@ export function BrandGalleryRoom({ onExit }: { onExit: () => void }) {
       >
         <color attach="background" args={["#08080a"]} />
         {/* The room's own haze. Cheap, and it is what makes the far end of
-            the axis read as far rather than as a wall at arm's length. */}
-        <fog attach="fog" args={["#08080a", 6, 34]} />
+            the axis read as far rather than as a wall at arm's length.
+            Starting at nine metres rather than six: with the washes in,
+            fog that close was taking the contrast off the stand the
+            visitor is walking toward. */}
+        <fog attach="fog" args={["#08080a", 9, 38]} />
 
         <BrandGalleryScene
           brands={brands}

@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { HOUSE_BRAND } from "./houseBrand";
 
 // What a stand in the Brand Gallery is, and how one is fetched.
 //
@@ -8,7 +9,9 @@ import { supabase } from "@/lib/supabase";
 // with tenants.
 
 /** What a stand is allowed to show. A capability, not a price: there is no
- *  tariff yet, and a column for one would be inventing the offer. */
+ *  tariff yet, and a column for one would be inventing the offer. It is
+ *  read by the room, never printed at a visitor — a word like "presence"
+ *  on someone's stand reads as a rank whatever it was meant as. */
 export type BrandTier = "presence" | "showcase" | "immersive" | "exclusive";
 
 export interface Brand {
@@ -26,6 +29,10 @@ export interface Brand {
   scale: number;
   tier: BrandTier;
   isFeatured: boolean;
+  /** True for KOV's own stand, which is not a tenant. Never set from a
+   *  row: the flag exists so the room can say "the studio" where it would
+   *  otherwise print a tier at a visitor. */
+  isHouse?: boolean;
 }
 
 interface BrandRow {
@@ -112,13 +119,13 @@ function toBrand(row: BrandRow): Brand {
   };
 }
 
-/** The gallery's occupants.
+/** The gallery's occupants: the house stand, then the tenants.
  *
  *  The status and date filtering is in the row-level policy, not here: a
  *  draft or an expired stand never leaves the database, so there is no
- *  client-side filter to forget. Returns an empty list on any failure —
- *  a gallery with no tenants is a room, and a room is still worth walking
- *  through. */
+ *  client-side filter to forget. A failure degrades to the house stand
+ *  alone — the room is still a room, and the one position that is not
+ *  someone else's to lose is KOV's own. */
 export async function fetchBrands(): Promise<Brand[]> {
   const { data, error } = await supabase
     .from("brand_gallery")
@@ -128,6 +135,11 @@ export async function fetchBrands(): Promise<Brand[]> {
     .order("is_featured", { ascending: false })
     .order("name", { ascending: true });
 
-  if (error || !data) return [];
-  return (data as BrandRow[]).map(toBrand);
+  const tenants = error || !data ? [] : (data as BrandRow[]).map(toBrand);
+
+  // The house stand, unless a real row has taken its slug — which is the
+  // escape hatch if KOV's own stand should ever be editable like any
+  // other. The host comes first: it is at the head of the room, and a
+  // list that opens on the building makes the rest read as tenants.
+  return tenants.some((brand) => brand.slug === HOUSE_BRAND.slug) ? tenants : [HOUSE_BRAND, ...tenants];
 }
