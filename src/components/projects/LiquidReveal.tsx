@@ -3,7 +3,9 @@
 import { useEffect, useRef } from "react";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 
-const SRC = "/work/liquid-16x9.webp";
+// 16:9 exactly, from a 9:16 source turned on its side — no crop, so the
+// whole render is in the frame.
+const SRC = "/work/liquid-red-16x9.webp";
 
 /** The lit disc, in pixels of radius, clamped so it is the same gesture
  *  on a laptop and on a wide monitor. */
