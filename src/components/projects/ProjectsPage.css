@@ -1,102 +1,92 @@
-/* /projets — quiet, typographic, on hairlines.
+/* /projets — light cards on the page's own black.
  *
- * Almost no colour. Red appears exactly twice on the whole page: the dash of
- * a section label, and the active dot of a row's rail. Everything else is
- * greys — which is what lets the two project pictures be the only saturated
- * things on the screen. */
+ * The reference this is built from is a light page. Transplanting the page
+ * would have meant a white document in the middle of a black site; what
+ * transplants instead is its card: a browser window over a block of text,
+ * off-white, sitting on the ground the rest of the site already uses. That
+ * is also the move the homepage's own project cards make, which is why two
+ * of these read as a set rather than as a short list. */
 
-.kov-pr {
-  --pr-line: rgba(231, 231, 229, 0.09);
-  --pr-gutter: 24px;
+.kov-pw {
+  --pw-ink: #111217;
+  --pw-paper: #f5f3ef;
+  --pw-line: rgba(231, 231, 229, 0.09);
+  --pw-gutter: 24px;
   min-height: 100vh;
-  padding-bottom: 0;
 }
 
 @media (min-width: 1024px) {
-  .kov-pr {
-    --pr-gutter: 56px;
+  .kov-pw {
+    --pw-gutter: 48px;
   }
 }
 
-/* A dash, then a tracked label. Used once per band. */
-.kov-pr__label {
-  display: flex;
+/* ── Statement ───────────────────────────────────────────────────────── */
+
+.kov-pw__head {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 140px var(--pw-gutter) 52px;
+  text-align: center;
+}
+
+@media (min-width: 1024px) {
+  .kov-pw__head {
+    padding: 156px var(--pw-gutter) 60px;
+  }
+}
+
+.kov-pw__label {
+  display: inline-flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
+  font-family: var(--font-mono), monospace;
   font-size: 10px;
   letter-spacing: 0.3em;
   text-transform: uppercase;
   color: var(--kov-steel);
 }
 
-.kov-pr__label::before {
-  content: "";
-  width: 30px;
+.kov-pw__label span[aria-hidden] {
+  width: 28px;
   height: 1px;
   background: var(--kov-red);
 }
 
-/* ── Masthead ────────────────────────────────────────────────────────── */
-
-.kov-pr__head {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 26px;
-  align-items: start;
-  padding: 136px var(--pr-gutter) 56px;
-  border-bottom: 1px solid var(--pr-line);
-}
-
-@media (min-width: 1024px) {
-  .kov-pr__head {
-    /* Label, statement, caption on one line — the whole opening in the
-       height of a paragraph, so the work starts near the top of the page
-       rather than below a screen of atmosphere. */
-    grid-template-columns: minmax(150px, 0.8fr) minmax(0, 2.2fr) minmax(0, 1.1fr);
-    gap: 48px;
-    padding: 148px var(--pr-gutter) 64px;
-  }
-
-  .kov-pr__label {
-    padding-top: 12px;
-  }
-}
-
-.kov-pr__title {
+.kov-pw__title {
+  margin-top: 24px;
   font-family: var(--font-display), sans-serif;
-  font-size: clamp(34px, 3.8vw, 58px);
+  font-size: clamp(32px, 4.4vw, 68px);
   font-weight: 400;
   line-height: 1.1;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.022em;
   color: var(--kov-bone);
 }
 
-.kov-pr__lede {
-  max-width: 34ch;
-  font-size: 13.5px;
+.kov-pw__lede {
+  max-width: 56ch;
+  margin: 24px auto 0;
+  font-size: 14px;
   line-height: 1.75;
   color: var(--kov-steel);
 }
 
-@media (min-width: 1024px) {
-  .kov-pr__lede {
-    padding-top: 10px;
-  }
-}
-
 /* ── Control bar ─────────────────────────────────────────────────────── */
 
-.kov-pr__bar {
+.kov-pw__bar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 16px var(--pr-gutter);
-  border-bottom: 1px solid var(--pr-line);
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 16px var(--pw-gutter);
+  border-top: 1px solid var(--pw-line);
+  border-bottom: 1px solid var(--pw-line);
 }
 
-.kov-pr__count {
+.kov-pw__count {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -108,25 +98,25 @@
   font-variant-numeric: tabular-nums;
 }
 
-.kov-pr__count b {
+.kov-pw__count b {
   font-weight: 500;
   color: var(--kov-concrete);
 }
 
-.kov-pr__count span[aria-hidden] {
+.kov-pw__count span[aria-hidden] {
   opacity: 0.4;
 }
 
-.kov-pr__views {
+.kov-pw__views {
   display: flex;
   align-items: center;
   gap: 2px;
   padding: 2px;
-  border: 1px solid var(--pr-line);
+  border: 1px solid var(--pw-line);
   border-radius: 999px;
 }
 
-.kov-pr__view {
+.kov-pw__view {
   padding: 7px 16px;
   border-radius: 999px;
   background: none;
@@ -139,90 +129,179 @@
   transition: background-color 280ms ease, color 280ms ease;
 }
 
-.kov-pr__view:hover {
+.kov-pw__view:hover {
   color: var(--kov-bone);
 }
 
-.kov-pr__view.is-on {
+.kov-pw__view.is-on {
   background: rgba(231, 231, 229, 0.08);
   color: var(--kov-bone);
 }
 
-.kov-pr__view:focus-visible {
+.kov-pw__view:focus-visible {
   outline: 2px solid var(--kov-red);
   outline-offset: 2px;
 }
 
-/* ── Detail: one row per project ─────────────────────────────────────── */
+/* ── The grid ────────────────────────────────────────────────────────── */
 
-.kov-pr__rows {
+.kov-pw__grid {
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 36px;
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 56px var(--pw-gutter) 0;
+}
+
+@media (min-width: 900px) {
+  .kov-pw__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 56px 44px;
+    padding-top: 72px;
+  }
+}
+
+/* ── One card ────────────────────────────────────────────────────────── */
+
+.kov-card {
   display: flex;
   flex-direction: column;
 }
 
-.kov-row {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 28px;
+.kov-card__window {
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--pw-paper);
+  box-shadow:
+    0 24px 60px -28px rgba(0, 0, 0, 0.75),
+    0 0 0 1px rgba(255, 255, 255, 0.06);
+  transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 700ms ease;
+}
+
+.kov-card:hover .kov-card__window {
+  transform: translateY(-4px);
+  box-shadow:
+    0 34px 80px -28px rgba(0, 0, 0, 0.82),
+    0 0 0 1px rgba(227, 30, 36, 0.3);
+}
+
+.kov-card__shot {
+  position: relative;
+  /* Taller than the screenshot, so the page is cut off at the bottom of the
+     frame: a page that ends exactly at its frame reads as a picture of a
+     page, one that runs past it reads as a page. */
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: var(--pw-paper);
+}
+
+.kov-card__img {
+  object-fit: cover;
+  object-position: top center;
+  transition: transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.kov-card:hover .kov-card__img {
+  transform: scale(1.015);
+}
+
+.kov-card__reserved {
+  display: flex;
   align-items: center;
-  padding: 56px var(--pr-gutter);
-  border-bottom: 1px solid var(--pr-line);
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 9.5px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(17, 18, 23, 0.32);
 }
 
-@media (min-width: 1024px) {
-  .kov-row {
-    /* Identity, picture, position — the reference's own three-part
-       measure, with the story spanning all three underneath. */
-    grid-template-columns: minmax(200px, 0.9fr) minmax(0, 2.3fr) minmax(130px, 0.55fr);
-    gap: 56px;
-    padding: 80px var(--pr-gutter);
-  }
+.kov-card__shotHit {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 }
 
-/* ── Identity column ─────────────────────────────────────────────────── */
-
-.kov-row__num {
-  display: block;
-  font-family: var(--font-display), sans-serif;
-  font-size: clamp(64px, 8vw, 132px);
-  font-weight: 400;
-  line-height: 0.8;
-  letter-spacing: -0.04em;
-  color: rgba(231, 231, 229, 0.07);
-  font-variant-numeric: tabular-nums;
+.kov-card__play {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  padding-left: 3px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  background: rgba(10, 10, 10, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  font-size: 13px;
+  color: #f5f3ef;
+  transition: background-color 300ms ease, border-color 300ms ease, transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.kov-row__name {
-  margin-top: 26px;
-  font-size: clamp(17px, 1.4vw, 21px);
-  font-weight: 400;
-  letter-spacing: 0.02em;
+.kov-card:hover .kov-card__play {
+  background: var(--kov-red);
+  border-color: var(--kov-red);
+  transform: scale(1.08);
+}
+
+/* ── The text under the window ───────────────────────────────────────── */
+
+.kov-card__text {
+  padding: 22px 2px 0;
+}
+
+/* What was built, before the name — the reference's own order, and the
+   right one: a prospect is looking for their own job on this line. */
+.kov-card__services {
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.6;
   color: var(--kov-bone);
 }
 
-.kov-row__rule {
-  display: block;
-  width: 34px;
-  height: 1px;
-  margin-top: 16px;
-  background: rgba(231, 231, 229, 0.2);
+.kov-card__services span[aria-hidden] {
+  color: var(--kov-red);
 }
 
-/* --kov-concrete, not --kov-steel: steel measures 4.41:1 on this ground,
-   under the 4.5:1 floor for anything that has to be read. */
-.kov-row__tagline {
-  margin-top: 16px;
-  max-width: 26ch;
+.kov-card__name {
+  margin-top: 12px;
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(22px, 2.1vw, 30px);
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  color: var(--kov-bone);
+}
+
+.kov-card__where {
+  margin-top: 4px;
   font-size: 13px;
-  line-height: 1.65;
+  line-height: 1.6;
+  color: var(--kov-steel);
+}
+
+/* --kov-concrete, not --kov-steel: steel measures 4.41:1 on #0a0a0a, under
+   the 4.5:1 floor for body copy. */
+.kov-card__body {
+  margin-top: 16px;
+  max-width: 52ch;
+  font-size: 13.5px;
+  line-height: 1.75;
   color: var(--kov-concrete);
 }
 
-.kov-row__link {
+.kov-card__link {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  margin-top: 26px;
+  margin-top: 18px;
   padding: 0;
   background: none;
   font-family: var(--font-mono), monospace;
@@ -234,242 +313,78 @@
   transition: color 280ms ease, gap 280ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.kov-row__link:hover {
+.kov-card__link:hover {
   gap: 16px;
   color: var(--kov-red);
 }
 
-.kov-row__link:focus-visible {
+.kov-card__link:focus-visible {
   outline: 2px solid var(--kov-red);
   outline-offset: 4px;
 }
 
-/* No button where a click would open onto the same three lines printed
-   under the row. */
-.kov-row__link.is-inert {
-  color: var(--kov-steel);
-  opacity: 0.55;
-  cursor: default;
-}
+/* ── À venir ─────────────────────────────────────────────────────────── */
 
-/* ── Picture ─────────────────────────────────────────────────────────── */
-
-.kov-row__visual {
-  position: relative;
-  aspect-ratio: 16 / 9;
-  overflow: hidden;
-  border-radius: 6px;
-  background: #0d0d0f;
-}
-
-/* Grey at rest, colour on approach. The reference is monochrome throughout;
-   this keeps the page that quiet while still showing the real work — and
-   makes the picture the only saturated thing on screen the moment someone
-   reaches for it. One value to change if it should always be in colour. */
-.kov-row__img {
-  object-fit: cover;
-  object-position: top center;
-  filter: grayscale(1) contrast(1.04) brightness(0.92);
-  transition: filter 700ms ease, transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.kov-row:hover .kov-row__img {
-  filter: grayscale(0) contrast(1) brightness(1);
-  transform: scale(1.015);
-}
-
-.kov-row__reserved {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  font-size: 9.5px;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: rgba(231, 231, 229, 0.3);
-}
-
-.kov-row__visualHit {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.kov-row__play {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 58px;
-  height: 58px;
-  padding-left: 3px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  background: rgba(10, 10, 10, 0.45);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  font-size: 13px;
-  color: #f5f3ef;
-  transition: background-color 300ms ease, border-color 300ms ease, transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.kov-row:hover .kov-row__play {
-  background: var(--kov-red);
-  border-color: var(--kov-red);
-  transform: scale(1.08);
-}
-
-/* ── Position rail ───────────────────────────────────────────────────── */
-/* Static per row: which of the set this is, and what field it is in. No
-   observer, nothing to keep in sync with the scroll. */
-
-.kov-row__rail {
-  display: flex;
-  align-items: center;
-  gap: 18px;
+.kov-soon {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 72px var(--pw-gutter) 0;
 }
 
 @media (min-width: 1024px) {
-  .kov-row__rail {
-    justify-content: flex-start;
+  .kov-soon {
+    padding-top: 96px;
   }
 }
 
-.kov-row__track {
-  display: flex;
-  align-items: center;
-  gap: 26px;
-}
-
-@media (min-width: 1024px) {
-  .kov-row__track {
-    flex-direction: column;
-    gap: 34px;
-  }
-}
-
-.kov-row__dot {
-  position: relative;
-  width: 7px;
-  height: 7px;
-  border-radius: 999px;
-  border: 1px solid rgba(231, 231, 229, 0.28);
-}
-
-/* The line between the dots, drawn from each dot to the next. */
-.kov-row__dot + .kov-row__dot::before {
-  content: "";
-  position: absolute;
-  background: rgba(231, 231, 229, 0.16);
-  left: 50%;
-  bottom: 100%;
-  width: 1px;
-  height: 34px;
-  transform: translateX(-50%);
-}
-
-@media (max-width: 1023px) {
-  .kov-row__dot + .kov-row__dot::before {
-    left: auto;
-    right: 100%;
-    bottom: 50%;
-    width: 26px;
-    height: 1px;
-    transform: translateY(50%);
-  }
-}
-
-.kov-row__dot.is-on {
-  background: var(--kov-red);
-  border-color: var(--kov-red);
-}
-
-.kov-row__caption {
-  max-width: 14ch;
-  font-size: 9.5px;
-  line-height: 1.7;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--kov-steel);
-}
-
-/* ── The reasoning, under the row ────────────────────────────────────── */
-
-.kov-row__story {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0;
-  margin-top: 6px;
-}
-
-@media (min-width: 1024px) {
-  .kov-row__story {
-    grid-column: 1 / -1;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 40px;
-    margin-top: 22px;
-    padding-top: 30px;
-    border-top: 1px solid var(--pr-line);
-  }
-}
-
-.kov-row__story > div {
-  padding: 13px 0;
-  border-top: 1px solid var(--pr-line);
-}
-
-@media (min-width: 1024px) {
-  .kov-row__story > div {
-    padding: 0;
-    border-top: none;
-  }
-}
-
-.kov-row__story dt {
-  font-family: var(--font-mono), monospace;
-  font-size: 9px;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: var(--kov-steel);
-}
-
-.kov-row__story dd {
-  margin-top: 8px;
-  max-width: 40ch;
-  font-size: 13px;
-  line-height: 1.7;
-  color: var(--kov-concrete);
-}
-
-/* ── The row for what is not published ───────────────────────────────── */
-
-.kov-row--soon .kov-row__num,
-.kov-row--soon .kov-row__name {
-  color: rgba(231, 231, 229, 0.28);
-}
-
-.kov-row--soon .kov-row__num {
-  color: rgba(231, 231, 229, 0.05);
-}
-
-.kov-row__soonList {
-  list-style: none;
+.kov-soon__head {
   display: flex;
   flex-direction: column;
+  gap: 12px;
+  padding-top: 40px;
+  border-top: 1px solid var(--pw-line);
 }
 
-.kov-row__soonList li {
+@media (min-width: 768px) {
+  .kov-soon__head {
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 32px;
+  }
+}
+
+.kov-soon__title {
+  font-family: var(--font-display), sans-serif;
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--kov-bone);
+}
+
+.kov-soon__note {
+  max-width: 48ch;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--kov-steel);
+}
+
+.kov-soon__list {
+  list-style: none;
+  margin-top: 22px;
+}
+
+.kov-soon__row {
   display: flex;
   align-items: center;
   gap: 18px;
-  padding: 15px 0;
-  border-top: 1px solid var(--pr-line);
+  padding: 16px 0;
+  border-top: 1px solid var(--pw-line);
 }
 
-.kov-row__soonNum {
+.kov-soon__num {
+  flex: 0 0 auto;
   font-family: var(--font-mono), monospace;
   font-size: 10px;
   letter-spacing: 0.16em;
@@ -477,19 +392,20 @@
   font-variant-numeric: tabular-nums;
 }
 
-.kov-row__soonTags {
+.kov-soon__tags {
   display: flex;
   flex-wrap: wrap;
   gap: 6px 16px;
   flex: 1;
   min-width: 0;
-  font-size: 10px;
+  font-size: 10.5px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--kov-concrete);
 }
 
-.kov-row__soonState {
+.kov-soon__state {
+  flex: 0 0 auto;
   font-family: var(--font-mono), monospace;
   font-size: 9px;
   letter-spacing: 0.2em;
@@ -501,8 +417,9 @@
 /* ── List ────────────────────────────────────────────────────────────── */
 
 .kov-list {
-  padding: 0 var(--pr-gutter);
-  border-bottom: 1px solid var(--pr-line);
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 8px var(--pw-gutter) 0;
 }
 
 .kov-list__head {
@@ -513,14 +430,14 @@
   .kov-list__head,
   .kov-list__row {
     display: grid;
-    grid-template-columns: 46px minmax(0, 1.4fr) minmax(0, 1.3fr) minmax(0, 1.6fr) 130px 40px;
+    grid-template-columns: 46px minmax(0, 1.2fr) minmax(0, 1.3fr) minmax(0, 1.8fr) 130px 40px;
     gap: 24px;
     align-items: center;
   }
 
   .kov-list__head {
     padding: 18px 0;
-    border-bottom: 1px solid var(--pr-line);
+    border-bottom: 1px solid var(--pw-line);
     font-family: var(--font-mono), monospace;
     font-size: 9px;
     letter-spacing: 0.24em;
@@ -539,22 +456,13 @@
   grid-template-columns: 46px 1fr;
   gap: 4px 16px;
   padding: 20px 0;
-  border-bottom: 1px solid var(--pr-line);
-  transition: background-color 260ms ease;
-}
-
-.kov-list__row:last-child {
-  border-bottom: none;
+  border-bottom: 1px solid var(--pw-line);
 }
 
 @media (min-width: 900px) {
   .kov-list__row {
     padding: 22px 0;
   }
-}
-
-.kov-list__row.is-soon {
-  color: var(--kov-steel);
 }
 
 .kov-list__num {
@@ -578,7 +486,7 @@
 .kov-list__field,
 .kov-list__tags {
   font-size: 11px;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--kov-concrete);
 }
@@ -631,8 +539,7 @@
   outline-offset: 2px;
 }
 
-/* Everything but the number and the name collapses out below 900px: a
-   five-column table on a phone is five columns of two words. */
+/* A five-column table on a phone is five columns of two words. */
 @media (max-width: 899px) {
   .kov-list__field,
   .kov-list__tags,
@@ -653,73 +560,49 @@
 
 /* ── Close ───────────────────────────────────────────────────────────── */
 
-.kov-pr__close {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 30px;
-  align-items: start;
-  padding: 80px var(--pr-gutter) 104px;
+.kov-pw__close {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 96px var(--pw-gutter) 112px;
+  text-align: center;
 }
 
 @media (min-width: 1024px) {
-  .kov-pr__close {
-    /* The same measure as the masthead, so the page opens and shuts on the
-       same line. */
-    grid-template-columns: minmax(150px, 0.8fr) minmax(0, 2.2fr) minmax(0, 1.1fr);
-    gap: 48px;
-    padding: 108px var(--pr-gutter) 132px;
+  .kov-pw__close {
+    padding: 128px var(--pw-gutter) 140px;
   }
 }
 
-.kov-pr__closeTitle {
+.kov-pw__closeTitle {
   font-family: var(--font-display), sans-serif;
-  font-size: clamp(30px, 3.4vw, 52px);
+  font-size: clamp(28px, 3.6vw, 56px);
   font-weight: 400;
   line-height: 1.1;
   letter-spacing: -0.02em;
   color: var(--kov-bone);
 }
 
-.kov-pr__closeLede {
-  margin-top: 22px;
-  max-width: 44ch;
-  font-size: 13.5px;
+.kov-pw__closeLede {
+  max-width: 46ch;
+  margin: 20px auto 0;
+  font-size: 14px;
   line-height: 1.75;
   color: var(--kov-steel);
 }
 
-.kov-pr__closeActions {
+.kov-pw__closeActions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
   gap: 14px;
   margin-top: 30px;
 }
 
-.kov-pr__triad {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 14px;
-  font-size: 9.5px;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: var(--kov-steel);
-}
-
-@media (min-width: 1024px) {
-  .kov-pr__triad {
-    padding-top: 12px;
-  }
-}
-
-.kov-pr__triad span[aria-hidden] {
-  opacity: 0.35;
-}
-
 /* ── The modal ───────────────────────────────────────────────────────── */
-/* The film and the longer description. The three narrative rows are already
-   under the row, so a modal is only offered where there is more. */
+/* The film and the longer description. What was built and what changed are
+   already printed on the card, so a modal is only offered where there is
+   more than that. */
 
 .kov-modal {
   width: 100%;
@@ -744,7 +627,7 @@
   overflow-y: auto;
   overscroll-behavior: contain;
   border-radius: 10px;
-  border: 1px solid var(--pr-line);
+  border: 1px solid rgba(231, 231, 229, 0.09);
   background: #0d0d0f;
   box-shadow: 0 40px 110px rgba(0, 0, 0, 0.72);
   animation: kovModalIn 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -791,7 +674,7 @@
   width: 100%;
   overflow: hidden;
   background: #000;
-  border-bottom: 1px solid var(--pr-line);
+  border-bottom: 1px solid rgba(231, 231, 229, 0.09);
 }
 
 .kov-modal__player {
@@ -853,7 +736,7 @@
   grid-template-columns: 1fr;
   gap: 5px;
   padding: 14px 0;
-  border-top: 1px solid var(--pr-line);
+  border-top: 1px solid rgba(231, 231, 229, 0.09);
 }
 
 @media (min-width: 640px) {
@@ -892,7 +775,7 @@
   gap: 9px;
   padding: 12px 20px;
   border-radius: 4px;
-  border: 1px solid var(--pr-line);
+  border: 1px solid rgba(231, 231, 229, 0.09);
   font-family: var(--font-mono), monospace;
   font-size: 9.5px;
   letter-spacing: 0.22em;
@@ -917,19 +800,20 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .kov-pr__view,
-  .kov-row__link,
-  .kov-row__img,
-  .kov-row__play,
-  .kov-list__row,
+  .kov-pw__view,
+  .kov-card__window,
+  .kov-card__img,
+  .kov-card__play,
+  .kov-card__link,
   .kov-list__action button,
   .kov-modal__close,
   .kov-modal__link {
     transition: none;
   }
 
-  .kov-row:hover .kov-row__img,
-  .kov-row:hover .kov-row__play,
+  .kov-card:hover .kov-card__window,
+  .kov-card:hover .kov-card__img,
+  .kov-card:hover .kov-card__play,
   .kov-list__row:hover .kov-list__action button {
     transform: none;
   }

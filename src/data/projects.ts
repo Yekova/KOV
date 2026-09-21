@@ -57,6 +57,15 @@ export interface Project {
    * real story — those entries are simply absent from that band rather than
    * padded out with a placeholder. */
   narrative: ProjectNarrative | null;
+  /** Where the client is, shown under the name on /projets: "Talence,
+   * 33400, Gironde". Null renders nothing.
+   *
+   * Empty on every entry today, and it has to stay that way until someone
+   * who knows fills it in — a town and a postcode are facts about another
+   * company, not something to infer from a logo. It is worth filling: a
+   * real place under a real project is the strongest local signal this
+   * site has, and the reference page prints one on every card. */
+  location: string | null;
   /** The page itself, cropped clean, for the browser frame on /projets.
    * Null falls back to `image` — but `image` is sometimes a device mockup
    * (Kanti arrived as a laptop and a phone on a light ground), and a mockup
@@ -86,6 +95,7 @@ export const PROJECTS: Project[] = [
     // No public case-study route exists yet, so this card carries its work
     // without pretending to open one.
     href: null,
+    location: null,
     image: "/work/kanti-mockup.webp",
     // The laptop screen of the mockup above, extracted to its own content.
     screen: "/work/kanti-screen.webp",
@@ -106,6 +116,7 @@ export const PROJECTS: Project[] = [
     tags: ["Immersif", "360°", "Technologie"],
     caseStudyHref: null,
     href: "/studio",
+    location: null,
     image: "/studio/covers/p01-cover.webp",
     // The cover is already a render of the experience itself, not a device
     // mockup, so it goes straight into the frame.
@@ -139,6 +150,7 @@ export const PROJECTS: Project[] = [
     tags: ["Identité", "Expérience", "Développement"],
     caseStudyHref: null,
     href: null,
+    location: null,
     image: null,
     screen: null,
     tagline: null,
@@ -154,6 +166,7 @@ export const PROJECTS: Project[] = [
     tags: ["Stratégie", "Design", "Motion"],
     caseStudyHref: null,
     href: null,
+    location: null,
     image: null,
     screen: null,
     tagline: null,
@@ -169,6 +182,7 @@ export const PROJECTS: Project[] = [
     tags: ["Exploration", "Design", "Développement"],
     caseStudyHref: null,
     href: null,
+    location: null,
     image: null,
     screen: null,
     tagline: null,
@@ -187,6 +201,7 @@ export const PROJECTS: Project[] = [
     tags: ["Stratégie", "Design", "Technologie"],
     caseStudyHref: null,
     href: "/contact",
+    location: null,
     image: null,
     screen: null,
     tagline: null,

@@ -2,25 +2,60 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
-import { NARRATIVE_ROWS, PROJECTS, type Project } from "@/data/projects";
+import { BrowserChrome } from "@/components/ui/BrowserChrome";
+import { PROJECTS, type Project } from "@/data/projects";
 import { ProjectModal } from "./ProjectModal";
 
-type View = "detail" | "list";
+type View = "grid" | "list";
+
+/** What the address pill shows. Derived from the project's own href, never
+ *  written by hand: a plausible-looking domain in a browser frame is a
+ *  claim, and a project with no public URL gets a blank pill instead. */
+function browserUrl(href: string | null): string | null {
+  if (!href) return null;
+  if (href.startsWith("/")) return `kov-agency.site${href}`;
+  try {
+    const parsed = new URL(href);
+    return `${parsed.host}${parsed.pathname.replace(/\/$/, "")}`;
+  } catch {
+    return null;
+  }
+}
+
+/** The line of deliverables above each name.
+ *
+ *  Taken from the project's own `system` line rather than written fresh —
+ *  "Architecture, design system, responsive, contenu" is already the list of
+ *  what was built, it is already reviewed copy, and splitting it means the
+ *  card and the modal can never end up claiming different work. */
+function services(project: Project): string[] {
+  if (!project.narrative) return [...project.tags];
+  return project.narrative.system
+    .replace(/\.$/, "")
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean)
+    // The source is a sentence, so everything after the first item arrives
+    // lowercase. These are deliverables in a list, not prose.
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1));
+}
+
+/** Whether there is anything behind a click: a film, or a longer
+ *  description. Everything else is already printed on the card. */
+const hasMore = (project: Project) => Boolean(project.video || project.detail);
 
 // The work, in two readings.
 //
-// Detail is the page: one full-width row per delivered project, on hairlines,
-// with the number set huge and ghosted at the left and a position rail at the
-// right. List is the same work as an index — number, name, field,
-// disciplines, state — including the ones that are not published, because an
-// index is exactly where the incomplete belongs and a showcase is exactly
-// where it does not.
+// Grid is the page: one light card per delivered project, each a browser
+// window over a block of text — deliverables, name, place, and what was
+// done. List is the same work as an index, and it includes what is not
+// published, because an index is exactly where the incomplete belongs and a
+// showcase is exactly where it does not.
 //
 // One modal for the whole page rather than one per project: two dialogs in
-// the DOM to show one at a time is two of everything for no reason, and the
-// open project is a single piece of state either way.
+// the DOM to show one at a time is two of everything for no reason.
 export function ProjectsView() {
-  const [view, setView] = useState<View>("detail");
+  const [view, setView] = useState<View>("grid");
   const [openId, setOpenId] = useState<string | null>(null);
 
   const delivered = useMemo(() => PROJECTS.filter((p) => p.status === "live"), []);
@@ -31,9 +66,8 @@ export function ProjectsView() {
 
   return (
     <>
-      {/* The control bar: what there is, and how to read it. */}
-      <div className="kov-pr__bar">
-        <p className="kov-pr__count">
+      <div className="kov-pw__bar">
+        <p className="kov-pw__count">
           <b>{String(delivered.length).padStart(2, "0")}</b> en ligne
           <span aria-hidden="true">/</span>
           <b>{String(upcoming.length).padStart(2, "0")}</b> à venir
@@ -41,18 +75,18 @@ export function ProjectsView() {
 
         {/* aria-pressed, not a pair of links: this changes how the same
             content is displayed, it does not navigate anywhere. */}
-        <div className="kov-pr__views" role="group" aria-label="Affichage des projets">
+        <div className="kov-pw__views" role="group" aria-label="Affichage des projets">
           <button
             type="button"
-            className={`kov-pr__view${view === "detail" ? " is-on" : ""}`}
-            aria-pressed={view === "detail"}
-            onClick={() => setView("detail")}
+            className={`kov-pw__view${view === "grid" ? " is-on" : ""}`}
+            aria-pressed={view === "grid"}
+            onClick={() => setView("grid")}
           >
-            Détail
+            Vignettes
           </button>
           <button
             type="button"
-            className={`kov-pr__view${view === "list" ? " is-on" : ""}`}
+            className={`kov-pw__view${view === "list" ? " is-on" : ""}`}
             aria-pressed={view === "list"}
             onClick={() => setView("list")}
           >
@@ -61,8 +95,8 @@ export function ProjectsView() {
         </div>
       </div>
 
-      {view === "detail" ? (
-        <DetailView projects={delivered} upcoming={upcoming} onOpen={setOpenId} />
+      {view === "grid" ? (
+        <GridView projects={delivered} upcoming={upcoming} onOpen={setOpenId} />
       ) : (
         <ListView projects={indexed} onOpen={setOpenId} />
       )}
@@ -72,14 +106,9 @@ export function ProjectsView() {
   );
 }
 
-/** Whether a project has anything behind a click: a film, or a longer
- *  description. The three narrative lines are already in the row, so a modal
- *  that only repeated them would be a door onto the same room. */
-const hasMore = (project: Project) => Boolean(project.video || project.detail);
+// ── Grid ─────────────────────────────────────────────────────────────────
 
-// ── Detail ───────────────────────────────────────────────────────────────
-
-function DetailView({
+function GridView({
   projects,
   upcoming,
   onOpen,
@@ -88,134 +117,123 @@ function DetailView({
   upcoming: Project[];
   onOpen: (id: string) => void;
 }) {
-  const total = projects.length;
-
   return (
-    <div className="kov-pr__rows">
-      {projects.map((project, index) => (
-        <article key={project.id} id={`projet-${project.id}`} className="kov-row">
-          <div className="kov-row__id">
-            <span aria-hidden="true" className="kov-row__num">
-              {project.id}
-            </span>
+    <>
+      <ul className="kov-pw__grid">
+        {projects.map((project) => (
+          <li key={project.id} id={`projet-${project.id}`} className="kov-card">
+            <div className="kov-card__window">
+              <BrowserChrome tone="light" url={browserUrl(project.href)} />
 
-            <h2 className="kov-row__name">{project.name}</h2>
-            <span aria-hidden="true" className="kov-row__rule" />
+              <div className="kov-card__shot">
+                {project.image ? (
+                  // Cropped at the bottom on purpose: a page that ends
+                  // exactly at the frame reads as a picture of a page, one
+                  // that runs past it reads as a page.
+                  <Image
+                    src={project.screen ?? project.image}
+                    alt={`${project.name} — ${project.category}`}
+                    fill
+                    sizes="(max-width: 1023px) 92vw, 46vw"
+                    className="kov-card__img"
+                  />
+                ) : (
+                  <span className="kov-card__reserved">Visuel à venir</span>
+                )}
 
-            {project.tagline && <p className="kov-row__tagline">{project.tagline}</p>}
+                {project.video && (
+                  // A redundant pointer affordance, out of the tab order and
+                  // hidden from assistive tech: the same action already has
+                  // a labelled button below. Clicking a large picture still
+                  // has to work.
+                  <button
+                    type="button"
+                    aria-hidden="true"
+                    tabIndex={-1}
+                    className="kov-card__shotHit"
+                    onClick={() => onOpen(project.id)}
+                  >
+                    <span className="kov-card__play">▶</span>
+                  </button>
+                )}
+              </div>
+            </div>
 
-            {hasMore(project) ? (
-              <button type="button" className="kov-row__link" onClick={() => onOpen(project.id)}>
-                {project.video ? "Voir la vidéo" : "En savoir plus"}
-                <span aria-hidden="true">→</span>
-              </button>
-            ) : (
-              // Nothing behind a click yet: no recording, no case study, no
-              // public URL. A button here would open onto the same three
-              // lines already printed below.
-              <span aria-hidden="true" className="kov-row__link is-inert">
-                Détail ci-dessous
-              </span>
-            )}
-          </div>
+            <div className="kov-card__text">
+              {/* What was actually built, before the name — the reference's
+                  own order, and the right one: a prospect is looking for
+                  their own job on this line. */}
+              <p className="kov-card__services">
+                {services(project).map((item, index) => (
+                  <span key={item}>
+                    {index > 0 && <span aria-hidden="true"> — </span>}
+                    {item}
+                  </span>
+                ))}
+              </p>
 
-          <div className="kov-row__visual">
-            {project.image ? (
-              <Image
-                src={project.screen ?? project.image}
-                alt={`${project.name} — ${project.category}`}
-                fill
-                sizes="(max-width: 1023px) 92vw, 52vw"
-                className="kov-row__img"
-              />
-            ) : (
-              <span className="kov-row__reserved">Visuel à venir</span>
-            )}
+              <h2 className="kov-card__name">{project.name}</h2>
 
-            {hasMore(project) && (
-              // A redundant pointer affordance, out of the tab order and
-              // hidden from assistive tech: the same action already has a
-              // labelled button in the column. Clicking a large picture
-              // still has to work.
-              <button
-                type="button"
-                aria-hidden="true"
-                tabIndex={-1}
-                className="kov-row__visualHit"
-                onClick={() => onOpen(project.id)}
-              >
-                {project.video && <span className="kov-row__play">▶</span>}
-              </button>
-            )}
-          </div>
+              <p className="kov-card__where">
+                {project.category}
+                {project.location && (
+                  <>
+                    <span aria-hidden="true"> · </span>
+                    {project.location}
+                  </>
+                )}
+              </p>
 
-          {/* Where this row sits in the set, and what field it is in. Static
-              per row — no observer, nothing to keep in sync. */}
-          <div aria-hidden="true" className="kov-row__rail">
-            <span className="kov-row__track">
-              {projects.map((dot, i) => (
-                <span key={dot.id} className={`kov-row__dot${i === index ? " is-on" : ""}`} />
-              ))}
-            </span>
-            <span className="kov-row__caption">{project.category}</span>
-          </div>
+              {project.narrative && (
+                <p className="kov-card__body">
+                  {project.narrative.problem} {project.narrative.result}
+                </p>
+              )}
 
-          {/* The reasoning, full width under the row. Real HTML, always
-              visible: this is the page someone sends to a colleague. */}
-          {project.narrative && (
-            <dl className="kov-row__story">
-              {NARRATIVE_ROWS.map((row) => (
-                <div key={row.key}>
-                  <dt>{row.label}</dt>
-                  <dd>{project.narrative?.[row.key]}</dd>
-                </div>
-              ))}
-            </dl>
-          )}
-        </article>
-      ))}
+              {hasMore(project) && (
+                <button type="button" className="kov-card__link" onClick={() => onOpen(project.id)}>
+                  {project.video ? "Voir la vidéo" : "En savoir plus"}
+                  <span aria-hidden="true">→</span>
+                </button>
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
 
       {upcoming.length > 0 && (
-        <article className="kov-row kov-row--soon">
-          <div className="kov-row__id">
-            <span aria-hidden="true" className="kov-row__num">
-              {upcoming[0].id}
-            </span>
-            <h2 className="kov-row__name">À venir</h2>
-            <span aria-hidden="true" className="kov-row__rule" />
-            <p className="kov-row__tagline">
+        <section className="kov-soon" aria-labelledby="projets-a-venir">
+          <div className="kov-soon__head">
+            <h2 id="projets-a-venir" className="kov-soon__title">
+              À venir
+            </h2>
+            {/* Says only what the data records: not published. No reserved
+                cards, no "Bientôt" plates — the worst tell of a thin
+                portfolio is empty frames dressed up as work. */}
+            <p className="kov-soon__note">
               {upcoming.length} projets qui ne sont pas encore en ligne. Ils rejoindront cette page quand ils le
               seront.
             </p>
           </div>
 
-          {/* No reserved cards and no "Bientôt" plates: the worst tell of a
-              thin portfolio is empty frames dressed up as work. Rows. */}
-          <ol className="kov-row__soonList">
+          <ol className="kov-soon__list">
             {upcoming.map((project) => (
-              <li key={project.id}>
-                <span className="kov-row__soonNum">{project.id}</span>
-                <span className="kov-row__soonTags">
+              <li key={project.id} className="kov-soon__row">
+                <span aria-hidden="true" className="kov-soon__num">
+                  {project.id}
+                </span>
+                <span className="kov-soon__tags">
                   {project.tags.map((tag) => (
                     <span key={tag}>{tag}</span>
                   ))}
                 </span>
-                <span className="kov-row__soonState">Non publié</span>
+                <span className="kov-soon__state">Non publié</span>
               </li>
             ))}
           </ol>
-
-          <div aria-hidden="true" className="kov-row__rail">
-            <span className="kov-row__track">
-              {Array.from({ length: total }, (_, i) => (
-                <span key={i} className="kov-row__dot" />
-              ))}
-            </span>
-            <span className="kov-row__caption">La suite</span>
-          </div>
-        </article>
+        </section>
       )}
-    </div>
+    </>
   );
 }
 
@@ -228,7 +246,7 @@ function ListView({ projects, onOpen }: { projects: Project[]; onOpen: (id: stri
         <span>#</span>
         <span>Projet</span>
         <span>Domaine</span>
-        <span>Disciplines</span>
+        <span>Prestations</span>
         <span>État</span>
         <span />
       </div>
@@ -236,25 +254,27 @@ function ListView({ projects, onOpen }: { projects: Project[]; onOpen: (id: stri
       <ol className="kov-list__body">
         {projects.map((project) => {
           const live = project.status === "live";
-          const clickable = hasMore(project);
 
           return (
             <li key={project.id} className={`kov-list__row${live ? "" : " is-soon"}`}>
               <span className="kov-list__num">{project.id}</span>
               <span className="kov-list__name">{project.name}</span>
-              <span className="kov-list__field">{project.category}</span>
-              <span className="kov-list__tags">{project.tags.join(" / ")}</span>
+              <span className="kov-list__field">
+                {project.category}
+                {project.location && ` · ${project.location}`}
+              </span>
+              <span className="kov-list__tags">{services(project).join(" — ")}</span>
               <span className="kov-list__state">
                 <span aria-hidden="true" className={`kov-list__pip${live ? " is-live" : ""}`} />
                 {live ? "En ligne" : "Non publié"}
               </span>
               <span className="kov-list__action">
-                {clickable ? (
+                {hasMore(project) && (
                   <button type="button" onClick={() => onOpen(project.id)}>
                     <span className="sr-only">{`Ouvrir ${project.name}`}</span>
                     <span aria-hidden="true">→</span>
                   </button>
-                ) : null}
+                )}
               </span>
             </li>
           );
