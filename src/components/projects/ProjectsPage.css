@@ -152,62 +152,127 @@
 
 @media (min-width: 1024px) {
   .kov-band--work {
-    padding: 104px 0 120px;
+    padding: 112px 0 128px;
   }
-}
-
-/* No side padding: the spreads inside reach the viewport edge, and each one
-   re-centres its own text against the site measure of 1600px. */
-.kov-band__bleed {
-  position: relative;
-  width: 100%;
 }
 
 .kov-work-list {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 64px;
+  gap: 88px;
 }
 
 @media (min-width: 1024px) {
   .kov-work-list {
-    gap: 124px;
+    gap: 150px;
   }
 }
 
-/* ── One spread ──────────────────────────────────────────── */
-/* Picture off one edge of the page, panel of text laid over the edge of it.
-   Overlapping is the whole device: text beside a picture is a two-column
-   layout, text on top of one is a spread, and those few pixels of overlap
-   are what stop two projects reading as two rows of a table. */
+/* ── A window on a stage ─────────────────────────────────── */
+/* These are websites. A cropped photograph of one is a picture of a
+   website; a window with chrome around it is the website. */
 
-.kov-dip {
-  position: relative;
-  display: flex;
-  flex-direction: column;
+.kov-vit {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 34px;
+  align-items: center;
   /* The top blur of the page runs 8rem down, so a deep link needs this. */
   scroll-margin-top: 140px;
 }
 
-.kov-dip__media {
+@media (min-width: 1024px) {
+  .kov-vit {
+    grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+    gap: 64px;
+  }
+
+  /* Sides alternate, so two projects read as a rhythm and not as a table. */
+  .kov-vit--flip .kov-vit__stage {
+    order: 2;
+  }
+
+  .kov-vit--flip .kov-vit__text {
+    order: 1;
+  }
+}
+
+.kov-vit__stage {
   position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
+  /* Room below for the floor glow and above for the tilt, so neither is
+     clipped by the band. */
+  padding: 8px 0 34px;
+  perspective: 1800px;
+}
+
+/* Pulls the window toward the edge of the screen. The band clips, so this
+   can never produce a horizontal scrollbar. */
+@media (min-width: 1024px) {
+  .kov-vit__stage {
+    margin-left: min(-4vw, -28px);
+  }
+
+  .kov-vit--flip .kov-vit__stage {
+    margin-left: 0;
+    margin-right: min(-4vw, -28px);
+  }
+}
+
+.kov-vit__window {
+  position: relative;
   overflow: hidden;
-  background: #0d0d0f;
+  border-radius: 14px;
+  border: 1px solid var(--kov-border);
+  background: var(--kov-graphite);
+  box-shadow:
+    0 2px 0 rgba(255, 255, 255, 0.05) inset,
+    0 44px 90px -34px rgba(0, 0, 0, 0.9),
+    0 0 0 1px rgba(0, 0, 0, 0.4);
+  transform-style: preserve-3d;
+  transition: transform 900ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 900ms ease;
 }
 
-.kov-dip__img {
+/* Turned toward the reader, and squaring up when they reach it. Below the
+   breakpoint the window is flat: a tilt on a 360px screen is a window you
+   cannot read. */
+@media (min-width: 1024px) {
+  .kov-vit__window {
+    transform: rotateY(7deg) rotateX(2deg);
+  }
+
+  .kov-vit--flip .kov-vit__window {
+    transform: rotateY(-7deg) rotateX(2deg);
+  }
+
+  .kov-vit:hover .kov-vit__window,
+  .kov-vit:focus-within .kov-vit__window {
+    transform: rotateY(0deg) rotateX(0deg);
+    box-shadow:
+      0 2px 0 rgba(255, 255, 255, 0.07) inset,
+      0 54px 110px -34px rgba(0, 0, 0, 0.92),
+      0 0 0 1px rgba(227, 30, 36, 0.28);
+  }
+}
+
+.kov-vit__chrome {
+  position: relative;
+  z-index: 2;
+}
+
+.kov-vit__screen {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: #0a0a0a;
+}
+
+.kov-vit__img {
   object-fit: cover;
-  transition: transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
+  object-position: top center;
 }
 
-.kov-dip:hover .kov-dip__img {
-  transform: scale(1.03);
-}
-
-.kov-dip__reserved {
+.kov-vit__reserved {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -220,16 +285,7 @@
   color: rgba(231, 231, 229, 0.38);
 }
 
-/* Darkens the picture where the panel will sit, so the overlap is legible
-   before the backdrop-filter of the panel does anything. */
-.kov-dip__grade {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(to top, rgba(10, 10, 10, 0.88), rgba(10, 10, 10, 0) 58%);
-}
-
-.kov-dip__mediaHit {
+.kov-vit__screenHit {
   position: absolute;
   inset: 0;
   display: flex;
@@ -238,7 +294,7 @@
   cursor: pointer;
 }
 
-.kov-dip__play {
+.kov-vit__play {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -246,101 +302,36 @@
   height: 66px;
   padding-left: 3px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  background: rgba(10, 10, 10, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(10, 10, 10, 0.55);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   color: #f5f3ef;
   transition: background-color 320ms ease, border-color 320ms ease, transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.kov-dip:hover .kov-dip__play {
+.kov-vit:hover .kov-vit__play {
   background: var(--kov-red);
   border-color: var(--kov-red);
   transform: scale(1.07);
 }
 
-/* Re-centres the text against the site measure, inside a band that itself
-   reaches the viewport edge. */
-.kov-dip__inner {
-  position: relative;
-  width: 100%;
-  max-width: 1600px;
-  margin: 0 auto;
-  padding: 0 24px;
+/* What makes the window sit on something rather than float on nothing. */
+.kov-vit__floor {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: 2px;
+  height: 44px;
+  border-radius: 50%;
+  background: radial-gradient(60% 100% at 50% 0%, rgba(227, 30, 36, 0.2), transparent 72%);
+  filter: blur(16px);
+  pointer-events: none;
 }
 
-.kov-dip__panel {
-  position: relative;
-  /* The overlap. Stacked layout puts the panel under the picture, so it
-     climbs back over it. */
-  margin-top: -52px;
-  padding: 26px 22px 24px;
-  border-radius: 18px;
-  border: 1px solid var(--kov-border);
-  background: rgba(12, 12, 14, 0.86);
-  backdrop-filter: blur(20px) saturate(140%);
-  -webkit-backdrop-filter: blur(20px) saturate(140%);
-  box-shadow: 0 30px 80px -34px rgba(0, 0, 0, 0.85);
-}
+/* ── The column beside it ────────────────────────────────── */
 
-@media (min-width: 1024px) {
-  .kov-dip {
-    display: block;
-    min-height: 620px;
-  }
-
-  .kov-dip__media {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    width: 62%;
-    aspect-ratio: auto;
-    border-radius: 0 18px 18px 0;
-  }
-
-  .kov-dip--flip .kov-dip__media {
-    left: auto;
-    right: 0;
-    border-radius: 18px 0 0 18px;
-  }
-
-  /* Sideways once the panel is beside the picture rather than under it. */
-  .kov-dip__grade {
-    background: linear-gradient(to right, rgba(10, 10, 10, 0.1), rgba(10, 10, 10, 0.8));
-  }
-
-  .kov-dip--flip .kov-dip__grade {
-    background: linear-gradient(to left, rgba(10, 10, 10, 0.1), rgba(10, 10, 10, 0.8));
-  }
-
-  /* A twelve-column measure is what makes the overlap a fixed proportion
-     rather than a number to re-tune at every width: the panel starts at
-     column 7, the picture ends at 62% of the viewport, and the difference
-     between the two is the overlap. */
-  .kov-dip__inner {
-    display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    column-gap: 24px;
-    min-height: 620px;
-    align-items: center;
-  }
-
-  .kov-dip__panel {
-    grid-column: 7 / -1;
-    margin-top: 0;
-    padding: 36px 34px 32px;
-  }
-
-  .kov-dip--flip .kov-dip__panel {
-    grid-column: 1 / 7;
-  }
-}
-
-/* ── The text of the panel ─────────────────────────────────── */
-
-.kov-dip__meta {
+.kov-vit__meta {
   display: flex;
   align-items: center;
   gap: 14px;
@@ -351,28 +342,28 @@
   color: var(--kov-steel);
 }
 
-.kov-dip__num {
+.kov-vit__num {
   color: var(--kov-red);
   font-variant-numeric: tabular-nums;
 }
 
-.kov-dip__rule {
+.kov-vit__rule {
   width: 28px;
   height: 1px;
   background: var(--kov-border);
 }
 
-.kov-dip__name {
+.kov-vit__name {
   margin-top: 14px;
   font-family: var(--font-display), sans-serif;
-  font-size: clamp(30px, 3.2vw, 52px);
+  font-size: clamp(30px, 3.4vw, 56px);
   line-height: 0.98;
   letter-spacing: -0.018em;
   text-transform: uppercase;
   color: var(--kov-bone);
 }
 
-.kov-dip__tagline {
+.kov-vit__tagline {
   margin-top: 12px;
   max-width: 30ch;
   font-size: 13px;
@@ -382,11 +373,11 @@
   color: var(--kov-red);
 }
 
-.kov-dip__story {
-  margin-top: 24px;
+.kov-vit__story {
+  margin-top: 26px;
 }
 
-.kov-dip__story > div {
+.kov-vit__story > div {
   display: grid;
   grid-template-columns: 1fr;
   gap: 3px;
@@ -394,14 +385,14 @@
   border-top: 1px solid var(--kov-border);
 }
 
-@media (min-width: 1280px) {
-  .kov-dip__story > div {
+@media (min-width: 640px) {
+  .kov-vit__story > div {
     grid-template-columns: 92px 1fr;
     gap: 18px;
   }
 }
 
-.kov-dip__story dt {
+.kov-vit__story dt {
   padding-top: 2px;
   font-family: var(--font-mono), monospace;
   font-size: 10px;
@@ -412,14 +403,14 @@
 
 /* --kov-concrete rather than --kov-steel: steel is 4.41:1 on this ground,
    under the 4.5:1 floor for body copy. */
-.kov-dip__story dd {
-  max-width: 54ch;
+.kov-vit__story dd {
+  max-width: 52ch;
   font-size: 13.5px;
   line-height: 1.6;
   color: var(--kov-concrete);
 }
 
-.kov-dip__foot {
+.kov-vit__foot {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -430,7 +421,7 @@
   border-top: 1px solid var(--kov-border);
 }
 
-.kov-dip__tags {
+.kov-vit__tags {
   list-style: none;
   display: flex;
   flex-wrap: wrap;
@@ -442,13 +433,13 @@
   color: var(--kov-steel);
 }
 
-.kov-dip__tags li + li::before {
+.kov-vit__tags li + li::before {
   content: "|";
   margin-right: 14px;
   color: rgba(231, 231, 229, 0.2);
 }
 
-.kov-dip__cta {
+.kov-vit__cta {
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -466,16 +457,16 @@
   transition: border-color 320ms ease, background-color 320ms ease;
 }
 
-.kov-dip__cta:hover {
+.kov-vit__cta:hover {
   border-color: var(--kov-red);
   background: rgba(227, 30, 36, 0.16);
 }
 
-.kov-dip__cta-arrow {
+.kov-vit__cta-arrow {
   transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.kov-dip__cta:hover .kov-dip__cta-arrow {
+.kov-vit__cta:hover .kov-vit__cta-arrow {
   transform: translate(2px, -2px);
 }
 
@@ -839,15 +830,21 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .kov-dip__img,
-  .kov-dip__play,
-  .kov-dip__cta,
-  .kov-dip__cta-arrow {
+  .kov-vit__window,
+  .kov-vit__play,
+  .kov-vit__cta,
+  .kov-vit__cta-arrow {
     transition: none;
   }
 
-  .kov-dip:hover .kov-dip__img,
-  .kov-dip:hover .kov-dip__play {
+  /* No tilt at all rather than a tilt that never resolves. */
+  .kov-vit__window,
+  .kov-vit--flip .kov-vit__window,
+  .kov-vit:hover .kov-vit__window {
+    transform: none;
+  }
+
+  .kov-vit:hover .kov-vit__play {
     transform: none;
   }
 

@@ -57,6 +57,11 @@ export interface Project {
    * real story — those entries are simply absent from that band rather than
    * padded out with a placeholder. */
   narrative: ProjectNarrative | null;
+  /** The page itself, cropped clean, for the browser frame on /projets.
+   * Null falls back to `image` — but `image` is sometimes a device mockup
+   * (Kanti arrived as a laptop and a phone on a light ground), and a mockup
+   * inside a browser frame is a mockup twice over. */
+  screen: string | null;
   /** A screen recording of the work, shown in the project's modal on
    * /projets. width and height are the file's real pixel dimensions: the
    * modal reserves the box from them, so opening it never reflows.
@@ -82,6 +87,8 @@ export const PROJECTS: Project[] = [
     // without pretending to open one.
     href: null,
     image: "/work/kanti-mockup.webp",
+    // The laptop screen of the mockup above, extracted to its own content.
+    screen: "/work/kanti-screen.webp",
     tagline: "Clarté et confiance",
     narrative: {
       problem: "Une offre patrimoniale complexe à structurer.",
@@ -100,6 +107,9 @@ export const PROJECTS: Project[] = [
     caseStudyHref: null,
     href: "/studio",
     image: "/studio/covers/p01-cover.webp",
+    // The cover is already a render of the experience itself, not a device
+    // mockup, so it goes straight into the frame.
+    screen: null,
     // Five rooms, not seven: studioNodes.ts defines p01–p07 but only five
     // carry `available: true` and only five panoramas exist on disk. This
     // cannot be derived — studioNodes imports PROJECTS, so reading it back
@@ -130,6 +140,7 @@ export const PROJECTS: Project[] = [
     caseStudyHref: null,
     href: null,
     image: null,
+    screen: null,
     tagline: null,
     narrative: null,
     video: null,
@@ -144,6 +155,7 @@ export const PROJECTS: Project[] = [
     caseStudyHref: null,
     href: null,
     image: null,
+    screen: null,
     tagline: null,
     narrative: null,
     video: null,
@@ -158,6 +170,7 @@ export const PROJECTS: Project[] = [
     caseStudyHref: null,
     href: null,
     image: null,
+    screen: null,
     tagline: null,
     narrative: null,
     video: null,
@@ -175,6 +188,7 @@ export const PROJECTS: Project[] = [
     caseStudyHref: null,
     href: "/contact",
     image: null,
+    screen: null,
     tagline: null,
     narrative: null,
     video: null,
