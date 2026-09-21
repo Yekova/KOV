@@ -1,29 +1,137 @@
-/* /projets — three full-width bands: statement, work, invitation.
+/* /projets — the work, one screen at a time.
  *
- * <main> carries no container. Each band bleeds to the viewport edge and
- * pads itself back to the site's own 1600px measure, which is the only way
- * to get an edge-to-edge ground whose content still lines up with every
- * other page. */
+ * Four chapters: the statement, one per delivered project, and the close.
+ * Each fills the viewport above 1024px, the ground steps very slightly
+ * between them, and a rail down the left gutter says which one you are in.
+ *
+ * No scroll-snap anywhere in this file. The site runs Lenis, and CSS
+ * snapping fights an inertia scroller that animates scrollTop itself. */
 
 .kov-work {
   min-height: 100vh;
 }
 
-.kov-band {
+/* ── A chapter ───────────────────────────────────────────────────────── */
+
+.kov-ch {
   position: relative;
+  display: flex;
+  align-items: center;
   overflow: hidden;
+  padding: 120px 0 96px;
 }
 
-.kov-band__inner {
+.kov-ch__inner {
   position: relative;
+  z-index: 1;
   width: 100%;
   max-width: 1600px;
   margin: 0 auto;
   padding: 0 24px;
 }
 
-/* A red dash, then a mono label. The page's one repeated signature, used
-   once per band. */
+@media (min-width: 1024px) {
+  /* svh, not vh: a mobile browser's collapsing URL bar makes vh taller than
+     what is actually on screen, and a chapter that overflows the screen is
+     not a chapter. Padding is inside the height (border-box), and the top
+     value is what keeps the content clear of the fixed nav. */
+  .kov-ch {
+    min-height: 100svh;
+    padding: 136px 0 104px;
+  }
+
+  /* A left gutter wide enough for the rail to live in, rather than over
+     the text. */
+  .kov-ch__inner {
+    padding-left: 84px;
+  }
+}
+
+.kov-ch--intro {
+  background: #0a0a0a;
+}
+
+.kov-ch--work {
+  background: #0b0b0c;
+  border-top: 1px solid var(--kov-border);
+}
+
+.kov-ch--work.is-alt {
+  background: #0e0e11;
+}
+
+.kov-ch--close {
+  border-top: 1px solid var(--kov-border);
+  background: linear-gradient(180deg, #0d0a0b, #0a0a0a 60%);
+}
+
+/* ── The rail ────────────────────────────────────────────────────────── */
+/* Hidden below 1024px, where the chapters are not full screen either and
+   there is no gutter to put it in. */
+
+.kov-rail {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .kov-rail {
+    position: fixed;
+    left: 30px;
+    top: 50%;
+    z-index: var(--z-content);
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    font-family: var(--font-mono), monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    color: var(--kov-steel);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.kov-rail__num {
+  color: var(--kov-bone);
+}
+
+.kov-rail__list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 11px;
+}
+
+/* Real links, not indicators. Four full-screen chapters is exactly the
+   situation where someone wants to skip one. */
+.kov-rail__dot {
+  display: block;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--kov-border);
+  transition: background-color 320ms ease, transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.kov-rail__dot:hover {
+  background: var(--kov-steel);
+}
+
+.kov-rail__dot.is-active {
+  background: var(--kov-red);
+  transform: scale(1.4);
+}
+
+.kov-rail__dot:focus-visible {
+  outline: 2px solid var(--kov-red);
+  outline-offset: 4px;
+}
+
+/* ── Shared signature ────────────────────────────────────────────────── */
+/* A red dash, then a mono label. Used once per chapter. */
+
 .kov-rule-label {
   display: flex;
   align-items: center;
@@ -42,24 +150,8 @@
   background: var(--kov-red);
 }
 
-/* ── Statement ───────────────────────────────────────────────────────── */
+/* ── Chapter 1 — the statement ───────────────────────────────────────── */
 
-.kov-band--hero {
-  padding: 168px 0 96px;
-  border-bottom: 1px solid var(--kov-border);
-}
-
-@media (min-width: 1024px) {
-  .kov-band--hero {
-    padding: 196px 0 120px;
-  }
-}
-
-.kov-hero__inner {
-  z-index: 1;
-}
-
-/* The faint rule grid the homepage projects section already sits on. */
 .kov-hero__grid {
   position: absolute;
   inset: 0;
@@ -72,13 +164,13 @@
 }
 
 /* A dark body lit from behind on its inner edge — a rim, not a glow around
-   a disc. The inset shadow is what does the work; the circle itself is
-   nearly the page's own black. */
+   a disc. The inset shadow does the work; the circle is nearly the page's
+   own black. */
 .kov-hero__body {
   position: absolute;
   top: 50%;
   right: -16%;
-  width: min(78vw, 860px);
+  width: min(78vw, 880px);
   aspect-ratio: 1;
   transform: translateY(-50%);
   border-radius: 50%;
@@ -89,12 +181,10 @@
     0 0 180px -40px rgba(227, 30, 36, 0.3);
 }
 
-/* One drifting band of light across the lower right, so the corner is not
-   an empty circle on an empty ground. */
 .kov-hero__streak {
   position: absolute;
   right: -8%;
-  bottom: -30%;
+  bottom: -22%;
   width: min(70vw, 780px);
   height: 46%;
   transform: rotate(-24deg);
@@ -144,32 +234,7 @@
   opacity: 0.6;
 }
 
-/* ── The work ────────────────────────────────────────────── */
-
-.kov-band--work {
-  padding: 84px 0 96px;
-}
-
-@media (min-width: 1024px) {
-  .kov-band--work {
-    padding: 112px 0 128px;
-  }
-}
-
-.kov-work-list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 88px;
-}
-
-@media (min-width: 1024px) {
-  .kov-work-list {
-    gap: 150px;
-  }
-}
-
-/* ── A window on a stage ─────────────────────────────────── */
+/* ── A window on a stage ─────────────────────────────────────────────── */
 /* These are websites. A cropped photograph of one is a picture of a
    website; a window with chrome around it is the website. */
 
@@ -178,8 +243,6 @@
   grid-template-columns: 1fr;
   gap: 34px;
   align-items: center;
-  /* The top blur of the page runs 8rem down, so a deep link needs this. */
-  scroll-margin-top: 140px;
 }
 
 @media (min-width: 1024px) {
@@ -200,14 +263,13 @@
 
 .kov-vit__stage {
   position: relative;
-  /* Room below for the floor glow and above for the tilt, so neither is
-     clipped by the band. */
+  /* Room below for the floor glow and above for the tilt. */
   padding: 8px 0 34px;
   perspective: 1800px;
 }
 
-/* Pulls the window toward the edge of the screen. The band clips, so this
-   can never produce a horizontal scrollbar. */
+/* Pulls the window toward the edge of the screen. The chapter clips, so
+   this can never produce a horizontal scrollbar. */
 @media (min-width: 1024px) {
   .kov-vit__stage {
     margin-left: min(-4vw, -28px);
@@ -233,8 +295,8 @@
   transition: transform 900ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 900ms ease;
 }
 
-/* Turned toward the reader, and squaring up when they reach it. Below the
-   breakpoint the window is flat: a tilt on a 360px screen is a window you
+/* Turned toward the reader, squaring up when they reach it. Flat below the
+   breakpoint: a seven-degree rotation on a 360px screen is a window you
    cannot read. */
 @media (min-width: 1024px) {
   .kov-vit__window {
@@ -329,7 +391,7 @@
   pointer-events: none;
 }
 
-/* ── The column beside it ────────────────────────────────── */
+/* ── The column beside it ────────────────────────────────────────────── */
 
 .kov-vit__meta {
   display: flex;
@@ -470,13 +532,81 @@
   transform: translate(2px, -2px);
 }
 
-/* ── À venir ─────────────────────────────────────────────────────────── */
+/* ── Last chapter ────────────────────────────────────────────────────── */
 
-.kov-soon {
-  margin-top: 88px;
-  padding-top: 44px;
-  border-top: 1px solid var(--kov-border);
+.kov-close {
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
 }
+
+@media (min-width: 1024px) {
+  .kov-close {
+    gap: 76px;
+  }
+}
+
+.kov-close__cta {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 30px;
+  align-items: end;
+}
+
+@media (min-width: 1024px) {
+  .kov-close__cta {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    gap: 64px;
+  }
+}
+
+.kov-cta__glow {
+  position: absolute;
+  top: 50%;
+  width: min(48vw, 520px);
+  aspect-ratio: 1;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, rgba(227, 30, 36, 0.16), transparent 66%);
+  filter: blur(18px);
+}
+
+.kov-cta__glow--left {
+  left: -18%;
+}
+
+.kov-cta__glow--right {
+  right: -18%;
+}
+
+.kov-cta__title {
+  margin-top: 26px;
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(30px, 4.2vw, 68px);
+  line-height: 0.98;
+  letter-spacing: -0.02em;
+  color: var(--kov-bone);
+}
+
+.kov-cta__aside {
+  max-width: 40ch;
+}
+
+.kov-cta__lede {
+  font-size: 14.5px;
+  line-height: 1.75;
+  color: var(--kov-concrete);
+}
+
+.kov-cta__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin-top: 28px;
+}
+
+/* ── À venir ─────────────────────────────────────────────────────────── */
 
 .kov-soon__head {
   display: flex;
@@ -510,14 +640,14 @@
 
 .kov-soon__list {
   list-style: none;
-  margin-top: 24px;
+  margin-top: 22px;
 }
 
 .kov-soon__row {
   display: flex;
   align-items: center;
   gap: 18px;
-  padding: 18px 0;
+  padding: 16px 0;
   border-top: 1px solid var(--kov-border);
 }
 
@@ -552,85 +682,9 @@
   opacity: 0.7;
 }
 
-/* ── Invitation ──────────────────────────────────────────────────────── */
-
-.kov-band--cta {
-  padding: 96px 0 104px;
-  border-top: 1px solid var(--kov-border);
-  background: linear-gradient(180deg, rgba(16, 12, 13, 0.6), rgba(10, 10, 10, 0));
-}
-
-@media (min-width: 1024px) {
-  .kov-band--cta {
-    padding: 120px 0 130px;
-  }
-}
-
-.kov-cta__glow {
-  position: absolute;
-  top: 50%;
-  width: min(48vw, 520px);
-  aspect-ratio: 1;
-  transform: translateY(-50%);
-  border-radius: 50%;
-  background: radial-gradient(circle at 50% 50%, rgba(227, 30, 36, 0.18), transparent 66%);
-  filter: blur(18px);
-}
-
-.kov-cta__glow--left {
-  left: -18%;
-}
-
-.kov-cta__glow--right {
-  right: -18%;
-}
-
-.kov-cta__inner {
-  z-index: 1;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 36px;
-  align-items: end;
-}
-
-@media (min-width: 1024px) {
-  .kov-cta__inner {
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-    gap: 72px;
-  }
-}
-
-.kov-cta__title {
-  margin-top: 26px;
-  font-family: var(--font-display), sans-serif;
-  font-size: clamp(30px, 4.2vw, 68px);
-  line-height: 0.98;
-  letter-spacing: -0.02em;
-  color: var(--kov-bone);
-}
-
-.kov-cta__aside {
-  max-width: 40ch;
-}
-
-.kov-cta__lede {
-  font-size: 14.5px;
-  line-height: 1.75;
-  color: var(--kov-concrete);
-}
-
-.kov-cta__actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 14px;
-  margin-top: 28px;
-}
-
 /* ── The modal ───────────────────────────────────────────────────────── */
-/* Where the reasoning lives. The card carries what you scan; this carries
-   what you read — the film, the longer description, and problem / system /
-   result laid out with room to breathe. */
+/* The film and the longer description. The three narrative rows are already
+   beside the window, so a modal is only offered where there is more. */
 
 .kov-modal {
   width: 100%;
@@ -783,8 +837,6 @@
   color: var(--kov-red);
 }
 
-/* --kov-concrete rather than --kov-steel: steel is 4.41:1 on this ground,
-   under the 4.5:1 floor for body copy. */
 .kov-modal__story dd {
   max-width: 62ch;
   font-size: 14px;
@@ -830,14 +882,17 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .kov-rail__dot,
   .kov-vit__window,
   .kov-vit__play,
   .kov-vit__cta,
-  .kov-vit__cta-arrow {
+  .kov-vit__cta-arrow,
+  .kov-modal__close,
+  .kov-modal__link {
     transition: none;
   }
 
-  /* No tilt at all rather than a tilt that never resolves. */
+  /* No tilt at all, rather than a tilt that never resolves. */
   .kov-vit__window,
   .kov-vit--flip .kov-vit__window,
   .kov-vit:hover .kov-vit__window {
@@ -850,10 +905,5 @@
 
   .kov-modal__panel {
     animation: none;
-  }
-
-  .kov-modal__close,
-  .kov-modal__link {
-    transition: none;
   }
 }
