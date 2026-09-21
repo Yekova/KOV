@@ -45,6 +45,10 @@ export default function ProjetsPage() {
           the only way to emit raw JSON-LD. */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
+      {/* The page's ground. Fixed behind everything below, and invisible
+          until the cursor moves across it. */}
+      <LiquidReveal />
+
       <header className="kov-pw__head">
         <p className="kov-pw__label">
           <span aria-hidden="true" />
@@ -62,8 +66,6 @@ export default function ProjetsPage() {
           galerie d&apos;images.
         </p>
       </header>
-
-      <LiquidReveal />
 
       <ProjectsView />
 
