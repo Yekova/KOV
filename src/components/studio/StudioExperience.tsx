@@ -15,6 +15,7 @@ import { StudioInfoPanel } from "@/components/studio/StudioInfoPanel";
 import { StudioRoomPanel } from "@/components/studio/StudioRoomPanel";
 import { StudioRoomCarousel } from "@/components/studio/StudioRoomCarousel";
 import { StudioFooter } from "@/components/studio/StudioFooter";
+import { StudioPointerReadout } from "@/components/studio/StudioPointerReadout";
 import { StudioMusicPlayer } from "@/components/studio/StudioMusicPlayer";
 import { HandTrackingController } from "@/components/studio/HandTrackingController";
 import { StudioErrorScreen } from "@/components/studio/StudioErrorScreen";
@@ -646,6 +647,34 @@ function StudioExperienceInner() {
         </Canvas>
       </div>
 
+      {/* A very slight softening at the edges, so the centre of the frame
+          reads as the sharp one. Masked to the outer third: the middle is
+          untouched glass.
+
+          This file already carries a warning against exactly this shape of
+          thing — the reveal used to animate blur(20px) to 0 across the
+          whole canvas and stuttered on integrated GPUs. The difference is
+          radius and motion: 3px, static, never re-evaluated. Blur cost
+          scales with radius, and a value that never changes lets the
+          compositor keep one cached result instead of rebuilding it every
+          frame. Off below the tablet breakpoint all the same, where the
+          GPU budget is already spoken for by the panorama itself. */}
+      {(phase === "exploring" || phase === "transitioning") && !isPhone && (
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 pointer-events-none hidden md:block"
+          style={{
+            zIndex: 1,
+            backdropFilter: "blur(3px)",
+            WebkitBackdropFilter: "blur(3px)",
+            maskImage:
+              "radial-gradient(ellipse 70% 70% at 50% 50%, transparent 52%, rgba(0,0,0,0.55) 78%, #000 100%)",
+            WebkitMaskImage:
+              "radial-gradient(ellipse 70% 70% at 50% 50%, transparent 52%, rgba(0,0,0,0.55) 78%, #000 100%)",
+          }}
+        />
+      )}
+
       {phase === "flying" && <StudioIntroFlight onDone={handleFlightDone} />}
 
       {(phase === "intro" || phase === "revealing") && (
@@ -679,6 +708,10 @@ function StudioExperienceInner() {
             cameraStateRef={cameraStateRef}
             onReplayTour={() => setTourState("open")}
           />
+          {/* Where the cursor is pointing, in the numbers studioNodes.ts
+              takes — so a hotspot can be placed by looking at it rather
+              than by guessing and nudging. C copies, H hides. */}
+          <StudioPointerReadout element={canvasEl} stateRef={cameraStateRef} />
           {/* Sitewide (any room), opt-in only — writes into the same
               cameraStateRef CameraController.tsx (inside the Canvas)
               already reads every frame, so no changes were needed there.
