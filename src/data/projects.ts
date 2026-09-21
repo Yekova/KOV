@@ -78,6 +78,26 @@ export interface Project {
    * Null until something is actually filmed. The modal is then simply not
    * offered for that project — no empty player, no "vidéo bientôt". */
   video: { src: string; poster: string; width: number; height: number } | null;
+  /** Extra real images of this project, for the modal's strip. Only files
+   * that actually depict this work — never a neighbouring render pressed
+   * into service to make a row of three. */
+  gallery: readonly string[] | null;
+  /** Measured, attributable figures for the modal's tiles: "+120% de trafic
+   * qualifié", "48 pages livrées".
+   *
+   * Null on every entry, and it stays null until someone has the analytics
+   * open in front of them. A number on a portfolio is a claim about another
+   * company's business; there is no such thing as a plausible one. The tiles
+   * simply do not render while this is null.
+   *
+   * `value` is the figure, `label` what it measures. Add a `source` here the
+   * day one of these needs defending. */
+  metrics: readonly { value: string; label: string }[] | null;
+  /** Something the client actually said, and who said it. Null until there
+   * is a real quote from a real person who agreed to be named — an invented
+   * testimonial is the single most damaging thing a page like this can
+   * carry. */
+  testimonial: { quote: string; author: string } | null;
   /** A longer description, for the modal only. The three narrative lines are
    * the summary the page itself carries; this is the room to say more once
    * there is more to say. Null renders nothing. */
@@ -105,6 +125,9 @@ export const PROJECTS: Project[] = [
       system: "Architecture, design system, responsive, contenu.",
       result: "Une expérience plus claire, cohérente et évolutive.",
     },
+    gallery: ["/work/kanti-mockup.webp"],
+    metrics: null,
+    testimonial: null,
     video: null,
     detail: null,
   },
@@ -132,14 +155,18 @@ export const PROJECTS: Project[] = [
       system: "Panoramas 360°, navigation WebGL, plan interactif.",
       result: "Une visite qu'on parcourt au lieu d'une page qu'on lit.",
     },
-    // Already in the repository, and already a recording of this very
-    // project — StudioShowcase plays the same file on the homepage.
-    video: {
-      src: "/home/studio-showreel.mp4",
-      poster: "/home/studio-showreel-poster.webp",
-      width: 1280,
-      height: 560,
-    },
+    // Real crops of three of the rooms — the same files StudioShowcase
+    // uses on the homepage, which is to say pictures of this exact project.
+    gallery: [
+      "/studio/covers/studio-detail-01.webp",
+      "/studio/covers/studio-detail-02.webp",
+      "/studio/covers/studio-detail-03.webp",
+    ],
+    metrics: null,
+    testimonial: null,
+    // The showreel was here and was removed by request: the strip above
+    // shows the rooms, which is what the film showed.
+    video: null,
     detail: null,
   },
   {
@@ -155,6 +182,9 @@ export const PROJECTS: Project[] = [
     screen: null,
     tagline: null,
     narrative: null,
+    gallery: null,
+    metrics: null,
+    testimonial: null,
     video: null,
     detail: null,
   },
@@ -171,6 +201,9 @@ export const PROJECTS: Project[] = [
     screen: null,
     tagline: null,
     narrative: null,
+    gallery: null,
+    metrics: null,
+    testimonial: null,
     video: null,
     detail: null,
   },
@@ -187,6 +220,9 @@ export const PROJECTS: Project[] = [
     screen: null,
     tagline: null,
     narrative: null,
+    gallery: null,
+    metrics: null,
+    testimonial: null,
     video: null,
     detail: null,
   },
@@ -206,6 +242,9 @@ export const PROJECTS: Project[] = [
     screen: null,
     tagline: null,
     narrative: null,
+    gallery: null,
+    metrics: null,
+    testimonial: null,
     video: null,
     detail: null,
   },

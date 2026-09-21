@@ -40,9 +40,11 @@ function services(project: Project): string[] {
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1));
 }
 
-/** Whether there is anything behind a click: a film, or a longer
- *  description. Everything else is already printed on the card. */
-const hasMore = (project: Project) => Boolean(project.video || project.detail);
+/** Every delivered project opens a sheet now. It used to be gated on a film
+ *  or a longer description, back when the modal held nothing the card did
+ *  not already say; the sheet carries the hero, the strip, the method and
+ *  the reasoning, so there is always something behind the click. */
+const openable = (project: Project) => project.status === "live";
 
 // The work, in two readings.
 //
@@ -131,7 +133,7 @@ function GridView({ projects, onOpen }: { projects: Project[]; onOpen: (id: stri
                   <span className="kov-card__reserved">Visuel à venir</span>
                 )}
 
-                {project.video && (
+                {openable(project) && (
                   // A redundant pointer affordance, out of the tab order and
                   // hidden from assistive tech: the same action already has
                   // a labelled button below. Clicking a large picture still
@@ -143,7 +145,7 @@ function GridView({ projects, onOpen }: { projects: Project[]; onOpen: (id: stri
                     className="kov-card__shotHit"
                     onClick={() => onOpen(project.id)}
                   >
-                    <span className="kov-card__play">▶</span>
+                    <span className="kov-card__play">{project.video ? "▶" : "↗"}</span>
                   </button>
                 )}
               </div>
@@ -180,9 +182,9 @@ function GridView({ projects, onOpen }: { projects: Project[]; onOpen: (id: stri
                 </p>
               )}
 
-              {hasMore(project) && (
+              {openable(project) && (
                 <button type="button" className="kov-card__link" onClick={() => onOpen(project.id)}>
-                  {project.video ? "Voir la vidéo" : "En savoir plus"}
+                  Voir le projet
                   <span aria-hidden="true">→</span>
                 </button>
               )}
@@ -217,7 +219,7 @@ function ListView({ projects, onOpen }: { projects: Project[]; onOpen: (id: stri
             </span>
             <span className="kov-list__tags">{services(project).join(" — ")}</span>
             <span className="kov-list__action">
-              {hasMore(project) && (
+              {openable(project) && (
                 <button type="button" onClick={() => onOpen(project.id)}>
                   <span className="sr-only">{`Ouvrir ${project.name}`}</span>
                   <span aria-hidden="true">→</span>

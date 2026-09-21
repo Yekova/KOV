@@ -2,30 +2,29 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import Image from "next/image";
 import Link from "next/link";
 import { X } from "lucide-react";
+import { PROCESS } from "@/data/processSteps";
 import { NARRATIVE_ROWS, type Project } from "@/data/projects";
 import { lockScroll, unlockScroll } from "@/lib/scrollLock";
 
-// The project in detail: the film, and the reasoning around it.
+// The project sheet.
 //
 // A native <dialog>, not a div with role="dialog". The element is the one
-// place the platform already implements the whole contract correctly — focus
+// place the platform already implements the whole contract correctly: focus
 // moves in and is trapped, Escape closes, the rest of the page goes inert,
-// and the top layer means no z-index in this codebase can ever paint over
-// it. Every hand-rolled modal in /admin reimplements a slice of that and
-// none of them traps focus.
+// and the top layer means no z-index in this codebase can paint over it.
 //
-// The <video> exists only while the dialog is open. A 7 MB file that is
-// mounted but hidden is a 7 MB file the browser may still decide to fetch,
-// and this page carries one per project.
+// Portalled to <body> and rendered only once open, so nothing here is
+// server-rendered and there is no hydration question about document.body.
 //
-// Portalled to <body>, and the whole thing renders only once open. Each case
-// sits inside a Reveal, which puts a transform on its <li>; the top layer is
-// specified to ignore ancestor transforms, but that corner has a long enough
-// history of browser bugs that a portal is cheaper than finding out. It also
-// means the server renders nothing at all here — no dialog, no player, and
-// no hydration question about document.body existing.
+// Every block below is conditional on real data. The reference this is
+// modelled on carries four figure tiles, a client testimonial, a country, a
+// year, a page count and a PDF case study — none of which is recorded
+// anywhere for these projects. The slots exist and stay empty rather than
+// being filled with plausible numbers: a figure on a portfolio is a claim
+// about somebody else's business.
 export function ProjectModal({
   project,
   open,
@@ -43,10 +42,9 @@ export function ProjectModal({
     if (!dialog || !open) return;
 
     // Captured here, while it still exists. React commits the DOM before it
-    // runs an effect's cleanup, so by the time the cleanup below fires the
-    // <video> has already been unmounted and videoRef.current is null —
-    // reading it there would silently skip the pause and leave a film
-    // playing, with audio, behind a closed dialog.
+    // runs an effect's cleanup, so by then the <video> is unmounted and the
+    // ref is null — reading it there would silently skip the pause and
+    // leave a film playing, with audio, behind a closed dialog.
     const video = videoRef.current;
 
     if (!dialog.open) dialog.showModal();
@@ -54,8 +52,6 @@ export function ProjectModal({
 
     return () => {
       unlockScroll();
-      // Rewinding as well as pausing, so reopening starts from the first
-      // frame rather than mid-shot.
       if (video) {
         video.pause();
         video.currentTime = 0;
@@ -64,15 +60,15 @@ export function ProjectModal({
     };
   }, [open]);
 
-  // Escape and the backdrop both fire the dialog's own close event; this is
-  // what keeps React's state in step with what the platform just did.
+  // Escape and the platform's own close both fire this; it is what keeps
+  // React's state in step with what the dialog just did.
   const handleClose = useCallback(() => {
     if (open) onClose();
   }, [open, onClose]);
 
-  // A click that lands on the dialog element itself rather than on its panel
-  // is a click on the backdrop. Native dialogs do not close on backdrop
-  // click, and people expect them to.
+  // A click that lands on the dialog element rather than on its panel is a
+  // click on the backdrop. Native dialogs do not close on that, and people
+  // expect them to.
   const handleBackdrop = useCallback(
     (event: React.MouseEvent<HTMLDialogElement>) => {
       if (event.target === dialogRef.current) onClose();
@@ -82,75 +78,228 @@ export function ProjectModal({
 
   if (!open) return null;
 
+  const titleId = `sheet-title-${project.id}`;
+
   return createPortal(
     <dialog
       ref={dialogRef}
       onClose={handleClose}
       onClick={handleBackdrop}
-      className="kov-modal"
-      aria-labelledby={`modal-title-${project.id}`}
+      className="kov-sheet"
+      aria-labelledby={titleId}
     >
-      <div className="kov-modal__panel">
-        <button type="button" onClick={onClose} className="kov-modal__close" aria-label="Fermer">
-          <X size={16} strokeWidth={2} aria-hidden="true" />
+      <div className="kov-sheet__panel">
+        <button type="button" onClick={onClose} className="kov-sheet__close" aria-label="Fermer">
+          <X size={16} strokeWidth={1.8} aria-hidden="true" />
         </button>
 
-        {project.video && (
-          // The box is reserved from the file's real dimensions, so the
-          // panel is its final size before a single frame has loaded.
-          <div
-            className="kov-modal__video"
-            style={{ aspectRatio: `${project.video.width} / ${project.video.height}` }}
-          >
-            <video
-              ref={videoRef}
-              src={project.video.src}
-              poster={project.video.poster}
-              controls
-              playsInline
-              preload="metadata"
-              className="kov-modal__player"
-            />
-          </div>
-        )}
-
-        <div className="kov-modal__body">
-          <p className="kov-modal__meta">
-            <span aria-hidden="true" className="kov-modal__index">
-              {project.id}
+        <header className="kov-sheet__bar">
+          <p className="kov-sheet__crumb">
+            <span aria-hidden="true">{project.id}</span>
+            <span aria-hidden="true" className="kov-sheet__slash">
+              /
             </span>
-            {project.category}
+            Projet
           </p>
+          <p aria-hidden="true" className="kov-sheet__sig">
+            Des idées plus loin
+            <span className="kov-sheet__sigRule" />
+            KOV
+          </p>
+        </header>
 
-          <h2 id={`modal-title-${project.id}`} className="kov-modal__title">
-            {project.name}
-          </h2>
+        <div className="kov-sheet__grid">
+          {/* ── Left: the work itself ─────────────────────────────── */}
+          <div className="kov-sheet__left">
+            <div className="kov-sheet__hero">
+              {project.image ? (
+                <Image
+                  src={project.image}
+                  alt={`${project.name} — ${project.category}`}
+                  fill
+                  sizes="(max-width: 1023px) 92vw, 54vw"
+                  className="kov-sheet__heroImg"
+                />
+              ) : (
+                <span className="kov-sheet__reserved">Visuel à venir</span>
+              )}
 
-          {project.detail && <p className="kov-modal__detail">{project.detail}</p>}
+              <span aria-hidden="true" className="kov-sheet__heroVeil" />
 
-          <dl className="kov-modal__story">
-            {project.narrative &&
-              NARRATIVE_ROWS.map((row) => (
-                <div key={row.key}>
-                  <dt>{row.label}</dt>
-                  <dd>{project.narrative?.[row.key]}</dd>
-                </div>
-              ))}
-          </dl>
+              <p aria-hidden="true" className="kov-sheet__heroTags">
+                {project.tags.map((tag) => (
+                  <span key={tag}>{tag}</span>
+                ))}
+              </p>
 
-          <div className="kov-modal__actions">
-            {project.href && (
-              <Link href={project.href} className="kov-modal__link kov-modal__link--primary">
-                Voir le projet
-                <span aria-hidden="true">↗</span>
-              </Link>
+              <p aria-hidden="true" className="kov-sheet__heroMark">
+                {project.name}
+              </p>
+
+              {project.tagline && <p className="kov-sheet__heroStatement">{project.tagline}</p>}
+
+              <p aria-hidden="true" className="kov-sheet__heroFoot">
+                <span className="kov-sheet__heroRule" />
+                <span>{project.category}</span>
+                {project.location && <span className="kov-sheet__heroWhere">{project.location}</span>}
+              </p>
+            </div>
+
+            {/* A film, when one exists. Neither project has one today, so
+                this renders for nobody — the strip below carries the work
+                instead. */}
+            {project.video && (
+              <div
+                className="kov-sheet__film"
+                style={{ aspectRatio: `${project.video.width} / ${project.video.height}` }}
+              >
+                <video
+                  ref={videoRef}
+                  src={project.video.src}
+                  poster={project.video.poster}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  className="kov-sheet__player"
+                />
+              </div>
             )}
-            {project.caseStudyHref && (
-              <Link href={project.caseStudyHref} className="kov-modal__link">
-                Lire l&apos;étude de cas
-                <span aria-hidden="true">→</span>
-              </Link>
+
+            {project.gallery && project.gallery.length > 0 && (
+              <ul className="kov-sheet__strip">
+                {project.gallery.map((src) => (
+                  <li key={src}>
+                    <Image
+                      src={src}
+                      alt=""
+                      aria-hidden="true"
+                      fill
+                      sizes="180px"
+                      className="kov-sheet__stripImg"
+                    />
+                  </li>
+                ))}
+              </ul>
             )}
+
+            {/* KOV's own seven steps, from processSteps.ts — the method,
+                applied. Labelled as the method rather than as this
+                project's bespoke plan, because that is what it is. */}
+            <section className="kov-sheet__steps" aria-label="La méthode appliquée">
+              <p className="kov-sheet__label">La méthode appliquée</p>
+              <ol>
+                {PROCESS.map((step) => (
+                  <li key={step.number}>
+                    <span aria-hidden="true" className="kov-sheet__stepDot" />
+                    <span className="kov-sheet__stepNum">{step.number}</span>
+                    <span className="kov-sheet__stepName">{step.title}</span>
+                  </li>
+                ))}
+              </ol>
+            </section>
+
+            {/* Renders for nobody today, and should: an invented
+                testimonial is the single most damaging thing a page like
+                this can carry. */}
+            {project.testimonial && (
+              <figure className="kov-sheet__quote">
+                <span aria-hidden="true" className="kov-sheet__quoteMark">
+                  &laquo;
+                </span>
+                <blockquote>{project.testimonial.quote}</blockquote>
+                <figcaption>— {project.testimonial.author}</figcaption>
+              </figure>
+            )}
+          </div>
+
+          {/* ── Right: what it is, and what was done ──────────────── */}
+          <div className="kov-sheet__right">
+            <p className="kov-sheet__eyebrow">
+              <span aria-hidden="true" className="kov-sheet__eyebrowNum">
+                {project.id}
+              </span>
+              <span aria-hidden="true" className="kov-sheet__slash">
+                /
+              </span>
+              {project.category}
+            </p>
+
+            <h2 id={titleId} className="kov-sheet__title">
+              {project.name}
+            </h2>
+
+            {project.detail ? (
+              <p className="kov-sheet__body">{project.detail}</p>
+            ) : (
+              project.narrative && (
+                <p className="kov-sheet__body">
+                  {project.narrative.problem} {project.narrative.result}
+                </p>
+              )
+            )}
+
+            {/* Four tiles in the reference, all four invented. They appear
+                the day projects.ts carries measured figures, and not
+                before. */}
+            {project.metrics && project.metrics.length > 0 && (
+              <ul className="kov-sheet__metrics">
+                {project.metrics.map((metric) => (
+                  <li key={metric.label}>
+                    <span className="kov-sheet__metricValue">{metric.value}</span>
+                    <span className="kov-sheet__metricLabel">{metric.label}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {project.narrative && (
+              <section className="kov-sheet__story" aria-label="Le raisonnement">
+                <p className="kov-sheet__label">Le raisonnement</p>
+                <dl>
+                  {NARRATIVE_ROWS.map((row) => (
+                    <div key={row.key}>
+                      <dt>{row.label}</dt>
+                      <dd>{project.narrative?.[row.key]}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </section>
+            )}
+
+            <section className="kov-sheet__skills" aria-label="Nos expertises sur ce projet">
+              <p className="kov-sheet__label">Nos expertises sur ce projet</p>
+              <ul>
+                {project.tags.map((tag) => (
+                  <li key={tag}>{tag}</li>
+                ))}
+              </ul>
+            </section>
+
+            {/* Both conditional, both pointing only at routes that exist.
+                Kanti has neither today and shows neither, rather than a
+                disabled button or a PDF that was never written. */}
+            {(project.href || project.caseStudyHref) && (
+              <div className="kov-sheet__actions">
+                {project.href && (
+                  <Link href={project.href} className="kov-sheet__cta kov-sheet__cta--primary">
+                    Voir le projet
+                    <span aria-hidden="true">↗</span>
+                  </Link>
+                )}
+                {project.caseStudyHref && (
+                  <Link href={project.caseStudyHref} className="kov-sheet__cta">
+                    Lire l&apos;étude de cas
+                    <span aria-hidden="true">→</span>
+                  </Link>
+                )}
+              </div>
+            )}
+
+            <p aria-hidden="true" className="kov-sheet__sign">
+              Des idées qui prennent vie.
+              <span className="kov-sheet__sigRule" />
+              KOV
+            </p>
           </div>
         </div>
       </div>
