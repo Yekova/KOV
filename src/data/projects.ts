@@ -77,7 +77,15 @@ export interface Project {
    *
    * Null until something is actually filmed. The modal is then simply not
    * offered for that project — no empty player, no "vidéo bientôt". */
-  video: { src: string; poster: string; width: number; height: number } | null;
+  video: {
+    src: string;
+    poster: string;
+    width: number;
+    height: number;
+    /** "01:34". Shown on the thumbnail. Omitted, the thumbnail says nothing
+     * about length rather than guessing at it. */
+    duration?: string;
+  } | null;
   /** Extra real images of this project, for the modal's strip. Only files
    * that actually depict this work — never a neighbouring render pressed
    * into service to make a row of three. */

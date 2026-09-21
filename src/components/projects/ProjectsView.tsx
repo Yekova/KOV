@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Image from "next/image";
 import { BrowserChrome } from "@/components/ui/BrowserChrome";
 import { PROJECTS, type Project } from "@/data/projects";
-import { ProjectModal } from "./ProjectModal";
+import { ProjectSheet, type SheetOrigin } from "./sheet/ProjectSheet";
 
 type View = "grid" | "list";
 
@@ -62,6 +62,20 @@ const openable = (project: Project) => project.status === "live";
 export function ProjectsView() {
   const [view, setView] = useState<View>("grid");
   const [openId, setOpenId] = useState<string | null>(null);
+  // Where the card that was clicked sits on screen, so the sheet can grow
+  // out of it rather than appear over it.
+  const [origin, setOrigin] = useState<SheetOrigin | null>(null);
+
+  const open = useCallback((id: string, event: React.MouseEvent<HTMLElement>) => {
+    const card = event.currentTarget.closest<HTMLElement>("[data-card]");
+    if (card) {
+      const rect = card.getBoundingClientRect();
+      setOrigin({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+    } else {
+      setOrigin(null);
+    }
+    setOpenId(id);
+  }, []);
 
   const delivered = useMemo(() => PROJECTS.filter((p) => p.status === "live"), []);
 
@@ -97,23 +111,23 @@ export function ProjectsView() {
       </div>
 
       {view === "grid" ? (
-        <GridView projects={delivered} onOpen={setOpenId} />
+        <GridView projects={delivered} onOpen={open} />
       ) : (
-        <ListView projects={delivered} onOpen={setOpenId} />
+        <ListView projects={delivered} onOpen={open} />
       )}
 
-      {openProject && <ProjectModal project={openProject} open onClose={() => setOpenId(null)} />}
+      {openProject && <ProjectSheet project={openProject} origin={origin} onClose={() => setOpenId(null)} />}
     </>
   );
 }
 
 // ── Grid ─────────────────────────────────────────────────────────────────
 
-function GridView({ projects, onOpen }: { projects: Project[]; onOpen: (id: string) => void }) {
+function GridView({ projects, onOpen }: { projects: Project[]; onOpen: (id: string, event: React.MouseEvent<HTMLElement>) => void }) {
   return (
     <ul className="kov-pw__grid">
         {projects.map((project) => (
-          <li key={project.id} id={`projet-${project.id}`} className="kov-card">
+          <li key={project.id} id={`projet-${project.id}`} className="kov-card" data-card>
             <div className="kov-card__window">
               <BrowserChrome tone="light" url={browserUrl(project.href)} />
 
@@ -143,7 +157,7 @@ function GridView({ projects, onOpen }: { projects: Project[]; onOpen: (id: stri
                     aria-hidden="true"
                     tabIndex={-1}
                     className="kov-card__shotHit"
-                    onClick={() => onOpen(project.id)}
+                    onClick={(event) => onOpen(project.id, event)}
                   >
                     <span className="kov-card__play">{project.video ? "▶" : "↗"}</span>
                   </button>
@@ -183,7 +197,7 @@ function GridView({ projects, onOpen }: { projects: Project[]; onOpen: (id: stri
               )}
 
               {openable(project) && (
-                <button type="button" className="kov-card__link" onClick={() => onOpen(project.id)}>
+                <button type="button" className="kov-card__link" onClick={(event) => onOpen(project.id, event)}>
                   Voir le projet
                   <span aria-hidden="true">→</span>
                 </button>
@@ -197,7 +211,7 @@ function GridView({ projects, onOpen }: { projects: Project[]; onOpen: (id: stri
 
 // ── List ─────────────────────────────────────────────────────────────────
 
-function ListView({ projects, onOpen }: { projects: Project[]; onOpen: (id: string) => void }) {
+function ListView({ projects, onOpen }: { projects: Project[]; onOpen: (id: string, event: React.MouseEvent<HTMLElement>) => void }) {
   return (
     <div className="kov-list">
       <div aria-hidden="true" className="kov-list__head">
@@ -220,7 +234,7 @@ function ListView({ projects, onOpen }: { projects: Project[]; onOpen: (id: stri
             <span className="kov-list__tags">{services(project).join(" — ")}</span>
             <span className="kov-list__action">
               {openable(project) && (
-                <button type="button" onClick={() => onOpen(project.id)}>
+                <button type="button" onClick={(event) => onOpen(project.id, event)}>
                   <span className="sr-only">{`Ouvrir ${project.name}`}</span>
                   <span aria-hidden="true">→</span>
                 </button>
