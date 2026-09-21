@@ -1,353 +1,296 @@
-/* /projets — the work, one screen at a time.
+/* /projets — quiet, typographic, on hairlines.
  *
- * Four chapters: the statement, one per delivered project, and the close.
- * Each fills the viewport above 1024px, the ground steps very slightly
- * between them, and a rail down the left gutter says which one you are in.
- *
- * No scroll-snap anywhere in this file. The site runs Lenis, and CSS
- * snapping fights an inertia scroller that animates scrollTop itself. */
+ * Almost no colour. Red appears exactly twice on the whole page: the dash of
+ * a section label, and the active dot of a row's rail. Everything else is
+ * greys — which is what lets the two project pictures be the only saturated
+ * things on the screen. */
 
-.kov-work {
+.kov-pr {
+  --pr-line: rgba(231, 231, 229, 0.09);
+  --pr-gutter: 24px;
   min-height: 100vh;
+  padding-bottom: 0;
 }
 
-/* ── A chapter ───────────────────────────────────────────────────────── */
+@media (min-width: 1024px) {
+  .kov-pr {
+    --pr-gutter: 56px;
+  }
+}
 
-.kov-ch {
-  position: relative;
+/* A dash, then a tracked label. Used once per band. */
+.kov-pr__label {
   display: flex;
   align-items: center;
-  overflow: hidden;
-  padding: 120px 0 96px;
+  gap: 16px;
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--kov-steel);
 }
 
-.kov-ch__inner {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  max-width: 1600px;
-  margin: 0 auto;
-  padding: 0 24px;
+.kov-pr__label::before {
+  content: "";
+  width: 30px;
+  height: 1px;
+  background: var(--kov-red);
 }
 
-@media (min-width: 1024px) {
-  /* svh, not vh: a mobile browser's collapsing URL bar makes vh taller than
-     what is actually on screen, and a chapter that overflows the screen is
-     not a chapter. Padding is inside the height (border-box), and the top
-     value is what keeps the content clear of the fixed nav. */
-  .kov-ch {
-    min-height: 100svh;
-    padding: 136px 0 104px;
-  }
+/* ── Masthead ────────────────────────────────────────────────────────── */
 
-  /* A left gutter wide enough for the rail to live in, rather than over
-     the text. */
-  .kov-ch__inner {
-    padding-left: 84px;
-  }
-}
-
-.kov-ch--intro {
-  background: #0a0a0a;
-}
-
-.kov-ch--work {
-  background: #0b0b0c;
-  border-top: 1px solid var(--kov-border);
-}
-
-.kov-ch--work.is-alt {
-  background: #0e0e11;
-}
-
-.kov-ch--close {
-  border-top: 1px solid var(--kov-border);
-  background: linear-gradient(180deg, #0d0a0b, #0a0a0a 60%);
-}
-
-/* ── The rail ────────────────────────────────────────────────────────── */
-/* Hidden below 1024px, where the chapters are not full screen either and
-   there is no gutter to put it in. */
-
-.kov-rail {
-  display: none;
+.kov-pr__head {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 26px;
+  align-items: start;
+  padding: 136px var(--pr-gutter) 56px;
+  border-bottom: 1px solid var(--pr-line);
 }
 
 @media (min-width: 1024px) {
-  .kov-rail {
-    position: fixed;
-    left: 30px;
-    top: 50%;
-    z-index: var(--z-content);
-    transform: translateY(-50%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 14px;
-    font-family: var(--font-mono), monospace;
-    font-size: 10px;
-    letter-spacing: 0.14em;
-    color: var(--kov-steel);
-    font-variant-numeric: tabular-nums;
+  .kov-pr__head {
+    /* Label, statement, caption on one line — the whole opening in the
+       height of a paragraph, so the work starts near the top of the page
+       rather than below a screen of atmosphere. */
+    grid-template-columns: minmax(150px, 0.8fr) minmax(0, 2.2fr) minmax(0, 1.1fr);
+    gap: 48px;
+    padding: 148px var(--pr-gutter) 64px;
+  }
+
+  .kov-pr__label {
+    padding-top: 12px;
   }
 }
 
-.kov-rail__num {
+.kov-pr__title {
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(34px, 3.8vw, 58px);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
   color: var(--kov-bone);
 }
 
-.kov-rail__list {
-  list-style: none;
+.kov-pr__lede {
+  max-width: 34ch;
+  font-size: 13.5px;
+  line-height: 1.75;
+  color: var(--kov-steel);
+}
+
+@media (min-width: 1024px) {
+  .kov-pr__lede {
+    padding-top: 10px;
+  }
+}
+
+/* ── Control bar ─────────────────────────────────────────────────────── */
+
+.kov-pr__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px var(--pr-gutter);
+  border-bottom: 1px solid var(--pr-line);
+}
+
+.kov-pr__count {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--kov-steel);
+  font-variant-numeric: tabular-nums;
+}
+
+.kov-pr__count b {
+  font-weight: 500;
+  color: var(--kov-concrete);
+}
+
+.kov-pr__count span[aria-hidden] {
+  opacity: 0.4;
+}
+
+.kov-pr__views {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--pr-line);
+  border-radius: 999px;
+}
+
+.kov-pr__view {
+  padding: 7px 16px;
+  border-radius: 999px;
+  background: none;
+  font-family: var(--font-mono), monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--kov-steel);
+  cursor: pointer;
+  transition: background-color 280ms ease, color 280ms ease;
+}
+
+.kov-pr__view:hover {
+  color: var(--kov-bone);
+}
+
+.kov-pr__view.is-on {
+  background: rgba(231, 231, 229, 0.08);
+  color: var(--kov-bone);
+}
+
+.kov-pr__view:focus-visible {
+  outline: 2px solid var(--kov-red);
+  outline-offset: 2px;
+}
+
+/* ── Detail: one row per project ─────────────────────────────────────── */
+
+.kov-pr__rows {
   display: flex;
   flex-direction: column;
+}
+
+.kov-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 28px;
   align-items: center;
-  gap: 11px;
+  padding: 56px var(--pr-gutter);
+  border-bottom: 1px solid var(--pr-line);
 }
 
-/* Real links, not indicators. Four full-screen chapters is exactly the
-   situation where someone wants to skip one. */
-.kov-rail__dot {
+@media (min-width: 1024px) {
+  .kov-row {
+    /* Identity, picture, position — the reference's own three-part
+       measure, with the story spanning all three underneath. */
+    grid-template-columns: minmax(200px, 0.9fr) minmax(0, 2.3fr) minmax(130px, 0.55fr);
+    gap: 56px;
+    padding: 80px var(--pr-gutter);
+  }
+}
+
+/* ── Identity column ─────────────────────────────────────────────────── */
+
+.kov-row__num {
   display: block;
-  width: 7px;
-  height: 7px;
-  border-radius: 999px;
-  background: var(--kov-border);
-  transition: background-color 320ms ease, transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(64px, 8vw, 132px);
+  font-weight: 400;
+  line-height: 0.8;
+  letter-spacing: -0.04em;
+  color: rgba(231, 231, 229, 0.07);
+  font-variant-numeric: tabular-nums;
 }
 
-.kov-rail__dot:hover {
-  background: var(--kov-steel);
+.kov-row__name {
+  margin-top: 26px;
+  font-size: clamp(17px, 1.4vw, 21px);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: var(--kov-bone);
 }
 
-.kov-rail__dot.is-active {
-  background: var(--kov-red);
-  transform: scale(1.4);
+.kov-row__rule {
+  display: block;
+  width: 34px;
+  height: 1px;
+  margin-top: 16px;
+  background: rgba(231, 231, 229, 0.2);
 }
 
-.kov-rail__dot:focus-visible {
+/* --kov-concrete, not --kov-steel: steel measures 4.41:1 on this ground,
+   under the 4.5:1 floor for anything that has to be read. */
+.kov-row__tagline {
+  margin-top: 16px;
+  max-width: 26ch;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--kov-concrete);
+}
+
+.kov-row__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 26px;
+  padding: 0;
+  background: none;
+  font-family: var(--font-mono), monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--kov-bone);
+  cursor: pointer;
+  transition: color 280ms ease, gap 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.kov-row__link:hover {
+  gap: 16px;
+  color: var(--kov-red);
+}
+
+.kov-row__link:focus-visible {
   outline: 2px solid var(--kov-red);
   outline-offset: 4px;
 }
 
-/* ── Shared signature ────────────────────────────────────────────────── */
-/* A red dash, then a mono label. Used once per chapter. */
-
-.kov-rule-label {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  font-family: var(--font-mono), monospace;
-  font-size: 11px;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: var(--kov-red);
-}
-
-.kov-rule-label::before {
-  content: "";
-  width: 34px;
-  height: 2px;
-  background: var(--kov-red);
-}
-
-/* ── Chapter 1 — the statement ───────────────────────────────────────── */
-
-.kov-hero__grid {
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(to right, rgba(231, 231, 229, 0.028) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(231, 231, 229, 0.028) 1px, transparent 1px);
-  background-size: 78px 78px;
-  mask-image: radial-gradient(64% 80% at 28% 50%, #000 15%, transparent 78%);
-  -webkit-mask-image: radial-gradient(64% 80% at 28% 50%, #000 15%, transparent 78%);
-}
-
-/* A dark body lit from behind on its inner edge — a rim, not a glow around
-   a disc. The inset shadow does the work; the circle is nearly the page's
-   own black. */
-.kov-hero__body {
-  position: absolute;
-  top: 50%;
-  right: -16%;
-  width: min(78vw, 880px);
-  aspect-ratio: 1;
-  transform: translateY(-50%);
-  border-radius: 50%;
-  background: radial-gradient(circle at 50% 50%, #121214 0 57%, rgba(10, 10, 10, 0) 60%);
-  box-shadow:
-    inset 74px 0 120px -74px rgba(227, 30, 36, 0.95),
-    inset 30px 0 40px -30px rgba(255, 210, 200, 0.5),
-    0 0 180px -40px rgba(227, 30, 36, 0.3);
-}
-
-.kov-hero__streak {
-  position: absolute;
-  right: -8%;
-  bottom: -22%;
-  width: min(70vw, 780px);
-  height: 46%;
-  transform: rotate(-24deg);
-  background: radial-gradient(60% 50% at 50% 50%, rgba(227, 30, 36, 0.22), transparent 70%);
-  filter: blur(26px);
-}
-
-.kov-hero__title {
-  margin-top: 30px;
-  max-width: 14ch;
-  font-family: var(--font-display), sans-serif;
-  font-size: clamp(42px, 6.4vw, 104px);
-  line-height: 0.94;
-  letter-spacing: -0.022em;
-  color: var(--kov-bone);
-}
-
-.kov-hero__lede {
-  margin-top: 28px;
-  max-width: 52ch;
-  font-size: 15px;
-  line-height: 1.75;
-  color: var(--kov-concrete);
-}
-
-.kov-hero__triad {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px 18px;
-  margin-top: 40px;
-  font-family: var(--font-mono), monospace;
-  font-size: 11px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--kov-concrete);
-}
-
-.kov-hero__triad-rule {
-  width: 34px;
-  height: 2px;
-  background: var(--kov-red);
-}
-
-.kov-hero__triad span[aria-hidden]:not(.kov-hero__triad-rule) {
+/* No button where a click would open onto the same three lines printed
+   under the row. */
+.kov-row__link.is-inert {
   color: var(--kov-steel);
-  opacity: 0.6;
+  opacity: 0.55;
+  cursor: default;
 }
 
-/* ── A window on a stage ─────────────────────────────────────────────── */
-/* These are websites. A cropped photograph of one is a picture of a
-   website; a window with chrome around it is the website. */
+/* ── Picture ─────────────────────────────────────────────────────────── */
 
-.kov-vit {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 34px;
-  align-items: center;
-}
-
-@media (min-width: 1024px) {
-  .kov-vit {
-    grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
-    gap: 64px;
-  }
-
-  /* Sides alternate, so two projects read as a rhythm and not as a table. */
-  .kov-vit--flip .kov-vit__stage {
-    order: 2;
-  }
-
-  .kov-vit--flip .kov-vit__text {
-    order: 1;
-  }
-}
-
-.kov-vit__stage {
+.kov-row__visual {
   position: relative;
-  /* Room below for the floor glow and above for the tilt. */
-  padding: 8px 0 34px;
-  perspective: 1800px;
-}
-
-/* Pulls the window toward the edge of the screen. The chapter clips, so
-   this can never produce a horizontal scrollbar. */
-@media (min-width: 1024px) {
-  .kov-vit__stage {
-    margin-left: min(-4vw, -28px);
-  }
-
-  .kov-vit--flip .kov-vit__stage {
-    margin-left: 0;
-    margin-right: min(-4vw, -28px);
-  }
-}
-
-.kov-vit__window {
-  position: relative;
+  aspect-ratio: 16 / 9;
   overflow: hidden;
-  border-radius: 14px;
-  border: 1px solid var(--kov-border);
-  background: var(--kov-graphite);
-  box-shadow:
-    0 2px 0 rgba(255, 255, 255, 0.05) inset,
-    0 44px 90px -34px rgba(0, 0, 0, 0.9),
-    0 0 0 1px rgba(0, 0, 0, 0.4);
-  transform-style: preserve-3d;
-  transition: transform 900ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 900ms ease;
+  border-radius: 6px;
+  background: #0d0d0f;
 }
 
-/* Turned toward the reader, squaring up when they reach it. Flat below the
-   breakpoint: a seven-degree rotation on a 360px screen is a window you
-   cannot read. */
-@media (min-width: 1024px) {
-  .kov-vit__window {
-    transform: rotateY(7deg) rotateX(2deg);
-  }
-
-  .kov-vit--flip .kov-vit__window {
-    transform: rotateY(-7deg) rotateX(2deg);
-  }
-
-  .kov-vit:hover .kov-vit__window,
-  .kov-vit:focus-within .kov-vit__window {
-    transform: rotateY(0deg) rotateX(0deg);
-    box-shadow:
-      0 2px 0 rgba(255, 255, 255, 0.07) inset,
-      0 54px 110px -34px rgba(0, 0, 0, 0.92),
-      0 0 0 1px rgba(227, 30, 36, 0.28);
-  }
-}
-
-.kov-vit__chrome {
-  position: relative;
-  z-index: 2;
-}
-
-.kov-vit__screen {
-  position: relative;
-  aspect-ratio: 16 / 10;
-  overflow: hidden;
-  background: #0a0a0a;
-}
-
-.kov-vit__img {
+/* Grey at rest, colour on approach. The reference is monochrome throughout;
+   this keeps the page that quiet while still showing the real work — and
+   makes the picture the only saturated thing on screen the moment someone
+   reaches for it. One value to change if it should always be in colour. */
+.kov-row__img {
   object-fit: cover;
   object-position: top center;
+  filter: grayscale(1) contrast(1.04) brightness(0.92);
+  transition: filter 700ms ease, transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.kov-vit__reserved {
+.kov-row:hover .kov-row__img {
+  filter: grayscale(0) contrast(1) brightness(1);
+  transform: scale(1.015);
+}
+
+.kov-row__reserved {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
   height: 100%;
-  background: linear-gradient(160deg, rgba(38, 38, 42, 0.9), rgba(12, 12, 13, 0.95));
-  font-size: 10px;
-  letter-spacing: 0.22em;
+  font-size: 9.5px;
+  letter-spacing: 0.24em;
   text-transform: uppercase;
-  color: rgba(231, 231, 229, 0.38);
+  color: rgba(231, 231, 229, 0.3);
 }
 
-.kov-vit__screenHit {
+.kov-row__visualHit {
   position: absolute;
   inset: 0;
   display: flex;
@@ -356,335 +299,427 @@
   cursor: pointer;
 }
 
-.kov-vit__play {
+.kov-row__play {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 66px;
-  height: 66px;
+  width: 58px;
+  height: 58px;
   padding-left: 3px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  background: rgba(10, 10, 10, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(10, 10, 10, 0.45);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
+  font-size: 13px;
   color: #f5f3ef;
-  transition: background-color 320ms ease, border-color 320ms ease, transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: background-color 300ms ease, border-color 300ms ease, transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.kov-vit:hover .kov-vit__play {
+.kov-row:hover .kov-row__play {
   background: var(--kov-red);
   border-color: var(--kov-red);
-  transform: scale(1.07);
+  transform: scale(1.08);
 }
 
-/* What makes the window sit on something rather than float on nothing. */
-.kov-vit__floor {
-  position: absolute;
-  left: 8%;
-  right: 8%;
-  bottom: 2px;
-  height: 44px;
-  border-radius: 50%;
-  background: radial-gradient(60% 100% at 50% 0%, rgba(227, 30, 36, 0.2), transparent 72%);
-  filter: blur(16px);
-  pointer-events: none;
-}
+/* ── Position rail ───────────────────────────────────────────────────── */
+/* Static per row: which of the set this is, and what field it is in. No
+   observer, nothing to keep in sync with the scroll. */
 
-/* ── The column beside it ────────────────────────────────────────────── */
-
-.kov-vit__meta {
+.kov-row__rail {
   display: flex;
   align-items: center;
-  gap: 14px;
-  font-family: var(--font-mono), monospace;
-  font-size: 11px;
-  letter-spacing: 0.18em;
+  gap: 18px;
+}
+
+@media (min-width: 1024px) {
+  .kov-row__rail {
+    justify-content: flex-start;
+  }
+}
+
+.kov-row__track {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+}
+
+@media (min-width: 1024px) {
+  .kov-row__track {
+    flex-direction: column;
+    gap: 34px;
+  }
+}
+
+.kov-row__dot {
+  position: relative;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(231, 231, 229, 0.28);
+}
+
+/* The line between the dots, drawn from each dot to the next. */
+.kov-row__dot + .kov-row__dot::before {
+  content: "";
+  position: absolute;
+  background: rgba(231, 231, 229, 0.16);
+  left: 50%;
+  bottom: 100%;
+  width: 1px;
+  height: 34px;
+  transform: translateX(-50%);
+}
+
+@media (max-width: 1023px) {
+  .kov-row__dot + .kov-row__dot::before {
+    left: auto;
+    right: 100%;
+    bottom: 50%;
+    width: 26px;
+    height: 1px;
+    transform: translateY(50%);
+  }
+}
+
+.kov-row__dot.is-on {
+  background: var(--kov-red);
+  border-color: var(--kov-red);
+}
+
+.kov-row__caption {
+  max-width: 14ch;
+  font-size: 9.5px;
+  line-height: 1.7;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--kov-steel);
 }
 
-.kov-vit__num {
-  color: var(--kov-red);
+/* ── The reasoning, under the row ────────────────────────────────────── */
+
+.kov-row__story {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  margin-top: 6px;
+}
+
+@media (min-width: 1024px) {
+  .kov-row__story {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 40px;
+    margin-top: 22px;
+    padding-top: 30px;
+    border-top: 1px solid var(--pr-line);
+  }
+}
+
+.kov-row__story > div {
+  padding: 13px 0;
+  border-top: 1px solid var(--pr-line);
+}
+
+@media (min-width: 1024px) {
+  .kov-row__story > div {
+    padding: 0;
+    border-top: none;
+  }
+}
+
+.kov-row__story dt {
+  font-family: var(--font-mono), monospace;
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--kov-steel);
+}
+
+.kov-row__story dd {
+  margin-top: 8px;
+  max-width: 40ch;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--kov-concrete);
+}
+
+/* ── The row for what is not published ───────────────────────────────── */
+
+.kov-row--soon .kov-row__num,
+.kov-row--soon .kov-row__name {
+  color: rgba(231, 231, 229, 0.28);
+}
+
+.kov-row--soon .kov-row__num {
+  color: rgba(231, 231, 229, 0.05);
+}
+
+.kov-row__soonList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.kov-row__soonList li {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 15px 0;
+  border-top: 1px solid var(--pr-line);
+}
+
+.kov-row__soonNum {
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--kov-steel);
   font-variant-numeric: tabular-nums;
 }
 
-.kov-vit__rule {
-  width: 28px;
-  height: 1px;
-  background: var(--kov-border);
-}
-
-.kov-vit__name {
-  margin-top: 14px;
-  font-family: var(--font-display), sans-serif;
-  font-size: clamp(30px, 3.4vw, 56px);
-  line-height: 0.98;
-  letter-spacing: -0.018em;
-  text-transform: uppercase;
-  color: var(--kov-bone);
-}
-
-.kov-vit__tagline {
-  margin-top: 12px;
-  max-width: 30ch;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--kov-red);
-}
-
-.kov-vit__story {
-  margin-top: 26px;
-}
-
-.kov-vit__story > div {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 3px;
-  padding: 13px 0;
-  border-top: 1px solid var(--kov-border);
-}
-
-@media (min-width: 640px) {
-  .kov-vit__story > div {
-    grid-template-columns: 92px 1fr;
-    gap: 18px;
-  }
-}
-
-.kov-vit__story dt {
-  padding-top: 2px;
-  font-family: var(--font-mono), monospace;
+.kov-row__soonTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  flex: 1;
+  min-width: 0;
   font-size: 10px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--kov-red);
-}
-
-/* --kov-concrete rather than --kov-steel: steel is 4.41:1 on this ground,
-   under the 4.5:1 floor for body copy. */
-.kov-vit__story dd {
-  max-width: 52ch;
-  font-size: 13.5px;
-  line-height: 1.6;
   color: var(--kov-concrete);
 }
 
-.kov-vit__foot {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  margin-top: 24px;
-  padding-top: 20px;
-  border-top: 1px solid var(--kov-border);
-}
-
-.kov-vit__tags {
-  list-style: none;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 14px;
+.kov-row__soonState {
   font-family: var(--font-mono), monospace;
-  font-size: 9.5px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--kov-steel);
-}
-
-.kov-vit__tags li + li::before {
-  content: "|";
-  margin-right: 14px;
-  color: rgba(231, 231, 229, 0.2);
-}
-
-.kov-vit__cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 20px;
-  border-radius: 4px;
-  border: 1px solid rgba(231, 231, 229, 0.28);
-  background: none;
-  font-family: var(--font-mono), monospace;
-  font-size: 10px;
+  font-size: 9px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--kov-bone);
-  white-space: nowrap;
-  cursor: pointer;
-  transition: border-color 320ms ease, background-color 320ms ease;
+  color: var(--kov-steel);
+  opacity: 0.6;
 }
 
-.kov-vit__cta:hover {
-  border-color: var(--kov-red);
-  background: rgba(227, 30, 36, 0.16);
+/* ── List ────────────────────────────────────────────────────────────── */
+
+.kov-list {
+  padding: 0 var(--pr-gutter);
+  border-bottom: 1px solid var(--pr-line);
 }
 
-.kov-vit__cta-arrow {
-  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+.kov-list__head {
+  display: none;
 }
 
-.kov-vit__cta:hover .kov-vit__cta-arrow {
-  transform: translate(2px, -2px);
-}
+@media (min-width: 900px) {
+  .kov-list__head,
+  .kov-list__row {
+    display: grid;
+    grid-template-columns: 46px minmax(0, 1.4fr) minmax(0, 1.3fr) minmax(0, 1.6fr) 130px 40px;
+    gap: 24px;
+    align-items: center;
+  }
 
-/* ── Last chapter ────────────────────────────────────────────────────── */
-
-.kov-close {
-  display: flex;
-  flex-direction: column;
-  gap: 56px;
-}
-
-@media (min-width: 1024px) {
-  .kov-close {
-    gap: 76px;
+  .kov-list__head {
+    padding: 18px 0;
+    border-bottom: 1px solid var(--pr-line);
+    font-family: var(--font-mono), monospace;
+    font-size: 9px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--kov-steel);
+    opacity: 0.6;
   }
 }
 
-.kov-close__cta {
+.kov-list__body {
+  list-style: none;
+}
+
+.kov-list__row {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 30px;
-  align-items: end;
+  grid-template-columns: 46px 1fr;
+  gap: 4px 16px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--pr-line);
+  transition: background-color 260ms ease;
 }
 
-@media (min-width: 1024px) {
-  .kov-close__cta {
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-    gap: 64px;
+.kov-list__row:last-child {
+  border-bottom: none;
+}
+
+@media (min-width: 900px) {
+  .kov-list__row {
+    padding: 22px 0;
   }
 }
 
-.kov-cta__glow {
-  position: absolute;
-  top: 50%;
-  width: min(48vw, 520px);
-  aspect-ratio: 1;
-  transform: translateY(-50%);
-  border-radius: 50%;
-  background: radial-gradient(circle at 50% 50%, rgba(227, 30, 36, 0.16), transparent 66%);
-  filter: blur(18px);
-}
-
-.kov-cta__glow--left {
-  left: -18%;
-}
-
-.kov-cta__glow--right {
-  right: -18%;
-}
-
-.kov-cta__title {
-  margin-top: 26px;
-  font-family: var(--font-display), sans-serif;
-  font-size: clamp(30px, 4.2vw, 68px);
-  line-height: 0.98;
-  letter-spacing: -0.02em;
-  color: var(--kov-bone);
-}
-
-.kov-cta__aside {
-  max-width: 40ch;
-}
-
-.kov-cta__lede {
-  font-size: 14.5px;
-  line-height: 1.75;
-  color: var(--kov-concrete);
-}
-
-.kov-cta__actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 14px;
-  margin-top: 28px;
-}
-
-/* ── À venir ─────────────────────────────────────────────────────────── */
-
-.kov-soon__head {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-@media (min-width: 768px) {
-  .kov-soon__head {
-    flex-direction: row;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 32px;
-  }
-}
-
-.kov-soon__title {
-  font-family: var(--font-display), sans-serif;
-  font-size: 18px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--kov-bone);
-}
-
-.kov-soon__note {
-  max-width: 46ch;
-  font-size: 13px;
-  line-height: 1.6;
+.kov-list__row.is-soon {
   color: var(--kov-steel);
 }
 
-.kov-soon__list {
-  list-style: none;
-  margin-top: 22px;
-}
-
-.kov-soon__row {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  padding: 16px 0;
-  border-top: 1px solid var(--kov-border);
-}
-
-.kov-soon__index {
-  flex: 0 0 auto;
+.kov-list__num {
   font-family: var(--font-mono), monospace;
-  font-size: 11px;
+  font-size: 10px;
   letter-spacing: 0.14em;
   color: var(--kov-steel);
   font-variant-numeric: tabular-nums;
 }
 
-.kov-soon__tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 18px;
-  flex: 1;
-  min-width: 0;
+.kov-list__name {
+  font-size: 15px;
+  letter-spacing: 0.01em;
+  color: var(--kov-bone);
+}
+
+.kov-list__row.is-soon .kov-list__name {
+  color: var(--kov-steel);
+}
+
+.kov-list__field,
+.kov-list__tags {
   font-size: 11px;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--kov-concrete);
 }
 
-.kov-soon__state {
-  flex: 0 0 auto;
+.kov-list__state {
+  display: flex;
+  align-items: center;
+  gap: 9px;
   font-family: var(--font-mono), monospace;
-  font-size: 10px;
-  letter-spacing: 0.18em;
+  font-size: 9px;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--kov-steel);
-  opacity: 0.7;
+}
+
+.kov-list__pip {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  border: 1px solid rgba(231, 231, 229, 0.3);
+}
+
+.kov-list__pip.is-live {
+  background: var(--kov-red);
+  border-color: var(--kov-red);
+}
+
+.kov-list__action {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.kov-list__action button {
+  padding: 4px 6px;
+  background: none;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--kov-steel);
+  cursor: pointer;
+  transition: color 240ms ease, transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.kov-list__row:hover .kov-list__action button {
+  color: var(--kov-red);
+  transform: translateX(3px);
+}
+
+.kov-list__action button:focus-visible {
+  outline: 2px solid var(--kov-red);
+  outline-offset: 2px;
+}
+
+/* Everything but the number and the name collapses out below 900px: a
+   five-column table on a phone is five columns of two words. */
+@media (max-width: 899px) {
+  .kov-list__field,
+  .kov-list__tags,
+  .kov-list__state {
+    grid-column: 2;
+  }
+
+  .kov-list__num {
+    grid-row: 1 / span 4;
+  }
+
+  .kov-list__action {
+    grid-column: 2;
+    justify-content: flex-start;
+    margin-top: 6px;
+  }
+}
+
+/* ── Close ───────────────────────────────────────────────────────────── */
+
+.kov-pr__close {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 30px;
+  align-items: start;
+  padding: 80px var(--pr-gutter) 104px;
+}
+
+@media (min-width: 1024px) {
+  .kov-pr__close {
+    /* The same measure as the masthead, so the page opens and shuts on the
+       same line. */
+    grid-template-columns: minmax(150px, 0.8fr) minmax(0, 2.2fr) minmax(0, 1.1fr);
+    gap: 48px;
+    padding: 108px var(--pr-gutter) 132px;
+  }
+}
+
+.kov-pr__closeTitle {
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(30px, 3.4vw, 52px);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--kov-bone);
+}
+
+.kov-pr__closeLede {
+  margin-top: 22px;
+  max-width: 44ch;
+  font-size: 13.5px;
+  line-height: 1.75;
+  color: var(--kov-steel);
+}
+
+.kov-pr__closeActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin-top: 30px;
+}
+
+.kov-pr__triad {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  font-size: 9.5px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--kov-steel);
+}
+
+@media (min-width: 1024px) {
+  .kov-pr__triad {
+    padding-top: 12px;
+  }
+}
+
+.kov-pr__triad span[aria-hidden] {
+  opacity: 0.35;
 }
 
 /* ── The modal ───────────────────────────────────────────────────────── */
 /* The film and the longer description. The three narrative rows are already
-   beside the window, so a modal is only offered where there is more. */
+   under the row, so a modal is only offered where there is more. */
 
 .kov-modal {
   width: 100%;
@@ -698,7 +733,7 @@
 }
 
 .kov-modal::backdrop {
-  background: rgba(6, 6, 7, 0.84);
+  background: rgba(6, 6, 7, 0.86);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
@@ -708,8 +743,8 @@
   max-height: 92vh;
   overflow-y: auto;
   overscroll-behavior: contain;
-  border-radius: var(--radius-glass);
-  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  border: 1px solid var(--pr-line);
   background: #0d0d0f;
   box-shadow: 0 40px 110px rgba(0, 0, 0, 0.72);
   animation: kovModalIn 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -756,7 +791,7 @@
   width: 100%;
   overflow: hidden;
   background: #000;
-  border-bottom: 1px solid var(--kov-border);
+  border-bottom: 1px solid var(--pr-line);
 }
 
 .kov-modal__player {
@@ -780,8 +815,8 @@
   align-items: center;
   gap: 14px;
   font-family: var(--font-mono), monospace;
-  font-size: 11px;
-  letter-spacing: 0.18em;
+  font-size: 10px;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--kov-steel);
 }
@@ -794,18 +829,18 @@
 .kov-modal__title {
   margin-top: 14px;
   font-family: var(--font-display), sans-serif;
-  font-size: clamp(26px, 3vw, 40px);
-  line-height: 1;
-  letter-spacing: -0.015em;
-  text-transform: uppercase;
+  font-size: clamp(24px, 2.6vw, 36px);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
   color: var(--kov-bone);
 }
 
 .kov-modal__detail {
   margin-top: 18px;
   max-width: 62ch;
-  font-size: 14.5px;
-  line-height: 1.7;
+  font-size: 14px;
+  line-height: 1.75;
   color: var(--kov-concrete);
 }
 
@@ -818,12 +853,12 @@
   grid-template-columns: 1fr;
   gap: 5px;
   padding: 14px 0;
-  border-top: 1px solid var(--kov-border);
+  border-top: 1px solid var(--pr-line);
 }
 
 @media (min-width: 640px) {
   .kov-modal__story > div {
-    grid-template-columns: 96px 1fr;
+    grid-template-columns: 110px 1fr;
     gap: 20px;
   }
 }
@@ -831,16 +866,16 @@
 .kov-modal__story dt {
   padding-top: 2px;
   font-family: var(--font-mono), monospace;
-  font-size: 10px;
-  letter-spacing: 0.18em;
+  font-size: 9px;
+  letter-spacing: 0.24em;
   text-transform: uppercase;
-  color: var(--kov-red);
+  color: var(--kov-steel);
 }
 
 .kov-modal__story dd {
   max-width: 62ch;
-  font-size: 14px;
-  line-height: 1.65;
+  font-size: 13.5px;
+  line-height: 1.7;
   color: var(--kov-concrete);
 }
 
@@ -857,10 +892,10 @@
   gap: 9px;
   padding: 12px 20px;
   border-radius: 4px;
-  border: 1px solid var(--kov-border);
+  border: 1px solid var(--pr-line);
   font-family: var(--font-mono), monospace;
-  font-size: 10px;
-  letter-spacing: 0.2em;
+  font-size: 9.5px;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--kov-bone);
   transition: border-color 300ms ease, background-color 300ms ease;
@@ -882,24 +917,20 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .kov-rail__dot,
-  .kov-vit__window,
-  .kov-vit__play,
-  .kov-vit__cta,
-  .kov-vit__cta-arrow,
+  .kov-pr__view,
+  .kov-row__link,
+  .kov-row__img,
+  .kov-row__play,
+  .kov-list__row,
+  .kov-list__action button,
   .kov-modal__close,
   .kov-modal__link {
     transition: none;
   }
 
-  /* No tilt at all, rather than a tilt that never resolves. */
-  .kov-vit__window,
-  .kov-vit--flip .kov-vit__window,
-  .kov-vit:hover .kov-vit__window {
-    transform: none;
-  }
-
-  .kov-vit:hover .kov-vit__play {
+  .kov-row:hover .kov-row__img,
+  .kov-row:hover .kov-row__play,
+  .kov-list__row:hover .kov-list__action button {
     transform: none;
   }
 
