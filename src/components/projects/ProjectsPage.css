@@ -189,10 +189,12 @@
 
 .kov-card__shot {
   position: relative;
-  /* Taller than the screenshot, so the page is cut off at the bottom of the
-     frame: a page that ends exactly at its frame reads as a picture of a
-     page, one that runs past it reads as a page. */
-  aspect-ratio: 4 / 3;
+  /* 16:9. The studio cover is exactly that ratio and fills it; the Kanti
+     capture is 1.6:1, so cover crops a little off its bottom — which is
+     the effect the reference has anyway: a page that ends exactly at its
+     frame reads as a picture of a page, one that runs past it reads as a
+     page. */
+  aspect-ratio: 16 / 9;
   overflow: hidden;
   background: var(--pw-paper);
 }
@@ -323,97 +325,6 @@
   outline-offset: 4px;
 }
 
-/* ── À venir ─────────────────────────────────────────────────────────── */
-
-.kov-soon {
-  max-width: 1500px;
-  margin: 0 auto;
-  padding: 72px var(--pw-gutter) 0;
-}
-
-@media (min-width: 1024px) {
-  .kov-soon {
-    padding-top: 96px;
-  }
-}
-
-.kov-soon__head {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding-top: 40px;
-  border-top: 1px solid var(--pw-line);
-}
-
-@media (min-width: 768px) {
-  .kov-soon__head {
-    flex-direction: row;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 32px;
-  }
-}
-
-.kov-soon__title {
-  font-family: var(--font-display), sans-serif;
-  font-size: 18px;
-  font-weight: 400;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--kov-bone);
-}
-
-.kov-soon__note {
-  max-width: 48ch;
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--kov-steel);
-}
-
-.kov-soon__list {
-  list-style: none;
-  margin-top: 22px;
-}
-
-.kov-soon__row {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  padding: 16px 0;
-  border-top: 1px solid var(--pw-line);
-}
-
-.kov-soon__num {
-  flex: 0 0 auto;
-  font-family: var(--font-mono), monospace;
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  color: var(--kov-steel);
-  font-variant-numeric: tabular-nums;
-}
-
-.kov-soon__tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 16px;
-  flex: 1;
-  min-width: 0;
-  font-size: 10.5px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--kov-concrete);
-}
-
-.kov-soon__state {
-  flex: 0 0 auto;
-  font-family: var(--font-mono), monospace;
-  font-size: 9px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--kov-steel);
-  opacity: 0.6;
-}
-
 /* ── List ────────────────────────────────────────────────────────────── */
 
 .kov-list {
@@ -430,7 +341,7 @@
   .kov-list__head,
   .kov-list__row {
     display: grid;
-    grid-template-columns: 46px minmax(0, 1.2fr) minmax(0, 1.3fr) minmax(0, 1.8fr) 130px 40px;
+    grid-template-columns: 46px minmax(0, 1.2fr) minmax(0, 1.3fr) minmax(0, 1.9fr) 40px;
     gap: 24px;
     align-items: center;
   }
@@ -479,39 +390,12 @@
   color: var(--kov-bone);
 }
 
-.kov-list__row.is-soon .kov-list__name {
-  color: var(--kov-steel);
-}
-
 .kov-list__field,
 .kov-list__tags {
   font-size: 11px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--kov-concrete);
-}
-
-.kov-list__state {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  font-family: var(--font-mono), monospace;
-  font-size: 9px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--kov-steel);
-}
-
-.kov-list__pip {
-  width: 5px;
-  height: 5px;
-  border-radius: 999px;
-  border: 1px solid rgba(231, 231, 229, 0.3);
-}
-
-.kov-list__pip.is-live {
-  background: var(--kov-red);
-  border-color: var(--kov-red);
 }
 
 .kov-list__action {
@@ -542,13 +426,12 @@
 /* A five-column table on a phone is five columns of two words. */
 @media (max-width: 899px) {
   .kov-list__field,
-  .kov-list__tags,
-  .kov-list__state {
+  .kov-list__tags {
     grid-column: 2;
   }
 
   .kov-list__num {
-    grid-row: 1 / span 4;
+    grid-row: 1 / span 3;
   }
 
   .kov-list__action {

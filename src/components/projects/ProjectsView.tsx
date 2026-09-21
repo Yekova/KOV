@@ -48,9 +48,12 @@ const hasMore = (project: Project) => Boolean(project.video || project.detail);
 //
 // Grid is the page: one light card per delivered project, each a browser
 // window over a block of text — deliverables, name, place, and what was
-// done. List is the same work as an index, and it includes what is not
-// published, because an index is exactly where the incomplete belongs and a
-// showcase is exactly where it does not.
+// done. List is the same work as an index.
+//
+// Neither mentions unpublished work. projects.ts still carries the three
+// placeholder entries, and the homepage grid still renders them as reserved
+// tiles; this page is the showcase, and a showcase that announces what it
+// does not have yet is counting down rather than showing.
 //
 // One modal for the whole page rather than one per project: two dialogs in
 // the DOM to show one at a time is two of everything for no reason.
@@ -59,8 +62,6 @@ export function ProjectsView() {
   const [openId, setOpenId] = useState<string | null>(null);
 
   const delivered = useMemo(() => PROJECTS.filter((p) => p.status === "live"), []);
-  const upcoming = useMemo(() => PROJECTS.filter((p) => p.status === "upcoming"), []);
-  const indexed = useMemo(() => [...delivered, ...upcoming], [delivered, upcoming]);
 
   const openProject = openId ? (PROJECTS.find((p) => p.id === openId) ?? null) : null;
 
@@ -68,9 +69,7 @@ export function ProjectsView() {
     <>
       <div className="kov-pw__bar">
         <p className="kov-pw__count">
-          <b>{String(delivered.length).padStart(2, "0")}</b> en ligne
-          <span aria-hidden="true">/</span>
-          <b>{String(upcoming.length).padStart(2, "0")}</b> à venir
+          <b>{String(delivered.length).padStart(2, "0")}</b> réalisations
         </p>
 
         {/* aria-pressed, not a pair of links: this changes how the same
@@ -96,9 +95,9 @@ export function ProjectsView() {
       </div>
 
       {view === "grid" ? (
-        <GridView projects={delivered} upcoming={upcoming} onOpen={setOpenId} />
+        <GridView projects={delivered} onOpen={setOpenId} />
       ) : (
-        <ListView projects={indexed} onOpen={setOpenId} />
+        <ListView projects={delivered} onOpen={setOpenId} />
       )}
 
       {openProject && <ProjectModal project={openProject} open onClose={() => setOpenId(null)} />}
@@ -108,18 +107,9 @@ export function ProjectsView() {
 
 // ── Grid ─────────────────────────────────────────────────────────────────
 
-function GridView({
-  projects,
-  upcoming,
-  onOpen,
-}: {
-  projects: Project[];
-  upcoming: Project[];
-  onOpen: (id: string) => void;
-}) {
+function GridView({ projects, onOpen }: { projects: Project[]; onOpen: (id: string) => void }) {
   return (
-    <>
-      <ul className="kov-pw__grid">
+    <ul className="kov-pw__grid">
         {projects.map((project) => (
           <li key={project.id} id={`projet-${project.id}`} className="kov-card">
             <div className="kov-card__window">
@@ -196,44 +186,10 @@ function GridView({
                   <span aria-hidden="true">→</span>
                 </button>
               )}
-            </div>
-          </li>
-        ))}
-      </ul>
-
-      {upcoming.length > 0 && (
-        <section className="kov-soon" aria-labelledby="projets-a-venir">
-          <div className="kov-soon__head">
-            <h2 id="projets-a-venir" className="kov-soon__title">
-              À venir
-            </h2>
-            {/* Says only what the data records: not published. No reserved
-                cards, no "Bientôt" plates — the worst tell of a thin
-                portfolio is empty frames dressed up as work. */}
-            <p className="kov-soon__note">
-              {upcoming.length} projets qui ne sont pas encore en ligne. Ils rejoindront cette page quand ils le
-              seront.
-            </p>
           </div>
-
-          <ol className="kov-soon__list">
-            {upcoming.map((project) => (
-              <li key={project.id} className="kov-soon__row">
-                <span aria-hidden="true" className="kov-soon__num">
-                  {project.id}
-                </span>
-                <span className="kov-soon__tags">
-                  {project.tags.map((tag) => (
-                    <span key={tag}>{tag}</span>
-                  ))}
-                </span>
-                <span className="kov-soon__state">Non publié</span>
-              </li>
-            ))}
-          </ol>
-        </section>
-      )}
-    </>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -247,38 +203,29 @@ function ListView({ projects, onOpen }: { projects: Project[]; onOpen: (id: stri
         <span>Projet</span>
         <span>Domaine</span>
         <span>Prestations</span>
-        <span>État</span>
         <span />
       </div>
 
       <ol className="kov-list__body">
-        {projects.map((project) => {
-          const live = project.status === "live";
-
-          return (
-            <li key={project.id} className={`kov-list__row${live ? "" : " is-soon"}`}>
-              <span className="kov-list__num">{project.id}</span>
-              <span className="kov-list__name">{project.name}</span>
-              <span className="kov-list__field">
-                {project.category}
-                {project.location && ` · ${project.location}`}
-              </span>
-              <span className="kov-list__tags">{services(project).join(" — ")}</span>
-              <span className="kov-list__state">
-                <span aria-hidden="true" className={`kov-list__pip${live ? " is-live" : ""}`} />
-                {live ? "En ligne" : "Non publié"}
-              </span>
-              <span className="kov-list__action">
-                {hasMore(project) && (
-                  <button type="button" onClick={() => onOpen(project.id)}>
-                    <span className="sr-only">{`Ouvrir ${project.name}`}</span>
-                    <span aria-hidden="true">→</span>
-                  </button>
-                )}
-              </span>
-            </li>
-          );
-        })}
+        {projects.map((project) => (
+          <li key={project.id} className="kov-list__row">
+            <span className="kov-list__num">{project.id}</span>
+            <span className="kov-list__name">{project.name}</span>
+            <span className="kov-list__field">
+              {project.category}
+              {project.location && ` · ${project.location}`}
+            </span>
+            <span className="kov-list__tags">{services(project).join(" — ")}</span>
+            <span className="kov-list__action">
+              {hasMore(project) && (
+                <button type="button" onClick={() => onOpen(project.id)}>
+                  <span className="sr-only">{`Ouvrir ${project.name}`}</span>
+                  <span aria-hidden="true">→</span>
+                </button>
+              )}
+            </span>
+          </li>
+        ))}
       </ol>
     </div>
   );
