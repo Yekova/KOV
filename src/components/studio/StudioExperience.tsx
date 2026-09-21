@@ -15,6 +15,18 @@ import { StudioInfoPanel } from "@/components/studio/StudioInfoPanel";
 import { StudioRoomPanel } from "@/components/studio/StudioRoomPanel";
 import { StudioRoomCarousel } from "@/components/studio/StudioRoomCarousel";
 import { StudioFooter } from "@/components/studio/StudioFooter";
+
+// Interactive rooms, resolved by the `experience` key on the node rather
+// than imported at the top of the engine. A walkable room is a second
+// renderer, its own scene graph and a few hundred lines of geometry; a
+// visitor who only tours the panoramas should never download it. next
+// /dynamic with ssr:false because none of it can render on a server.
+const INTERACTIVE_ROOMS: Record<string, React.ComponentType<{ onExit: () => void }>> = {
+  "brand-gallery": dynamic(
+    () => import("@/components/studio/brandGallery/BrandGalleryRoom").then((m) => m.BrandGalleryRoom),
+    { ssr: false }
+  ),
+};
 import { StudioPointerReadout } from "@/components/studio/StudioPointerReadout";
 import { StudioMusicPlayer } from "@/components/studio/StudioMusicPlayer";
 import { HandTrackingController } from "@/components/studio/HandTrackingController";
@@ -257,6 +269,12 @@ function StudioExperienceInner() {
   );
 
   const currentNode = STUDIO_NODES[currentNodeId];
+  // Null for every panorama room, which is all of them but one.
+  const InteractiveRoom =
+    currentNode.kind === "interactive-3d" && currentNode.experience
+      ? (INTERACTIVE_ROOMS[currentNode.experience] ?? null)
+      : null;
+  const interactiveRoom = InteractiveRoom !== null;
   const cameraStateRef = useRef<CameraState>({
     yaw: currentNode.initialYaw,
     pitch: currentNode.initialPitch,
@@ -472,13 +490,28 @@ function StudioExperienceInner() {
         timersRef.current.push(setTimeout(resolve, reducedMotion ? 0 : NAV_COVER_MS + NAV_HOLD_MS));
       });
 
+      // An interactive room has no panorama to decode, so there is nothing
+      // to race the curtain against but the curtain itself. Reaching for
+      // targetNode.panorama here regardless — which is what this did
+      // before rooms had a kind — would try to load "" and fail the
+      // navigation outright.
+      const arrival: Promise<THREE.Texture | null> =
+        targetNode.kind === "interactive-3d"
+          ? Promise.resolve(null)
+          : loadTexture(targetNode.panorama).then((t) => (diag("nav:texture-decoded", targetId), t));
+
       diag("nav:texture-load-start", targetId);
-      Promise.all([loadTexture(targetNode.panorama).then((t) => (diag("nav:texture-decoded", targetId), t)), covered])
+      Promise.all([arrival, covered])
         .then(([loaded]) => {
           // The pre-existing `useEffect(() => () => texture?.dispose(), [texture])`
           // below disposes whatever texture this replaces once React commits
           // it — no manual dispose needed here.
           diag("nav:swap-commit", targetId);
+          // Dropping the previous room's texture on the way into an
+          // interactive one is the point of setting null: the effect below
+          // disposes whatever this replaces, so a 6144x3072 panorama does
+          // not sit in GPU memory for the whole visit to a room that never
+          // shows it.
           setTexture(loaded);
           setCurrentNodeId(targetId);
           cameraStateRef.current.yaw = targetNode.initialYaw;
@@ -548,9 +581,17 @@ function StudioExperienceInner() {
 
   return (
     <div className="relative w-full h-full overflow-hidden" style={{ background: "#050505" }}>
+      {/* An interactive room replaces the panorama canvas outright rather
+          than layering over it: two live WebGL contexts for one room, one
+          of them rendering a sphere nobody is looking at. */}
+      {interactiveRoom && phase !== "intro" && phase !== "flying" && (
+        <InteractiveRoom onExit={() => navigateToNode(STUDIO_ENTRY_NODE_ID)} />
+      )}
+
       <div
         ref={setCanvasEl}
         className="absolute inset-0"
+        hidden={interactiveRoom}
         style={{
           opacity: canvasRevealed ? 1 : 0,
           // Opacity and a transform, never `filter`. This used to animate
@@ -572,6 +613,11 @@ function StudioExperienceInner() {
       >
         <Canvas
           key={canvasKey}
+          // While an interactive room is up the panorama div is `hidden`, but
+          // a hidden canvas still runs its loop: R3F does not stop on
+          // display:none. Parking the frameloop is what actually makes the
+          // claim above true — one room, one context doing work.
+          frameloop={interactiveRoom ? "never" : "always"}
           // [min,max] — R3F clamps to the device's actual devicePixelRatio
           // within this range automatically (min(devicePixelRatio, 2), per
           // the quality audit's request), rather than a fixed value. Was

@@ -31,8 +31,25 @@ export interface StudioInfoHotspot {
   body: string;
 }
 
+/** How a room is rendered.
+ *
+ *  "panorama" is an equirectangular texture on a sphere, looked around from
+ *  a fixed point — every room in this studio until now.
+ *
+ *  "interactive-3d" is a real scene the visitor walks through. It ignores
+ *  `panorama` entirely and names a component instead, so the engine loads
+ *  no texture and mounts no sphere for it. Adding one of these must never
+ *  require touching how the panorama rooms work. */
+export type StudioRoomKind = "panorama" | "interactive-3d";
+
 export interface StudioNode {
   id: string;
+  /** Which renderer this room needs. */
+  kind: StudioRoomKind;
+  /** For `interactive-3d` only: which scene to mount. A key, not an import
+   *  — the registry that resolves it lazy-loads, so a walkable room's
+   *  geometry never reaches a visitor who only tours the panoramas. */
+  experience?: string;
   name: string;
   /** Short room code shown in the HUD ("P01"). */
   room: string;
@@ -69,6 +86,7 @@ export const STUDIO_ENTRY_NODE_ID = "p01";
 export const STUDIO_NODES: Record<string, StudioNode> = {
   p01: {
     id: "p01",
+    kind: "panorama",
     name: "Portal",
     room: "P01",
     subtitle: "Entrée du studio",
@@ -127,6 +145,13 @@ export const STUDIO_NODES: Record<string, StudioNode> = {
         label: "Rooftop",
       },
       {
+        targetNodeId: "p04",
+        // Invented placement, same latitude as the others in this room.
+        // Opposite the gym so the two branches do not overlap.
+        position: [470, -30, 120],
+        label: "Brand Gallery",
+      },
+      {
         targetNodeId: "p03",
         // Invented placement, same latitude as the two above. The floor
         // plan puts the gym to the Portal's west, so the hotspot goes to
@@ -160,6 +185,7 @@ export const STUDIO_NODES: Record<string, StudioNode> = {
   },
   p02: {
     id: "p02",
+    kind: "panorama",
     name: "Design Studio",
     room: "P02",
     subtitle: "Concevoir demain",
@@ -227,6 +253,7 @@ export const STUDIO_NODES: Record<string, StudioNode> = {
   // is where the bay windows are in the photograph.
   p03: {
     id: "p03",
+    kind: "panorama",
     name: "Salle de sport",
     room: "P03",
     subtitle: "Entretenir la machine",
@@ -268,17 +295,29 @@ export const STUDIO_NODES: Record<string, StudioNode> = {
       },
     ],
   },
+  // The one room that is not a photograph. It takes the last scaffolded
+  // slot and is the first `interactive-3d` node: a real scene the visitor
+  // walks through, with brands occupying architectural positions in it.
+  //
+  // Everything a panorama room needs is absent on purpose — no texture,
+  // no arrival angle worth setting — and the engine reads `kind` before it
+  // reaches for any of it.
   p04: {
     id: "p04",
-    name: "Motion Room",
+    kind: "interactive-3d",
+    experience: "brand-gallery",
+    name: "Brand Gallery",
     room: "P04",
-    subtitle: "Donner vie aux idées",
-    description: "Bientôt disponible.",
+    subtitle: "Un lieu, pas une page",
+    description:
+      "Une galerie noire qui se parcourt à pied. Les marques y occupent des emplacements construits — un socle, une lumière, un mur — plutôt qu'une ligne dans une liste de partenaires.",
     panorama: "",
     initialYaw: 0,
     initialPitch: 0,
-    zoomEnabled: true,
-    available: false,
+    zoomEnabled: false,
+    available: true,
+    // Walked out of, not clicked out of: the exit is a door in the scene
+    // (BrandGalleryExit). No hotspot layer runs in an interactive room.
     connections: [],
     artworks: [],
     infoHotspots: [],
@@ -290,6 +329,7 @@ export const STUDIO_NODES: Record<string, StudioNode> = {
   // eighth room would have meant carving a new volume into the building.
   p05: {
     id: "p05",
+    kind: "panorama",
     name: "Bureau",
     room: "P05",
     subtitle: "Là où ça se décide",
@@ -334,6 +374,7 @@ export const STUDIO_NODES: Record<string, StudioNode> = {
   },
   p06: {
     id: "p06",
+    kind: "panorama",
     name: "Lounge",
     room: "P06",
     subtitle: "Un temps pour souffler",
@@ -377,6 +418,7 @@ export const STUDIO_NODES: Record<string, StudioNode> = {
   },
   p07: {
     id: "p07",
+    kind: "panorama",
     name: "Rooftop",
     room: "P07",
     subtitle: "Prendre de la hauteur",
