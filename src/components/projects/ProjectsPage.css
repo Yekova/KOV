@@ -144,179 +144,70 @@
   opacity: 0.6;
 }
 
-/* ── The work ────────────────────────────────────────────────────────── */
+/* ── The work ────────────────────────────────────────────── */
 
 .kov-band--work {
-  padding: 72px 0 96px;
+  padding: 84px 0 96px;
 }
 
 @media (min-width: 1024px) {
   .kov-band--work {
-    padding: 88px 0 120px;
+    padding: 104px 0 120px;
   }
+}
+
+/* No side padding: the spreads inside reach the viewport edge, and each one
+   re-centres its own text against the site measure of 1600px. */
+.kov-band__bleed {
+  position: relative;
+  width: 100%;
 }
 
 .kov-work-list {
   list-style: none;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 24px;
-}
-
-@media (min-width: 1280px) {
-  .kov-work-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-/* ── The card ────────────────────────────────────────────────────────── */
-
-.kov-pcard {
-  position: relative;
-  display: grid;
-  grid-template-columns: 1fr;
-  overflow: hidden;
-  border-radius: 18px;
-  border: 1px solid var(--kov-border);
-  background: linear-gradient(120deg, rgba(20, 20, 23, 0.9), rgba(12, 12, 13, 0.92));
-  /* The anchors survive from the previous layout; the page's top blur runs
-     8rem down, so a deep link needs the margin. */
-  scroll-margin-top: 140px;
-  transition: border-color 420ms ease, transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-@media (min-width: 640px) {
-  .kov-pcard {
-    /* Text and picture side by side, the picture running off the card's own
-       right edge — the left column stays the fixed part so two cards of
-       different name lengths still line up. */
-    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
-  }
-}
-
-.kov-pcard:hover {
-  border-color: rgba(227, 30, 36, 0.4);
-  transform: translateY(-3px);
-}
-
-.kov-pcard__text {
-  position: relative;
-  z-index: 2;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  padding: 26px 22px 24px;
+  gap: 64px;
 }
 
 @media (min-width: 1024px) {
-  .kov-pcard__text {
-    padding: 34px 26px 30px 32px;
+  .kov-work-list {
+    gap: 124px;
   }
 }
 
-.kov-pcard__num {
-  font-family: var(--font-display), sans-serif;
-  font-size: clamp(30px, 3vw, 42px);
-  line-height: 1;
-  letter-spacing: -0.02em;
-  color: var(--kov-red);
-  font-variant-numeric: tabular-nums;
-}
+/* ── One spread ──────────────────────────────────────────── */
+/* Picture off one edge of the page, panel of text laid over the edge of it.
+   Overlapping is the whole device: text beside a picture is a two-column
+   layout, text on top of one is a spread, and those few pixels of overlap
+   are what stop two projects reading as two rows of a table. */
 
-.kov-pcard__name {
-  margin-top: 4px;
-  font-size: clamp(22px, 2.1vw, 30px);
-  line-height: 1.1;
-  letter-spacing: -0.01em;
-  color: var(--kov-bone);
-}
-
-/* The field the work is in, on a red edge — the reference's own device, and
-   the reason the card needs no subtitle. */
-.kov-pcard__cat {
-  margin-top: 20px;
-  padding-left: 12px;
-  border-left: 2px solid var(--kov-red);
-  max-width: 15ch;
-  font-family: var(--font-mono), monospace;
-  font-size: 10px;
-  line-height: 1.7;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--kov-concrete);
-}
-
-.kov-pcard__tagline {
-  margin-top: 26px;
-  max-width: 22ch;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.45;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--kov-bone);
-}
-
-.kov-pcard__pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: auto;
-  padding: 12px 20px;
-  border-radius: 4px;
-  border: 1px solid rgba(231, 231, 229, 0.28);
-  font-family: var(--font-mono), monospace;
-  font-size: 10px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--kov-bone);
-  white-space: nowrap;
-  transition: background-color 320ms ease, border-color 320ms ease;
-}
-
-/* margin-top:auto needs something above it to push against on a short
-   card; this keeps the pill off the tagline when there is room. */
-.kov-pcard__tagline + .kov-pcard__pill {
-  margin-top: 30px;
-}
-
-.kov-pcard__pill-arrow {
-  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.kov-pcard:hover .kov-pcard__pill {
-  border-color: var(--kov-red);
-  background: rgba(227, 30, 36, 0.14);
-}
-
-.kov-pcard:hover .kov-pcard__pill-arrow {
-  transform: translate(2px, -2px);
-}
-
-/* ── The card's picture ──────────────────────────────────────────────── */
-
-.kov-pcard__media {
+.kov-dip {
   position: relative;
-  min-height: 210px;
+  display: flex;
+  flex-direction: column;
+  /* The top blur of the page runs 8rem down, so a deep link needs this. */
+  scroll-margin-top: 140px;
+}
+
+.kov-dip__media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
   overflow: hidden;
+  background: #0d0d0f;
 }
 
-@media (min-width: 640px) {
-  .kov-pcard__media {
-    min-height: 100%;
-  }
-}
-
-.kov-pcard__img {
+.kov-dip__img {
   object-fit: cover;
-  transition: transform 800ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.kov-pcard:hover .kov-pcard__img {
-  transform: scale(1.04);
+.kov-dip:hover .kov-dip__img {
+  transform: scale(1.03);
 }
 
-.kov-pcard__reserved {
+.kov-dip__reserved {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -329,34 +220,33 @@
   color: rgba(231, 231, 229, 0.38);
 }
 
-/* Dissolves the picture into the card instead of butting it against the
-   text with a seam. Vertical below 640px, where the picture sits under the
-   text rather than beside it. */
-.kov-pcard__fade {
+/* Darkens the picture where the panel will sit, so the overlap is legible
+   before the backdrop-filter of the panel does anything. */
+.kov-dip__grade {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(14, 14, 16, 0.96) 0%, rgba(14, 14, 16, 0) 42%);
+  pointer-events: none;
+  background: linear-gradient(to top, rgba(10, 10, 10, 0.88), rgba(10, 10, 10, 0) 58%);
 }
 
-@media (min-width: 640px) {
-  .kov-pcard__fade {
-    background: linear-gradient(to right, rgba(14, 14, 16, 0.96) 0%, rgba(14, 14, 16, 0) 38%);
-  }
-}
-
-.kov-pcard__play {
+.kov-dip__mediaHit {
   position: absolute;
-  top: 50%;
-  left: 54%;
-  transform: translate(-50%, -50%);
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 54px;
-  height: 54px;
+  cursor: pointer;
+}
+
+.kov-dip__play {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 66px;
+  height: 66px;
   padding-left: 3px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.45);
   background: rgba(10, 10, 10, 0.5);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
@@ -364,47 +254,229 @@
   transition: background-color 320ms ease, border-color 320ms ease, transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.kov-pcard:hover .kov-pcard__play {
+.kov-dip:hover .kov-dip__play {
   background: var(--kov-red);
   border-color: var(--kov-red);
-  transform: translate(-50%, -50%) scale(1.08);
+  transform: scale(1.07);
 }
 
-.kov-pcard__tags {
-  position: absolute;
-  right: 18px;
-  bottom: 16px;
+/* Re-centres the text against the site measure, inside a band that itself
+   reaches the viewport edge. */
+.kov-dip__inner {
+  position: relative;
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.kov-dip__panel {
+  position: relative;
+  /* The overlap. Stacked layout puts the panel under the picture, so it
+     climbs back over it. */
+  margin-top: -52px;
+  padding: 26px 22px 24px;
+  border-radius: 18px;
+  border: 1px solid var(--kov-border);
+  background: rgba(12, 12, 14, 0.86);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  box-shadow: 0 30px 80px -34px rgba(0, 0, 0, 0.85);
+}
+
+@media (min-width: 1024px) {
+  .kov-dip {
+    display: block;
+    min-height: 620px;
+  }
+
+  .kov-dip__media {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 62%;
+    aspect-ratio: auto;
+    border-radius: 0 18px 18px 0;
+  }
+
+  .kov-dip--flip .kov-dip__media {
+    left: auto;
+    right: 0;
+    border-radius: 18px 0 0 18px;
+  }
+
+  /* Sideways once the panel is beside the picture rather than under it. */
+  .kov-dip__grade {
+    background: linear-gradient(to right, rgba(10, 10, 10, 0.1), rgba(10, 10, 10, 0.8));
+  }
+
+  .kov-dip--flip .kov-dip__grade {
+    background: linear-gradient(to left, rgba(10, 10, 10, 0.1), rgba(10, 10, 10, 0.8));
+  }
+
+  /* A twelve-column measure is what makes the overlap a fixed proportion
+     rather than a number to re-tune at every width: the panel starts at
+     column 7, the picture ends at 62% of the viewport, and the difference
+     between the two is the overlap. */
+  .kov-dip__inner {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: 24px;
+    min-height: 620px;
+    align-items: center;
+  }
+
+  .kov-dip__panel {
+    grid-column: 7 / -1;
+    margin-top: 0;
+    padding: 36px 34px 32px;
+  }
+
+  .kov-dip--flip .kov-dip__panel {
+    grid-column: 1 / 7;
+  }
+}
+
+/* ── The text of the panel ─────────────────────────────────── */
+
+.kov-dip__meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--kov-steel);
+}
+
+.kov-dip__num {
+  color: var(--kov-red);
+  font-variant-numeric: tabular-nums;
+}
+
+.kov-dip__rule {
+  width: 28px;
+  height: 1px;
+  background: var(--kov-border);
+}
+
+.kov-dip__name {
+  margin-top: 14px;
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(30px, 3.2vw, 52px);
+  line-height: 0.98;
+  letter-spacing: -0.018em;
+  text-transform: uppercase;
+  color: var(--kov-bone);
+}
+
+.kov-dip__tagline {
+  margin-top: 12px;
+  max-width: 30ch;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--kov-red);
+}
+
+.kov-dip__story {
+  margin-top: 24px;
+}
+
+.kov-dip__story > div {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3px;
+  padding: 13px 0;
+  border-top: 1px solid var(--kov-border);
+}
+
+@media (min-width: 1280px) {
+  .kov-dip__story > div {
+    grid-template-columns: 92px 1fr;
+    gap: 18px;
+  }
+}
+
+.kov-dip__story dt {
+  padding-top: 2px;
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--kov-red);
+}
+
+/* --kov-concrete rather than --kov-steel: steel is 4.41:1 on this ground,
+   under the 4.5:1 floor for body copy. */
+.kov-dip__story dd {
+  max-width: 54ch;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--kov-concrete);
+}
+
+.kov-dip__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--kov-border);
+}
+
+.kov-dip__tags {
   list-style: none;
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 4px 12px;
+  gap: 4px 14px;
   font-family: var(--font-mono), monospace;
   font-size: 9.5px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: rgba(245, 243, 239, 0.82);
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.9);
+  color: var(--kov-steel);
 }
 
-.kov-pcard__tags li + li::before {
+.kov-dip__tags li + li::before {
   content: "|";
-  margin-right: 12px;
-  color: rgba(245, 243, 239, 0.34);
+  margin-right: 14px;
+  color: rgba(231, 231, 229, 0.2);
 }
 
-/* One control for the whole card. */
-.kov-pcard__hit {
-  position: absolute;
-  inset: 0;
-  z-index: 3;
+.kov-dip__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  border-radius: 4px;
+  border: 1px solid rgba(231, 231, 229, 0.28);
+  background: none;
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--kov-bone);
+  white-space: nowrap;
   cursor: pointer;
-  border-radius: 18px;
+  transition: border-color 320ms ease, background-color 320ms ease;
 }
 
-.kov-pcard__hit:focus-visible {
-  outline: 2px solid var(--kov-red);
-  outline-offset: -3px;
+.kov-dip__cta:hover {
+  border-color: var(--kov-red);
+  background: rgba(227, 30, 36, 0.16);
+}
+
+.kov-dip__cta-arrow {
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.kov-dip__cta:hover .kov-dip__cta-arrow {
+  transform: translate(2px, -2px);
 }
 
 /* ── À venir ─────────────────────────────────────────────────────────── */
@@ -767,19 +839,15 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .kov-pcard,
-  .kov-pcard__img,
-  .kov-pcard__play,
-  .kov-pcard__pill,
-  .kov-pcard__pill-arrow {
+  .kov-dip__img,
+  .kov-dip__play,
+  .kov-dip__cta,
+  .kov-dip__cta-arrow {
     transition: none;
   }
 
-  .kov-pcard:hover {
-    transform: none;
-  }
-
-  .kov-pcard:hover .kov-pcard__img {
+  .kov-dip:hover .kov-dip__img,
+  .kov-dip:hover .kov-dip__play {
     transform: none;
   }
 

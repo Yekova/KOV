@@ -94,15 +94,16 @@ export default function ProjetsPage() {
 
       {/* ── The work ───────────────────────────────────────────────── */}
       <section className="kov-band kov-band--work" aria-label="Projets livrés">
-        <div className="kov-band__inner">
+        <div className="kov-band__bleed">
+          {/* Spreads alternate sides. The <li> is the band itself, so the
+              picture can escape to the viewport edge from inside it. */}
           <ol className="kov-work-list">
             {delivered.map((project, index) => (
               <Reveal
                 as="li"
                 key={project.id}
                 variant="fade"
-                delay={index * 0.08}
-                className="kov-pcard"
+                className={`kov-dip${index % 2 === 1 ? " kov-dip--flip" : ""}`}
                 id={`projet-${project.id}`}
               >
                 <ProjectCase project={project} />
@@ -110,12 +111,15 @@ export default function ProjetsPage() {
             ))}
           </ol>
 
-          {upcoming.length > 0 && (
+        </div>
+
+        {upcoming.length > 0 && (
+          <div className="kov-band__inner">
             <Reveal variant="fade">
               <ProjectsUpcoming />
             </Reveal>
-          )}
-        </div>
+          </div>
+        )}
       </section>
 
       {/* ── Invitation ─────────────────────────────────────────────── */}
