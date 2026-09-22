@@ -86,7 +86,28 @@ export function StudioRoomCarousel({ nodes, activeId, onSelectRoom, trailing }: 
                     opacity: node.available ? 1 : 0.55,
                   }}
                 >
-                  {node.available ? (
+                  {node.available && node.kind === "interactive-3d" ? (
+                    /* A room that is not a photograph does not get one.
+                       
+                       This tile was pointing at /studio/thumbnails/p04.webp,
+                       which has never existed and never will: the Brands
+                       Gallery is geometry, and the honest cover for it is
+                       its name set the way the mark is set. A render would
+                       be a picture of the room taken from somewhere the
+                       visitor cannot stand. */
+                    <span
+                      className="w-full h-full flex flex-col items-center justify-center gap-1.5 px-2 transition-transform duration-500 group-hover:scale-105"
+                      style={{ background: "linear-gradient(150deg, #101013 0%, #08080a 60%, #14090a 100%)" }}
+                    >
+                      <span
+                        className="font-display text-kov-bone text-center leading-[1.05]"
+                        style={{ fontSize: 15, letterSpacing: "-0.015em" }}
+                      >
+                        {node.name}
+                      </span>
+                      <span aria-hidden="true" className="block h-px w-6" style={{ background: "var(--kov-red)" }} />
+                    </span>
+                  ) : node.available ? (
                     <Image
                       src={`/studio/thumbnails/${node.id}.webp`}
                       alt=""
