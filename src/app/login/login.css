@@ -1,10 +1,14 @@
 /* The card, and what it does under the cursor.
  *
- * Two things happen on hover. The edge takes the accent and the shadow
- * deepens, which is the card saying it is the live object on the screen;
- * and a soft red light follows the pointer across the glass, which is the
- * room's own light reaching it. The second is a pseudo-element rather than
- * a real node so nothing inside the card has to move out of its way.
+ * The card is a GlassSurface — real refraction through an SVG
+ * feDisplacementMap, not a blur — so everything here is what sits on top of
+ * that: the edge, the shadow, and a soft red light that follows the
+ * pointer across the glass, which is the room's own light reaching it.
+ *
+ * ::after rather than ::before: GlassSurface's fallback path already owns
+ * ::before on this same element (under @supports not backdrop-filter), and
+ * two rules of equal specificity targeting one pseudo-element would be
+ * settled by whichever stylesheet Next happened to emit last.
  *
  * --mx/--my are written straight to the element's style on pointermove, in
  * LoginForm. State would mean a React render per mouse sample. */
@@ -12,20 +16,24 @@
 .kov-login-card {
   position: relative;
   isolation: isolate;
+  /* Declared here rather than inherited from the glass recipe: the SVG
+     path draws no border of its own, and the hover state below has to have
+     something to change. */
+  border: 1px solid var(--glass-border);
   transition: border-color 420ms ease, box-shadow 420ms ease, transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.kov-login-card::before {
+.kov-login-card::after {
   content: "";
   position: absolute;
   inset: 0;
-  z-index: -1;
+  z-index: 0; /* above the glass, below .glass-surface__content (z-index 1) */
   border-radius: inherit;
   /* Centred until the pointer says otherwise, so a keyboard visitor who
      never moves a mouse still gets a lit card rather than a dead one. */
   background: radial-gradient(
-    460px circle at var(--mx, 50%) var(--my, 30%),
-    rgba(227, 30, 36, 0.16),
+    520px circle at var(--mx, 50%) var(--my, 26%),
+    rgba(227, 30, 36, 0.17),
     rgba(227, 30, 36, 0) 62%
   );
   opacity: 0;
@@ -33,32 +41,19 @@
   pointer-events: none;
 }
 
+/* :focus-within alongside :hover is the whole point of pairing them —
+   someone filling this in from the keyboard gets the same lit card as
+   someone with a cursor on it. */
 .kov-login-card:hover,
 .kov-login-card:focus-within {
   border-color: rgba(227, 30, 36, 0.38) !important;
-  box-shadow: 0 40px 90px -50px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(227, 30, 36, 0.08);
+  box-shadow: 0 44px 96px -52px rgba(0, 0, 0, 0.92), 0 0 0 1px rgba(227, 30, 36, 0.09);
   transform: translateY(-3px);
 }
 
-.kov-login-card:hover::before,
-.kov-login-card:focus-within::before {
+.kov-login-card:hover::after,
+.kov-login-card:focus-within::after {
   opacity: 1;
-}
-
-/* Focus-within rather than hover alone is the whole point of pairing them:
-   someone filling this in with a keyboard gets the same lit card as
-   someone with a cursor on it. */
-
-@media (prefers-reduced-motion: reduce) {
-  .kov-login-card,
-  .kov-login-card::before {
-    transition: none;
-  }
-
-  .kov-login-card:hover,
-  .kov-login-card:focus-within {
-    transform: none;
-  }
 }
 
 /* The fields lift with the card. A border that only reacts on focus leaves
@@ -75,4 +70,35 @@
 .kov-login-field:focus {
   border-color: var(--kov-red) !important;
   background-color: rgba(255, 255, 255, 0.07);
+}
+
+/* The provider buttons. Round, quiet at rest, and the mark takes the
+   accent rather than the whole button filling in — three filled circles
+   under a red submit button would be four things competing. */
+.kov-login-social {
+  transition: border-color 280ms ease, color 280ms ease, background-color 280ms ease, transform 280ms ease;
+}
+
+.kov-login-social:hover:not(:disabled) {
+  border-color: rgba(227, 30, 36, 0.5) !important;
+  background-color: rgba(227, 30, 36, 0.1) !important;
+  transform: translateY(-2px);
+}
+
+.kov-login-social:disabled {
+  cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kov-login-card,
+  .kov-login-card::after,
+  .kov-login-social {
+    transition: none;
+  }
+
+  .kov-login-card:hover,
+  .kov-login-card:focus-within,
+  .kov-login-social:hover:not(:disabled) {
+    transform: none;
+  }
 }

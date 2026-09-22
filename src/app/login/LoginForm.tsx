@@ -1,9 +1,12 @@
 "use client";
 
 import { useActionState, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
+import { GlassSurface } from "@/components/ui/GlassSurface";
 import { login, type LoginState } from "./actions";
 import { LoginLoadingOverlay } from "./LoginLoadingOverlay";
+import { SocialSignIn } from "./SocialSignIn";
 
 const INITIAL_STATE: LoginState = { error: null };
 
@@ -15,7 +18,17 @@ const FIELD =
 
 const LABEL = "mb-2 block font-mono text-[9px] uppercase tracking-[0.24em] text-kov-steel";
 
-export function LoginForm({ next, justReset }: { next?: string; justReset?: boolean }) {
+export function LoginForm({
+  next,
+  justReset,
+  notice,
+}: {
+  next?: string;
+  justReset?: boolean;
+  /** A message from the OAuth callback, already resolved to prose by the
+   *  page — the component does not know about error codes. */
+  notice?: string | null;
+}) {
   const [state, formAction, isPending] = useActionState(login, INITIAL_STATE);
   const [showPassword, setShowPassword] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -35,42 +48,60 @@ export function LoginForm({ next, justReset }: { next?: string; justReset?: bool
     <>
       {isPending && <LoginLoadingOverlay />}
 
-      <div
+      {/* Real refraction, not a blur.
+          
+          GlassSurface runs an SVG feDisplacementMap over what is behind it,
+          with a per-channel offset — the same recipe as the nav pill. It is
+          worth its cost here and almost nowhere else: this card sits on a
+          photograph of a room with a red light in it, which is exactly the
+          kind of backdrop a displacement filter has something to bend.
+          
+          width/height "auto" so it measures the content rather than being
+          stretched by a percentage with nothing definite to resolve
+          against — the pill learned that the hard way. */}
+      <GlassSurface
         ref={cardRef}
-        onPointerMove={trackLight}
-        className="kov-login-card w-full max-w-[440px] p-8 sm:p-10"
-        style={{
-          borderRadius: 22,
-          border: "1px solid var(--glass-border)",
-          background: "rgba(12,12,14,0.62)",
-          backdropFilter: "blur(26px) saturate(140%)",
-          WebkitBackdropFilter: "blur(26px) saturate(140%)",
-          boxShadow: "var(--glass-shadow-full)",
-        }}
+        width="auto"
+        height="auto"
+        borderRadius={26}
+        blur={14}
+        displace={1.4}
+        distortionScale={-160}
+        redOffset={2}
+        greenOffset={9}
+        blueOffset={16}
+        backgroundOpacity={0.1}
+        saturation={1.2}
+        className="kov-login-card w-full max-w-[520px]"
       >
-        <div className="flex items-baseline justify-between gap-4">
-          <p className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.26em] text-kov-bone">
-            <span aria-hidden="true" className="inline-block h-px w-6 bg-kov-red" />
-            Connexion
-          </p>
-          <p className="font-mono text-[10px] uppercase tracking-[0.26em] text-kov-steel">Bienvenue</p>
-        </div>
+        <div onPointerMove={trackLight} className="w-full p-8 sm:p-11">
+        {/* Just the mark. The card sat under an eyebrow, a right-aligned
+            greeting and a heading, which is three registers of type before
+            the first field — on a page whose only job is one form. */}
+        <Image
+          src="/kov/brand/kov-wordmark-bone.png"
+          alt="KOV"
+          width={1116}
+          height={209}
+          className="mx-auto h-6 w-auto"
+          priority
+        />
 
-        <h2
-          className="mt-7 font-display text-kov-bone"
-          style={{ fontSize: "clamp(28px, 3.4vw, 40px)", lineHeight: 1.1, letterSpacing: "-0.02em" }}
-        >
-          Accédez
-          <br />à votre espace<span className="text-kov-red">.</span>
-        </h2>
+        <span aria-hidden="true" className="mx-auto mt-6 block h-px w-10 bg-kov-red" />
+
+        {notice && (
+          <p role="alert" className="mt-7 border-l-2 border-kov-red pl-3 text-sm text-kov-bone">
+            {notice}
+          </p>
+        )}
 
         {justReset && (
-          <p className="mt-6 border-l-2 border-kov-red pl-3 text-sm text-kov-bone">
+          <p className="mt-7 border-l-2 border-kov-red pl-3 text-sm text-kov-bone">
             Mot de passe mis à jour. Vous pouvez vous connecter.
           </p>
         )}
 
-        <form action={formAction} className="mt-8">
+        <form action={formAction} className="mt-9">
           {next && <input type="hidden" name="next" value={next} />}
 
           <div>
@@ -179,6 +210,8 @@ export function LoginForm({ next, justReset }: { next?: string; justReset?: bool
           </button>
         </form>
 
+        <SocialSignIn next={next} />
+
         <p className="mt-7 flex items-center justify-center gap-2 text-xs text-kov-steel">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
             <rect x="5" y="11" width="14" height="9" rx="1.5" />
@@ -186,7 +219,8 @@ export function LoginForm({ next, justReset }: { next?: string; justReset?: bool
           </svg>
           Connexion sécurisée et chiffrée
         </p>
-      </div>
+        </div>
+      </GlassSurface>
     </>
   );
 }

@@ -33,6 +33,15 @@ export default async function LoginPage(props: PageProps<"/login">) {
   const nextParam = searchParams.next;
   const next = typeof nextParam === "string" ? nextParam : undefined;
   const justReset = searchParams.reset === "success";
+  // What /api/auth/callback redirects back with when a provider sign-in
+  // does not end in a session.
+  const errorParam = typeof searchParams.error === "string" ? searchParams.error : null;
+  const notice =
+    errorParam === "not-invited"
+      ? "Cet espace est accessible sur invitation. Demandez un accès à votre interlocuteur KOV."
+      : errorParam === "oauth"
+        ? "La connexion avec ce service n'a pas abouti."
+        : null;
 
   return (
     <main id="kov-main" tabIndex={-1} className="relative min-h-screen" style={{ background: "var(--kov-black)" }}>
@@ -87,7 +96,7 @@ export default async function LoginPage(props: PageProps<"/login">) {
         </div>
 
         <div className="flex w-full justify-center lg:w-auto lg:justify-end">
-          <LoginForm next={next} justReset={justReset} />
+          <LoginForm next={next} justReset={justReset} notice={notice} />
         </div>
       </div>
     </main>
