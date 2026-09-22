@@ -6,7 +6,18 @@ import { BrowserChrome } from "@/components/ui/BrowserChrome";
 import { PROJECTS, type Project } from "@/data/projects";
 import { ProjectSheet, type SheetOrigin } from "./sheet/ProjectSheet";
 
-type View = "grid" | "list";
+/** How the same projects are laid out.
+ *
+ *  "grid" is two equal columns — the default, and the one that answers
+ *  "what is here" fastest. "editorial" composes rows of different widths
+ *  for a reading pass rather than a scanning one. "list" is the index. */
+type View = "grid" | "editorial" | "list";
+
+const VIEWS: readonly { id: View; label: string }[] = [
+  { id: "grid", label: "Grille" },
+  { id: "editorial", label: "Éditorial" },
+  { id: "list", label: "Liste" },
+];
 
 /** What the address pill shows. Derived from the project's own href, never
  *  written by hand: a plausible-looking domain in a browser frame is a
@@ -113,32 +124,27 @@ export function ProjectsView() {
           )}
         </p>
 
-        {/* aria-pressed, not a pair of links: this changes how the same
+        {/* aria-pressed, not a set of links: this changes how the same
             content is displayed, it does not navigate anywhere. */}
-        <div className="kov-pw__views" role="group" aria-label="Affichage des projets">
-          <button
-            type="button"
-            className={`kov-pw__view${view === "grid" ? " is-on" : ""}`}
-            aria-pressed={view === "grid"}
-            onClick={() => setView("grid")}
-          >
-            Vignettes
-          </button>
-          <button
-            type="button"
-            className={`kov-pw__view${view === "list" ? " is-on" : ""}`}
-            aria-pressed={view === "list"}
-            onClick={() => setView("list")}
-          >
-            Liste
-          </button>
+        <div className="kov-pw__views" role="group" aria-label="Disposition des projets">
+          {VIEWS.map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              className={`kov-pw__view${view === option.id ? " is-on" : ""}`}
+              aria-pressed={view === option.id}
+              onClick={() => setView(option.id)}
+            >
+              {option.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {view === "grid" ? (
-        <GridView projects={listed} onOpen={open} />
-      ) : (
+      {view === "list" ? (
         <ListView projects={listed} onOpen={open} />
+      ) : (
+        <GridView projects={listed} onOpen={open} composed={view === "editorial"} />
       )}
 
       {openProject && <ProjectSheet project={openProject} origin={origin} onClose={() => setOpenId(null)} />}
@@ -196,8 +202,19 @@ const SIZES: Record<number, string> = {
 
 // ── Grid ─────────────────────────────────────────────────────────────────
 
-function GridView({ projects, onOpen }: { projects: Project[]; onOpen: (id: string, event: React.MouseEvent<HTMLElement>) => void }) {
-  const spans = spansFor(projects);
+function GridView({
+  projects,
+  onOpen,
+  composed,
+}: {
+  projects: Project[];
+  onOpen: (id: string, event: React.MouseEvent<HTMLElement>) => void;
+  /** False for the default grid: every card at six twelfths, which is two
+   *  equal columns — the layout this page had before the rhythm existed,
+   *  now one option among three rather than the only one. */
+  composed: boolean;
+}) {
+  const spans = composed ? spansFor(projects) : projects.map(() => 6);
 
   return (
     <ul className="kov-pw__grid">
@@ -211,7 +228,9 @@ function GridView({ projects, onOpen }: { projects: Project[]; onOpen: (id: stri
           <li
             key={project.id}
             id={`projet-${project.id}`}
-            className={`kov-card${span === 12 ? " kov-card--feature" : ""}${isReserved(project) ? " kov-card--reserved" : ""}`}
+            className={`kov-card${composed && span === 12 ? " kov-card--feature" : ""}${
+              composed && isReserved(project) ? " kov-card--reserved" : ""
+            }`}
             style={{ ["--span" as string]: span, ["--span-md" as string]: spanMd }}
             data-card
           >
@@ -325,6 +344,7 @@ function ListView({ projects, onOpen }: { projects: Project[]; onOpen: (id: stri
   return (
     <div className="kov-list">
       <div aria-hidden="true" className="kov-list__head">
+        <span />
         <span>#</span>
         <span>Projet</span>
         <span>Domaine</span>
@@ -335,6 +355,24 @@ function ListView({ projects, onOpen }: { projects: Project[]; onOpen: (id: stri
       <ol className="kov-list__body">
         {projects.map((project) => (
           <li key={project.id} className="kov-list__row">
+            {/* The list had no picture in it at all, which made it an
+                index of names rather than a second way of looking at the
+                work. Same treatment as the cards: grey until the row is
+                under the cursor. */}
+            <span className="kov-list__thumb">
+              {project.image ? (
+                <Image
+                  src={project.screen ?? project.image}
+                  alt=""
+                  aria-hidden="true"
+                  fill
+                  sizes="132px"
+                  className="kov-list__thumbImg"
+                />
+              ) : (
+                <span aria-hidden="true" className="kov-list__thumbEmpty" />
+              )}
+            </span>
             <span className="kov-list__num">{project.id}</span>
             <span className="kov-list__name">{project.name}</span>
             <span className="kov-list__field">

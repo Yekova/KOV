@@ -473,7 +473,7 @@
   .kov-list__head,
   .kov-list__row {
     display: grid;
-    grid-template-columns: 46px minmax(0, 1.2fr) minmax(0, 1.3fr) minmax(0, 1.9fr) 40px;
+    grid-template-columns: 132px 46px minmax(0, 1.2fr) minmax(0, 1.2fr) minmax(0, 1.7fr) 40px;
     gap: 24px;
     align-items: center;
   }
@@ -496,10 +496,54 @@
 
 .kov-list__row {
   display: grid;
-  grid-template-columns: 46px 1fr;
-  gap: 4px 16px;
-  padding: 20px 0;
+  /* The picture holds the left column for the whole row on a phone; the
+     name, the field and the rest stack beside it. */
+  grid-template-columns: 104px 1fr;
+  gap: 3px 16px;
+  padding: 18px 0;
   border-bottom: 1px solid var(--pw-line);
+  align-items: center;
+}
+
+.kov-list__thumb {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid var(--pw-line);
+  border-radius: 6px;
+  background: rgba(231, 231, 229, 0.03);
+}
+
+@media (max-width: 899px) {
+  .kov-list__thumb {
+    grid-row: 1 / -1;
+  }
+}
+
+.kov-list__thumbImg {
+  object-fit: cover;
+  /* Grey at rest, colour under the cursor — the same rule the cards
+     follow, so the two views read as the same work seen twice. */
+  filter: grayscale(1);
+  transition: filter 420ms ease, transform 620ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.kov-list__row:hover .kov-list__thumbImg {
+  filter: grayscale(0);
+  transform: scale(1.04);
+}
+
+/* Nothing photographed yet. A dash rather than a caption: at this size a
+   line of type would be unreadable, and an empty frame already says it. */
+.kov-list__thumbEmpty {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 18px;
+  height: 1px;
+  background: rgba(231, 231, 229, 0.22);
+  transform: translate(-50%, -50%);
 }
 
 @media (min-width: 900px) {
