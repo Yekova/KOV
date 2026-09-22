@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { LoginForm } from "./LoginForm";
-import { MouseFrameBackdrop } from "@/components/ui/MouseFrameBackdrop";
-import { GlassCard } from "@/components/ui/GlassCard";
-import Lightning from "@/components/login/Lightning";
 
 export const metadata: Metadata = {
   title: "Connexion — KOV",
@@ -20,9 +18,15 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 };
 
-// Must match the number of frames actually extracted into public/kov/character/login-frames/.
-const LOGIN_FRAME_COUNT = 60;
-
+// The way in.
+//
+// One photograph, one statement, one card. What was here before was a
+// sixty-frame image sequence that scrubbed with the cursor and a WebGL
+// lightning bolt composited over it in screen blend — two moving surfaces
+// and a megabyte of frames, on the one page in the site where the visitor
+// has a single job and already knows what it is.
+//
+// The room does the atmosphere now, and it does it in a 129 KB still.
 export default async function LoginPage(props: PageProps<"/login">) {
   const searchParams = await props.searchParams;
   const nextParam = searchParams.next;
@@ -30,66 +34,73 @@ export default async function LoginPage(props: PageProps<"/login">) {
   const justReset = searchParams.reset === "success";
 
   return (
-    <main id="kov-main" tabIndex={-1} className="min-h-screen relative" style={{ background: "var(--kov-black)" }}>
-      <MouseFrameBackdrop
-        basePath="/kov/character/login-frames"
-        frameCount={LOGIN_FRAME_COUNT}
-        poster={`/kov/character/login-frames/frame-${String(Math.floor(LOGIN_FRAME_COUNT / 2)).padStart(3, "0")}.jpg`}
+    <main id="kov-main" tabIndex={-1} className="relative min-h-screen" style={{ background: "var(--kov-black)" }}>
+      {/* priority: this is the page's only image and it is the page. */}
+      <Image
+        src="/kov/login/hall.webp"
+        alt=""
+        aria-hidden="true"
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover"
+        style={{ objectPosition: "center 60%" }}
       />
 
-      {/* Ambient WebGL bolt, layered above the (opaque, full-bleed) character
-          backdrop with a screen blend so it adds red light over the image
-          rather than hiding it — `--z-atmosphere` sits exactly between
-          `--z-canvas` (the backdrop above) and `--z-content` (the form). */}
+      {/* Two scrims rather than one flat veil: a vertical one so the copy
+          at the top and the corner mark at the bottom both sit on
+          something, and a horizontal one that deepens toward the right
+          where the card lands. The photograph keeps its own light in the
+          middle, which is the whole reason to use it. */}
       <div
         aria-hidden="true"
         className="absolute inset-0"
-        style={{ zIndex: "var(--z-atmosphere)", pointerEvents: "none", mixBlendMode: "screen" }}
-      >
-        <Lightning hue={360} xOffset={0.15} speed={0.7} intensity={0.6} size={1.4} />
-      </div>
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(8,8,10,0.72) 0%, rgba(8,8,10,0.28) 34%, rgba(8,8,10,0.30) 62%, rgba(8,8,10,0.78) 100%), linear-gradient(90deg, rgba(8,8,10,0.66) 0%, rgba(8,8,10,0.12) 42%, rgba(8,8,10,0.55) 100%)",
+        }}
+      />
 
-      <div className="relative min-h-screen max-w-[1800px] mx-auto flex flex-col md:flex-row items-center justify-between gap-16 px-6 md:px-16 py-24">
-        <div className="hidden md:block max-w-xs">
-          <p className="text-kov-red text-xs uppercase tracking-widest mb-6">Espace sécurisé</p>
+      <div className="relative mx-auto flex min-h-screen max-w-[1600px] flex-col justify-center gap-14 px-6 py-32 md:px-12 lg:flex-row lg:items-center lg:justify-between lg:gap-20 lg:py-36">
+        <div className="max-w-xl">
+          <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-kov-red">KOV Studio</p>
+
+          {/* The page's heading is the statement, not the card: the
+              biggest thing on the screen and the first heading a screen
+              reader reaches should be the same thing. */}
           <h1
-            className="font-display text-kov-bone uppercase"
-            style={{ fontSize: "var(--heading-lg)", lineHeight: "var(--line-height-display)" }}
+            className="mt-7 font-display text-kov-bone"
+            style={{ fontSize: "clamp(34px, 5vw, 66px)", lineHeight: 1.06, letterSpacing: "-0.025em" }}
           >
-            VOTRE PROJET,
+            Entrez dans
             <br />
-            UN ESPACE
-            <br />
-            SÉCURISÉ<span className="text-kov-red">.</span>
+            {/* The second line steps back so the first reads as the
+                instruction and the second as the place. */}
+            <span style={{ color: "var(--kov-concrete)" }}>un autre espace.</span>
           </h1>
-          <p className="text-kov-steel mt-8 text-sm leading-relaxed">
-            Connexion réservée aux clients et à l&apos;équipe KOV — suivi de projet et échanges centralisés.
+
+          <span aria-hidden="true" className="mt-8 block h-px w-14 bg-kov-red" />
+
+          <p className="mt-8 max-w-sm text-sm leading-relaxed text-kov-steel">
+            Un lieu dédié à vos projets, vos documents et vos échanges avec l&apos;équipe. Connectez-vous pour
+            reprendre où vous en étiez.
           </p>
 
-          <GlassCard className="mt-12 flex items-start gap-4 p-4">
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className="text-kov-red shrink-0 mt-0.5"
-            >
-              <rect x="5" y="11" width="14" height="9" rx="1.5" />
-              <path d="M8 11V7a4 4 0 0 1 8 0v4" />
-            </svg>
-            <div>
-              <p className="text-kov-bone text-xs uppercase tracking-widest">Vos données, notre engagement</p>
-              <p className="text-kov-steel text-xs mt-1.5 leading-relaxed">
-                Hébergement sécurisé dans l&apos;UE (Irlande). Connexion chiffrée de bout en bout.
-              </p>
-            </div>
-          </GlassCard>
+          {/* The corner mark. Three verbs and a number, which is the
+              site's own language — not a caption, and nothing it claims. */}
+          <div className="mt-16 hidden lg:block">
+            <p className="font-mono text-[11px] tabular-nums text-kov-bone">01</p>
+            <p className="mt-3 font-mono text-[9px] uppercase leading-[1.9] tracking-[0.28em] text-kov-steel">
+              Explorer
+              <br />
+              Imaginer
+              <br />
+              Construire
+            </p>
+          </div>
         </div>
 
-        <div className="w-full max-w-md">
-          <p className="font-display text-kov-bone text-lg tracking-widest mb-8 md:hidden text-center">KOV</p>
+        <div className="flex w-full justify-center lg:w-auto lg:justify-end">
           <LoginForm next={next} justReset={justReset} />
         </div>
       </div>
