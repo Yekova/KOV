@@ -12,8 +12,12 @@ export const metadata: Metadata = {
 // leading zero. Written out from the national form once, here, rather
 // than transformed at render — a phone number is not the place for
 // clever string handling.
+//
+// It lives in the href and nowhere else. Nothing on the page prints it,
+// which keeps it off the page for an address harvester reading text —
+// though the link itself still carries it, so this is discretion rather
+// than protection.
 const WHATSAPP_NUMBER = "33614533556";
-const WHATSAPP_DISPLAY = "06 14 53 35 56";
 
 // WhatsApp's own mark, drawn rather than fetched: the CSP allows no
 // external images, and an icon font for one glyph is absurd. In KOV red
@@ -91,13 +95,10 @@ export default function ContactPage() {
               className="inline-flex items-center gap-3 rounded-full border border-kov-red/45 px-4 py-2.5 text-kov-red transition-colors duration-300 hover:border-kov-red hover:bg-kov-red/10"
             >
               <WhatsAppMark />
-              {/* The mark alone would be an unlabelled link. Naming the
-                  service and showing the number means the destination is
-                  legible before the click, to a screen reader and to
+              {/* The mark alone would be an unlabelled link. The word is
+                  what names the destination, to a screen reader and to
                   everyone else. */}
-              <span className="font-mono text-[11px] tracking-[0.18em] uppercase text-kov-bone">
-                WhatsApp <span aria-hidden="true" className="opacity-40">·</span> {WHATSAPP_DISPLAY}
-              </span>
+              <span className="font-mono text-[11px] tracking-[0.18em] uppercase text-kov-bone">WhatsApp</span>
             </a>
           </div>
         </div>
