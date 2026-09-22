@@ -15,7 +15,11 @@ export function ExpertiseCompilationCard({ step }: { step: ExpertiseStep }) {
   const strip = step.shape === "strip";
 
   return (
-    <Link href="/#work-gallery" className={`kov-xp-card${strip ? " kov-xp-card--strip" : ""}`}>
+    // Each card goes to its own expertise, not to one anchor shared by all
+    // six. The step already carried the slug; the link was simply not using
+    // it — so the strongest six internal links on the site pointed at the
+    // same place, and the pages they should have pointed at had none.
+    <Link href={`/expertise/${step.slug}`} className={`kov-xp-card${strip ? " kov-xp-card--strip" : ""}`}>
       <span aria-hidden="true" className="kov-xp-card__num">
         {step.number}
       </span>

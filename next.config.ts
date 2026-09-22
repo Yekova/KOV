@@ -29,13 +29,12 @@ const nextConfig: NextConfig = {
       { source: "/cgv", destination: "/legal/cgv", permanent: true },
       { source: "/terms", destination: "/legal/conditions-utilisation", permanent: true },
       { source: "/privacy", destination: "/legal/confidentialite", permanent: true },
-      // /expertise and its six service pages were removed — the homepage now
-      // carries that content across #expertise, #process and #spotlight.
-      // Both were indexed and linked from the sitemap, so they redirect
-      // rather than 404. The fragment is for humans with a bookmark; Google
-      // only sees the redirect to "/", which is what we want.
-      { source: "/expertise", destination: "/#expertise", permanent: true },
-      { source: "/expertise/:slug", destination: "/#expertise", permanent: true },
+      // /expertise and its six pages redirected to an anchor on the homepage
+      // for a while. That is defensible for a small site and wrong for
+      // search: an anchor cannot rank, cannot carry a title, and cannot
+      // answer a question — and commercial intent is a question. The pages
+      // are back, so the redirects are gone; anything still linking to the
+      // old URLs now lands on the real page rather than being bounced.
     ];
   },
   experimental: {

@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { PILLARS } from "@/data/expertisePillars";
 
 const SITE_URL = "https://kov-agency.site";
 
@@ -14,6 +15,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: SITE_URL, changeFrequency: "weekly", priority: 1 },
     { url: `${SITE_URL}/projets`, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${SITE_URL}/expertise`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${SITE_URL}/journal`, changeFrequency: "weekly", priority: 0.7 },
     { url: `${SITE_URL}/studio`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${SITE_URL}/contact`, changeFrequency: "monthly", priority: 0.6 },
@@ -42,6 +44,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Individual projects are absent too, and that is not an oversight: there is
   // no /projets/<slug> route. A project is a card and a modal on one page, so
   // /projets is the only URL there is to list.
+  // The six service pages. Generated from the same list the pages are, so a
+  // seventh expertise appears in the sitemap by existing rather than by
+  // someone remembering this file.
+  const expertiseRoutes: MetadataRoute.Sitemap = PILLARS.map((pillar) => ({
+    url: `${SITE_URL}/expertise/${pillar.slug}`,
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
+  }));
+
   const { data: posts, error } = await supabaseAdmin
     .from("posts")
     .select("slug, updated_at")
@@ -67,5 +78,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.5,
   }));
 
-  return [...staticRoutes, ...legalRoutes, ...postRoutes];
+  return [...staticRoutes, ...expertiseRoutes, ...legalRoutes, ...postRoutes];
 }

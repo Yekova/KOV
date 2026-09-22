@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PILLARS } from "@/data/expertisePillars";
 import Image from "next/image";
 import { Button } from "@/components/ui/Button";
 
@@ -9,17 +10,21 @@ const NAV_LINKS = [
   { href: "/contact", label: "Contact" },
 ];
 
-// The homepage sections that carry what /expertise used to. Real anchors,
-// three distinct destinations — the previous column listed the six pillars,
-// which after that page's removal would all have resolved to one.
+// The six expertises have their own pages again, so the column points at
+// them rather than at one anchor standing in for all six.
 //
-// "Ce que vous obtenez" pointed at #spotlight, which no longer exists. It is
-// not repointed at a neighbour: a footer link whose label no longer matches
-// where it lands is worse than one fewer link.
+// It matters beyond tidiness: a page nothing links to is a page Google
+// discovers late and weighs lightly, and these six were reachable only
+// through the sitemap. Built from PILLARS so a seventh appears here by
+// existing rather than by someone remembering this file.
+//
+// The nav pill deliberately does not carry Expertise — that was a decision,
+// and this is not a way around it. A footer is where a site lists what it
+// has; a nav is where it puts what people came for.
 const APPROACH_LINKS = [
-  { href: "/#expertise", label: "Nos expertises" },
+  { href: "/expertise", label: "Toutes nos expertises" },
+  ...PILLARS.map((pillar) => ({ href: `/expertise/${pillar.slug}`, label: pillar.title })),
   { href: "/#process", label: "Notre processus" },
-  { href: "/projets", label: "Nos projets" },
 ];
 
 const RESOURCE_LINKS = [
