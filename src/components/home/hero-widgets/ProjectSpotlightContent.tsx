@@ -1,14 +1,17 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { PROJECTS } from "@/data/projects";
+import type { Project } from "@/data/projects";
 
-// The one real named client project (projects.ts). Real device mockup of
-// the actual Kanti site (supplied directly — public/work/kanti-mockup.webp),
-// not a stand-in photo.
-const KANTI = PROJECTS[0];
+// The featured project, given rather than found.
+//
+// It used to be `PROJECTS[0]`, read at module load, with the picture written
+// in by hand underneath — so reordering the list changed the name and the
+// category while leaving someone else's screenshot above them. Both now come
+// from the same object, and which object it is, is the caller's business.
+export function ProjectSpotlightContent({ project, total }: { project: Project; total: number }) {
+  if (!project.image) return null;
 
-export function ProjectSpotlightContent() {
   return (
     <Link href="/#work-gallery" className="group relative block h-full w-full overflow-hidden" style={{ borderRadius: 20 }}>
       {/* No text over the mockup at rest — it stays fully visible so the
@@ -16,8 +19,8 @@ export function ProjectSpotlightContent() {
           only appears on hover, over a graying overlay so it's legible
           against whatever's underneath it. */}
       <Image
-        src="/work/kanti-mockup.webp"
-        alt="Aperçu du site Kanti"
+        src={project.image}
+        alt={`Aperçu du site ${project.name}`}
         fill
         sizes="(min-width: 1024px) 30vw, 60vw"
         className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
@@ -41,17 +44,19 @@ export function ProjectSpotlightContent() {
             <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-kov-red" />
             Projet featured
           </p>
-          {/* PROJECTS has six entries, not seven, and this widget shows the
-              first of them. The counter said 01 / 07. */}
-          <span className="text-kov-steel text-[10px] tabular-nums">01 / {String(PROJECTS.length).padStart(2, "0")}</span>
+          {/* Both halves of the counter are real now. The left one was the
+              literal string "01" even after the list was reordered. */}
+          <span className="text-kov-steel text-[10px] tabular-nums">
+            {project.id} / {String(total).padStart(2, "0")}
+          </span>
         </div>
 
         <div>
-          <p className="text-kov-steel text-[10px] uppercase tracking-widest">{KANTI.category}</p>
+          <p className="text-kov-steel text-[10px] uppercase tracking-widest">{project.category}</p>
           <h3 className="font-display text-kov-bone uppercase mt-1" style={{ fontSize: "clamp(22px, 2.4vw, 32px)" }}>
-            {KANTI.name}
+            {project.name}
           </h3>
-          <p className="text-kov-steel text-[11px] uppercase tracking-widest mt-1">{KANTI.tags.join(" / ")}</p>
+          <p className="text-kov-steel text-[11px] uppercase tracking-widest mt-1">{project.tags.join(" / ")}</p>
 
           <span className="mt-4 inline-flex items-center gap-2 text-kov-bone text-[11px] uppercase tracking-widest">
             <span

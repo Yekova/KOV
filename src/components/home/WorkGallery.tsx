@@ -1,11 +1,19 @@
 import { ProjectsEditorial } from "@/components/home/projects/ProjectsEditorial";
 import { ProjectsGrid } from "@/components/home/projects/ProjectsGrid";
 import { ProjectsProof } from "@/components/home/projects/ProjectsProof";
+import { PROJECTS, type Project } from "@/data/projects";
 
 // The projects section: an editorial column beside an aligned grid of six
 // cards. The background stays the page's own; the only thing added here is
 // a very faint rule grid, which the cards now sit squarely on.
-export function WorkGallery() {
+// The one place on the homepage that knows where project data comes from.
+// Everything below it receives a list — which is what lets two of the three
+// children stay Client Components.
+export function WorkGallery({ projects = PROJECTS }: { projects?: Project[] }) {
+  // The homepage grid is three columns by two and wants six; /projets lists
+  // everything. That is the whole of what `showOnHome` decides.
+  const shown = projects.filter((project) => project.showOnHome);
+
   return (
     <section id="work-gallery" className="relative px-6 py-32 max-w-[1600px] mx-auto scroll-mt-24">
       <div
@@ -22,14 +30,14 @@ export function WorkGallery() {
 
       <div className="relative grid grid-cols-1 lg:grid-cols-[minmax(0,34fr)_minmax(0,66fr)] gap-14 lg:gap-16">
         <ProjectsEditorial />
-        <ProjectsGrid />
+        <ProjectsGrid projects={shown} />
       </div>
 
       {/* The grid shows what exists; this says what it took. Full width under
           both columns, and it renders only the projects that actually have a
           story — today two of six. */}
       <div className="relative">
-        <ProjectsProof />
+        <ProjectsProof projects={shown} />
       </div>
     </section>
   );

@@ -4,7 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { BrowserChrome } from "@/components/ui/BrowserChrome";
-import { PROJECTS, isExternalHref, type Project } from "@/data/projects";
+import { isExternalHref, type Project } from "@/data/projects";
 import { ProjectSheet, type SheetOrigin } from "./sheet/ProjectSheet";
 
 /** How the same projects are laid out.
@@ -71,14 +71,14 @@ const openable = (project: Project) => project.status === "live";
 //
 // One modal for the whole page rather than one per project: two dialogs in
 // the DOM to show one at a time is two of everything for no reason.
-export function ProjectsView() {
+export function ProjectsView({ projects }: { projects: Project[] }) {
   const [view, setView] = useState<View>("grid");
-  const [openId, setOpenId] = useState<string | null>(null);
+  const [openSlug, setOpenSlug] = useState<string | null>(null);
   // Where the card that was clicked sits on screen, so the sheet can grow
   // out of it rather than appear over it.
   const [origin, setOrigin] = useState<SheetOrigin | null>(null);
 
-  const open = useCallback((id: string, event: React.MouseEvent<HTMLElement>) => {
+  const open = useCallback((slug: string, event: React.MouseEvent<HTMLElement>) => {
     const card = event.currentTarget.closest<HTMLElement>("[data-card]");
     if (card) {
       const rect = card.getBoundingClientRect();
@@ -86,10 +86,10 @@ export function ProjectsView() {
     } else {
       setOrigin(null);
     }
-    setOpenId(id);
+    setOpenSlug(slug);
   }, []);
 
-  const delivered = useMemo(() => PROJECTS.filter((p) => p.status === "live"), []);
+  const delivered = useMemo(() => projects.filter((p) => p.status === "live"), [projects]);
 
   // What the page lists: the delivered work, then what is coming.
   //
@@ -99,15 +99,15 @@ export function ProjectsView() {
   // invitation entry belongs to the homepage network and never appears
   // here — this page is the work, and the ask is already the footer.
   const listed = useMemo(() => {
-    const coming = PROJECTS.filter((p) => p.status === "upcoming");
+    const coming = projects.filter((p) => p.status === "upcoming");
     const named = coming.filter((p) => p.summary);
     const reserved = coming.find((p) => !p.summary);
     return [...delivered, ...named, ...(reserved ? [reserved] : [])];
-  }, [delivered]);
+  }, [projects, delivered]);
 
   const upcoming = listed.length - delivered.length;
 
-  const openProject = openId ? (PROJECTS.find((p) => p.id === openId) ?? null) : null;
+  const openProject = openSlug ? (projects.find((p) => p.slug === openSlug) ?? null) : null;
 
   return (
     <>
@@ -148,7 +148,7 @@ export function ProjectsView() {
         <GridView projects={listed} onOpen={open} composed={view === "editorial"} />
       )}
 
-      {openProject && <ProjectSheet project={openProject} origin={origin} onClose={() => setOpenId(null)} />}
+      {openProject && <ProjectSheet project={openProject} origin={origin} onClose={() => setOpenSlug(null)} />}
     </>
   );
 }
@@ -209,7 +209,7 @@ function GridView({
   composed,
 }: {
   projects: Project[];
-  onOpen: (id: string, event: React.MouseEvent<HTMLElement>) => void;
+  onOpen: (slug: string, event: React.MouseEvent<HTMLElement>) => void;
   /** False for the default grid: every card at six twelfths, which is two
    *  equal columns — the layout this page had before the rhythm existed,
    *  now one option among three rather than the only one. */
@@ -227,8 +227,8 @@ function GridView({
 
           return (
           <li
-            key={project.id}
-            id={`projet-${project.id}`}
+            key={project.slug}
+            id={`projet-${project.slug}`}
             className={`kov-card${composed && span === 12 ? " kov-card--feature" : ""}${
               composed && isReserved(project) ? " kov-card--reserved" : ""
             }`}
@@ -264,7 +264,7 @@ function GridView({
                     aria-hidden="true"
                     tabIndex={-1}
                     className="kov-card__shotHit"
-                    onClick={(event) => onOpen(project.id, event)}
+                    onClick={(event) => onOpen(project.slug, event)}
                   >
                     <span className="kov-card__play">{project.video ? "▶" : "↗"}</span>
                   </button>
@@ -347,7 +347,7 @@ function GridView({
               )}
 
               {openable(project) && (
-                <button type="button" className="kov-card__link" onClick={(event) => onOpen(project.id, event)}>
+                <button type="button" className="kov-card__link" onClick={(event) => onOpen(project.slug, event)}>
                   Voir l&apos;étude
                   <span aria-hidden="true">→</span>
                 </button>
@@ -362,7 +362,7 @@ function GridView({
 
 // ── List ─────────────────────────────────────────────────────────────────
 
-function ListView({ projects, onOpen }: { projects: Project[]; onOpen: (id: string, event: React.MouseEvent<HTMLElement>) => void }) {
+function ListView({ projects, onOpen }: { projects: Project[]; onOpen: (slug: string, event: React.MouseEvent<HTMLElement>) => void }) {
   return (
     <div className="kov-list">
       <div aria-hidden="true" className="kov-list__head">
@@ -376,7 +376,7 @@ function ListView({ projects, onOpen }: { projects: Project[]; onOpen: (id: stri
 
       <ol className="kov-list__body">
         {projects.map((project) => (
-          <li key={project.id} className="kov-list__row">
+          <li key={project.slug} className="kov-list__row">
             {/* The list had no picture in it at all, which made it an
                 index of names rather than a second way of looking at the
                 work. Same treatment as the cards: grey until the row is
@@ -404,7 +404,7 @@ function ListView({ projects, onOpen }: { projects: Project[]; onOpen: (id: stri
             <span className="kov-list__tags">{project.status === "live" ? services(project).join(" — ") : ""}</span>
             <span className="kov-list__action">
               {openable(project) && (
-                <button type="button" onClick={(event) => onOpen(project.id, event)}>
+                <button type="button" onClick={(event) => onOpen(project.slug, event)}>
                   <span className="sr-only">{`Ouvrir ${project.name}`}</span>
                   <span aria-hidden="true">→</span>
                 </button>

@@ -1,6 +1,6 @@
 "use client";
 
-import { PROJECTS } from "@/data/projects";
+import type { Project } from "@/data/projects";
 import { ProjectCard } from "@/components/home/projects/ProjectCard";
 
 // Six cards, aligned. Three columns by two rows on desktop, two on a
@@ -12,12 +12,12 @@ import { ProjectCard } from "@/components/home/projects/ProjectCard";
 // Git holds them if the idea comes back.
 const CARD_HEIGHT = 286;
 
-export function ProjectsGrid() {
+export function ProjectsGrid({ projects }: { projects: Project[] }) {
   return (
     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
-      {PROJECTS.map((project) => (
+      {projects.map((project) => (
         <div
-          key={project.id}
+          key={project.slug}
           className="h-[264px] lg:h-[var(--card-h)]"
           style={{ ["--card-h" as string]: `${CARD_HEIGHT}px` }}
         >

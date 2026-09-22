@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/Button";
 import { KovCTA } from "@/components/ui/KovCTA";
 import { LiquidReveal } from "@/components/projects/LiquidReveal";
 import { ProjectsView } from "@/components/projects/ProjectsView";
+import { PROJECTS } from "@/data/projects";
 import "@/components/projects/ProjectsPage.css";
 
 const SITE_URL = "https://kov-agency.site";
@@ -70,7 +71,7 @@ export default function ProjetsPage() {
         </p>
       </header>
 
-      <ProjectsView />
+      <ProjectsView projects={PROJECTS} />
 
       <footer className="kov-pw__close">
         <h2 className="kov-pw__closeTitle">

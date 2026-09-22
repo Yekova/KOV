@@ -1,9 +1,9 @@
 import { KovCard } from "@/components/ui/KovCard";
 import { TagPill } from "@/components/ui/Chip";
-import { PROJECTS } from "@/data/projects";
+import type { Project } from "@/data/projects";
 
 interface KovProjectCardProps {
-  project: (typeof PROJECTS)[number];
+  project: Project;
   index: number;
   total: number;
 }

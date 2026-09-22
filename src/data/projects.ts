@@ -38,7 +38,13 @@ export const NARRATIVE_ROWS = [
 ] as const satisfies readonly { label: string; key: keyof ProjectNarrative }[];
 
 export interface Project {
+  /** The ordinal a visitor reads on the face of the card ("01"). Not a key:
+   *  see `slug`, which took that job over when the data moved into a table
+   *  and the real key became a uuid nobody should ever see. */
   id: string;
+  /** URL-safe identifier. The React key, the DOM anchor `#projet-<slug>`,
+   *  and what the open sheet is looked up by. */
+  slug: string;
   name: string;
   status: ProjectStatus;
   category: string;
@@ -127,6 +133,10 @@ export interface Project {
    * claiming a result it has not got. This says what the thing is and
    * stops there. Null renders nothing. */
   summary: string | null;
+  /** Whether this appears in the homepage grid. /projets always lists
+   *  everything; the homepage is three columns by two and wants six. */
+  showOnHome: boolean;
+  featured: boolean;
   /** A longer description, for the modal only. The three narrative lines are
    * the summary the page itself carries; this is the room to say more once
    * there is more to say. Null renders nothing. */
@@ -146,6 +156,7 @@ export const isExternalHref = (href: string) => /^https?:\/\//.test(href);
 export const PROJECTS: Project[] = [
   {
     id: "01",
+    slug: "kanti",
     name: "Kanti",
     status: "live",
     category: "Gestion de patrimoine",
@@ -175,9 +186,12 @@ export const PROJECTS: Project[] = [
     video: null,
     summary: null,
     detail: null,
+    showOnHome: true,
+    featured: false,
   },
   {
     id: "02",
+    slug: "kov-virtual-studio",
     name: "KOV Virtual Studio",
     status: "live",
     category: "Plateforme immersive",
@@ -221,6 +235,8 @@ export const PROJECTS: Project[] = [
     video: null,
     summary: null,
     detail: null,
+    showOnHome: true,
+    featured: false,
   },
   {
     // Named, but not delivered. It carries a `summary` rather than a
@@ -228,6 +244,7 @@ export const PROJECTS: Project[] = [
     // and no result to claim. Everything below it stays null until the
     // work exists — no mockup, no route, no figures.
     id: "03",
+    slug: "h-capital",
     name: "H Capital",
     status: "upcoming",
     category: "Investissement",
@@ -249,11 +266,14 @@ export const PROJECTS: Project[] = [
     summary:
       "Une plateforme d'investissement : suivi de portefeuilles, recherche sur les sociétés cotées, le tout assisté par l'IA.",
     detail: null,
+    showOnHome: true,
+    featured: false,
   },
   {
     // The reserved position. No name to give it yet and nothing to say
     // about it, which is the whole of what it announces.
     id: "04",
+    slug: "prochaine-realisation-04",
     name: "Prochaine réalisation",
     status: "upcoming",
     category: "À venir",
@@ -274,9 +294,12 @@ export const PROJECTS: Project[] = [
     video: null,
     summary: null,
     detail: null,
+    showOnHome: true,
+    featured: false,
   },
   {
     id: "05",
+    slug: "prochaine-realisation-05",
     name: "Prochaine réalisation",
     status: "upcoming",
     category: "À venir",
@@ -297,12 +320,15 @@ export const PROJECTS: Project[] = [
     video: null,
     summary: null,
     detail: null,
+    showOnHome: true,
+    featured: false,
   },
   {
     // Not a project and not pretending to be one. The network's argument is
     // that every piece of work connects back to the same method — so the
     // sixth node is the reader's own, and it goes somewhere real.
     id: "06",
+    slug: "votre-projet",
     name: "Votre projet",
     status: "invitation",
     category: "Parlons-en",
@@ -323,5 +349,7 @@ export const PROJECTS: Project[] = [
     video: null,
     summary: null,
     detail: null,
+    showOnHome: true,
+    featured: false,
   },
 ];

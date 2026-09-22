@@ -3,7 +3,7 @@
 // entry (the engine, hotspot layers, and navigation logic were already
 // generic). Angles in radians.
 
-import { PROJECTS } from "@/data/projects";
+import type { Project } from "@/data/projects";
 
 export interface StudioConnection {
   /** id of the StudioNode this connection leads to. */
@@ -20,7 +20,7 @@ export interface StudioArtwork {
   /** Project shown on click — sourced from PROJECTS (src/data/projects.ts)
    * so this stays a single source of truth with the homepage's own work
    * gallery, instead of a second hand-written copy of the same content. */
-  project: (typeof PROJECTS)[number];
+  project: Project;
 }
 
 export interface StudioInfoHotspot {

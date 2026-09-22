@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { NARRATIVE_ROWS, PROJECTS } from "@/data/projects";
+import { NARRATIVE_ROWS, type Project } from "@/data/projects";
 import { Reveal } from "@/components/ui/Reveal";
 
 // Turns the grid above from a portfolio into an argument: for the projects
@@ -17,8 +17,8 @@ import { Reveal } from "@/components/ui/Reveal";
 // Degradation is by construction, not by styling: entries without a narrative
 // are simply not in the list. No empty slot, no "bientôt", no greyed row. As
 // real work lands, the band grows on its own.
-export function ProjectsProof() {
-  const told = PROJECTS.filter((project) => project.narrative);
+export function ProjectsProof({ projects }: { projects: Project[] }) {
+  const told = projects.filter((project) => project.narrative);
   if (told.length === 0) return null;
 
   // A two-column grid holding one item reads as a mistake rather than a

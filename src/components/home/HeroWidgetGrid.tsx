@@ -16,6 +16,7 @@ import {
 import { prefersReducedMotion } from "@/lib/motion/reducedMotion";
 import { WidgetShell, DragHandle } from "@/components/home/hero-widgets/WidgetShell";
 import { ProjectSpotlightContent } from "@/components/home/hero-widgets/ProjectSpotlightContent";
+import type { Project } from "@/data/projects";
 import { ResponsivePreviewContent } from "@/components/home/hero-widgets/ResponsivePreviewContent";
 import { PerformanceContent } from "@/components/home/hero-widgets/PerformanceContent";
 import { Studio360Content } from "@/components/home/hero-widgets/Studio360Content";
@@ -75,7 +76,15 @@ function readAnimationsEnabled(): boolean {
   }
 }
 
-export function HeroWidgetGrid({ latestPost }: { latestPost: HeroJournalPost | null }) {
+export function HeroWidgetGrid({
+  latestPost,
+  spotlight,
+  projectCount,
+}: {
+  latestPost: HeroJournalPost | null;
+  spotlight: Project | null;
+  projectCount: number;
+}) {
   // The order/hint state below both start at their SSR-safe defaults —
   // reading localStorage straight into a useState lazy initializer would
   // make the client's *first* render (during hydration) differ from the
@@ -178,7 +187,7 @@ export function HeroWidgetGrid({ latestPost }: { latestPost: HeroJournalPost | n
   }
 
   const content: Record<HeroWidgetId, React.ReactNode> = {
-    spotlight: <ProjectSpotlightContent />,
+    spotlight: spotlight ? <ProjectSpotlightContent project={spotlight} total={projectCount} /> : null,
     responsive: <ResponsivePreviewContent />,
     performance: <PerformanceContent />,
     studio: <Studio360Content />,

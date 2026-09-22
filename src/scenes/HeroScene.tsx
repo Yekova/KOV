@@ -2,6 +2,7 @@ import { KovCTA } from "@/components/ui/KovCTA";
 import { Nav } from "@/components/navigation/Nav";
 import { HeroGlobalMenuButton } from "@/components/layout/HeroGlobalMenuButton";
 import { HeroWidgetGrid } from "@/components/home/HeroWidgetGrid";
+import { PROJECTS } from "@/data/projects";
 import type { HeroJournalPost } from "@/components/home/hero-widgets/JournalContent";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { resolvePostImageUrl } from "@/lib/portal/storage";
@@ -37,6 +38,16 @@ async function getLatestJournalPost(): Promise<HeroJournalPost | null> {
 
 export async function HeroScene() {
   const latestPost = await getLatestJournalPost();
+
+  // Which project the hero puts in its window. `featured` first, then the
+  // first delivered one — never "whatever is at index zero", which is what
+  // it used to be and what made reordering the list swap a name onto
+  // somebody else's screenshot.
+  const projects = PROJECTS;
+  const spotlight =
+    projects.find((project) => project.featured) ??
+    projects.find((project) => project.status === "live") ??
+    null;
   return (
     <section id="hero" className="relative min-h-screen overflow-hidden">
       {/* No background color here on purpose — the animated LineWaves
@@ -89,7 +100,7 @@ export async function HeroScene() {
               localStorage persistence). The responsive-mockup footage
               lives inside the grid now too, as the "Responsive Preview"
               widget's own content. */}
-          <HeroWidgetGrid latestPost={latestPost} />
+          <HeroWidgetGrid latestPost={latestPost} spotlight={spotlight} projectCount={projects.length} />
         </div>
       </div>
 
