@@ -79,13 +79,38 @@ export function ProjectsView() {
 
   const delivered = useMemo(() => PROJECTS.filter((p) => p.status === "live"), []);
 
+  // What the page lists: the delivered work, then what is coming.
+  //
+  // Every upcoming entry that has something to say about itself shows in
+  // full; the unnamed ones collapse to a single reserved card, because
+  // three identical "À venir" tiles is padding, not a roadmap. The
+  // invitation entry belongs to the homepage network and never appears
+  // here — this page is the work, and the ask is already the footer.
+  const listed = useMemo(() => {
+    const coming = PROJECTS.filter((p) => p.status === "upcoming");
+    const named = coming.filter((p) => p.summary);
+    const reserved = coming.find((p) => !p.summary);
+    return [...delivered, ...named, ...(reserved ? [reserved] : [])];
+  }, [delivered]);
+
+  const upcoming = listed.length - delivered.length;
+
   const openProject = openId ? (PROJECTS.find((p) => p.id === openId) ?? null) : null;
 
   return (
     <>
       <div className="kov-pw__bar">
+        {/* The count counts delivered work, and says separately what is
+            on the way — a single number over a grid that also holds
+            reserved cards would be counting the wrong thing. */}
         <p className="kov-pw__count">
           <b>{String(delivered.length).padStart(2, "0")}</b> réalisations
+          {upcoming > 0 && (
+            <>
+              <span aria-hidden="true">·</span>
+              {String(upcoming).padStart(2, "0")} à venir
+            </>
+          )}
         </p>
 
         {/* aria-pressed, not a pair of links: this changes how the same
@@ -111,9 +136,9 @@ export function ProjectsView() {
       </div>
 
       {view === "grid" ? (
-        <GridView projects={delivered} onOpen={open} />
+        <GridView projects={listed} onOpen={open} />
       ) : (
-        <ListView projects={delivered} onOpen={open} />
+        <ListView projects={listed} onOpen={open} />
       )}
 
       {openProject && <ProjectSheet project={openProject} origin={origin} onClose={() => setOpenId(null)} />}
@@ -183,14 +208,20 @@ function GridView({ projects, onOpen }: { projects: Project[]; onOpen: (id: stri
               {/* What was actually built, before the name — the reference's
                   own order, and the right one: a prospect is looking for
                   their own job on this line. */}
-              <p className="kov-card__services">
-                {services(project).map((item, index) => (
-                  <span key={item}>
-                    {index > 0 && <span aria-hidden="true"> — </span>}
-                    {item}
-                  </span>
-                ))}
-              </p>
+              {/* Only for delivered work. On a project that has not
+                  shipped, a line of deliverables under the heading
+                  "prestations" is a claim about work nobody has done —
+                  the summary below says what the thing is instead. */}
+              {project.status === "live" && (
+                <p className="kov-card__services">
+                  {services(project).map((item, index) => (
+                    <span key={item}>
+                      {index > 0 && <span aria-hidden="true"> — </span>}
+                      {item}
+                    </span>
+                  ))}
+                </p>
+              )}
 
               <h2 className="kov-card__name">{project.name}</h2>
 
@@ -204,10 +235,12 @@ function GridView({ projects, onOpen }: { projects: Project[]; onOpen: (id: stri
                 )}
               </p>
 
-              {project.narrative && (
+              {project.narrative ? (
                 <p className="kov-card__body">
                   {project.narrative.problem} {project.narrative.result}
                 </p>
+              ) : (
+                project.summary && <p className="kov-card__body">{project.summary}</p>
               )}
 
               {openable(project) && (
@@ -245,7 +278,7 @@ function ListView({ projects, onOpen }: { projects: Project[]; onOpen: (id: stri
               {project.category}
               {project.location && ` · ${project.location}`}
             </span>
-            <span className="kov-list__tags">{services(project).join(" — ")}</span>
+            <span className="kov-list__tags">{project.status === "live" ? services(project).join(" — ") : ""}</span>
             <span className="kov-list__action">
               {openable(project) && (
                 <button type="button" onClick={(event) => onOpen(project.id, event)}>

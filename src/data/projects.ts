@@ -119,6 +119,14 @@ export interface Project {
    * testimonial is the single most damaging thing a page like this can
    * carry. */
   testimonial: { quote: string; author: string } | null;
+  /** What this is, in a sentence or two, for an entry that has no
+   * delivered story yet.
+   *
+   * `narrative` is for work that has shipped — problème, système,
+   * résultat — and forcing a project in progress into that shape means
+   * claiming a result it has not got. This says what the thing is and
+   * stops there. Null renders nothing. */
+  summary: string | null;
   /** A longer description, for the modal only. The three narrative lines are
    * the summary the page itself carries; this is the room to say more once
    * there is more to say. Null renders nothing. */
@@ -154,6 +162,7 @@ export const PROJECTS: Project[] = [
     metrics: null,
     testimonial: null,
     video: null,
+    summary: null,
     detail: null,
   },
   {
@@ -199,14 +208,19 @@ export const PROJECTS: Project[] = [
     // The showreel was here and was removed by request: the strip above
     // shows the rooms, which is what the film showed.
     video: null,
+    summary: null,
     detail: null,
   },
   {
+    // Named, but not delivered. It carries a `summary` rather than a
+    // `narrative` for exactly that reason: there is a thing to describe
+    // and no result to claim. Everything below it stays null until the
+    // work exists — no mockup, no route, no figures.
     id: "03",
-    name: "Projet 03",
+    name: "H Capital",
     status: "upcoming",
-    category: "Projet à venir",
-    tags: ["Identité", "Expérience", "Développement"],
+    category: "Investissement",
+    tags: ["Portefeuilles", "Sociétés cotées", "IA"],
     caseStudyHref: null,
     href: null,
     location: null,
@@ -221,13 +235,17 @@ export const PROJECTS: Project[] = [
     metrics: null,
     testimonial: null,
     video: null,
+    summary:
+      "Une plateforme d'investissement : suivi de portefeuilles, recherche sur les sociétés cotées, le tout assisté par l'IA.",
     detail: null,
   },
   {
+    // The reserved position. No name to give it yet and nothing to say
+    // about it, which is the whole of what it announces.
     id: "04",
-    name: "Projet 04",
+    name: "Prochaine réalisation",
     status: "upcoming",
-    category: "Projet à venir",
+    category: "À venir",
     tags: ["Stratégie", "Design", "Motion"],
     caseStudyHref: null,
     href: null,
@@ -243,13 +261,14 @@ export const PROJECTS: Project[] = [
     metrics: null,
     testimonial: null,
     video: null,
+    summary: null,
     detail: null,
   },
   {
     id: "05",
-    name: "Projet 05",
+    name: "Prochaine réalisation",
     status: "upcoming",
-    category: "Projet à venir",
+    category: "À venir",
     tags: ["Exploration", "Design", "Développement"],
     caseStudyHref: null,
     href: null,
@@ -265,6 +284,7 @@ export const PROJECTS: Project[] = [
     metrics: null,
     testimonial: null,
     video: null,
+    summary: null,
     detail: null,
   },
   {
@@ -290,6 +310,7 @@ export const PROJECTS: Project[] = [
     metrics: null,
     testimonial: null,
     video: null,
+    summary: null,
     detail: null,
   },
 ];

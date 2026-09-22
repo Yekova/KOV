@@ -24,9 +24,12 @@ export const metadata: Metadata = {
 //
 // Both the homepage section and this page render from PROJECTS, so this page
 // cannot list work the rest of the site does not know about. It does not
-// filter — a control over two delivered projects controls nothing — and it
-// does not pad: unpublished entries are rows in an index below the grid,
-// never reserved cards with "Bientôt" in them.
+// filter — a control over two delivered projects controls nothing.
+//
+// It does list what is coming, which it did not before: a named project in
+// progress carries a description and no result, and the unnamed positions
+// collapse to a single reserved card. Three identical "À venir" tiles would
+// be padding; one is a roadmap with a place in it.
 export default function ProjetsPage() {
   // Truthful and minimal: what the page is, not what is on it. No dates, no
   // authorship, no per-project claims — none of that is recorded anywhere,
@@ -62,8 +65,8 @@ export default function ProjetsPage() {
         </h1>
 
         <p className="kov-pw__lede">
-          Ce qui a été livré sur chaque projet, et ce que ça a changé. Le raisonnement derrière le travail, pas une
-          galerie d&apos;images.
+          Ce qui a été livré sur chaque projet, et ce que ça a changé — puis ce qui arrive. Le raisonnement derrière
+          le travail, pas une galerie d&apos;images.
         </p>
       </header>
 
