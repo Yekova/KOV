@@ -1,7 +1,7 @@
 import { ProjectsEditorial } from "@/components/home/projects/ProjectsEditorial";
 import { ProjectsGrid } from "@/components/home/projects/ProjectsGrid";
 import { ProjectsProof } from "@/components/home/projects/ProjectsProof";
-import { PROJECTS, type Project } from "@/data/projects";
+import { fetchShowcaseProjects } from "@/lib/showcase/projects";
 
 // The projects section: an editorial column beside an aligned grid of six
 // cards. The background stays the page's own; the only thing added here is
@@ -9,7 +9,8 @@ import { PROJECTS, type Project } from "@/data/projects";
 // The one place on the homepage that knows where project data comes from.
 // Everything below it receives a list — which is what lets two of the three
 // children stay Client Components.
-export function WorkGallery({ projects = PROJECTS }: { projects?: Project[] }) {
+export async function WorkGallery() {
+  const projects = await fetchShowcaseProjects();
   // The homepage grid is three columns by two and wants six; /projets lists
   // everything. That is the whole of what `showOnHome` decides.
   const shown = projects.filter((project) => project.showOnHome);

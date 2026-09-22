@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/Button";
 import { KovCTA } from "@/components/ui/KovCTA";
 import { LiquidReveal } from "@/components/projects/LiquidReveal";
 import { ProjectsView } from "@/components/projects/ProjectsView";
-import { PROJECTS } from "@/data/projects";
+import { fetchShowcaseProjects } from "@/lib/showcase/projects";
 import "@/components/projects/ProjectsPage.css";
 
 const SITE_URL = "https://kov-agency.site";
@@ -31,7 +31,15 @@ export const metadata: Metadata = {
 // progress carries a description and no result, and the unnamed positions
 // collapse to a single reserved card. Three identical "À venir" tiles would
 // be padding; one is a roadmap with a place in it.
-export default function ProjetsPage() {
+// The page reads a table now, so it must not be baked once at build time.
+// /journal carries the scar from exactly that mistake; sixty seconds is the
+// window it settled on, and the admin's own actions call revalidatePath on
+// top of it for an instant update.
+export const revalidate = 60;
+
+export default async function ProjetsPage() {
+  const projects = await fetchShowcaseProjects();
+
   // Truthful and minimal: what the page is, not what is on it. No dates, no
   // authorship, no per-project claims — none of that is recorded anywhere,
   // and structured data is the last place to start inventing it.
@@ -71,7 +79,7 @@ export default function ProjetsPage() {
         </p>
       </header>
 
-      <ProjectsView projects={PROJECTS} />
+      <ProjectsView projects={projects} />
 
       <footer className="kov-pw__close">
         <h2 className="kov-pw__closeTitle">

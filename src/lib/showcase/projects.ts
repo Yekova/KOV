@@ -1,7 +1,7 @@
 import "server-only";
 import { supabase } from "@/lib/supabase";
 import { getPublicAssetUrl } from "@/lib/portal/storage";
-import type { Project, ProjectStatus } from "@/data/projects";
+import { PROJECTS, type Project, type ProjectStatus } from "@/data/projects";
 
 // Reading the portfolio.
 //
@@ -163,9 +163,19 @@ export function toProject(row: ShowcaseRow): Project {
 
 /** Every published project, in the order the admin put them in.
  *
- *  Returns an empty list on failure rather than throwing. A portfolio page
- *  that renders its header and no cards is a page with a problem; a page
- *  that throws is a five-hundred. */
+ *  Falls back to the entries still in src/data/projects.ts when the query
+ *  fails or comes back empty — which is the state of this project until the
+ *  migration is applied to its database.
+ *
+ *  This is transitional and should be deleted the day the table is live,
+ *  but it is not belt-and-braces: /journal already learned this the hard
+ *  way (see its page comment — a build-time query returned nothing, the
+ *  empty result was frozen into a static page, and an article stayed
+ *  invisible for sixteen days). A showcase that silently renders zero
+ *  projects is the same failure with the same shape.
+ *
+ *  It never throws. A page that renders its header and no cards has a
+ *  problem; a page that throws is a five-hundred. */
 export async function fetchShowcaseProjects(): Promise<Project[]> {
   const { data, error } = await supabase
     .from("showcase_projects")
@@ -176,6 +186,6 @@ export async function fetchShowcaseProjects(): Promise<Project[]> {
     .order("sort_order", { ascending: true, nullsFirst: false })
     .order("reference", { ascending: true });
 
-  if (error || !data) return [];
+  if (error || !data || data.length === 0) return PROJECTS;
   return (data as unknown as ShowcaseRow[]).map(toProject);
 }

@@ -2,7 +2,7 @@ import { KovCTA } from "@/components/ui/KovCTA";
 import { Nav } from "@/components/navigation/Nav";
 import { HeroGlobalMenuButton } from "@/components/layout/HeroGlobalMenuButton";
 import { HeroWidgetGrid } from "@/components/home/HeroWidgetGrid";
-import { PROJECTS } from "@/data/projects";
+import { fetchShowcaseProjects } from "@/lib/showcase/projects";
 import type { HeroJournalPost } from "@/components/home/hero-widgets/JournalContent";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { resolvePostImageUrl } from "@/lib/portal/storage";
@@ -43,7 +43,7 @@ export async function HeroScene() {
   // first delivered one — never "whatever is at index zero", which is what
   // it used to be and what made reordering the list swap a name onto
   // somebody else's screenshot.
-  const projects = PROJECTS;
+  const projects = await fetchShowcaseProjects();
   const spotlight =
     projects.find((project) => project.featured) ??
     projects.find((project) => project.status === "live") ??
