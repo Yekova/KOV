@@ -269,6 +269,27 @@ function GridView({
                     <span className="kov-card__play">{project.video ? "▶" : "↗"}</span>
                   </button>
                 )}
+
+                {/* On the window, not under it.
+                    
+                    The picture is a browser frame showing the site, so the
+                    corner of that frame is where "go and see it" belongs:
+                    the visitor is already looking at the thing the button
+                    opens. It sits above the shot's own click target, which
+                    opens the study instead, so the two never contend for
+                    the same pixel. */}
+                {project.href &&
+                  (isExternalHref(project.href) ? (
+                    <a href={project.href} target="_blank" rel="noopener noreferrer" className="kov-card__visit">
+                      Voir le projet
+                      <span aria-hidden="true">↗</span>
+                    </a>
+                  ) : (
+                    <Link href={project.href} className="kov-card__visit">
+                      Voir le projet
+                      <span aria-hidden="true">→</span>
+                    </Link>
+                  ))}
               </div>
             </div>
 
@@ -325,40 +346,11 @@ function GridView({
                 project.summary && <p className="kov-card__body">{project.summary}</p>
               )}
 
-              {/* Two different things, said differently. The sheet is the
-                  reasoning behind the work; the site is the work. They used
-                  to share a label, which meant the card offered "Voir le
-                  projet" and opened something that was not the project. */}
-              {/* Not rendered empty: H Capital and the reserved position
-                  have neither a study nor a site, and a flex row with
-                  nothing in it is still eighteen pixels of margin. */}
-              {(openable(project) || project.href) && (
-              <div className="kov-card__actions">
-                {openable(project) && (
-                  <button type="button" className="kov-card__link" onClick={(event) => onOpen(project.id, event)}>
-                    Voir l&apos;étude
-                    <span aria-hidden="true">→</span>
-                  </button>
-                )}
-
-                {project.href &&
-                  (isExternalHref(project.href) ? (
-                    <a
-                      href={project.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="kov-card__link kov-card__link--ghost"
-                    >
-                      Voir le projet
-                      <span aria-hidden="true">↗</span>
-                    </a>
-                  ) : (
-                    <Link href={project.href} className="kov-card__link kov-card__link--ghost">
-                      Voir le projet
-                      <span aria-hidden="true">→</span>
-                    </Link>
-                  ))}
-              </div>
+              {openable(project) && (
+                <button type="button" className="kov-card__link" onClick={(event) => onOpen(project.id, event)}>
+                  Voir l&apos;étude
+                  <span aria-hidden="true">→</span>
+                </button>
               )}
           </div>
         </li>

@@ -431,21 +431,11 @@
   color: var(--kov-concrete);
 }
 
-/* The two controls sit on one line where there is room and stack where
-   there is not — at a third of a twelve-column row they would otherwise
-   collide. */
-.kov-card__actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px 26px;
-  margin-top: 18px;
-}
-
 .kov-card__link {
   display: inline-flex;
   align-items: center;
   gap: 10px;
+  margin-top: 18px;
   padding: 0;
   background: none;
   font-family: var(--font-mono), monospace;
@@ -467,15 +457,57 @@
   outline-offset: 4px;
 }
 
-/* The secondary of the pair. Quieter at rest and the same weight on hover:
-   both are real destinations, one is just the one the page is about. */
-.kov-card__link--ghost {
-  color: var(--kov-steel);
+/* The way to the site, in the corner of the window that shows it.
+   
+   Dark and blurred rather than tinted to the card: it sits on a
+   screenshot, and a screenshot is an uncontrolled background — the one
+   thing a label on top of one cannot assume is the colour underneath.
+   Always visible, never hover-only: a control that appears only under the
+   cursor does not exist on a touch screen. */
+.kov-card__visit {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(10, 10, 10, 0.62);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-family: var(--font-mono), monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #f5f3ef;
   text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 280ms ease, border-color 280ms ease, gap 280ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.kov-card__link--ghost:hover {
-  color: var(--kov-red);
+.kov-card__visit:hover {
+  gap: 14px;
+  background: var(--kov-red);
+  border-color: var(--kov-red);
+}
+
+.kov-card__visit:focus-visible {
+  outline: 2px solid var(--kov-red);
+  outline-offset: 3px;
+}
+
+/* On a narrow card the pill would otherwise take most of the frame. */
+@media (max-width: 520px) {
+  .kov-card__visit {
+    right: 10px;
+    bottom: 10px;
+    padding: 9px 13px;
+    font-size: 9px;
+    letter-spacing: 0.16em;
+  }
 }
 
 /* ── List ────────────────────────────────────────────────────────────── */
