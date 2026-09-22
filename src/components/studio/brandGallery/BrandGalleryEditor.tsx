@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
-import { GALLERY_COLLIDERS, GALLERY_SLOTS } from "./galleryLayout";
+import { GALLERY_COLLIDERS, GALLERY_SLOTS, levelAt } from "./galleryLayout";
 import { playerState } from "./playerState";
 
 // Placing a stand, in development only.
@@ -23,9 +23,15 @@ export function BrandGalleryEditor() {
   useFrame(() => {
     const x = playerState.x.toFixed(2);
     const z = playerState.z.toFixed(2);
+    // The floor the visitor is standing on, not their eye height: a stand
+    // sits on the deck, and position_y in the row is where its plinth
+    // meets it.
+    const y = playerState.y.toFixed(2);
     const rotation = (((-playerState.yaw % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2)).toFixed(3);
-    valueRef.current = `position_x: ${x}, position_y: 0, position_z: ${z}, rotation_y: ${rotation}`;
-    if (readoutRef.current) readoutRef.current.textContent = `x ${x}  z ${z}  ry ${rotation}`;
+    valueRef.current = `position_x: ${x}, position_y: ${y}, position_z: ${z}, rotation_y: ${rotation}`;
+    if (readoutRef.current) {
+      readoutRef.current.textContent = `N${levelAt(playerState.y)}  x ${x}  y ${y}  z ${z}  ry ${rotation}`;
+    }
   });
 
   useEffect(() => {
@@ -48,7 +54,11 @@ export function BrandGalleryEditor() {
       ))}
 
       {GALLERY_SLOTS.map((slot) => (
-        <mesh key={`slot-${slot.id}`} position={[slot.position[0], 0.02, slot.position[2]]} rotation={[-Math.PI / 2, 0, 0]}>
+        <mesh
+          key={`slot-${slot.id}`}
+          position={[slot.position[0], slot.position[1] + 0.02, slot.position[2]]}
+          rotation={[-Math.PI / 2, 0, 0]}
+        >
           <ringGeometry args={[0.7, 0.78, 32]} />
           <meshBasicMaterial color="#4ad0ff" transparent opacity={0.45} />
         </mesh>

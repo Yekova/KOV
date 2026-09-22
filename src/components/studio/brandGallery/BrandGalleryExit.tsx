@@ -17,7 +17,10 @@ export function BrandGalleryExit({ onNear }: { onNear: (near: boolean) => void }
 
   useFrame(() => {
     const distance = Math.hypot(playerState.x - EXIT.position[0], playerState.z - EXIT.position[2]);
-    const inside = distance <= EXIT.radius;
+    // On the ground floor only. In plan the portal sits directly under the
+    // mezzanine's south band, so without the height test the way out would
+    // offer itself to someone standing on the ring four metres above it.
+    const inside = distance <= EXIT.radius && playerState.y < 1;
     if (inside !== near.current) {
       near.current = inside;
       setGlow(inside);

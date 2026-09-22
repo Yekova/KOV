@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { resolveCollisions } from "./collision";
-import { EYE_HEIGHT, GALLERY_COLLIDERS, PLAYER_RADIUS, SPAWN, SPAWN_YAW } from "./galleryLayout";
+import { EYE_HEIGHT, GALLERY_COLLIDERS, PLAYER_RADIUS, SPAWN, SPAWN_YAW, floorAt } from "./galleryLayout";
 import { playerState, resetPlayerState } from "./playerState";
 import { usePlayerControls } from "./usePlayerControls";
 
@@ -12,6 +12,11 @@ const WALK_SPEED = 2.35; // m/s — a gallery pace, not a corridor sprint
 const ACCEL = 9; // how fast the pace is reached, and lost
 const LOOK_SENSITIVITY = 0.0022;
 const PITCH_LIMIT = Math.PI / 2 - 0.08;
+/** How fast the feet settle onto whatever they are standing on. One rate
+ *  for both directions: a stair tread is a few centimetres and a misstep
+ *  off the mezzanine is four metres, and the same exponential handles both
+ *  as a settle rather than as a fall — there is no drama to stage here. */
+const SETTLE = 14;
 
 // Moving through the room.
 //
@@ -149,16 +154,30 @@ export function PlayerController({
     velocity.current.x += (targetX - velocity.current.x) * blend;
     velocity.current.z += (targetZ - velocity.current.z) * blend;
 
+    // Collision is resolved at the height the visitor is currently at, so
+    // the same glass guard stops them on the mezzanine and lets them walk
+    // underneath it on the ground floor.
     const next = resolveCollisions(
       state.x + velocity.current.x * delta,
       state.z + velocity.current.z * delta,
+      state.y,
       PLAYER_RADIUS,
       GALLERY_COLLIDERS
     );
 
     state.x = next.x;
     state.z = next.z;
-    camera.position.set(next.x, EYE_HEIGHT, next.z);
+
+    // What they are standing on, resolved from where they already were:
+    // anything more than a step above their feet is a thing they are
+    // under, not a thing they are on.
+    const ground = floorAt(next.x, next.z, state.y);
+    if (ground !== null) {
+      state.y += (ground - state.y) * (1 - Math.exp(-SETTLE * delta));
+      if (Math.abs(ground - state.y) < 0.002) state.y = ground;
+    }
+
+    camera.position.set(next.x, state.y + EYE_HEIGHT, next.z);
   });
   /* eslint-enable react-hooks/immutability */
 

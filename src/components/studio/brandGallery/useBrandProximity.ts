@@ -47,7 +47,16 @@ export function useBrandProximity(
   useFrame(() => {
     const dx = playerState.x - position[0];
     const dz = playerState.z - position[2];
-    const distance = Math.hypot(dx, dz);
+    // Height counts, and counts double.
+    //
+    // In one storey a plan-view distance was the whole truth. With a
+    // mezzanine it is a lie: a stand on the ring is three metres from
+    // someone standing directly beneath it in plan and completely out of
+    // reach in fact. Weighting the vertical term means a floor between
+    // two points reads as further than the same distance across a floor,
+    // which is what it is.
+    const dy = (playerState.y - position[1]) * 2;
+    const distance = Math.hypot(dx, dy, dz);
     const level = nearnessAt(distance);
     if (level !== current.current) {
       current.current = level;

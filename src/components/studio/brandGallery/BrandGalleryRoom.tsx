@@ -32,6 +32,7 @@ export function BrandGalleryRoom({ onExit }: { onExit: () => void }) {
   const [ready, setReady] = useState(false);
   const [locked, setLocked] = useState(false);
   const [nearExit, setNearExit] = useState(false);
+  const [level, setLevel] = useState<0 | 1>(0);
   const [active, setActive] = useState<Brand | null>(null);
 
   useEffect(() => {
@@ -74,7 +75,13 @@ export function BrandGalleryRoom({ onExit }: { onExit: () => void }) {
       let nearest: Brand | null = null;
       let best = REACH_DISTANCE;
       for (const brand of brands) {
-        const distance = Math.hypot(playerState.x - brand.position[0], playerState.z - brand.position[2]);
+        // The same weighted vertical term useBrandProximity uses: a stand
+        // on the ring is not within reach of someone standing under it.
+        const distance = Math.hypot(
+          playerState.x - brand.position[0],
+          (playerState.y - brand.position[1]) * 2,
+          playerState.z - brand.position[2]
+        );
         if (distance <= best) {
           best = distance;
           nearest = brand;
@@ -104,11 +111,11 @@ export function BrandGalleryRoom({ onExit }: { onExit: () => void }) {
         <color attach="background" args={["#08080a"]} />
         {/* The room's own haze. Cheap, and it is what makes the far end of
             the axis read as far rather than as a wall at arm's length.
-            Starting at thirteen metres now that the room is actually
-            lit: any closer and the haze was taking the contrast off the
-            stand the visitor is walking toward, which is the one thing
-            the far end of the axis is for. */}
-        <fog attach="fog" args={["#0d0d10", 13, 44]} />
+            Pushed out again with the room: the diagonal of a 22-metre
+            square across two storeys is about 31 metres, and haze that
+            starts before the far wall takes the contrast off the niche
+            the visitor is walking toward. */}
+        <fog attach="fog" args={["#0d0d10", 16, 52]} />
 
         <BrandGalleryScene
           brands={brands}
@@ -116,6 +123,7 @@ export function BrandGalleryRoom({ onExit }: { onExit: () => void }) {
           onInteract={handleInteract}
           onExitZone={setNearExit}
           onLockChange={setLocked}
+          onLevelChange={setLevel}
         />
 
         {DEBUG && <BrandGalleryEditor />}
@@ -138,6 +146,7 @@ export function BrandGalleryRoom({ onExit }: { onExit: () => void }) {
         brands={brands}
         locked={locked}
         nearExit={nearExit}
+        level={level}
         onExit={onExit}
         onSelect={handleInteract}
       />

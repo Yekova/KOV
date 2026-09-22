@@ -149,7 +149,7 @@ export const STUDIO_NODES: Record<string, StudioNode> = {
         // Invented placement, same latitude as the others in this room.
         // Opposite the gym so the two branches do not overlap.
         position: [470, -30, 120],
-        label: "Brand Gallery",
+        label: "Brands Gallery",
       },
       {
         targetNodeId: "p03",
@@ -306,11 +306,11 @@ export const STUDIO_NODES: Record<string, StudioNode> = {
     id: "p04",
     kind: "interactive-3d",
     experience: "brand-gallery",
-    name: "Brand Gallery",
+    name: "Brands Gallery",
     room: "P04",
     subtitle: "Un lieu, pas une page",
     description:
-      "Une galerie noire qui se parcourt à pied. Les marques y occupent des emplacements construits — un socle, une lumière, un mur — plutôt qu'une ligne dans une liste de partenaires.",
+      "Deux niveaux autour d'un vide central, qui se parcourent à pied. Les marques y occupent des emplacements construits — un socle, une lumière, une niche — plutôt qu'une ligne dans une liste de partenaires.",
     panorama: "",
     initialYaw: 0,
     initialPitch: 0,

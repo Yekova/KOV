@@ -20,12 +20,17 @@ export function BrandGalleryHUD({
   brands,
   locked,
   nearExit,
+  level,
   onExit,
   onSelect,
 }: {
   brands: Brand[];
   locked: boolean;
   nearExit: boolean;
+  /** Which floor the visitor is on. The building has two, and a visitor
+   *  who has just come up a flight in a room with no windows has no other
+   *  way to be sure which one they are standing on. */
+  level: 0 | 1;
   onExit: () => void;
   onSelect: (brand: Brand) => void;
 }) {
@@ -54,7 +59,9 @@ export function BrandGalleryHUD({
           color: "var(--kov-steel)",
         }}
       >
-        P04 <span style={{ color: "var(--kov-bone)" }}>Brand Gallery</span>
+        P04 <span style={{ color: "var(--kov-bone)" }}>Brands Gallery</span>
+        <span aria-hidden="true" style={{ opacity: 0.35 }}> · </span>
+        <span style={{ color: "var(--kov-bone)" }}>Niveau {level}</span>
       </p>
 
       {/* The reticle. One pixel of intent: in a pointer-locked room there
@@ -116,6 +123,9 @@ export function BrandGalleryHUD({
             </span>
             <span>
               <b style={{ color: "var(--kov-bone)", fontWeight: 500 }}>E</b> découvrir
+            </span>
+            <span>
+              <b style={{ color: "var(--kov-bone)", fontWeight: 500 }}>Escalier</b> niveau 1
             </span>
             <span>
               <b style={{ color: "var(--kov-bone)", fontWeight: 500 }}>Échap</b> libérer le curseur

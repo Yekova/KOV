@@ -20,17 +20,21 @@ import { SPAWN, SPAWN_YAW } from "./galleryLayout";
 
 export interface PlayerState {
   x: number;
+  /** Feet, not eyes. The room has two floors now, so height is part of
+   *  where the visitor is rather than a constant the camera adds. */
+  y: number;
   z: number;
   yaw: number;
 }
 
-export const playerState: PlayerState = { x: SPAWN[0], z: SPAWN[2], yaw: SPAWN_YAW };
+export const playerState: PlayerState = { x: SPAWN[0], y: 0, z: SPAWN[2], yaw: SPAWN_YAW };
 
 /** Puts the visitor back at the entrance. Called when the room mounts, so
  *  leaving and coming back starts the visit again rather than resuming
  *  wherever the last one stopped. */
 export function resetPlayerState() {
   playerState.x = SPAWN[0];
+  playerState.y = 0;
   playerState.z = SPAWN[2];
   playerState.yaw = SPAWN_YAW;
 }

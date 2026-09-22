@@ -1,6 +1,11 @@
 import type { Brand } from "./brands";
 import { GALLERY_SLOTS } from "@/components/studio/brandGallery/galleryLayout";
 
+/** Where the host stands: the centre niche of the far wall on the ground
+ *  floor, which is what a visitor is looking at the moment they step
+ *  through the portal. */
+const HOUSE_SLOT = GALLERY_SLOTS.find((slot) => slot.id === "n0-north-c") ?? GALLERY_SLOTS[0];
+
 /** The stand KOV occupies in its own gallery.
  *
  *  Not a seeded row and not a mock. A row in `brand_gallery` is a tenant —
@@ -27,10 +32,12 @@ export const HOUSE_BRAND: Brand = {
   videoUrl: null,
   modelUrl: null,
   websiteUrl: "https://kov-agency.site",
-  // The recess at the head of the room. The host stands where the room
-  // points, which is also the position a visitor reaches last.
-  position: GALLERY_SLOTS[7].position,
-  rotationY: GALLERY_SLOTS[7].rotationY,
+  // The niche on the far wall, dead ahead of the portal across the void.
+  // Addressed by id rather than by index: the building has two storeys and
+  // seventeen addresses now, and an index into that list is a number that
+  // means nothing the day one is inserted.
+  position: HOUSE_SLOT.position,
+  rotationY: HOUSE_SLOT.rotationY,
   scale: 1,
   tier: "immersive",
   isFeatured: true,
