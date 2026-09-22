@@ -92,21 +92,23 @@ export const STUDIO_NODES: Record<string, StudioNode> = {
     subtitle: "Entrée du studio",
     description: "Un seuil entre les idées et le réel. Le Portal vous accueille dans l'univers KOV, une expérience immersive au cœur de la création digitale.",
     panorama: "/studio/panoramas/p01.webp",
-    // Arrival faces the KOV letters on the reception wall, not the lit
-    // passage at the texture's centre.
+    // Arrival faces the KOV letters on the reception wall.
     //
-    // Derived, not eyeballed: the lettering is centred at x ≈ 1775 of the
-    // 6144px panorama, and the texture's horizontal centre is yaw 0 (the
-    // convention this file already follows), so the offset is
-    // (1775/6144 − 0.5) × 2π = −1.33 rad ≈ −76°, i.e. to the left. Pitch
-    // lifts a little for the same reason: the sign sits above eye level, at
-    // v ≈ 0.44 rather than the horizon's 0.5.
+    // Derived, and this time the convention was verified rather than
+    // assumed. The previous value was computed as if the middle of the
+    // texture were yaw 0; it is not. Built in Node against three's own
+    // SphereGeometry — the exact one PanoramaSphere makes, negative x
+    // scale included — the equator vertex at u = 0.75 is the one at
+    // [0, 0, -500], so:
     //
-    // The passage to P02 is still straight ahead at yaw 0 — its hotspot did
-    // not move — so finding it now means turning right, which is the whole
-    // point: you land on the mark, then go looking.
-    initialYaw: -1.33,
-    initialPitch: 0.17,
+    //     yaw = 3*PI/2 - 2*PI * (x_pixel / 6144)
+    //
+    // The lettering is centred at x = 1775, y = 1377 of the 6144x3072
+    // panorama, which gives yaw 2.897 and pitch 0.163. The old -1.33
+    // resolves to x = 5909 — the glazed corner with a tree behind it,
+    // which is what a visitor has actually been landing on.
+    initialYaw: 2.897,
+    initialPitch: 0.163,
     zoomEnabled: true,
     available: true,
     connections: [

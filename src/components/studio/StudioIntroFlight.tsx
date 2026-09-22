@@ -7,7 +7,22 @@ const POSTER = "/studio/intro/flight-poster.webp";
 // The file is 10s at 24fps. The cap is a safety net, not a schedule: if the
 // `ended` event never fires — a decode failure, a tab backgrounded mid-play,
 // an autoplay policy that stopped it — the visitor still reaches the studio.
+// Left generous on purpose: with the rates below the descent lands at about
+// six and a half seconds, and this number only matters on the path where
+// something has already gone wrong.
 const HARD_STOP_MS = 12_000;
+
+// The descent is not played at one speed.
+//
+// Ten seconds of cloud is ten seconds of nothing happening, and a visitor
+// who has pressed "Entrer" has already decided. So the flight crosses the
+// sky fast and then puts the brakes on for the arrival — which is both the
+// interesting part of the shot and the moment the studio has to feel like
+// somewhere you are landing rather than a page that finished loading.
+const FAST = 1.7;
+const SLOW = 0.7;
+/** Where the braking starts, as a fraction of the film. */
+const BRAKE_FROM = 0.68;
 
 // The descent. Plays once between "Entrer dans le studio" and the studio
 // itself: clouds, then a building, then the room.
@@ -44,6 +59,24 @@ export function StudioIntroFlight({ onDone }: { onDone: () => void }) {
     const video = videoRef.current;
     const timer = window.setTimeout(finish, HARD_STOP_MS);
 
+    // The speed ramp. Driven from currentTime rather than a wall clock, so
+    // it stays in step with the film whatever the decoder does — a stall,
+    // a slow first frame, or a browser that clamps the rate all leave the
+    // curve pinned to the picture rather than drifting off it.
+    let frame = 0;
+    const ramp = () => {
+      frame = requestAnimationFrame(ramp);
+      if (!video || !video.duration || Number.isNaN(video.duration)) return;
+
+      const t = video.currentTime / video.duration;
+      const k = Math.max(0, Math.min(1, (t - BRAKE_FROM) / (1 - BRAKE_FROM)));
+      // Smoothstep, so the deceleration has no corner in it: a linear ramp
+      // reads as the film being throttled, an eased one as it settling.
+      const eased = k * k * (3 - 2 * k);
+      video.playbackRate = FAST + (SLOW - FAST) * eased;
+    };
+    frame = requestAnimationFrame(ramp);
+
     video?.play().catch(() => {
       // Autoplay refused, or the file failed. Nothing to show, so do not
       // make the visitor wait out the timeout in front of a still frame.
@@ -53,6 +86,7 @@ export function StudioIntroFlight({ onDone }: { onDone: () => void }) {
     video?.addEventListener("ended", finish);
     return () => {
       window.clearTimeout(timer);
+      cancelAnimationFrame(frame);
       video?.removeEventListener("ended", finish);
     };
   }, [onDone]);
