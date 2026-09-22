@@ -34,9 +34,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/legal/gestion-cookies",
   ].map((path) => ({ url: `${SITE_URL}${path}`, changeFrequency: "yearly" as const, priority: 0.3 }));
 
-  // /login, /merci and /journal/preview are deliberately absent: all three
-  // answer noindex. A sitemap is a list of pages you want indexed, so listing
-  // a noindex page is a contradiction Search Console reports back at you.
+  // /login, /merci and the two preview routes are deliberately absent: they
+  // all answer noindex. A sitemap is a list of pages you want indexed, so
+  // listing a noindex page is a contradiction Search Console reports back at
+  // you.
+  //
+  // Individual projects are absent too, and that is not an oversight: there is
+  // no /projets/<slug> route. A project is a card and a modal on one page, so
+  // /projets is the only URL there is to list.
   const { data: posts, error } = await supabaseAdmin
     .from("posts")
     .select("slug, updated_at")

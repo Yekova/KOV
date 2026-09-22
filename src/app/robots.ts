@@ -15,9 +15,9 @@ const SITE_URL = "https://kov-agency.site";
 //
 // /admin and /client stay disallowed because there is genuinely nothing to
 // fetch: both redirect to /login for anyone without a session (src/proxy.ts),
-// so there is no page for a noindex to live on. /journal/preview is the same
-// shape — requireAdmin() guards it — and carries its own noindex too, for the
-// case where a draft URL gets shared.
+// so there is no page for a noindex to live on. The two preview routes are
+// the same shape — requireAdmin() guards both — and each carries its own
+// noindex too, for the case where a draft URL gets shared.
 //
 // None of this is a security boundary. The real boundary is the auth check in
 // src/proxy.ts and requireAdmin(); robots.txt is a public file that says out
@@ -27,7 +27,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/admin", "/client", "/journal/preview", "/api/"],
+      disallow: ["/admin", "/client", "/journal/preview", "/projets/preview", "/api/"],
     },
     sitemap: `${SITE_URL}/sitemap.xml`,
     host: SITE_URL,
