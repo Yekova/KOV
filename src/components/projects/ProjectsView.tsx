@@ -4,7 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { BrowserChrome } from "@/components/ui/BrowserChrome";
-import { PROJECTS, type Project } from "@/data/projects";
+import { PROJECTS, isExternalHref, type Project } from "@/data/projects";
 import { ProjectSheet, type SheetOrigin } from "./sheet/ProjectSheet";
 
 /** How the same projects are laid out.
@@ -51,11 +51,6 @@ function services(project: Project): string[] {
     // lowercase. These are deliverables in a list, not prose.
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1));
 }
-
-/** Does this go off the site? An internal route stays a Link and a real
- *  destination opens in its own tab — a portfolio that navigates away from
- *  itself to show its work has lost the visitor it was persuading. */
-const isExternal = (href: string) => /^https?:\/\//.test(href);
 
 /** Every delivered project opens a sheet now. It used to be gated on a film
  *  or a longer description, back when the modal held nothing the card did
@@ -347,7 +342,7 @@ function GridView({
                 )}
 
                 {project.href &&
-                  (isExternal(project.href) ? (
+                  (isExternalHref(project.href) ? (
                     <a
                       href={project.href}
                       target="_blank"

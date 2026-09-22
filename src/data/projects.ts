@@ -133,6 +133,16 @@ export interface Project {
   detail: string | null;
 }
 
+/** Does this destination leave the site?
+ *
+ *  It became a question the day a project's `href` stopped being an
+ *  internal route. Defined once, next to the data, because three surfaces
+ *  render that field — the homepage card, the /projets card and the
+ *  sheet — and a link that opens in a new tab in one of them and navigates
+ *  away in another is the same link behaving differently depending on
+ *  which picture of it you clicked. */
+export const isExternalHref = (href: string) => /^https?:\/\//.test(href);
+
 export const PROJECTS: Project[] = [
   {
     id: "01",

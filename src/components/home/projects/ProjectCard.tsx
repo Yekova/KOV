@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import type { Project } from "@/data/projects";
+import { isExternalHref, type Project } from "@/data/projects";
 
 interface ProjectCardProps {
   project: Project;
@@ -165,16 +165,40 @@ export function ProjectCard({ project }: ProjectCardProps) {
 
   // A card is a link only where a real page exists. The ones without a
   // destination stay inert rather than pointing somewhere that isn't there.
-  return project.href ? (
-    <Link
-      href={project.href}
-      className="block h-full rounded-[22px] focus-visible:outline-2 focus-visible:outline-offset-4"
-      style={{ outlineColor: "var(--kov-red)" }}
-      aria-label={`${project.name} — ${project.category}`}
-    >
+  if (!project.href) return shell;
+
+  const className = "block h-full rounded-[22px] focus-visible:outline-2 focus-visible:outline-offset-4";
+  const style = { outlineColor: "var(--kov-red)" };
+
+  // A client's own site is not this site.
+  //
+  // The whole tile is the link — it cannot hold a nested button, and a
+  // second interactive element inside a link is not a thing to add — so
+  // the distinction lives in the link itself: a real destination opens in
+  // its own tab, and the accessible name says so before the click rather
+  // than after it. Without this, clicking a homepage card silently took
+  // the visitor off the homepage, which is the opposite of what a project
+  // grid is for.
+  if (isExternalHref(project.href)) {
+    return (
+      <a
+        href={project.href}
+        target="_blank"
+        // The destination is another origin; noopener keeps it from
+        // reaching back through window.opener.
+        rel="noopener noreferrer"
+        className={className}
+        style={style}
+        aria-label={`${project.name} — ${project.category} (nouvel onglet)`}
+      >
+        {shell}
+      </a>
+    );
+  }
+
+  return (
+    <Link href={project.href} className={className} style={style} aria-label={`${project.name} — ${project.category}`}>
       {shell}
     </Link>
-  ) : (
-    shell
   );
 }
