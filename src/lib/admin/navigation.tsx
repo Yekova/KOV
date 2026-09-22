@@ -130,6 +130,20 @@ export const adminNavigation: AdminNavSection[] = [
     label: "Entreprise",
     items: [
       {
+        // The public portfolio, not the client delivery tracker under
+        // "Projets" — two different things that both wanted the same word.
+        id: "realisations",
+        label: "Réalisations",
+        href: "/admin/realisations",
+        icon: (
+          <>
+            <rect x="3" y="4" width="18" height="13" rx="1.5" />
+            <path d="M3 8h18" />
+            <path d="M8 21h8" />
+          </>
+        ),
+      },
+      {
         id: "billing",
         label: "Facturation",
         href: "/admin/billing",

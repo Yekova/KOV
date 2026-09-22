@@ -1,5 +1,6 @@
 import "server-only";
 import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getPublicAssetUrl } from "@/lib/portal/storage";
 import { PROJECTS, type Project, type ProjectStatus } from "@/data/projects";
 
@@ -188,4 +189,17 @@ export async function fetchShowcaseProjects(): Promise<Project[]> {
 
   if (error || !data || data.length === 0) return PROJECTS;
   return (data as unknown as ShowcaseRow[]).map(toProject);
+}
+
+/** One project, draft included, for the admin preview.
+ *
+ *  The service-role client on purpose: a draft is invisible to the
+ *  anonymous key by policy, which is the whole point of the policy. The
+ *  caller is responsible for requireAdmin() — /projets/preview/[id] does it
+ *  first thing, because it sits outside /admin and so gets none of the
+ *  proxy's gating for free. */
+export async function fetchShowcaseProjectById(id: string): Promise<Project | null> {
+  const { data, error } = await supabaseAdmin.from("showcase_projects").select(COLUMNS).eq("id", id).maybeSingle();
+  if (error || !data) return null;
+  return toProject(data as unknown as ShowcaseRow);
 }
