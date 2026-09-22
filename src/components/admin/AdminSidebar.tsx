@@ -63,6 +63,29 @@ function NavLinks({
   );
 }
 
+/** The way back out.
+ *
+ *  The admin had no link to the site it administers — every route under
+ *  /admin leads to another route under /admin, and the only exit was the
+ *  address bar. It opens in a new tab on purpose: checking how something
+ *  landed on the public site is a glance, not a departure, and losing an
+ *  half-filled form to see one is a bad trade. */
+function BackToSite({ onNavigate }: { onNavigate?: () => void }) {
+  return (
+    <a
+      href="/"
+      target="_blank"
+      rel="noopener"
+      onClick={onNavigate}
+      className="mt-6 flex items-center justify-between gap-2 border-t pt-5 text-xs uppercase tracking-widest text-kov-steel transition-colors hover:text-kov-red"
+      style={{ borderColor: "var(--kov-border)" }}
+    >
+      Voir le site
+      <span aria-hidden="true">↗</span>
+    </a>
+  );
+}
+
 export function AdminSidebar({ badgeCounts }: { badgeCounts: Record<string, number> }) {
   const pathname = usePathname();
   const { open, setOpen } = useMobileNav();
@@ -85,6 +108,7 @@ export function AdminSidebar({ badgeCounts }: { badgeCounts: Record<string, numb
         </Link>
 
         <NavLinks pathname={pathname} badgeCounts={badgeCounts} />
+        <BackToSite />
       </aside>
 
       {open &&
@@ -99,6 +123,7 @@ export function AdminSidebar({ badgeCounts }: { badgeCounts: Record<string, numb
                 </button>
               </div>
               <NavLinks pathname={pathname} badgeCounts={badgeCounts} onNavigate={() => setOpen(false)} />
+              <BackToSite onNavigate={() => setOpen(false)} />
             </div>
           </div>,
           document.body

@@ -255,6 +255,11 @@ export function ShowcaseForm({ projectId }: { projectId?: string }) {
             </div>
             <div>
               <label className={LABEL}>Marque au survol</label>
+              <p className="text-kov-steel text-xs mb-1">
+                Le logo du client, qui sort de la carte en trois exemplaires au survol sur /projets. PNG à fond
+                transparent — il est posé sur la page, pas dans un cadre. Sans lui, la carte ne fait rien au
+                survol, ce qui est un état normal et non un manque.
+              </p>
               <Controller
                 control={control}
                 name="hoverLogo"

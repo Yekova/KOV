@@ -3,6 +3,7 @@
 import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { revalidateShowcase } from "@/lib/revalidateShowcase";
+import { PROJECTS } from "@/data/projects";
 import { showcaseInputSchema, type ShowcaseInput } from "./schema";
 
 // Every action re-checks requireAdmin() even though src/proxy.ts already
@@ -321,4 +322,75 @@ export async function createShowcaseUploadUrl(
   if (error || !data) return { path: null, token: null, error: "La préparation du téléversement a échoué." };
 
   return { path: data.path, token: data.token, error: null };
+}
+
+/** Brings the six entries that still live in src/data/projects.ts into the
+ *  table.
+ *
+ *  The migration seeds them too, so this is for the case where the table was
+ *  created but arrived empty — and, more usefully, it means the first thing
+ *  someone sees in an empty admin is a way to fill it rather than a dead
+ *  end. Refuses to run when anything is already there: it is an import, not
+ *  a merge, and a second press should not double the portfolio.
+ *
+ *  Delete it once the file is gone. */
+export async function importLegacyProjects(): Promise<{ error: string | null; imported: number }> {
+  await requireAdmin();
+
+  const { data: already, error: readError } = await supabaseAdmin.from("showcase_projects").select("id").limit(1);
+  if (readError) {
+    return {
+      error: "La table showcase_projects est introuvable — la migration n'a pas encore été appliquée.",
+      imported: 0,
+    };
+  }
+  if (already && already.length > 0) {
+    return { error: "Des réalisations existent déjà : l'import ne s'exécute qu'une fois.", imported: 0 };
+  }
+
+  const rows = PROJECTS.map((project, index) => ({
+    slug: project.slug,
+    reference: project.id,
+    name: project.name,
+    // Everything on the site today is live, so it arrives published — the
+    // import reproduces the current state rather than hiding it behind a
+    // review nobody asked for.
+    publication: "published" as const,
+    kind: project.status,
+    published_at: new Date().toISOString(),
+    sort_order: index,
+    category: project.category,
+    tags: [...project.tags],
+    summary: project.summary,
+    tagline: project.tagline,
+    detail: project.detail,
+    brief: project.brief,
+    narrative_problem: project.narrative?.problem ?? null,
+    narrative_system: project.narrative?.system ?? null,
+    narrative_result: project.narrative?.result ?? null,
+    deliverables: project.deliverables ? [...project.deliverables] : [],
+    location: project.location,
+    href: project.href,
+    case_study_href: project.caseStudyHref,
+    image_path: project.image,
+    screen_path: project.screen,
+    hover_logo_path: project.hoverLogo,
+    gallery_paths: project.gallery ? [...project.gallery] : [],
+    video_path: project.video?.src ?? null,
+    video_poster_path: project.video?.poster ?? null,
+    video_width: project.video?.width ?? null,
+    video_height: project.video?.height ?? null,
+    video_duration: project.video?.duration ?? null,
+    metrics: project.metrics ?? [],
+    testimonial_quote: project.testimonial?.quote ?? null,
+    testimonial_author: project.testimonial?.author ?? null,
+    show_on_home: project.showOnHome,
+    featured: project.featured,
+  }));
+
+  const { error } = await supabaseAdmin.from("showcase_projects").insert(rows);
+  if (error) return { error: "L'import a échoué.", imported: 0 };
+
+  revalidateShowcase();
+  return { error: null, imported: rows.length };
 }

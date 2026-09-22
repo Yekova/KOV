@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowDown, ArrowUp, Eye, Loader2, Pencil, Send, Star, Trash2, Undo2 } from "lucide-react";
-import { EmptyState } from "@/components/admin/EmptyState";
+import { ArrowDown, ArrowUp, Download, Eye, Loader2, Pencil, Send, Star, Trash2, Undo2 } from "lucide-react";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import {
   deleteShowcaseProject,
   getShowcaseProjects,
+  importLegacyProjects,
   reorderShowcaseProjects,
   setShowcasePublication,
   type ShowcaseRow,
@@ -92,6 +92,52 @@ function PublishButton({ project }: { project: ShowcaseRow }) {
   );
 }
 
+/** What an empty table offers.
+ *
+ *  The six projects the site is already showing live in a TypeScript file,
+ *  and until they are rows there is nothing here to edit. An empty admin
+ *  whose only message is "rien à afficher" would be telling someone their
+ *  own portfolio does not exist — so it offers to bring it in instead. */
+function ImportPanel() {
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: importLegacyProjects,
+    onSuccess: (result) => {
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      queryClient.invalidateQueries({ queryKey: ["showcase"] });
+      toast.success(`${result.imported} réalisations importées`);
+    },
+    onError: () => toast.error("L'import a échoué."),
+  });
+
+  return (
+    <div
+      className="border border-dashed p-8 text-center"
+      style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
+    >
+      <p className="text-kov-bone text-sm">Aucune réalisation dans la base.</p>
+      <p className="text-kov-steel text-sm mt-2 max-w-md mx-auto leading-relaxed">
+        Les six projets actuellement en ligne sont encore dans le code. Importez-les pour pouvoir les modifier
+        ici — l&apos;opération ne s&apos;exécute qu&apos;une fois et ne change rien à ce que voient les
+        visiteurs.
+      </p>
+      <button
+        type="button"
+        disabled={mutation.isPending}
+        onClick={() => mutation.mutate()}
+        className="mt-5 inline-flex items-center gap-2 border px-4 py-2.5 text-xs uppercase tracking-widest text-kov-bone transition-colors hover:border-kov-red disabled:opacity-50"
+        style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
+      >
+        {mutation.isPending ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+        Importer les réalisations existantes
+      </button>
+    </div>
+  );
+}
+
 export function ShowcaseList() {
   const queryClient = useQueryClient();
   const { data: projects, isLoading } = useQuery({ queryKey: ["showcase"], queryFn: getShowcaseProjects });
@@ -103,9 +149,7 @@ export function ShowcaseList() {
   });
 
   if (isLoading) return <Skeleton />;
-  if (!projects || projects.length === 0) {
-    return <EmptyState message="Aucune réalisation. La première donnera son contenu à /projets." />;
-  }
+  if (!projects || projects.length === 0) return <ImportPanel />;
 
   // The whole order is sent, not a swapped pair. A pair swap writes two rows
   // and trusts every other row's existing value; sending the list the admin
