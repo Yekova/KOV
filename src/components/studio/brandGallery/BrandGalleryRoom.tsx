@@ -5,6 +5,7 @@ import { Canvas } from "@react-three/fiber";
 import * as THREE from "three";
 import { fetchBrands, type Brand } from "@/lib/studio/brands";
 import { trackGallery } from "@/lib/studio/galleryAnalytics";
+import { startGallerySink } from "@/lib/studio/gallerySink";
 import { BrandGalleryScene } from "./BrandGalleryScene";
 import { BrandGalleryHUD } from "./BrandGalleryHUD";
 import { BrandInteractionPanel } from "./BrandInteractionPanel";
@@ -35,6 +36,12 @@ export function BrandGalleryRoom({ onExit }: { onExit: () => void }) {
   const [level, setLevel] = useState<0 | 1>(0);
   const [active, setActive] = useState<Brand | null>(null);
 
+  // Measurement runs for exactly as long as the visit does. Attached
+  // before the brands are fetched so the first stand someone walks up to
+  // is already counted, and torn down on the way out — which flushes
+  // whatever is still queued.
+  useEffect(() => startGallerySink(), []);
+
   useEffect(() => {
     let cancelled = false;
     void fetchBrands().then((rows) => {
@@ -51,7 +58,7 @@ export function BrandGalleryRoom({ onExit }: { onExit: () => void }) {
 
   const handleInteract = useCallback((brand: Brand) => {
     setActive(brand);
-    trackGallery("brand_stand_interact", { room_id: ROOM_ID, brand_id: brand.id, tier: brand.tier });
+    trackGallery("brand_stand_interact", { room_id: ROOM_ID, slot_id: brand.slotId, brand_id: brand.id, tier: brand.tier });
     // The panel is DOM, and reading it means using the cursor — so the
     // room gives the pointer back rather than making the visitor press
     // Escape first and wonder why nothing is clickable.

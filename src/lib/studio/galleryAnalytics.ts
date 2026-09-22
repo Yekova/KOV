@@ -1,9 +1,9 @@
 // Brand Gallery events.
 //
-// The brief lists PostHog; this project does not have it — checked, not
-// assumed: there is no posthog dependency and no provider anywhere in src.
-// So this is the seam rather than the integration. Every call site emits
-// through here, and wiring a real sink later is one function body.
+// The seam every call site emits through. gallerySink.ts attaches the
+// real one — a batched POST to a server route that decides what is
+// writable — because these numbers end up on a sponsor's invoice and a
+// browser that can write them is a browser that can inflate them.
 //
 // Nothing personal is ever in a payload: a brand id, a tier, a room. No
 // visitor identifier, no dwell time tied to a person, no path.
@@ -18,6 +18,11 @@ export type GalleryEvent =
 
 export interface GalleryEventProps {
   room_id: string;
+  /** The address the event happened at, e.g. "n1-north-c". Present on the
+   *  four per-brand events and absent on the two room-level ones — which
+   *  is exactly the line between what a sponsor is owed a report on and
+   *  what is KOV's own business. */
+  slot_id?: string;
   brand_id?: string;
   tier?: string;
 }

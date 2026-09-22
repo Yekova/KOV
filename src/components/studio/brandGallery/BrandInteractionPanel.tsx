@@ -119,7 +119,7 @@ export function BrandInteractionPanel({ brand, onClose }: { brand: Brand; onClos
           // noopener because the opened page gets window.opener otherwise,
           // and this URL comes from a row rather than from us.
           rel="noopener noreferrer"
-          onClick={() => trackGallery("brand_cta_click", { room_id: "p04", brand_id: brand.id, tier: brand.tier })}
+          onClick={() => trackGallery("brand_cta_click", { room_id: "p04", slot_id: brand.slotId, brand_id: brand.id, tier: brand.tier })}
           className="inline-flex items-center gap-2 mt-5 px-4 py-3 font-mono"
           style={{
             border: "1px solid rgba(227,30,36,0.5)",

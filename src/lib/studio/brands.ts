@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { GALLERY_SLOTS } from "@/components/studio/brandGallery/galleryLayout";
 import { HOUSE_BRAND } from "./houseBrand";
 
 // What a stand in the Brand Gallery is, and how one is fetched.
@@ -16,6 +17,11 @@ export type BrandTier = "presence" | "showcase" | "immersive" | "exclusive";
 
 export interface Brand {
   id: string;
+  /** The address this stand occupies, e.g. "n1-north-c". The row names an
+   *  address and nothing more: where that address is, is geometry in the
+   *  code, which is what makes it impossible for a row to put a stand
+   *  inside a wall. */
+  slotId: string;
   name: string;
   slug: string;
   description: string | null;
@@ -35,23 +41,20 @@ export interface Brand {
   isHouse?: boolean;
 }
 
-interface BrandRow {
-  id: string;
+interface GalleryRow {
+  placement_id: string;
+  slot_id: string;
+  tier: string;
+  is_featured: boolean;
+  brand_id: string;
   name: string;
   slug: string;
   description: string | null;
+  website_url: string | null;
   logo_url: string | null;
   cover_url: string | null;
   video_url: string | null;
   model_url: string | null;
-  website_url: string | null;
-  position_x: number;
-  position_y: number;
-  position_z: number;
-  rotation_y: number;
-  scale: number;
-  tier: string;
-  is_featured: boolean;
 }
 
 const TIERS: readonly BrandTier[] = ["presence", "showcase", "immersive", "exclusive"];
@@ -100,9 +103,21 @@ function safeLink(value: string | null): string | null {
   }
 }
 
-function toBrand(row: BrandRow): Brand {
+const SLOTS = new Map(GALLERY_SLOTS.map((slot) => [slot.id, slot]));
+
+function toBrand(row: GalleryRow): Brand | null {
+  // An address the building does not have. It cannot happen while
+  // gallery_slots is seeded from the same list, but a row pointing at a
+  // slot the code has since removed would otherwise be a stand at the
+  // origin, floating in the middle of the void.
+  const slot = SLOTS.get(row.slot_id);
+  if (!slot) return null;
+
   return {
-    id: row.id,
+    // The placement, not the brand: the same brand can stand twice, and
+    // each stand is its own thing in the room.
+    id: row.placement_id,
+    slotId: row.slot_id,
     name: row.name,
     slug: row.slug,
     description: row.description,
@@ -111,9 +126,9 @@ function toBrand(row: BrandRow): Brand {
     videoUrl: safeAsset(row.video_url),
     modelUrl: safeAsset(row.model_url),
     websiteUrl: safeLink(row.website_url),
-    position: [row.position_x, row.position_y, row.position_z],
-    rotationY: row.rotation_y,
-    scale: row.scale,
+    position: slot.position,
+    rotationY: slot.rotationY,
+    scale: 1,
     tier: TIERS.includes(row.tier as BrandTier) ? (row.tier as BrandTier) : "presence",
     isFeatured: row.is_featured,
   };
@@ -127,19 +142,27 @@ function toBrand(row: BrandRow): Brand {
  *  alone — the room is still a room, and the one position that is not
  *  someone else's to lose is KOV's own. */
 export async function fetchBrands(): Promise<Brand[]> {
+  // public_gallery, not the tables under it. The view is the only thing
+  // the anonymous key can reach, and it already answers the one question
+  // the room has: what is standing here today. Draft placements, cancelled
+  // ones, unpaid ones, the sponsor's account link and every commercial id
+  // are not filtered out by this function — they are absent from what the
+  // database exposes, which is the only kind of filtering that cannot be
+  // forgotten.
   const { data, error } = await supabase
-    .from("brand_gallery")
+    .from("public_gallery")
     .select(
-      "id,name,slug,description,logo_url,cover_url,video_url,model_url,website_url,position_x,position_y,position_z,rotation_y,scale,tier,is_featured"
+      "placement_id,slot_id,tier,is_featured,brand_id,name,slug,description,website_url,logo_url,cover_url,video_url,model_url"
     )
     .order("is_featured", { ascending: false })
     .order("name", { ascending: true });
 
-  const tenants = error || !data ? [] : (data as BrandRow[]).map(toBrand);
+  const tenants = error || !data ? [] : (data as GalleryRow[]).map(toBrand).filter((brand): brand is Brand => brand !== null);
 
-  // The house stand, unless a real row has taken its slug — which is the
-  // escape hatch if KOV's own stand should ever be editable like any
-  // other. The host comes first: it is at the head of the room, and a
-  // list that opens on the building makes the rest read as tenants.
+  // The house stand, unless a real placement has taken its slug — which is
+  // the escape hatch if KOV's own stand should ever be sold, moved or
+  // edited like any other. The host comes first: it is the address the
+  // portal looks at, and a list that opens on the building makes the rest
+  // read as tenants.
   return tenants.some((brand) => brand.slug === HOUSE_BRAND.slug) ? tenants : [HOUSE_BRAND, ...tenants];
 }

@@ -27,7 +27,13 @@ export async function GET(request: Request) {
   }
 
   const now = Date.now();
-  const results = { quotesReminded: 0, invoicesReminded: 0, errors: [] as string[] };
+  const results = {
+    quotesReminded: 0,
+    invoicesReminded: 0,
+    galleryRowsRolledUp: 0,
+    galleryEventsPruned: 0,
+    errors: [] as string[],
+  };
 
   const { data: quotes } = await supabaseAdmin
     .from("quotes")
@@ -101,6 +107,31 @@ export async function GET(request: Request) {
     } catch (err) {
       results.errors.push(`invoice ${invoice.reference}: ${err instanceof Error ? err.message : "unknown error"}`);
     }
+  }
+
+  // ── The Brands Gallery's measurement ────────────────────────────────
+  //
+  // Folded into this job rather than given a cron of its own, because a
+  // Vercel Hobby project gets two scheduled jobs and spending one on an
+  // aggregation that takes milliseconds would be spending it badly. The
+  // two pieces of work are unrelated, so they are separated where it
+  // matters — in SQL, as two functions — and only share a clock.
+  //
+  // Both are idempotent: re-running the day rewrites it rather than
+  // doubling it, which is what makes a missed cron a non-event.
+  try {
+    const { data: rolled, error: rollError } = await supabaseAdmin.rpc("roll_up_brand_metrics");
+    if (rollError) throw new Error(rollError.message);
+    results.galleryRowsRolledUp = typeof rolled === "number" ? rolled : 0;
+
+    // Raw events are kept only as long as they are needed to build and
+    // audit the roll-up. Keeping behavioural data past the purpose that
+    // justified collecting it is the thing data minimisation is against.
+    const { data: pruned, error: pruneError } = await supabaseAdmin.rpc("prune_brand_events", { keep_days: 90 });
+    if (pruneError) throw new Error(pruneError.message);
+    results.galleryEventsPruned = typeof pruned === "number" ? pruned : 0;
+  } catch (err) {
+    results.errors.push(`gallery metrics: ${err instanceof Error ? err.message : "unknown error"}`);
   }
 
   return NextResponse.json(results);

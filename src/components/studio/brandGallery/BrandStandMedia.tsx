@@ -95,7 +95,7 @@ export function BrandStandMedia({
 
     void element
       .play()
-      .then(() => trackGallery("brand_video_play", { room_id: "p04", brand_id: brand.id, tier: brand.tier }))
+      .then(() => trackGallery("brand_video_play", { room_id: "p04", slot_id: brand.slotId, brand_id: brand.id, tier: brand.tier }))
       .catch(() => {
         // Autoplay refused even muted, on some configurations. The cover
         // underneath is still there, which is the right fallback.
@@ -110,7 +110,7 @@ export function BrandStandMedia({
       videoRef.current = null;
       setVideoTexture(null);
     };
-  }, [legible, brand.videoUrl, brand.id, brand.tier]);
+  }, [legible, brand.videoUrl, brand.id, brand.slotId, brand.tier]);
 
   // The film wins over the cover where both exist and the visitor is close
   // enough to have triggered it.

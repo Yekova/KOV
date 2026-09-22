@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Html } from "@react-three/drei";
 import * as THREE from "three";
 import type { Brand } from "@/lib/studio/brands";
+import { trackGallery } from "@/lib/studio/galleryAnalytics";
 import { BrandStandMedia } from "./BrandStandMedia";
 import { atLeast, useBrandProximity, type Nearness } from "./useBrandProximity";
 
@@ -25,7 +26,23 @@ export function BrandStand({ brand, onInteract }: { brand: Brand; onInteract: (b
   // see the fixture below on why a spot needs an object to aim at.
   const panelTarget = useMemo(() => new THREE.Object3D(), []);
 
-  useBrandProximity(brand.position, (level) => setNear(level));
+  useBrandProximity(brand.position, (level) => {
+    setNear(level);
+    // The one event a sponsor is really buying, and the one that was
+    // declared and never emitted. Fired on reaching "legible" — five
+    // metres, close enough that the panel is readable — and only on the
+    // crossing, so standing at a stand is one view rather than sixty a
+    // second. Walking away and coming back is a second view, which is
+    // what it is.
+    if (level === "legible") {
+      trackGallery("brand_stand_view", {
+        room_id: "p04",
+        slot_id: brand.slotId,
+        brand_id: brand.id,
+        tier: brand.tier,
+      });
+    }
+  });
 
   const lit = atLeast(near, "lit");
   const legible = atLeast(near, "legible");

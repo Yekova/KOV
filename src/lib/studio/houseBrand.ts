@@ -23,6 +23,7 @@ const HOUSE_SLOT = GALLERY_SLOTS.find((slot) => slot.id === "n0-north-c") ?? GAL
  *  A real row with the slug `kov` overrides it — see fetchBrands. */
 export const HOUSE_BRAND: Brand = {
   id: "kov-house",
+  slotId: HOUSE_SLOT.id,
   name: "KOV",
   slug: "kov",
   description:
