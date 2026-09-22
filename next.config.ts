@@ -6,6 +6,26 @@ const nextConfig: NextConfig = {
   // existing links/bookmarks/search results to the old paths keep working.
   async redirects() {
     return [
+      // One site, one hostname.
+      //
+      // www.kov-agency.site was serving the whole site directly, with no
+      // redirect: two hostnames, identical content, and a sitemap on the www
+      // one listing nothing but apex URLs. The canonical tags already pointed
+      // at the apex, so this is the redirect that was missing rather than a
+      // change of mind about which host is real.
+      //
+      // It also removes a way to fail in Search Console: a sitemap has to
+      // live inside the property it is submitted to, and two reachable
+      // hostnames is two properties to get that wrong between.
+      //
+      // Safe against a loop: the apex answers 200 directly today, so nothing
+      // upstream is sending it the other way.
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.kov-agency.site" }],
+        destination: "https://kov-agency.site/:path*",
+        permanent: true,
+      },
       { source: "/cgv", destination: "/legal/cgv", permanent: true },
       { source: "/terms", destination: "/legal/conditions-utilisation", permanent: true },
       { source: "/privacy", destination: "/legal/confidentialite", permanent: true },
