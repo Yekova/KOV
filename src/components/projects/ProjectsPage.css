@@ -431,11 +431,21 @@
   color: var(--kov-concrete);
 }
 
+/* The two controls sit on one line where there is room and stack where
+   there is not — at a third of a twelve-column row they would otherwise
+   collide. */
+.kov-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 26px;
+  margin-top: 18px;
+}
+
 .kov-card__link {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  margin-top: 18px;
   padding: 0;
   background: none;
   font-family: var(--font-mono), monospace;
@@ -455,6 +465,17 @@
 .kov-card__link:focus-visible {
   outline: 2px solid var(--kov-red);
   outline-offset: 4px;
+}
+
+/* The secondary of the pair. Quieter at rest and the same weight on hover:
+   both are real destinations, one is just the one the page is about. */
+.kov-card__link--ghost {
+  color: var(--kov-steel);
+  text-decoration: none;
+}
+
+.kov-card__link--ghost:hover {
+  color: var(--kov-red);
 }
 
 /* ── List ────────────────────────────────────────────────────────────── */

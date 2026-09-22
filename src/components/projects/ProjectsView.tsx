@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { BrowserChrome } from "@/components/ui/BrowserChrome";
 import { PROJECTS, type Project } from "@/data/projects";
 import { ProjectSheet, type SheetOrigin } from "./sheet/ProjectSheet";
@@ -50,6 +51,11 @@ function services(project: Project): string[] {
     // lowercase. These are deliverables in a list, not prose.
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1));
 }
+
+/** Does this go off the site? An internal route stays a Link and a real
+ *  destination opens in its own tab — a portfolio that navigates away from
+ *  itself to show its work has lost the visitor it was persuading. */
+const isExternal = (href: string) => /^https?:\/\//.test(href);
 
 /** Every delivered project opens a sheet now. It used to be gated on a film
  *  or a longer description, back when the modal held nothing the card did
@@ -324,11 +330,40 @@ function GridView({
                 project.summary && <p className="kov-card__body">{project.summary}</p>
               )}
 
-              {openable(project) && (
-                <button type="button" className="kov-card__link" onClick={(event) => onOpen(project.id, event)}>
-                  Voir le projet
-                  <span aria-hidden="true">→</span>
-                </button>
+              {/* Two different things, said differently. The sheet is the
+                  reasoning behind the work; the site is the work. They used
+                  to share a label, which meant the card offered "Voir le
+                  projet" and opened something that was not the project. */}
+              {/* Not rendered empty: H Capital and the reserved position
+                  have neither a study nor a site, and a flex row with
+                  nothing in it is still eighteen pixels of margin. */}
+              {(openable(project) || project.href) && (
+              <div className="kov-card__actions">
+                {openable(project) && (
+                  <button type="button" className="kov-card__link" onClick={(event) => onOpen(project.id, event)}>
+                    Voir l&apos;étude
+                    <span aria-hidden="true">→</span>
+                  </button>
+                )}
+
+                {project.href &&
+                  (isExternal(project.href) ? (
+                    <a
+                      href={project.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="kov-card__link kov-card__link--ghost"
+                    >
+                      Voir le projet
+                      <span aria-hidden="true">↗</span>
+                    </a>
+                  ) : (
+                    <Link href={project.href} className="kov-card__link kov-card__link--ghost">
+                      Voir le projet
+                      <span aria-hidden="true">→</span>
+                    </Link>
+                  ))}
+              </div>
               )}
           </div>
         </li>

@@ -141,9 +141,10 @@ export const PROJECTS: Project[] = [
     category: "Gestion de patrimoine",
     tags: ["Stratégie", "Design", "Développement"],
     caseStudyHref: null,
-    // No public case-study route exists yet, so this card carries its work
-    // without pretending to open one.
-    href: null,
+    // The live site. It is also what the browser frame on /projets prints
+    // in its address pill — derived from this one field rather than typed
+    // twice, so the card can never show a domain the button does not open.
+    href: "https://www.kanti-patrimoine.com/",
     location: null,
     image: "/work/kanti-mockup.webp",
     // The laptop screen of the mockup above, extracted to its own content.
