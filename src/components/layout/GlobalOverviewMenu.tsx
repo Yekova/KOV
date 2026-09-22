@@ -82,7 +82,7 @@ const GLASS_PANEL_STYLE = {
 } as const;
 
 // Full-screen "whole site in one glance" overview, opened from
-// GlobalMenuButton (bottom-center). Reuses GlobalSearch's own circular
+// GlobalMenuButton (bottom-center). Reuses the circular
 // clip-path reveal (same mechanism, anchored at the button's fixed position
 // instead of a measured trigger rect, since both are already bottom-center).
 //

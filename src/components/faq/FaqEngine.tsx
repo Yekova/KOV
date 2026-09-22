@@ -75,7 +75,7 @@ export function FaqEngine() {
   const showGrouped = category === ALL && !q;
 
   // "/" focuses the FAQ's own search box — the sitewide ⌘K/Ctrl+K search
-  // (GlobalSearch, mounted in the site chrome on every page) already owns
+  // (NavSearch, in the nav pill on every page) already owns
   // that combo for its own overlay, so reusing it here would show a
   // shortcut hint that doesn't actually do what it says on this page.
   useEffect(() => {

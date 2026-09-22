@@ -145,6 +145,14 @@
 
 /* ── The grid ────────────────────────────────────────────────────────── */
 
+/* Twelve columns, and each card says how many it takes.
+ *
+ * Two equal columns down the page gave every project the same weight,
+ * which is the one thing a portfolio must not do: the delivered work and
+ * the position that is still empty were the same size. The spans come
+ * from ProjectsView, which composes complete rows — a full-width feature,
+ * then pairs, then threes — so the page reads as a sequence of different
+ * rows rather than as a table of equal cells. */
 .kov-pw__grid {
   list-style: none;
   display: grid;
@@ -155,11 +163,47 @@
   padding: 56px var(--pw-gutter) 0;
 }
 
+.kov-card {
+  grid-column: span 1;
+}
+
+/* Tablet: halves or the full width, never thirds — a card at a third of
+   900px is a thumbnail with a paragraph under it. */
 @media (min-width: 900px) {
   .kov-pw__grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(12, minmax(0, 1fr));
     gap: 56px 44px;
     padding-top: 72px;
+  }
+
+  .kov-card {
+    grid-column: span var(--span-md, 6);
+  }
+}
+
+@media (min-width: 1200px) {
+  .kov-card {
+    grid-column: span var(--span, 6);
+  }
+}
+
+/* The feature. Side by side rather than a browser window the width of the
+   page with a caption under it — at 1500px that window is 840px tall on
+   its own, and the name ends up below the fold of the card. */
+@media (min-width: 1200px) {
+  .kov-card--feature {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
+    gap: 56px;
+    align-items: center;
+  }
+
+  .kov-card--feature .kov-card__text {
+    padding-top: 0;
+  }
+
+  .kov-card--feature .kov-card__name {
+    font-size: clamp(30px, 3vw, 44px);
   }
 }
 
@@ -169,6 +213,13 @@
   position: relative;
   display: flex;
   flex-direction: column;
+}
+
+/* A reserved position holds nothing, so it gets the smallest frame on the
+   page and sits alone at the end of it — an empty frame on a wall, not a
+   card pretending to have contents. */
+.kov-card--reserved .kov-card__shot {
+  aspect-ratio: 4 / 3;
 }
 
 /* The marks break out of the frame, so they live on the card and not in

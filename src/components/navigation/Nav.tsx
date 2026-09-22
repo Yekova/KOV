@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/Button";
-import { GlobalSearch } from "@/components/search/GlobalSearch";
+import { NavSearch } from "@/components/navigation/NavSearch";
 import { NavLinks, type NavLinkItem } from "@/components/navigation/NavLinks";
 import { MobileNavMenu } from "@/components/navigation/MobileNavMenu";
 import { REVEAL_EASE } from "@/lib/motion/easing";
@@ -38,6 +38,8 @@ export function Nav({ variant = "fixed", flat = false }: NavProps) {
   const isHome = pathname === "/";
   const scrolled = useScrolled();
   const [mobileOpen, setMobileOpen] = useState(false);
+  // The field unfurls over the links, so the links get out of its way.
+  const [searchOpen, setSearchOpen] = useState(false);
   const pillRef = useRef<HTMLDivElement>(null);
   // True whenever the pill is currently scrolled over a registered light
   // zone (e.g. ScreenShowcase's dashboard screenshot) — the glass pill
@@ -110,12 +112,20 @@ export function Nav({ variant = "fixed", flat = false }: NavProps) {
         />
       </Link>
 
-      <nav className="hidden md:flex items-center gap-2.5 sm:gap-6 px-2.5 sm:px-3 text-xs uppercase tracking-widest text-kov-bone transition-colors duration-300">
+      <nav
+        className={`hidden md:flex items-center gap-2.5 sm:gap-6 px-2.5 sm:px-3 text-xs uppercase tracking-widest text-kov-bone transition-[color,opacity] duration-300 ${
+          searchOpen ? "pointer-events-none opacity-0" : "opacity-100"
+        }`}
+        // Hidden from the keyboard as well as from the eye while the field
+        // is over them: a link you cannot see but can still tab to is worse
+        // than one that is simply gone.
+        inert={searchOpen || undefined}
+      >
         <NavLinks links={LINKS} pillRef={pillRef} />
       </nav>
 
       <div className="hidden md:flex items-center gap-1 pr-1">
-        <GlobalSearch />
+        <NavSearch pillRef={pillRef} onOpenChange={setSearchOpen} />
         <Link
           href="/login"
           aria-label="Espace client"

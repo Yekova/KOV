@@ -15,7 +15,7 @@ interface NavLink {
 // reasoning as every other portaled popup in this codebase.
 export function MobileNavMenu({ open, onClose, links }: { open: boolean; onClose: () => void; links: NavLink[] }) {
   // Escape closes it — loi de Jakob. Every overlay on the web does this, and
-  // every other overlay in this codebase already did (GlobalSearch,
+  // every other overlay in this codebase already did (the nav dropdowns,
   // GlobalOverviewMenu, the studio panels); this one, the primary navigation
   // on a phone, was the exception.
   useEffect(() => {

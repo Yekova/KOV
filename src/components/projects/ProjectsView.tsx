@@ -146,13 +146,75 @@ export function ProjectsView() {
   );
 }
 
+/** Is this a position nobody has filled yet? An upcoming entry with
+ *  nothing to say about itself — the page shows exactly one. */
+const isReserved = (project: Project) => project.status === "upcoming" && !project.summary;
+
+/** How the rows are composed, in twelfths of a row.
+ *
+ *  Cycled down the page, so the eye gets a different shape each time: the
+ *  first project takes the whole row, the next two share it, then three,
+ *  then a pair, then a wide one beside a narrow one. Every shape adds to
+ *  twelve, so a row never leaves a hole in the middle of the page. */
+const RHYTHM: readonly (readonly number[])[] = [[12], [6, 6], [4, 4, 4], [6, 6], [8, 4]];
+
+/** What to use when fewer cards are left than the next shape wants. */
+const FITS: Record<number, readonly number[]> = { 1: [12], 2: [6, 6], 3: [4, 4, 4] };
+
+/** One span per card, in order.
+ *
+ *  The reserved position is taken out first and put back at four twelfths
+ *  on the end: it is an empty frame, and widening an empty frame only
+ *  makes a bigger empty frame. */
+function spansFor(projects: Project[]): number[] {
+  const reserved = projects.length > 0 && isReserved(projects[projects.length - 1]);
+  const body = reserved ? projects.slice(0, -1) : projects;
+
+  const spans: number[] = [];
+  let row = 0;
+  while (spans.length < body.length) {
+    const left = body.length - spans.length;
+    const cycled = RHYTHM[row % RHYTHM.length];
+    const shape = cycled.length > left ? (FITS[left] ?? [12]) : cycled;
+    spans.push(...shape);
+    row += 1;
+  }
+
+  if (reserved) spans.push(4);
+  return spans;
+}
+
+/** What Next should download for a card of this width. The grid caps at
+ *  1500px, so the large end is a pixel figure rather than a viewport one —
+ *  a 12-span card on a 2560px screen is still only 1400px of picture. */
+const SIZES: Record<number, string> = {
+  12: "(max-width: 899px) 92vw, (max-width: 1199px) 92vw, min(1400px, 62vw)",
+  8: "(max-width: 899px) 92vw, (max-width: 1199px) 46vw, min(930px, 42vw)",
+  6: "(max-width: 899px) 92vw, (max-width: 1199px) 46vw, min(690px, 31vw)",
+  4: "(max-width: 899px) 92vw, (max-width: 1199px) 46vw, min(450px, 21vw)",
+};
+
 // ── Grid ─────────────────────────────────────────────────────────────────
 
 function GridView({ projects, onOpen }: { projects: Project[]; onOpen: (id: string, event: React.MouseEvent<HTMLElement>) => void }) {
+  const spans = spansFor(projects);
+
   return (
     <ul className="kov-pw__grid">
-        {projects.map((project) => (
-          <li key={project.id} id={`projet-${project.id}`} className="kov-card" data-card>
+        {projects.map((project, index) => {
+          const span = spans[index] ?? 6;
+          // Tablet has room for halves, not thirds — see the media query
+          // in ProjectsPage.css on why a third of 900px is a thumbnail.
+          const spanMd = span === 12 ? 12 : 6;
+
+          return (
+          <li
+            key={project.id}
+            id={`projet-${project.id}`}
+            className={`kov-card${span === 12 ? " kov-card--feature" : ""}${isReserved(project) ? " kov-card--reserved" : ""}`}
+            style={{ ["--span" as string]: span, ["--span-md" as string]: spanMd }}
+            data-card
+          >
             <div className="kov-card__window">
               <BrowserChrome tone="light" url={browserUrl(project.href)} />
 
@@ -165,7 +227,7 @@ function GridView({ projects, onOpen }: { projects: Project[]; onOpen: (id: stri
                     src={project.screen ?? project.image}
                     alt={`${project.name} — ${project.category}`}
                     fill
-                    sizes="(max-width: 1023px) 92vw, 46vw"
+                    sizes={SIZES[span] ?? SIZES[6]}
                     className="kov-card__img"
                   />
                 ) : (
@@ -251,7 +313,8 @@ function GridView({ projects, onOpen }: { projects: Project[]; onOpen: (id: stri
               )}
           </div>
         </li>
-      ))}
+          );
+        })}
     </ul>
   );
 }
