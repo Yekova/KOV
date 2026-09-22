@@ -1,0 +1,78 @@
+/* The card, and what it does under the cursor.
+ *
+ * Two things happen on hover. The edge takes the accent and the shadow
+ * deepens, which is the card saying it is the live object on the screen;
+ * and a soft red light follows the pointer across the glass, which is the
+ * room's own light reaching it. The second is a pseudo-element rather than
+ * a real node so nothing inside the card has to move out of its way.
+ *
+ * --mx/--my are written straight to the element's style on pointermove, in
+ * LoginForm. State would mean a React render per mouse sample. */
+
+.kov-login-card {
+  position: relative;
+  isolation: isolate;
+  transition: border-color 420ms ease, box-shadow 420ms ease, transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.kov-login-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  /* Centred until the pointer says otherwise, so a keyboard visitor who
+     never moves a mouse still gets a lit card rather than a dead one. */
+  background: radial-gradient(
+    460px circle at var(--mx, 50%) var(--my, 30%),
+    rgba(227, 30, 36, 0.16),
+    rgba(227, 30, 36, 0) 62%
+  );
+  opacity: 0;
+  transition: opacity 520ms ease;
+  pointer-events: none;
+}
+
+.kov-login-card:hover,
+.kov-login-card:focus-within {
+  border-color: rgba(227, 30, 36, 0.38) !important;
+  box-shadow: 0 40px 90px -50px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(227, 30, 36, 0.08);
+  transform: translateY(-3px);
+}
+
+.kov-login-card:hover::before,
+.kov-login-card:focus-within::before {
+  opacity: 1;
+}
+
+/* Focus-within rather than hover alone is the whole point of pairing them:
+   someone filling this in with a keyboard gets the same lit card as
+   someone with a cursor on it. */
+
+@media (prefers-reduced-motion: reduce) {
+  .kov-login-card,
+  .kov-login-card::before {
+    transition: none;
+  }
+
+  .kov-login-card:hover,
+  .kov-login-card:focus-within {
+    transform: none;
+  }
+}
+
+/* The fields lift with the card. A border that only reacts on focus leaves
+   the resting state reading as flat plates; this gives the whole group a
+   hover state without taking anything from the focused one. */
+.kov-login-card:hover .kov-login-field {
+  border-color: rgba(231, 231, 229, 0.18);
+}
+
+.kov-login-field {
+  transition: border-color 300ms ease, background-color 300ms ease;
+}
+
+.kov-login-field:focus {
+  border-color: var(--kov-red) !important;
+  background-color: rgba(255, 255, 255, 0.07);
+}

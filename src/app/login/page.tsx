@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import { LoginBackdrop } from "./LoginBackdrop";
 import { LoginForm } from "./LoginForm";
+import "./login.css";
 
 export const metadata: Metadata = {
   title: "Connexion — KOV",
@@ -35,33 +36,12 @@ export default async function LoginPage(props: PageProps<"/login">) {
 
   return (
     <main id="kov-main" tabIndex={-1} className="relative min-h-screen" style={{ background: "var(--kov-black)" }}>
-      {/* priority: this is the page's only image and it is the page. */}
-      <Image
-        src="/kov/login/hall.webp"
-        alt=""
-        aria-hidden="true"
-        fill
-        priority
-        sizes="100vw"
-        className="object-cover"
-        style={{ objectPosition: "center 60%" }}
-      />
+      {/* Fixed, so the room is the ground under the footer as well as
+          under the form — and so it holds still while the page moves over
+          it. It drifts against the cursor; see LoginBackdrop. */}
+      <LoginBackdrop />
 
-      {/* Two scrims rather than one flat veil: a vertical one so the copy
-          at the top and the corner mark at the bottom both sit on
-          something, and a horizontal one that deepens toward the right
-          where the card lands. The photograph keeps its own light in the
-          middle, which is the whole reason to use it. */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0"
-        style={{
-          background:
-            "linear-gradient(180deg, rgba(8,8,10,0.72) 0%, rgba(8,8,10,0.28) 34%, rgba(8,8,10,0.30) 62%, rgba(8,8,10,0.78) 100%), linear-gradient(90deg, rgba(8,8,10,0.66) 0%, rgba(8,8,10,0.12) 42%, rgba(8,8,10,0.55) 100%)",
-        }}
-      />
-
-      <div className="relative mx-auto flex min-h-screen max-w-[1600px] flex-col justify-center gap-14 px-6 py-32 md:px-12 lg:flex-row lg:items-center lg:justify-between lg:gap-20 lg:py-36">
+      <div className="relative z-[1] mx-auto flex min-h-screen max-w-[1600px] flex-col justify-center gap-14 px-6 py-32 md:px-12 lg:flex-row lg:items-center lg:justify-between lg:gap-20 lg:py-36">
         <div className="max-w-xl">
           <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-kov-red">KOV Studio</p>
 
@@ -72,18 +52,24 @@ export default async function LoginPage(props: PageProps<"/login">) {
             className="mt-7 font-display text-kov-bone"
             style={{ fontSize: "clamp(34px, 5vw, 66px)", lineHeight: 1.06, letterSpacing: "-0.025em" }}
           >
-            Entrez dans
+            Votre espace
             <br />
             {/* The second line steps back so the first reads as the
-                instruction and the second as the place. */}
-            <span style={{ color: "var(--kov-concrete)" }}>un autre espace.</span>
+                possessive and the second as the promise. */}
+            <span style={{ color: "var(--kov-concrete)" }}>
+              sécurisé<span className="text-kov-red">.</span>
+            </span>
           </h1>
 
           <span aria-hidden="true" className="mt-8 block h-px w-14 bg-kov-red" />
 
+          {/* Four things, and all four are real routes behind this form:
+              /client/projects, /client/quotes, /client/invoices,
+              /client/documents. Nothing here announces a feature the space
+              does not have. */}
           <p className="mt-8 max-w-sm text-sm leading-relaxed text-kov-steel">
-            Un lieu dédié à vos projets, vos documents et vos échanges avec l&apos;équipe. Connectez-vous pour
-            reprendre où vous en étiez.
+            Suivi de projet, devis, factures et documents, au même endroit. Connectez-vous pour reprendre où vous en
+            étiez.
           </p>
 
           {/* The corner mark. Three verbs and a number, which is the

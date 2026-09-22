@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import Link from "next/link";
 import { login, type LoginState } from "./actions";
 import { LoginLoadingOverlay } from "./LoginLoadingOverlay";
@@ -11,20 +11,34 @@ const INITIAL_STATE: LoginState = { error: null };
 // Against a photograph an underline is a line on an image; a filled box is
 // a thing you can type into, which is what this screen is for.
 const FIELD =
-  "h-[52px] w-full rounded-xl border bg-white/[0.045] px-4 pr-11 text-[15px] text-kov-bone outline-none transition-colors placeholder:text-kov-steel/70 focus:border-kov-red";
+  "kov-login-field h-[52px] w-full rounded-xl border bg-white/[0.045] px-4 pr-11 text-[15px] text-kov-bone outline-none placeholder:text-kov-steel/70";
 
 const LABEL = "mb-2 block font-mono text-[9px] uppercase tracking-[0.24em] text-kov-steel";
 
 export function LoginForm({ next, justReset }: { next?: string; justReset?: boolean }) {
   const [state, formAction, isPending] = useActionState(login, INITIAL_STATE);
   const [showPassword, setShowPassword] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  // Where the light on the glass is. Written straight to the element —
+  // state here would be a React render per mouse sample, for two numbers
+  // that only CSS ever reads.
+  const trackLight = (event: React.PointerEvent<HTMLDivElement>) => {
+    const card = cardRef.current;
+    if (!card) return;
+    const rect = card.getBoundingClientRect();
+    card.style.setProperty("--mx", `${event.clientX - rect.left}px`);
+    card.style.setProperty("--my", `${event.clientY - rect.top}px`);
+  };
 
   return (
     <>
       {isPending && <LoginLoadingOverlay />}
 
       <div
-        className="w-full max-w-[440px] p-8 sm:p-10"
+        ref={cardRef}
+        onPointerMove={trackLight}
+        className="kov-login-card w-full max-w-[440px] p-8 sm:p-10"
         style={{
           borderRadius: 22,
           border: "1px solid var(--glass-border)",
