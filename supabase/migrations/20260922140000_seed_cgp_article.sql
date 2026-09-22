@@ -55,9 +55,9 @@ insert into posts (
 
 <h2>Structurer une offre qui est, par nature, complexe</h2>
 
-<p>C'est le problème que nous avons rencontré en travaillant pour <a href="/projets">Kanti</a>, un cabinet de gestion de patrimoine : une offre réelle, sérieuse, et impossible à saisir d'un coup d'œil. Immobilier, placements financiers, transmission, fiscalité, retraite, protection du dirigeant — chaque brique est légitime, et mises côte à côte elles forment un mur.</p>
+<p>C'est le problème que nous avons rencontré en travaillant pour <a href="/projets">Kanti</a>, un cabinet de gestion de patrimoine : une offre réelle, sérieuse, et impossible à saisir d'un coup d'œil. Immobilier, placements financiers, transmission, fiscalité, retraite, protection du dirigeant. Chaque brique est légitime, et mises côte à côte elles forment un mur.</p>
 
-<p>Un visiteur ne lit pas un mur. Il cherche <em>son</em> cas : « je vends mon entreprise », « je viens d'hériter », « je prépare ma retraite ». Une offre organisée par produit oblige chaque prospect à traduire lui-même sa situation en catégorie — et la plupart ne font pas cet effort, ils partent.</p>
+<p>Un visiteur ne lit pas un mur. Il cherche <em>son</em> cas : « je vends mon entreprise », « je viens d'hériter », « je prépare ma retraite ». Une offre organisée par produit oblige chaque prospect à traduire lui-même sa situation en catégorie, et la plupart ne font pas cet effort : ils partent.</p>
 
 <p>L'arbitrage est donc souvent le même : présenter l'offre par <strong>situation de vie</strong> plutôt que par famille de produits, et garder la vue par produit pour ceux qui savent déjà ce qu'ils cherchent. Ce n'est pas un choix esthétique, c'est une décision d'architecture qui se prend avant la première maquette.</p>
 
@@ -65,13 +65,13 @@ insert into posts (
 
 <p>Un formulaire « Nom, e-mail, message » vous apporte des demandes que vous devrez qualifier au téléphone, une par une. Pour un cabinet dont le temps est la ressource rare, c'est le mauvais échange.</p>
 
-<p>Quelques questions supplémentaires, posées correctement, changent la nature de ce qui arrive dans votre boîte : la situation, l'échéance, ce qui motive la démarche. Le prospect y répond volontiers — c'est même rassurant, parce que ça ressemble à un premier rendez-vous plutôt qu'à une prise de contact commerciale.</p>
+<p>Quelques questions supplémentaires, posées correctement, changent la nature de ce qui arrive dans votre boîte : la situation, l'échéance, ce qui motive la démarche. Le prospect y répond volontiers. C'est même rassurant, parce que ça ressemble à un premier rendez-vous plutôt qu'à une prise de contact commerciale.</p>
 
 <p>Deux règles pratiques : ne demandez jamais une information que vous n'utiliserez pas, et dites ce qui se passe ensuite. Un formulaire qui annonce la suite est rempli plus souvent qu'un formulaire qui se contente d'un bouton « Envoyer ».</p>
 
 <h2>Ce que le référencement change pour un cabinet</h2>
 
-<p>Un cabinet patrimonial n'a pas besoin de trafic. Il a besoin de <strong>quelques dizaines de bonnes personnes par an</strong>, ce qui est un objectif complètement différent — et beaucoup plus atteignable.</p>
+<p>Un cabinet patrimonial n'a pas besoin de trafic. Il a besoin de <strong>quelques dizaines de bonnes personnes par an</strong>, ce qui est un objectif complètement différent, et beaucoup plus atteignable.</p>
 
 <p>Les requêtes qui amènent un client ne sont presque jamais « gestion de patrimoine ». Ce sont des questions : que faire après la vente de son entreprise, comment préparer une succession, faut-il un CGP quand on n'est pas fortuné. Chacune est une page, et chaque page est une occasion d'être trouvé par quelqu'un qui a déjà le problème que vous savez traiter.</p>
 
@@ -87,7 +87,7 @@ insert into posts (
   <li>Sait-il ce qui se passe après avoir rempli le formulaire ?</li>
 </ul>
 
-<p>Trois « non » ne veulent pas dire qu'il faut tout refaire. Dans la plupart des cas, l'essentiel se joue sur l'organisation du contenu et sur la hiérarchie des preuves — pas sur le design.</p>
+<p>Trois « non » ne veulent pas dire qu'il faut tout refaire. Dans la plupart des cas, l'essentiel se joue sur l'organisation du contenu et sur la hiérarchie des preuves, pas sur le design.</p>
 
 <p>C'est le travail que nous avons mené pour Kanti : structurer une offre patrimoniale complexe, pour aboutir à une expérience plus claire, cohérente et évolutive. Si vous êtes dans la même situation, <a href="/contact">parlez-nous de votre cabinet</a> : on revient avec une lecture du problème avant de parler design.</p>
 $article$,

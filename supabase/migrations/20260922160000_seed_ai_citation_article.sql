@@ -40,7 +40,7 @@ insert into posts (
 
 <p>Les moteurs de réponse n'explorent pas un web parallèle. Ils lisent les mêmes pages, par le même protocole, avec des robots qui se déclarent. Rien de ce que vous faites pour eux n'est perdu pour Google, et l'inverse est vrai aussi.</p>
 
-<p>Ce qui change, c'est l'unité. Google indexe une page et la classe. Un moteur de réponse <strong>extrait un passage et l'attribue</strong>. Vous n'optimisez plus une page : vous produisez des passages qui survivent à l'extraction — lisibles seuls, sortis de leur contexte, sans le paragraphe qui les précédait.</p>
+<p>Ce qui change, c'est l'unité. Google indexe une page et la classe. Un moteur de réponse <strong>extrait un passage et l'attribue</strong>. Vous n'optimisez plus une page : vous produisez des passages qui survivent à l'extraction, lisibles seuls, sortis de leur contexte, sans le paragraphe qui les précédait.</p>
 
 <h2>Première condition : que la page existe sans JavaScript</h2>
 
@@ -48,23 +48,23 @@ insert into posts (
 
 <p>Le test tient en dix secondes et ne demande aucun outil : affichez le code source de la page (Ctrl+U), cherchez une phrase de votre texte. Si elle n'y est pas, aucun moteur de réponse ne la citera, quelle qu'en soit la qualité.</p>
 
-<p>C'est une décision d'architecture, prise au moment du développement — pas un réglage qu'on ajoute après. Un site rendu côté serveur passe ce test par construction ; un site entièrement rendu côté navigateur ne le passe jamais.</p>
+<p>C'est une décision d'architecture, prise au moment du développement, et non un réglage qu'on ajoute après. Un site rendu côté serveur passe ce test par construction ; un site entièrement rendu côté navigateur ne le passe jamais.</p>
 
 <h2>Deuxième condition : une autorisation, et elle est mal comprise</h2>
 
 <p>Les robots se déclarent, et ils ne font pas tous le même travail. Côté OpenAI, on distingue notamment :</p>
 
 <ul>
-  <li><strong>GPTBot</strong> — collecte destinée à l'entraînement des modèles.</li>
-  <li><strong>OAI-SearchBot</strong> — constitution de l'index de recherche.</li>
-  <li><strong>ChatGPT-User</strong> — récupération d'une page déclenchée par la question d'un utilisateur.</li>
+  <li><strong>GPTBot</strong> : collecte destinée à l'entraînement des modèles.</li>
+  <li><strong>OAI-SearchBot</strong> : constitution de l'index de recherche.</li>
+  <li><strong>ChatGPT-User</strong> : récupération d'une page déclenchée par la question d'un utilisateur.</li>
 </ul>
 
 <p>Perplexity déclare de son côté <strong>PerplexityBot</strong> et <strong>Perplexity-User</strong>, sur une logique comparable.</p>
 
 <p>D'où le malentendu le plus répandu : beaucoup de sites bloquent GPTBot en pensant « se protéger de l'IA », puis s'étonnent de n'être jamais cités. Ce sont deux décisions distinctes. Refuser que vos pages nourrissent l'entraînement d'un modèle ne vous retire pas des réponses ; bloquer les agents de recherche et de récupération, si. Tranchez-les séparément, en sachant laquelle vous tranchez.</p>
 
-<p>Cette liste évolue : les opérateurs ajoutent et renomment leurs agents. Avant d'écrire une règle dans votre <em>robots.txt</em>, allez lire la documentation de l'opérateur concerné plutôt qu'un article — celui-ci compris.</p>
+<p>Cette liste évolue : les opérateurs ajoutent et renomment leurs agents. Avant d'écrire une règle dans votre <em>robots.txt</em>, allez lire la documentation de l'opérateur concerné plutôt qu'un article, celui-ci compris.</p>
 
 <blockquote>Un moteur de réponse ne cite pas un site. Il cite un passage. Écrivez des passages qui tiennent debout tout seuls.</blockquote>
 
@@ -80,7 +80,7 @@ insert into posts (
   <li><strong>Aucun renvoi interne implicite</strong> : « comme on l'a vu plus haut » ne veut rien dire dans un passage cité, qui n'a pas de plus haut.</li>
 </ul>
 
-<p>C'est exactement pour ça qu'une <a href="/faq">FAQ bien tenue</a> fonctionne : c'est structurellement une collection de réponses autonomes. Et c'est le principe qui a guidé notre article sur les <a href="/journal/site-internet-conseiller-gestion-patrimoine">sites de conseillers en gestion de patrimoine</a> — une question, posée en titre, traitée jusqu'au bout.</p>
+<p>C'est exactement pour ça qu'une <a href="/faq">FAQ bien tenue</a> fonctionne : c'est structurellement une collection de réponses autonomes. Et c'est le principe qui a guidé notre article sur les <a href="/journal/site-internet-conseiller-gestion-patrimoine">sites de conseillers en gestion de patrimoine</a> : une question, posée en titre, traitée jusqu'au bout.</p>
 
 <h2>llms.txt : utile, mais pas magique</h2>
 
@@ -104,7 +104,7 @@ insert into posts (
 
 <p><strong>Poser les questions vous-même.</strong> Interrogez les moteurs sur les sujets dont vous devriez être la réponse. Mais les réponses varient selon l'utilisateur, la session et le moment : traitez ça comme une observation répétée dans le temps, jamais comme une mesure.</p>
 
-<p><strong>Lire vos journaux serveur.</strong> Les agents s'identifient. Voir OAI-SearchBot ou PerplexityBot venir chercher vos pages vous dit que vous êtes lisible et autorisé — c'est-à-dire la partie que vous maîtrisez réellement.</p>
+<p><strong>Lire vos journaux serveur.</strong> Les agents s'identifient. Voir OAI-SearchBot ou PerplexityBot venir chercher vos pages vous dit que vous êtes lisible et autorisé, c'est-à-dire la partie que vous maîtrisez réellement.</p>
 
 <p>Le reste, être choisi plutôt qu'un autre, ne se pilote pas. Autant le savoir avant d'y consacrer un budget.</p>
 
@@ -112,7 +112,7 @@ insert into posts (
 
 <p>Tout ce qui précède découle d'une seule chose : un site lisible par une machine et écrit pour être cité. Du HTML servi par le serveur, des autorisations décidées plutôt que subies, des réponses autonomes plutôt que des pages fourre-tout.</p>
 
-<p>Ce n'est pas une nouvelle discipline. C'est l'ancienne, faite correctement — et c'est ce que recouvrent la <a href="/expertise/strategie">stratégie</a> et le <a href="/expertise/developpement">développement</a> dans notre façon de travailler. Si vous voulez savoir ce que votre site donne à lire aujourd'hui, <a href="/contact">écrivez-nous</a> : on regarde, et on vous le dit.</p>
+<p>Ce n'est pas une nouvelle discipline. C'est l'ancienne, faite correctement, et c'est ce que recouvrent la <a href="/expertise/strategie">stratégie</a> et le <a href="/expertise/developpement">développement</a> dans notre façon de travailler. Si vous voulez savoir ce que votre site donne à lire aujourd'hui, <a href="/contact">écrivez-nous</a> : on regarde, et on vous le dit.</p>
 $article$,
   null,
   'published',
