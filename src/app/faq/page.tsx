@@ -9,7 +9,7 @@ import { FaqEngine } from "@/components/faq/FaqEngine";
 const SITE_URL = "https://kov-agency.site";
 
 export const metadata: Metadata = {
-  title: "FAQ | KOV",
+  title: "FAQ — délais, budget et déroulé d'un projet web | KOV",
   description: "Délais, processus, budget, technique : les réponses aux questions les plus fréquentes avant de démarrer un projet avec KOV.",
   alternates: { canonical: `${SITE_URL}/faq` },
 };

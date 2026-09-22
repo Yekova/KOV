@@ -5,8 +5,9 @@ import { JournalListClient } from "@/components/journal/JournalListClient";
 import type { JournalPostSummary } from "@/components/journal/journalTypes";
 
 export const metadata: Metadata = {
-  title: "Journal | KOV",
-  description: "Études de cas et notes de studio : comment on construit ce dont on est fiers.",
+  title: "Journal — études de cas et notes de studio | KOV",
+  description:
+    "Études de cas et notes de studio : comment on construit un site, ce qu'on décide en chemin et pourquoi. Le raisonnement derrière le travail, pas un blog.",
   alternates: { canonical: "https://kov-agency.site/journal" },
 };
 

@@ -43,7 +43,12 @@ export const metadata: Metadata = {
   // La baseline n'a pas disparu pour autant : elle reste le <h1> de la page
   // (HeroScene) et la ligne de la carte sociale.
   title: "KOV Studio Design et Développement Web à Bordeaux",
-  description: "KOV transforme les idées en expériences numériques.",
+  // 51 caractères, et aucun terme que quelqu'un taperait — Google en
+  // affiche jusqu'à ~155 et réécrit lui-même celles qui ne répondent pas à
+  // la requête. Celle-ci nomme le métier, la ville et les trois entrées
+  // réelles du site : création, refonte, immersif.
+  description:
+    "Studio digital à Bordeaux. Création et refonte de sites internet, design sur mesure et expériences immersives en 3D — avec un studio virtuel à visiter.",
   openGraph: {
     siteName: "KOV",
     locale: "fr_FR",

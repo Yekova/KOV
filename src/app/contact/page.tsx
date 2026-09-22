@@ -3,8 +3,9 @@ import { ContactWizard } from "@/components/contact/ContactWizard";
 import LiquidEther from "@/components/contact/LiquidEtherLazy";
 
 export const metadata: Metadata = {
-  title: "Contact | KOV",
-  description: "Un projet en tête ? On le construit.",
+  title: "Contact — démarrer un projet web à Bordeaux | KOV",
+  description:
+    "Parlez-nous de votre projet de site internet, de refonte ou d'expérience immersive. On revient avec une lecture du problème avant de parler design.",
   alternates: { canonical: "https://kov-agency.site/contact" },
 };
 

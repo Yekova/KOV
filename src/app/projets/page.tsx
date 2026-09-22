@@ -9,7 +9,7 @@ import "@/components/projects/ProjectsPage.css";
 const SITE_URL = "https://kov-agency.site";
 
 export const metadata: Metadata = {
-  title: "Réalisations | KOV",
+  title: "Nos réalisations — créations de sites internet | KOV Bordeaux",
   description:
     "Les dernières créations de sites internet signées KOV : ce qui a été livré sur chaque projet, et ce que ça a changé.",
   alternates: { canonical: `${SITE_URL}/projets` },
