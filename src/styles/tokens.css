@@ -74,4 +74,12 @@
   --z-nav: 50;
   --z-modal: 60;
   --z-cursor: 70;
+  /* Above the cursor, which is the top of everything else here.
+     The consent banner was reported as visible but completely inert, clicks
+     and hover alike, which is the signature of something transparent lying
+     over it. It sat at --z-modal, with the cursor layer above it; the cursor
+     is pointer-events-none and therefore innocent, but the point of this
+     token is that the banner no longer depends on that being true of every
+     future layer. Nothing in this scale can cover it now. */
+  --z-consent: 80;
 }
