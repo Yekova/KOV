@@ -60,6 +60,14 @@ export default function ExpertiseHubPage() {
           Un site qui tient ne vient pas d&apos;une compétence mais de six, tenues ensemble. Voici ce que chacune
           recouvre, et ce qu&apos;elle décide.
         </p>
+
+        <p className="mt-5 max-w-2xl text-kov-steel text-sm leading-relaxed">
+          Vous cherchez plutôt à savoir ce que recouvre un projet et comment il se déroule ? Commencez par la{" "}
+          <Link href="/creation-site-internet" className="text-kov-red hover:text-kov-bone transition-colors underline underline-offset-2">
+            création de site internet
+          </Link>
+          .
+        </p>
       </Reveal>
 
       <Reveal variant="fade">

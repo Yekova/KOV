@@ -85,8 +85,16 @@ export async function HeroScene() {
               UNE EXÉCUTION<span className="text-kov-red">.</span>
             </h1>
 
+            {/* The line under the headline is the only place on this page
+                where the words a buyer actually types can go without
+                touching the brand statement above it, which is a decision
+                the owner has not made yet. Measured before rewriting: the
+                homepage said "création de site" zero times in 2446 words.
+                The claim itself is unchanged, it is simply said in the
+                visitor's vocabulary rather than only in the studio's. */}
             <p className="mt-5 md:mt-8 max-w-md text-kov-concrete text-sm leading-relaxed">
-              De la conception au motion, un seul studio pour maîtriser l&apos;exigence de chaque pixel.
+              Création de site internet sur mesure : stratégie, design, développement et motion, tenus par un seul
+              studio.
             </p>
 
             {/* Stacked and full-width on a phone, side by side from `sm`.

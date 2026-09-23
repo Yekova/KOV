@@ -22,6 +22,10 @@ const NAV_LINKS = [
 // and this is not a way around it. A footer is where a site lists what it
 // has; a nav is where it puts what people came for.
 const APPROACH_LINKS = [
+  // First, and on every page of the site: a page linked from nowhere cannot
+  // rank, and this one exists specifically to be found. The six expertise
+  // pages shipped as orphans once already.
+  { href: "/creation-site-internet", label: "Création de site internet" },
   { href: "/expertise", label: "Toutes nos expertises" },
   ...PILLARS.map((pillar) => ({ href: `/expertise/${pillar.slug}`, label: pillar.title })),
   { href: "/#process", label: "Notre processus" },

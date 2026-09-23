@@ -14,6 +14,10 @@ export const revalidate = 3600;
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: SITE_URL, changeFrequency: "weekly", priority: 1 },
+    // The commercial landing page, above the portfolio and the expertise hub
+    // on purpose: it is the one page on this site whose whole job is the
+    // phrase people type when they want to buy a website.
+    { url: `${SITE_URL}/creation-site-internet`, changeFrequency: "monthly", priority: 0.9 },
     { url: `${SITE_URL}/projets`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${SITE_URL}/expertise`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${SITE_URL}/journal`, changeFrequency: "weekly", priority: 0.7 },
