@@ -49,7 +49,7 @@ export async function HeroScene() {
     projects.find((project) => project.status === "live") ??
     null;
   return (
-    <section id="hero" className="relative min-h-screen overflow-hidden">
+    <section id="hero" className="relative min-h-[88vh] md:min-h-screen overflow-hidden">
       {/* No background color here on purpose — the animated LineWaves
           background now lives at the page level (src/app/page.tsx) so
           it's visible behind every homepage section, not just this one.
@@ -59,7 +59,7 @@ export async function HeroScene() {
       <Nav variant="contained" />
 
       <div
-        className="relative min-h-screen flex items-center px-6 md:px-16 pt-24 md:pt-28 pb-16"
+        className="relative min-h-[88vh] md:min-h-screen flex items-center px-6 md:px-16 pt-24 md:pt-28 pb-16"
         style={{ zIndex: "var(--z-content)" }}
       >
         <div className="grid md:grid-cols-[0.8fr_1.2fr] gap-6 md:gap-8 items-center w-full max-w-[1600px] mx-auto">
@@ -111,15 +111,20 @@ export async function HeroScene() {
               localStorage persistence). The responsive-mockup footage
               lives inside the grid now too, as the "Responsive Preview"
               widget's own content. */}
-          <HeroWidgetGrid latestPost={latestPost} spotlight={spotlight} projectCount={projects.length} />
+          {/* Out of the flow entirely below md, not merely hidden inside
+              itself: an empty second grid child would still take the column
+              gap, and the hero would open on a 24px hole. */}
+          <div className="hidden md:block">
+            <HeroWidgetGrid latestPost={latestPost} spotlight={spotlight} projectCount={projects.length} />
+          </div>
         </div>
       </div>
 
       {/* Wrapped in its own h-screen box, pinned to the section's top,
           rather than a bare <HeroGlobalMenuButton /> as a direct child —
           the button's own `bottom-*` resolves against its nearest
-          positioned ancestor, and this section is `min-h-screen`: if the
-          content above (the image/video stack) ever pushes the section
+          positioned ancestor, and this section is at least 88vh and often
+          a full screen: if the content above ever pushes the section
           taller than one real viewport, `bottom-*` against the section
           itself would land below the visible fold, not at the bottom of
           what's actually on screen. `position:absolute` (not sticky/fixed)

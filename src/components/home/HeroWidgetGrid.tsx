@@ -10,7 +10,6 @@ import {
   HERO_WIDGET_HINT_SEEN_STORAGE_KEY,
   HERO_WIDGET_ANIMATIONS_STORAGE_KEY,
   HERO_WIDGET_SIZE,
-  MOBILE_HERO_WIDGET_ORDER,
   type HeroWidgetId,
 } from "@/data/heroWidgets";
 import { prefersReducedMotion } from "@/lib/motion/reducedMotion";
@@ -204,7 +203,7 @@ export function HeroWidgetGrid({
           is untouched, the red waves still show through around the edges. */}
       <div
         aria-hidden="true"
-        className="absolute -inset-8 pointer-events-none"
+        className="absolute -inset-8 hidden md:block pointer-events-none"
         style={{ background: "radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.4) 100%)" }}
       />
 
@@ -310,30 +309,15 @@ export function HeroWidgetGrid({
         </div>
       </div>
 
-      {/* Mobile: fixed editorial order (spec §23/§34), no drag at all, and a
-          short list rather than the full seven — see MOBILE_HERO_WIDGET_ORDER
-          for why. The "responsive" preview used to be pinned here as a 3/4
-          box ahead of the loop; it was the single tallest thing on the page
-          and the first thing a phone had to scroll past, so it now shows on
-          desktop only, where the grid gives it a column instead of a screen. */}
-      <div className="md:hidden flex flex-col gap-2.5">
-        {MOBILE_HERO_WIDGET_ORDER.map((id) => (
-          <div key={id} className="relative" style={{ aspectRatio: id === "spotlight" ? "4 / 3" : "16 / 9" }}>
-            <WidgetShell
-              draggable={false}
-              isDragging={false}
-              isOtherDragging={false}
-              isDropTarget={false}
-              onDragStart={() => {}}
-              onDragEnd={() => {}}
-              onDragOver={() => {}}
-              onDrop={() => {}}
-            >
-              {content[id]}
-            </WidgetShell>
-          </div>
-        ))}
-      </div>
+      {/* There is no mobile branch any more, by decision (spec §23's fixed
+          editorial order applied to a stack that no longer exists).
+          A bento grid is a desktop idea: it reads as a dashboard because
+          several tiles are visible at once and the eye chooses. Stacked one
+          per row on a phone it is a queue, and every tile restates a section
+          further down the page that says the same thing with more room. The
+          hero's job on a phone is one promise and one action, so that is all
+          that is left there. HeroScene keeps this component out of the flow
+          below md rather than hiding it here, so the column gap goes too. */}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ComponentType } from "react";
+import Link from "next/link";
 import { gsap, initGsap, pinAndTrack, motion as motionTiming, GSAP_REVEAL_EASE } from "@/lib/motion";
 import { BrowserChrome } from "@/components/ui/BrowserChrome";
 import { Button } from "@/components/ui/Button";
@@ -149,7 +150,7 @@ export function ActivationWindow() {
   // grow toward fullscreen during the dive — the coverflow below is
   // sized/positioned independently of the window's own box.
   useEffect(() => {
-    if (reducedMotion) return;
+    if (reducedMotion || compact) return;
     const runway = runwayRef.current;
     const card = cardRef.current;
     if (!runway || !card) return;
@@ -204,7 +205,7 @@ export function ActivationWindow() {
     );
 
     return () => trigger.kill();
-  }, [reducedMotion, cardGap]);
+  }, [reducedMotion, compact, cardGap]);
 
   // One-time arrival as the window scrolls into view — a separate tween
   // on entranceRef (not cardRef), which the effect above owns exclusively
@@ -212,7 +213,7 @@ export function ActivationWindow() {
   // keeping them on different elements means the two never fight over the
   // same inline style.
   useEffect(() => {
-    if (reducedMotion) return;
+    if (reducedMotion || compact) return;
     const el = entranceRef.current;
     if (!el) return;
     initGsap();
@@ -233,7 +234,95 @@ export function ActivationWindow() {
     }, el);
 
     return () => ctx.revert();
-  }, [reducedMotion]);
+  }, [reducedMotion, compact]);
+
+  // Phones get their own section, not a narrowed copy of this one.
+  //
+  // What they were getting: a sticky full-bleed runway holding a window in
+  // browser chrome, and inside it a second, nested vertical scroll area of
+  // six 9/16 portrait cards. On a 375px screen each of those is around
+  // 516px tall, so the section was a scroll container inside a pinned
+  // viewport inside the page. Touch has no way to tell those three apart.
+  //
+  // The six cards are six selling points. On a phone the most persuasive
+  // form for that is the plainest one: a list you can take in at a glance,
+  // and the action right under it. No runway, no chrome, no nested scroll,
+  // no six animated visuals, and nothing to swipe before reaching the
+  // button that actually starts a project.
+  if (compact) {
+    return (
+      <div className="relative">
+        <div className="flex items-center gap-3">
+          <span aria-hidden="true" className="w-1 shrink-0" style={{ height: 16, background: "var(--kov-red)" }} />
+          <p className="text-xs uppercase tracking-widest text-kov-steel">Notre approche</p>
+        </div>
+
+        <h3
+          className="mt-5 font-display text-kov-bone uppercase"
+          style={{ fontSize: "clamp(30px, 8vw, 40px)", lineHeight: "var(--line-height-display)" }}
+        >
+          Un site qui
+          <br />
+          vous ressemble
+        </h3>
+
+        <p className="mt-5 text-kov-steel text-sm leading-relaxed">
+          Un site sur-mesure, pensé pour votre marque, vos objectifs et vos utilisateurs. Design, performance et
+          accompagnement : tout est réuni pour faire la différence.
+        </p>
+
+        <ul className="mt-9 list-none border-t" style={{ borderColor: "var(--kov-border)" }}>
+          {CARDS.map((card, i) => {
+            const inner = (
+              <>
+                <span className="font-mono text-[11px] text-kov-red shrink-0 pt-0.5">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-kov-bone text-[15px] font-medium">{card.title}</span>
+                  <span className="mt-1 block text-kov-steel text-[13px] leading-relaxed">{card.body}</span>
+                  <span className="mt-2.5 flex flex-wrap gap-1.5">
+                    {(card.features ?? []).map((feature) => (
+                      <span
+                        key={feature}
+                        className="px-2 py-1 text-[11px] uppercase tracking-widest text-kov-steel"
+                        style={{ border: "1px solid var(--kov-border)", borderRadius: 999 }}
+                      >
+                        {feature}
+                      </span>
+                    ))}
+                  </span>
+                </span>
+              </>
+            );
+
+            return (
+              <li key={card.title} className="border-b" style={{ borderColor: "var(--kov-border)" }}>
+                {card.href ? (
+                  <Link href={card.href} className="flex gap-4 py-5">
+                    {inner}
+                  </Link>
+                ) : (
+                  <div className="flex gap-4 py-5">{inner}</div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+
+        {/* The point of the section. It used to sit above six full-height
+            cards, so on a phone it was the thing you scrolled away from. */}
+        <div className="mt-9 flex flex-col gap-3">
+          <Button variant="primary" href="/contact" className="w-full justify-center py-3.5">
+            Démarrer mon projet →
+          </Button>
+          <Button variant="secondary" href="/#work-gallery" className="w-full justify-center py-3.5">
+            Voir nos réalisations ↗
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div ref={runwayRef} className="relative" style={{ height: `calc(100vh + ${RUNWAY_VH}vh)` }}>
