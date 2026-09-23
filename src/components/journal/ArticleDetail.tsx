@@ -33,6 +33,23 @@ export interface JournalArticle {
   likes: number;
 }
 
+/** Who actually wrote the thing.
+ *
+ *  Separate from `authorName`, which is a free-text column the admin edits
+ *  and which currently reads "KOV" on every post. A studio is a publisher,
+ *  not an author: search engines and answer engines both weigh a named,
+ *  identifiable human over a brand, and a page that asserts authorship in
+ *  its markup while showing none to the reader asserts it twice as weakly.
+ *
+ *  Supplied by the server from the business record, so it is the same name
+ *  the legal pages already publish. Nothing here is new disclosure and
+ *  nothing is invented: a name and a role, no biography, no credentials, no
+ *  portrait. */
+export interface ArticleAuthor {
+  name: string;
+  role: string;
+}
+
 const CARD_STYLE = {
   background: "var(--kov-carbon)",
   border: "1px solid var(--kov-border)",
@@ -44,7 +61,15 @@ function formatDate(iso: string | null): string {
   return new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 }
 
-export function ArticleDetail({ article, related }: { article: JournalArticle; related: JournalPostSummary[] }) {
+export function ArticleDetail({
+  article,
+  related,
+  author,
+}: {
+  article: JournalArticle;
+  related: JournalPostSummary[];
+  author?: ArticleAuthor | null;
+}) {
   const articleRef = useRef<HTMLDivElement>(null);
   const [body, setBody] = useState(article.body);
   const [toc, setToc] = useState<TocItem[]>([]);
@@ -143,6 +168,32 @@ export function ArticleDetail({ article, related }: { article: JournalArticle; r
               {article.audioUrl ? <AudioPlayer src={article.audioUrl} /> : <BrowserTTSPlayer text={article.body} />}
 
               <div className="kov-post-body mt-10" dangerouslySetInnerHTML={{ __html: body }} />
+
+              {author && (
+                <div
+                  className="mt-14 pt-8 flex items-start gap-4"
+                  style={{ borderTop: "1px solid var(--kov-border)" }}
+                >
+                  <span
+                    aria-hidden="true"
+                    className="shrink-0 flex items-center justify-center font-display text-kov-bone text-sm"
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: "var(--radius-pill)",
+                      border: "1px solid var(--kov-border)",
+                      background: "var(--kov-carbon)",
+                    }}
+                  >
+                    {author.name.charAt(0)}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-xs uppercase tracking-widest text-kov-steel">Écrit par</p>
+                    <p className="mt-1 text-kov-bone text-sm font-medium">{author.name}</p>
+                    <p className="mt-1 text-kov-steel text-sm leading-relaxed">{author.role}</p>
+                  </div>
+                </div>
+              )}
             </div>
 
             <aside className="lg:sticky self-start space-y-8" style={{ top: 96 }}>

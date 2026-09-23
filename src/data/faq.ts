@@ -331,3 +331,30 @@ export const FAQ: FaqItem[] = [
     answer: "Un message via le formulaire de contact, avec quelques mots sur votre projet, on revient vers vous pour planifier le premier échange.",
   },
 ];
+
+/** A stable, readable anchor for one question.
+ *
+ *  Fifty answers lived on one address. An answer engine quotes a passage,
+ *  not a page, and a passage with no address of its own can only ever be
+ *  cited as "somewhere on /faq" — which is the difference between being
+ *  linked and being referenced. Each question now resolves to
+ *  /faq#its-own-slug.
+ *
+ *  Derived from the question text rather than stored, so a new entry gets
+ *  an anchor by existing. The cost of that choice is that rewording a
+ *  question breaks its anchor; the alternative, a hand-maintained id column
+ *  on fifty rows, breaks more often and more quietly.
+ */
+export function faqAnchor(question: string): string {
+  return question
+    .normalize("NFD")
+    // Strip combining accents: "délais" and "delais" must not produce two
+    // different anchors for the same question.
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/['’]/g, "-")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 70)
+    .replace(/-+$/g, "");
+}

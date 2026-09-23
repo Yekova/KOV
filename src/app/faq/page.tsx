@@ -3,7 +3,7 @@ import Image from "next/image";
 import { Reveal } from "@/components/ui/Reveal";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { KovCTA } from "@/components/ui/KovCTA";
-import { FAQ } from "@/data/faq";
+import { FAQ, faqAnchor } from "@/data/faq";
 import { FaqEngine } from "@/components/faq/FaqEngine";
 
 const SITE_URL = "https://kov-agency.site";
@@ -18,11 +18,22 @@ export default function FaqPage() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: FAQ.map((item) => ({
-      "@type": "Question",
-      name: item.question,
-      acceptedAnswer: { "@type": "Answer", text: item.answer },
-    })),
+    // Every question now carries its own address. Fifty answers used to
+    // share one URL, which meant the most an engine could do with any of
+    // them was point at the page and leave the reader to find the right
+    // paragraph. @id plus url makes each one a thing that can be cited,
+    // linked and landed on, which is what an answer engine actually
+    // consumes: a passage, not a document.
+    mainEntity: FAQ.map((item) => {
+      const anchor = faqAnchor(item.question);
+      return {
+        "@type": "Question",
+        "@id": `${SITE_URL}/faq#${anchor}`,
+        url: `${SITE_URL}/faq#${anchor}`,
+        name: item.question,
+        acceptedAnswer: { "@type": "Answer", text: item.answer },
+      };
+    }),
   };
 
   return (

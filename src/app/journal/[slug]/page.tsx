@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { getBusinessInfo } from "@/lib/billing/businessInfo";
 import { resolvePostImageUrl } from "@/lib/portal/storage";
 import { ArticleDetail } from "@/components/journal/ArticleDetail";
 import type { JournalPostSummary } from "@/components/journal/journalTypes";
@@ -103,6 +104,12 @@ export default async function JournalPostPage(props: PageProps<"/journal/[slug]"
     views: r.views,
   }));
 
+  // The person behind the studio, from the record the legal pages already
+  // publish. One source, so the byline, the markup and the mentions légales
+  // can never drift apart.
+  const business = await getBusinessInfo();
+  const authorId = `${SITE_URL}/#author`;
+
   const articleUrl = `${SITE_URL}/journal/${post.slug}`;
   const coverUrl = resolvePostImageUrl(post.cover_image_path);
 
@@ -118,13 +125,27 @@ export default async function JournalPostPage(props: PageProps<"/journal/[slug]"
         // Google reads dateModified to decide how fresh a page is, and it was
         // the one date missing here even though the column was already there.
         dateModified: post.updated_at ?? post.published_at ?? undefined,
-        author: { "@type": "Organization", name: post.author_name || "KOV" },
+        // A named person, not the studio. An organisation publishes; it does
+        // not write. Answer engines and Google both weigh identifiable
+        // authorship, and this was the one entity the graph never declared.
+        author: { "@id": authorId },
         publisher: {
           "@type": "Organization",
           name: "KOV",
           logo: { "@type": "ImageObject", url: `${SITE_URL}/kov/brand/kov-wordmark-bone.png` },
         },
         mainEntityOfPage: articleUrl,
+      },
+      {
+        "@type": "Person",
+        "@id": authorId,
+        name: business.legalName,
+        jobTitle: "Fondateur de KOV",
+        worksFor: { "@id": `${SITE_URL}/#organization` },
+        // No url, no image, no sameAs, no description: there is no author
+        // page to point at, no portrait that is actually of this person
+        // (the studio's illustrated character is not one), and no public
+        // profile in the repo. A thin true node beats a padded invented one.
       },
       {
         "@type": "BreadcrumbList",
@@ -158,6 +179,7 @@ export default async function JournalPostPage(props: PageProps<"/journal/[slug]"
           likes: post.likes,
         }}
         related={related}
+        author={{ name: business.legalName, role: "Fondateur de KOV, studio de design et de développement à Bordeaux." }}
       />
     </>
   );

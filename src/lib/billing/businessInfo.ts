@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export interface BusinessInfo {
@@ -41,7 +42,14 @@ const FALLBACK_BUSINESS_INFO: BusinessInfo = {
 };
 
 // Admin-editable via /admin/settings — see 20260822150000_create_business_settings.sql.
-export async function getBusinessInfo(): Promise<BusinessInfo> {
+//
+// Wrapped in React's cache(): three call sites now read this during a single
+// render (the sitewide structured data in the root layout, an article's
+// author node, the Bordeaux page's address block), and without dedup that
+// is three identical queries for one response. cache() is per-request, so
+// unlike Next's fetch cache it cannot serve a stale address — which is a
+// distinction this file has already paid for once.
+export const getBusinessInfo = cache(async function getBusinessInfo(): Promise<BusinessInfo> {
   const { data } = await supabaseAdmin.from("business_settings").select("*").eq("id", true).maybeSingle();
   if (!data) return FALLBACK_BUSINESS_INFO;
 
@@ -64,7 +72,7 @@ export async function getBusinessInfo(): Promise<BusinessInfo> {
     paymentTermsDays: data.payment_terms_days,
     latePaymentMention: data.late_payment_mention,
   };
-}
+});
 
 export async function updateBusinessInfo(info: BusinessInfo) {
   const { error } = await supabaseAdmin
