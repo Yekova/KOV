@@ -43,7 +43,7 @@ export default function LegalLayout({ children }: { children: ReactNode }) {
 
       <div className="px-6">
         <div className="relative max-w-[1400px] mx-auto">
-          <div className="pt-40">
+          <div className="pt-28 md:pt-40">
             <div className="max-w-xl lg:max-w-2xl relative z-10">
               <p className="flex items-center gap-3 text-xs uppercase tracking-widest text-kov-steel">
                 <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-kov-red" />

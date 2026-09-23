@@ -270,3 +270,31 @@ body {
     animation: none;
   }
 }
+
+/* Minimum legible size for the smallest utility labels, on phones only.
+
+   The site sets a lot of 8px and 9px uppercase micro-labels: HUD chrome in
+   the studio, the map, the music player, the login form's field labels. At a
+   desk they read as precision. Held at arm's length on a phone they are not
+   readable at all, and several of them carry real information rather than
+   decoration.
+
+   Done here, once, rather than at the forty-eight call sites: the desktop
+   composition is deliberate and must not move, and a per-site edit would
+   have meant forty-eight chances to change something above 768px by
+   accident. Below that width there is no composition to protect, only a
+   label to read.
+
+   Unlayered on purpose. Tailwind v4 emits its utilities inside a cascade
+   layer, and an unlayered rule beats a layered one whatever the specificity,
+   so this needs no !important and no selector weight games.
+
+   10px and 11px are deliberately left alone: they are borderline rather than
+   illegible, and there are far more of them, so raising them would reflow a
+   great deal for much less gain. */
+@media (max-width: 767px) {
+  .text-\[8px\],
+  .text-\[9px\] {
+    font-size: 11px;
+  }
+}

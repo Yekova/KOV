@@ -99,7 +99,7 @@ export function ScreenShowcase() {
   }, [reducedMotion]);
 
   return (
-    <section id="showcase" className="px-6 py-32 max-w-[1600px] mx-auto">
+    <section id="showcase" className="px-6 py-20 md:py-32 max-w-[1600px] mx-auto">
       <ScrollFloat
         containerClassName="text-center mb-24 md:mb-36"
         textClassName="font-display text-kov-bone uppercase text-[clamp(26px,3.4vw,54px)] leading-[0.95]"

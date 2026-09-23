@@ -16,7 +16,7 @@ export async function WorkGallery() {
   const shown = projects.filter((project) => project.showOnHome);
 
   return (
-    <section id="work-gallery" className="relative px-6 py-32 max-w-[1600px] mx-auto scroll-mt-24">
+    <section id="work-gallery" className="relative px-6 py-20 md:py-32 max-w-[1600px] mx-auto scroll-mt-24">
       <div
         aria-hidden="true"
         className="absolute inset-0 pointer-events-none"

@@ -41,7 +41,7 @@ const CONSTATS = [
 // Server Component may render it (same arrangement as src/app/faq/page.tsx).
 export function PhilosophyStatement() {
   return (
-    <section id="philosophy" className="relative px-6 py-32 max-w-[1600px] mx-auto scroll-mt-40">
+    <section id="philosophy" className="relative px-6 py-20 md:py-32 max-w-[1600px] mx-auto scroll-mt-40">
       {/* Black ground with a cursor-lit hole in it — see SectionVeil. It
           replaces the radial scrim that was here: an opaque block reads
           better behind text, and the halo gives back a glimpse of the

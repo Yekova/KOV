@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { Canvas } from "@react-three/fiber";
 import * as THREE from "three";
 import { fetchBrands, type Brand } from "@/lib/studio/brands";
@@ -36,13 +37,37 @@ export function BrandGalleryRoom({ onExit }: { onExit: () => void }) {
   const [level, setLevel] = useState<0 | 1>(0);
   const [active, setActive] = useState<Brand | null>(null);
 
+  // Can this visitor actually walk?
+  //
+  // PlayerController drives the camera from `mousemove` under pointer
+  // lock, and the movement keys come from `keydown`. A phone emits
+  // neither, and pointer lock is a desktop API. Rendering the canvas
+  // there handed someone a room they could not move in, with nothing on
+  // screen saying why — the worst of both, because it looks like a bug.
+  //
+  // useMediaQuery rather than a state set from an effect: the site
+  // already owns that hook, it is built on useSyncExternalStore, and it
+  // answers correctly for a component that mounts after hydration, which
+  // is exactly this one (the studio imports the room dynamically and
+  // mounts it on arrival). So there is no first pass at the server's
+  // answer and no flash of the wrong branch.
+  const canWalk = useMediaQuery("(pointer: fine)");
+
   // Measurement runs for exactly as long as the visit does. Attached
   // before the brands are fetched so the first stand someone walks up to
   // is already counted, and torn down on the way out — which flushes
   // whatever is still queued.
-  useEffect(() => startGallerySink(), []);
+  //
+  // Gated on `canWalk`: a visitor who is shown the "come back from a
+  // computer" panel never entered the room, and counting them as a visit
+  // would quietly inflate every number the gallery reports.
+  useEffect(() => {
+    if (!canWalk) return;
+    return startGallerySink();
+  }, [canWalk]);
 
   useEffect(() => {
+    if (!canWalk) return;
     let cancelled = false;
     void fetchBrands().then((rows) => {
       if (cancelled) return;
@@ -54,7 +79,7 @@ export function BrandGalleryRoom({ onExit }: { onExit: () => void }) {
       cancelled = true;
       trackGallery("brand_gallery_exit", { room_id: ROOM_ID });
     };
-  }, []);
+  }, [canWalk]);
 
   const handleInteract = useCallback((brand: Brand) => {
     setActive(brand);
@@ -100,6 +125,37 @@ export function BrandGalleryRoom({ onExit }: { onExit: () => void }) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [active, brands, handleInteract]);
+
+  // Placed after every hook, so the hook order is identical in both
+  // branches. Says what the room needs and offers the way back, rather
+  // than leaving someone pinching at a scene that will never move.
+  if (!canWalk) {
+    return (
+      <div className="absolute inset-0 flex items-center justify-center px-6" style={{ background: "#08080a" }}>
+        <div className="max-w-sm text-center">
+          <p className="flex items-center justify-center gap-3 text-xs uppercase tracking-widest text-kov-steel">
+            <span aria-hidden="true" className="h-px w-7 bg-kov-red" />
+            Brands Gallery
+          </p>
+          <h2 className="mt-6 font-display text-kov-bone uppercase text-2xl leading-tight">
+            Cette salle se parcourt à la souris
+          </h2>
+          <p className="mt-5 text-kov-steel text-sm leading-relaxed">
+            On s&apos;y déplace au clavier et on y regarde autour de soi à la souris, ce que votre appareil ne permet
+            pas. Le reste du studio se visite normalement, et la galerie vous attend depuis un ordinateur.
+          </p>
+          <button
+            type="button"
+            onClick={onExit}
+            className="mt-8 inline-flex items-center gap-2 border px-5 py-3 text-xs uppercase tracking-widest text-kov-bone hover:text-kov-red transition-colors"
+            style={{ borderColor: "var(--kov-border)" }}
+          >
+            Revenir au studio
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="absolute inset-0" style={{ background: "#08080a" }}>

@@ -16,7 +16,7 @@ import { ProcessGallery } from "@/components/home/process/ProcessGallery";
 // gallery does, and it carries its own client boundary.
 export function ProcessTimeline() {
   return (
-    <section id="process" className="relative px-6 py-32 max-w-[1600px] mx-auto scroll-mt-40">
+    <section id="process" className="relative px-6 py-20 md:py-32 max-w-[1600px] mx-auto scroll-mt-40">
       {/* Black ground with a cursor-lit hole in it — see SectionVeil. The
           content below must stay inside its own `relative` wrapper, or the
           veil paints over it. */}

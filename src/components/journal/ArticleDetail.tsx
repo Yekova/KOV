@@ -70,7 +70,7 @@ export function ArticleDetail({ article, related }: { article: JournalArticle; r
     <main className="min-h-screen">
       <ReadingProgress targetRef={articleRef} onPercentChange={setReadPercent} />
 
-      <div className="px-6 pt-40 pb-32">
+      <div className="px-6 pt-28 md:pt-40 pb-20 md:pb-32">
         <div className="max-w-[1400px] mx-auto">
           <nav aria-label="Fil d'ariane" className="flex items-center gap-2 text-xs uppercase tracking-widest text-kov-steel mb-8">
             <Link href="/" className="hover:text-kov-red transition-colors">
