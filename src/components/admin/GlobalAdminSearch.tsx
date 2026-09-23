@@ -36,13 +36,24 @@ export function GlobalAdminSearch({ items }: { items: AdminSearchItem[] }) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  useEffect(() => {
-    if (open) {
-      inputRef.current?.focus();
-    } else {
+  // Clearing the box on close is a state adjustment, not a side effect, so
+  // it happens during render rather than in an effect. Calling setState
+  // synchronously from an effect schedules a second render pass for
+  // something React can settle in the first one, which is what the
+  // compiler's set-state-in-effect rule is about. Same pattern Nav.tsx uses
+  // for its own route-change reset.
+  const [wasOpen, setWasOpen] = useState(open);
+  if (wasOpen !== open) {
+    setWasOpen(open);
+    if (!open) {
       setQuery("");
       setCategory("Tout");
     }
+  }
+
+  // Focus is a real side effect on a real DOM node, so this one stays.
+  useEffect(() => {
+    if (open) inputRef.current?.focus();
   }, [open]);
 
   const results = useMemo(() => {

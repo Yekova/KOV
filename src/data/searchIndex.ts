@@ -1,107 +1,102 @@
-// Static search index — a hand-written map of real site content, not a real
-// full-text/backend search. Good enough as a first version; if content grows
-// enough that this goes stale, generate it from the actual page content
-// instead of hand-maintaining it further.
+import { PILLARS } from "@/data/expertisePillars";
+
+// The site's own search index.
+//
+// It used to be hand-written, and the file said so: "if content grows enough
+// that this goes stale, generate it from the actual page content instead of
+// hand-maintaining it further." It went stale. Eight of its fifteen entries
+// pointed at /#expertise, an anchor on the homepage, from the period when
+// the six /expertise/<slug> pages did not exist. They exist again, and the
+// search was still sending people to a fragment. It also knew nothing about
+// the journal or about the two commercial pages, so a visitor typing
+// "création de site" into the site's own search did not find the page built
+// for exactly that.
+//
+// So the expertise entries are derived from PILLARS now rather than typed
+// out: a seventh discipline appears in search by existing, and a renamed
+// slug cannot leave a dead link behind. The fixed pages below are listed by
+// hand because there is nothing to derive them from, and they are few.
+//
+// Articles are deliberately not here. They live in the database and change
+// without a deploy, so searchKov fetches them (see src/lib/search.ts). A
+// list of articles frozen into the client bundle would be the same mistake
+// this file is being repaired for.
 
 export interface SearchItem {
   title: string;
-  category: "Expertise" | "Studio" | "Projets" | "Contact";
+  category: "Expertise" | "Studio" | "Projets" | "Journal" | "Contact";
   href: string;
   description: string;
   keywords?: string[];
 }
 
-export const searchIndex: SearchItem[] = [
+// `tagline` rather than the long lede from expertiseDetail: this array ships
+// in the client bundle, and pulling two thousand words of prose into it to
+// populate a search dropdown would cost far more than it returns.
+const EXPERTISE: SearchItem[] = PILLARS.map((pillar) => ({
+  title: pillar.title,
+  category: "Expertise",
+  href: `/expertise/${pillar.slug}`,
+  description: pillar.tagline,
+}));
+
+const PAGES: SearchItem[] = [
   {
-    title: "Stratégie",
+    title: "Création de site internet",
     category: "Expertise",
-    href: "/#expertise",
-    description: "Positionnement, structure et parcours utilisateurs, décidés avant de designer quoi que ce soit.",
+    href: "/creation-site-internet",
+    description: "Ce que recouvre une création sur mesure, ce qui fait varier un projet, et ce que vous recevez.",
+    keywords: ["création de site web", "refonte", "sur mesure", "prix", "budget", "devis"],
   },
   {
-    title: "Design",
+    title: "Agence web à Bordeaux",
     category: "Expertise",
-    href: "/#expertise",
-    description: "Des interfaces pensées comme de l'architecture. La structure d'abord, le style ensuite.",
+    href: "/agence-web-bordeaux",
+    description: "Le studio depuis sa ville : ce que la proximité change, et ce qu'elle ne change pas.",
+    keywords: ["bordeaux", "gironde", "local", "agence", "rendez-vous"],
   },
   {
-    title: "Développement",
+    title: "Toutes nos expertises",
     category: "Expertise",
-    href: "/#expertise",
-    description: "Du code de production dès le premier jour, conçu pour tenir face au vrai trafic.",
-  },
-  {
-    title: "Motion",
-    category: "Expertise",
-    href: "/#expertise",
-    description: "Un mouvement qui explique, jamais qui joue un rôle.",
-  },
-  {
-    title: "Systèmes",
-    category: "Expertise",
-    href: "/#expertise",
-    description: "Une architecture numérique conçue pour évoluer.",
-  },
-  {
-    title: "Intégration",
-    category: "Expertise",
-    href: "/#expertise",
-    description: "Outils, données et automatisations, connectés.",
-    keywords: ["crm", "automatisation", "api"],
-  },
-  {
-    title: "Notre processus",
-    category: "Expertise",
-    href: "/#expertise",
-    description: "Sept étapes : Découvrir, Structurer, Design, Développer, Motion, Lancer, Évoluer.",
-    keywords: ["comment travaillez-vous", "processus", "méthodologie"],
-  },
-  {
-    title: "Ce qu'on construit",
-    category: "Expertise",
-    href: "/#expertise",
-    description: "Sites corporate, sites immersifs, applications web, dashboards, espaces clients, systèmes numériques.",
-    keywords: ["services", "quels services proposez-vous", "crm", "application web"],
-  },
-  {
-    title: "FAQ",
-    category: "Contact",
-    href: "/faq",
-    description: "Délais, processus, budget, maintenance : les réponses aux questions fréquentes.",
-    keywords: ["questions", "faq", "combien ça coûte", "combien de temps"],
+    href: "/expertise",
+    description: "Les six métiers réunis, et ce que chacun décide dans un projet.",
+    keywords: ["processus", "méthodologie", "comment travaillez-vous"],
   },
   {
     title: "Réalisations",
     category: "Projets",
     href: "/projets",
-    description: "Tous les projets livrés : le problème, le système construit, et ce qui a changé.",
-    keywords: ["projets", "portfolio", "réalisations", "montrez-moi vos projets", "références"],
+    description: "Les projets livrés et ceux en cours.",
+    keywords: ["portfolio", "références", "clients", "cas"],
   },
   {
-    title: "Kanti · Gestion de patrimoine",
-    category: "Projets",
-    href: "/projets",
-    description: "Stratégie, design et développement pour une expérience numérique de gestion de patrimoine.",
-    keywords: ["étude de cas", "projet", "kanti", "patrimoine"],
+    title: "Journal",
+    category: "Journal",
+    href: "/journal",
+    description: "Études de cas et notes de studio : le raisonnement derrière le travail.",
+    keywords: ["blog", "articles", "notes"],
   },
   {
-    title: "Philosophie",
+    title: "Studio virtuel",
     category: "Studio",
     href: "/studio",
-    description: "Le bon design n'a pas besoin de crier. Clarté, intention, impact.",
+    description: "Un lieu à parcourir en 360°, plutôt qu'une page à lire.",
+    keywords: ["360", "immersif", "webgl", "3d", "visite"],
   },
   {
-    title: "Petit par choix",
-    category: "Studio",
-    href: "/studio",
-    description: "Moins de niveaux hiérarchiques, plus d'implication, un meilleur travail : c'est KOV.",
-    keywords: ["à propos", "équipe", "qui êtes-vous"],
+    title: "FAQ",
+    category: "Contact",
+    href: "/faq",
+    description: "Délais, budget, technique, suivi : cinquante réponses aux questions qu'on nous pose.",
+    keywords: ["questions", "délais", "budget", "maintenance"],
   },
   {
     title: "Démarrer un projet",
     category: "Contact",
     href: "/contact",
-    description: "Dites-nous ce que vous construisez.",
-    keywords: ["nous contacter", "devis", "contact"],
+    description: "Dites-nous où vous en êtes. On revient avec une lecture du problème avant de parler design.",
+    keywords: ["contact", "devis", "rendez-vous", "écrire"],
   },
 ];
+
+export const searchIndex: SearchItem[] = [...EXPERTISE, ...PAGES];

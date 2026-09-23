@@ -31,6 +31,10 @@ export function InvoiceDocument({ data, businessInfo }: { data: InvoicePdfData; 
     <Document>
       <Page size="A4" style={pdfStyles.page}>
         <View style={pdfStyles.headerRow}>
+          {/* eslint-disable-next-line jsx-a11y/alt-text -- @react-pdf/renderer's
+              Image is a PDF drawing primitive and has no alt prop; the rule
+              matches on the component name and assumes next/image or <img>.
+              A PDF has no accessibility tree for an alt to land in. */}
           <Image src={KOV_LOGO_SRC} style={pdfStyles.logo} />
           <View>
             <Text style={pdfStyles.docTitle}>{KIND_LABEL[data.kind].toUpperCase()}</Text>

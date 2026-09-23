@@ -19,13 +19,21 @@ export function StatusDonutCard({ projects }: { projects: { status: string }[] }
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
 
-  let cumulative = 0;
-  const segments = PROJECT_STATUSES.filter((s) => counts[s] > 0).map((s) => {
-    const arcLen = total > 0 ? (counts[s] / total) * circumference : 0;
-    const seg = { status: s, arcLen, offset: cumulative };
-    cumulative += arcLen;
-    return seg;
-  });
+  // Built with reduce rather than a `let` accumulated inside map(). The
+  // running offset was a variable reassigned from a callback, which the
+  // React Compiler refuses because it cannot tell when that write happens
+  // relative to the render it is memoising. The arithmetic is identical:
+  // each arc starts where the previous one ended.
+  const visible = PROJECT_STATUSES.filter((s) => counts[s] > 0);
+  const segments = visible.reduce<{ status: (typeof PROJECT_STATUSES)[number]; arcLen: number; offset: number }[]>(
+    (acc, s) => {
+      const arcLen = total > 0 ? (counts[s] / total) * circumference : 0;
+      const previous = acc[acc.length - 1];
+      const offset = previous ? previous.offset + previous.arcLen : 0;
+      return [...acc, { status: s, arcLen, offset }];
+    },
+    []
+  );
 
   return (
     <GlassCard className="p-6">
