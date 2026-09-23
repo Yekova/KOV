@@ -7,7 +7,7 @@ const SITE_URL = "https://kov-agency.site";
 export const metadata: Metadata = {
   title: "Studio virtuel 360° : visitez nos espaces | KOV Bordeaux",
   description:
-    "Visitez le studio KOV en 360° : des salles à parcourir, une navigation WebGL et un plan interactif. La démonstration de ce qu'on sait construire.",
+    "Le studio KOV en 360° : des salles à parcourir, une navigation WebGL, un plan interactif. La démonstration plutôt que la promesse.",
   alternates: { canonical: `${SITE_URL}/studio` },
 };
 

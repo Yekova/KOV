@@ -5,7 +5,7 @@ import LiquidEther from "@/components/contact/LiquidEtherLazy";
 export const metadata: Metadata = {
   title: "Contact — démarrer un projet web à Bordeaux | KOV",
   description:
-    "Parlez-nous de votre projet de site internet, de refonte ou d'expérience immersive. On revient avec une lecture du problème avant de parler design.",
+    "Parlez-nous de votre projet de site internet ou de refonte. On revient avec une lecture du problème avant de parler design.",
   alternates: { canonical: "https://kov-agency.site/contact" },
 };
 

@@ -54,7 +54,7 @@ export const metadata: Metadata = {
   // la requête. Celle-ci nomme le métier, la ville et les trois entrées
   // réelles du site : création, refonte, immersif.
   description:
-    "Studio digital à Bordeaux. Création et refonte de sites internet, design sur mesure et expériences immersives en 3D — avec un studio virtuel à visiter.",
+    "Création et refonte de sites internet sur mesure à Bordeaux. Design, développement, motion, et un studio virtuel à visiter.",
   openGraph: {
     siteName: "KOV",
     locale: "fr_FR",

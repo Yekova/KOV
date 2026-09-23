@@ -31,7 +31,7 @@ const FAQ_COUNT = 4;
 export const metadata: Metadata = {
   title: "Agence web à Bordeaux : création de site internet | KOV",
   description:
-    "Studio de création de sites internet à Bordeaux : stratégie, design, développement et motion. Ce que la proximité change vraiment, et comment nous rencontrer.",
+    "Création de sites internet à Bordeaux : ce que la proximité change, ce qu'elle ne change pas, et comment nous rencontrer.",
   alternates: { canonical: `${SITE_URL}/agence-web-bordeaux` },
 };
 

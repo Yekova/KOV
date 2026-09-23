@@ -30,7 +30,7 @@ const FAQ_COUNT = 4;
 export const metadata: Metadata = {
   title: "Création de site internet sur mesure | KOV Bordeaux",
   description:
-    "Création et refonte de sites internet sur mesure : ce que le sur-mesure change, ce qui fait varier un projet, comment ça se déroule et ce que vous recevez.",
+    "Création et refonte de sites internet sur mesure : ce qui fait varier un projet, comment ça se déroule, et ce que vous recevez.",
   alternates: { canonical: `${SITE_URL}/creation-site-internet` },
 };
 

@@ -11,7 +11,7 @@ const SITE_URL = "https://kov-agency.site";
 export const metadata: Metadata = {
   title: "Expertise — création et refonte de sites internet | KOV",
   description:
-    "Stratégie, design, développement, motion, systèmes et intégration. Les six métiers avec lesquels KOV construit un site, et ce que chacun recouvre.",
+    "Stratégie, design, développement, motion, systèmes, intégration : les six métiers avec lesquels KOV construit un site.",
   alternates: { canonical: `${SITE_URL}/expertise` },
 };
 
