@@ -28,7 +28,7 @@ const FALLBACK_BUSINESS_INFO: BusinessInfo = {
   legalName: "Mattéo Delorme",
   commercialName: "KOV",
   legalForm: "Entreprise individuelle",
-  address: { street: "49 rue André Maginot", postalCode: "33000", city: "Bordeaux", country: "France" },
+  address: { street: "49 rue André Maginot", postalCode: "33200", city: "Bordeaux", country: "France" },
   siret: "941 801 391 00017",
   siren: "941 801 391",
   apeCode: "62.01Z",

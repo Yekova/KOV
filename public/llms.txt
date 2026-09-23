@@ -8,6 +8,7 @@ KOV pense chaque projet comme un seul système : stratégie, design, développem
 
 - [Accueil](https://kov-agency.site/) : présentation du studio et de son approche.
 - [Création de site internet](https://kov-agency.site/creation-site-internet) : ce que recouvre une création sur mesure, création ou refonte, ce qui fait varier un projet, et ce que le client reçoit.
+- [Agence web à Bordeaux](https://kov-agency.site/agence-web-bordeaux) : le studio vu depuis sa ville, ce que la proximité change et ce qu'elle ne change pas, et l'adresse.
 - [Expertise](https://kov-agency.site/expertise) : les six disciplines réunies, et ce que chacune décide dans un projet.
 - [Réalisations](https://kov-agency.site/projets) : les projets livrés et ceux en cours.
 - [Studio](https://kov-agency.site/studio) : la philosophie et les principes du studio, et un espace à parcourir.

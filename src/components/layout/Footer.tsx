@@ -26,6 +26,7 @@ const APPROACH_LINKS = [
   // rank, and this one exists specifically to be found. The six expertise
   // pages shipped as orphans once already.
   { href: "/creation-site-internet", label: "Création de site internet" },
+  { href: "/agence-web-bordeaux", label: "Agence web à Bordeaux" },
   { href: "/expertise", label: "Toutes nos expertises" },
   ...PILLARS.map((pillar) => ({ href: `/expertise/${pillar.slug}`, label: pillar.title })),
   { href: "/#process", label: "Notre processus" },

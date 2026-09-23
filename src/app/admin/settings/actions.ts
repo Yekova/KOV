@@ -73,4 +73,19 @@ export async function updateBusinessSettings(formData: FormData) {
   });
 
   revalidatePath("/admin/settings");
+  // These values are not admin-only. The address and SIRET are published on
+  // /legal and /legal/cgv because the law requires it, and the address is now
+  // in the sitewide structured data too, which lives in the root layout and
+  // therefore renders on every page of the site.
+  //
+  // Only /admin was being revalidated, so editing the address here updated
+  // the database and left the public pages showing the old one until their
+  // own ISR window happened to expire. On a legally required page that is a
+  // real problem, and for local search an address that disagrees with itself
+  // across a site is exactly the signal that gets discounted.
+  //
+  // "layout" scope rather than a list of paths: the JSON-LD is in the root
+  // layout, so the set of affected pages is every page, and naming them one
+  // by one would be a list that goes stale the next time a route is added.
+  revalidatePath("/", "layout");
 }

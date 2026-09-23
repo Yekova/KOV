@@ -18,6 +18,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // on purpose: it is the one page on this site whose whole job is the
     // phrase people type when they want to buy a website.
     { url: `${SITE_URL}/creation-site-internet`, changeFrequency: "monthly", priority: 0.9 },
+    // The local page. Same priority: a city query converts at least as well
+    // as the national one and is far more winnable.
+    { url: `${SITE_URL}/agence-web-bordeaux`, changeFrequency: "monthly", priority: 0.9 },
     { url: `${SITE_URL}/projets`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${SITE_URL}/expertise`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${SITE_URL}/journal`, changeFrequency: "weekly", priority: 0.7 },
