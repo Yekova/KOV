@@ -34,15 +34,21 @@ export const metadata: Metadata = {
   // Le <title> de l'accueil, donc le lien bleu dans Google — et aussi, par
   // héritage, og:title et twitter:title.
   //
-  // L'ancienne valeur était la baseline de marque seule ("On construit ce que
-  // les gens retiennent."). Belle ligne, mais elle ne disait nulle part ce que
-  // fait KOV ni où : rien à quoi rattacher une recherche, et c'est exactement
-  // le cas où Google réécrit le titre lui-même. Celui-ci nomme le métier et la
-  // ville, en 49 caractères — sous la limite d'affichage.
+  // Deux valeurs ont précédé celle-ci. D'abord la baseline de marque seule
+  // ("On construit ce que les gens retiennent.") : belle ligne, mais elle ne
+  // disait ni le métier ni le lieu, donc rien à quoi rattacher une recherche.
+  // Puis "KOV Studio Design et Développement Web à Bordeaux", qui nommait
+  // enfin les deux mais pas le terme commercial : personne ne tape
+  // "développement web" pour acheter un site, on tape "création de site web".
   //
-  // La baseline n'a pas disparu pour autant : elle reste le <h1> de la page
-  // (HeroScene) et la ligne de la carte sociale.
-  title: "KOV Studio Design et Développement Web à Bordeaux",
+  // Celle-ci le nomme, garde la ville et garde la marque, en 55 caractères,
+  // sous la limite d'affichage. Le terme d'abord et la marque ensuite, parce
+  // que c'est l'ordre utile quand la marque n'est pas encore connue : une
+  // recherche sur "KOV" trouve le site de toute façon.
+  //
+  // "développement" n'est pas perdu : /expertise/developpement est la page
+  // dont c'est le sujet, et elle porte ce terme dans son propre titre.
+  title: "Création de site web sur mesure à Bordeaux | KOV Studio",
   // 51 caractères, et aucun terme que quelqu'un taperait — Google en
   // affiche jusqu'à ~155 et réécrit lui-même celles qui ne répondent pas à
   // la requête. Celle-ci nomme le métier, la ville et les trois entrées

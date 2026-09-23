@@ -69,20 +69,33 @@ export async function HeroScene() {
               Digital × Design × Motion
             </p>
 
-            {/* 34px floor, not 24. Below a 686px viewport the fluid term is
-                smaller than the floor, so a phone always got the floor, and
-                24px is not a headline: it was the same size as the sentence
-                under it and the page opened on nothing in particular.
-                "UNE EXÉCUTION." is fourteen characters, which still sets on
-                one line at 34px inside the 327px a 375px screen leaves after
-                the page's own padding. Above 971px nothing changes. */}
+            {/* The headline carries the term now, by the owner's decision.
+                "UNE VISION. UNE EXÉCUTION." was a strong brand line and a
+                nil search signal: the homepage's own h1 contained nothing
+                anyone types. This keeps the cadence exactly, two lines, same
+                rhythm, same red full stop, and swaps the second half for
+                what the page is actually selling.
+
+                30px floor rather than the 34 the previous line used, and
+                that is a deliberate margin rather than a taste. The line is
+                one character longer than the old one and contains a W, the
+                widest uppercase glyph in Archivo Black, against roughly
+                327px of usable width on a 375px screen. No browser runs on
+                this project, so the width cannot be measured here: at 34px
+                my own estimate put it within a few pixels of wrapping, and a
+                headline with an explicit <br/> that wraps anyway breaks onto
+                three lines and looks like a bug. 30px buys about a tenth of
+                the line back and is still twice the body text.
+
+                Above 857px the fluid term takes over and the desktop
+                composition is unchanged. */}
             <h1
               className="mt-4 font-display text-kov-bone uppercase"
-              style={{ fontSize: "clamp(34px, 3.5vw, 56px)", lineHeight: "var(--line-height-display)" }}
+              style={{ fontSize: "clamp(30px, 3.5vw, 56px)", lineHeight: "var(--line-height-display)" }}
             >
-              UNE VISION.
+              VOTRE VISION.
               <br />
-              UNE EXÉCUTION<span className="text-kov-red">.</span>
+              VOTRE SITE WEB<span className="text-kov-red">.</span>
             </h1>
 
             {/* The line under the headline is the only place on this page
