@@ -38,15 +38,20 @@ export const DEFAULT_HERO_WIDGET_ORDER: HeroWidgetId[] = [
 
 // Fixed editorial order for mobile (spec §23) — drag is disabled there
 // entirely, so this never changes at runtime.
-export const MOBILE_HERO_WIDGET_ORDER: HeroWidgetId[] = [
-  "responsive",
-  "spotlight",
-  "studio",
-  "expertise",
-  "performance",
-  "journal",
-  "start-project",
-];
+//
+// Two of the seven, not all seven. Stacked one per row on a phone the full
+// set came to roughly 1660px of widgets: the "responsive" preview alone is
+// a 3/4 box, which is taller than a phone's own screen is wide by half
+// again. Counting the copy above it, arriving on the homepage meant
+// scrolling past about three screens of hero before the site started.
+//
+// A bento grid is a desktop idea. It reads as a dashboard because seven
+// tiles are visible at once and the eye chooses; stacked vertically it is
+// just a queue, and five of those tiles duplicate a section further down
+// the page that says the same thing with more room. So mobile keeps the
+// two that are not repeated anywhere above the fold: one real project, and
+// the newest article. The others are not lost, they are where they belong.
+export const MOBILE_HERO_WIDGET_ORDER: HeroWidgetId[] = ["spotlight", "journal"];
 
 // v2: bumped when the widget upgrade (design pass) shipped, in case a
 // stored v1 order ever became incompatible with a future widget set —

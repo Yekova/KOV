@@ -310,23 +310,14 @@ export function HeroWidgetGrid({
         </div>
       </div>
 
-      {/* Mobile: fixed editorial order (spec §23/§34), no drag at all. */}
+      {/* Mobile: fixed editorial order (spec §23/§34), no drag at all, and a
+          short list rather than the full seven — see MOBILE_HERO_WIDGET_ORDER
+          for why. The "responsive" preview used to be pinned here as a 3/4
+          box ahead of the loop; it was the single tallest thing on the page
+          and the first thing a phone had to scroll past, so it now shows on
+          desktop only, where the grid gives it a column instead of a screen. */}
       <div className="md:hidden flex flex-col gap-2.5">
-        <div className="relative" style={{ aspectRatio: "3 / 4" }}>
-          <WidgetShell
-            draggable={false}
-            isDragging={false}
-            isOtherDragging={false}
-            isDropTarget={false}
-            onDragStart={() => {}}
-            onDragEnd={() => {}}
-            onDragOver={() => {}}
-            onDrop={() => {}}
-          >
-            {content.responsive}
-          </WidgetShell>
-        </div>
-        {MOBILE_HERO_WIDGET_ORDER.filter((id) => id !== "responsive").map((id) => (
+        {MOBILE_HERO_WIDGET_ORDER.map((id) => (
           <div key={id} className="relative" style={{ aspectRatio: id === "spotlight" ? "4 / 3" : "16 / 9" }}>
             <WidgetShell
               draggable={false}

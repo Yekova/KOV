@@ -69,24 +69,35 @@ export async function HeroScene() {
               Digital × Design × Motion
             </p>
 
+            {/* 34px floor, not 24. Below a 686px viewport the fluid term is
+                smaller than the floor, so a phone always got the floor, and
+                24px is not a headline: it was the same size as the sentence
+                under it and the page opened on nothing in particular.
+                "UNE EXÉCUTION." is fourteen characters, which still sets on
+                one line at 34px inside the 327px a 375px screen leaves after
+                the page's own padding. Above 971px nothing changes. */}
             <h1
               className="mt-4 font-display text-kov-bone uppercase"
-              style={{ fontSize: "clamp(24px, 3.5vw, 56px)", lineHeight: "var(--line-height-display)" }}
+              style={{ fontSize: "clamp(34px, 3.5vw, 56px)", lineHeight: "var(--line-height-display)" }}
             >
               UNE VISION.
               <br />
               UNE EXÉCUTION<span className="text-kov-red">.</span>
             </h1>
 
-            <p className="mt-8 max-w-md text-kov-concrete text-sm leading-relaxed">
+            <p className="mt-5 md:mt-8 max-w-md text-kov-concrete text-sm leading-relaxed">
               De la conception au motion, un seul studio pour maîtriser l&apos;exigence de chaque pixel.
             </p>
 
-            <div className="flex flex-wrap items-center gap-4 mt-10">
-              <KovCTA href="/contact" flat emphasis>
+            {/* Stacked and full-width on a phone, side by side from `sm`.
+                Wrapped inline pills put the primary action at thumb-width and
+                left the second one orphaned on its own row anyway, so the
+                column was already happening, just by accident. */}
+            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 sm:gap-4 mt-7 md:mt-10">
+              <KovCTA href="/contact" flat emphasis blockOnMobile>
                 Démarrer un projet
               </KovCTA>
-              <KovCTA href="/#work-gallery" flat>
+              <KovCTA href="/#work-gallery" flat blockOnMobile>
                 Voir nos projets
               </KovCTA>
             </div>

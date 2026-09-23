@@ -21,6 +21,17 @@ interface KovCTAProps {
    * Hero's primary CTA per the same brief ("le bouton primaire peut
    * recevoir davantage de rouge"). Only meaningful together with `flat`. */
   emphasis?: boolean;
+  /** Full-width, centred label below `sm`, normal content-width pill above.
+   * A thumb aims at a target, not at a label: on a phone the hero's primary
+   * action should be the width of the column and impossible to miss, while
+   * the desktop composition keeps its inline pills. Off by default, so every
+   * existing call site renders exactly as it did.
+   *
+   * Scoped to the `flat` variant, which is the only one the Hero uses.
+   * GlassSurface sizes itself to its content on purpose (see its own note on
+   * why stretching it once broke Nav's pill), so widening that path would
+   * mean reopening a settled bug for a case nothing asks for. */
+  blockOnMobile?: boolean;
 }
 
 // The homepage's premium CTA — extracted from HeroScene's original inline
@@ -43,9 +54,11 @@ export function KovCTA({
   className = "",
   flat = false,
   emphasis = false,
+  blockOnMobile = false,
 }: KovCTAProps) {
+  const wide = blockOnMobile && flat;
   return (
-    <div className={`group relative inline-block ${className}`}>
+    <div className={`group relative ${wide ? "block w-full sm:inline-block sm:w-auto" : "inline-block"} ${className}`}>
       {/* Only the non-flat (GlassSurface) variant gets the WebGL halo — the
           Hero's flat CTAs had it explicitly removed by request, and `flat`
           is only ever used there, so gating it here is equivalent to a
@@ -58,7 +71,9 @@ export function KovCTA({
       <Link href={href} className="relative block">
         {flat ? (
           <span
-            className={`inline-flex items-center gap-2 px-6 py-3 text-xs uppercase tracking-widest transition-all duration-300 group-hover:scale-[1.02] ${
+            className={`${
+              wide ? "flex w-full justify-center sm:inline-flex sm:w-auto" : "inline-flex"
+            } items-center gap-2 px-6 py-3.5 sm:py-3 text-xs uppercase tracking-widest transition-all duration-300 group-hover:scale-[1.02] ${
               emphasis ? "text-white" : "text-kov-bone group-hover:text-kov-red"
             }`}
             style={{
