@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { GlassSurface } from "@/components/ui/GlassSurface";
@@ -31,18 +31,6 @@ export function LoginForm({
 }) {
   const [state, formAction, isPending] = useActionState(login, INITIAL_STATE);
   const [showPassword, setShowPassword] = useState(false);
-  const cardRef = useRef<HTMLDivElement>(null);
-
-  // Where the light on the glass is. Written straight to the element —
-  // state here would be a React render per mouse sample, for two numbers
-  // that only CSS ever reads.
-  const trackLight = (event: React.PointerEvent<HTMLDivElement>) => {
-    const card = cardRef.current;
-    if (!card) return;
-    const rect = card.getBoundingClientRect();
-    card.style.setProperty("--mx", `${event.clientX - rect.left}px`);
-    card.style.setProperty("--my", `${event.clientY - rect.top}px`);
-  };
 
   return (
     <>
@@ -60,7 +48,6 @@ export function LoginForm({
           stretched by a percentage with nothing definite to resolve
           against — the pill learned that the hard way. */}
       <GlassSurface
-        ref={cardRef}
         width="auto"
         height="auto"
         borderRadius={26}
@@ -72,9 +59,9 @@ export function LoginForm({
         blueOffset={16}
         backgroundOpacity={0.1}
         saturation={1.2}
-        className="kov-login-card w-full max-w-[520px]"
+        className="kov-login-card w-full max-w-[640px]"
       >
-        <div onPointerMove={trackLight} className="w-full p-8 sm:p-11">
+        <div className="w-full p-8 sm:p-11">
         {/* Just the mark. The card sat under an eyebrow, a right-aligned
             greeting and a heading, which is three registers of type before
             the first field — on a page whose only job is one form. */}

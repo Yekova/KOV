@@ -50,7 +50,16 @@ export default async function LoginPage(props: PageProps<"/login">) {
           it. It drifts against the cursor; see LoginBackdrop. */}
       <LoginBackdrop />
 
-      <div className="relative z-[1] mx-auto flex min-h-screen max-w-[1600px] flex-col justify-center gap-14 px-6 py-32 md:px-12 lg:flex-row lg:items-center lg:justify-between lg:gap-20 lg:py-36">
+      {/* The card sits on the left from `lg` up, by request.
+          `flex-row-reverse` rather than swapping the two blocks in the
+          source: the heading has to stay first in the document, since it is
+          the page's h1 and the first thing a screen reader reaches, and the
+          comment below says as much. Reversing the visual order costs
+          nothing here because the text column holds no focusable element,
+          so the tab order still lands in the form first either way.
+          Below `lg` the layout is a single column and the card follows the
+          heading, which is the right order on a phone. */}
+      <div className="relative z-[1] mx-auto flex min-h-screen max-w-[1600px] flex-col justify-center gap-14 px-6 py-32 md:px-12 lg:flex-row-reverse lg:items-center lg:justify-between lg:gap-20 lg:py-36">
         <div className="max-w-xl">
           <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-kov-red">KOV Studio</p>
 
@@ -95,7 +104,9 @@ export default async function LoginPage(props: PageProps<"/login">) {
           </div>
         </div>
 
-        <div className="flex w-full justify-center lg:w-auto lg:justify-end">
+        {/* `justify-start` now that this column is the left one: the card
+            hugs the page's left gutter instead of the gap in the middle. */}
+        <div className="flex w-full justify-center lg:w-auto lg:justify-start">
           <LoginForm next={next} justReset={justReset} notice={notice} />
         </div>
       </div>

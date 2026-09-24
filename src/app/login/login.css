@@ -23,37 +23,24 @@
   transition: border-color 420ms ease, box-shadow 420ms ease, transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.kov-login-card::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0; /* above the glass, below .glass-surface__content (z-index 1) */
-  border-radius: inherit;
-  /* Centred until the pointer says otherwise, so a keyboard visitor who
-     never moves a mouse still gets a lit card rather than a dead one. */
-  background: radial-gradient(
-    520px circle at var(--mx, 50%) var(--my, 26%),
-    rgba(227, 30, 36, 0.17),
-    rgba(227, 30, 36, 0) 62%
-  );
-  opacity: 0;
-  transition: opacity 520ms ease;
-  pointer-events: none;
-}
-
-/* :focus-within alongside :hover is the whole point of pairing them —
-   someone filling this in from the keyboard gets the same lit card as
-   someone with a cursor on it. */
+/* The red halo is gone, by request.
+ *
+ * It was a ::after radial gradient in the brand red, tracking the cursor
+ * across the card and fading in on hover, plus a red border and a red hairline
+ * ring in the shadow. Removed rather than dimmed: a login card is the one
+ * surface on this site with nothing to sell, and red is the site's signal
+ * colour, which it cannot be while it is also decoration here.
+ *
+ * What replaces it is neutral, and it is deliberately not nothing.
+ * :focus-within is still paired with :hover, because someone filling this in
+ * from the keyboard has to see the card respond exactly as someone with a
+ * cursor on it does. The response is now a brighter neutral edge, a deeper
+ * shadow and the same lift. */
 .kov-login-card:hover,
 .kov-login-card:focus-within {
-  border-color: rgba(227, 30, 36, 0.38) !important;
-  box-shadow: 0 44px 96px -52px rgba(0, 0, 0, 0.92), 0 0 0 1px rgba(227, 30, 36, 0.09);
+  border-color: rgba(231, 231, 229, 0.22) !important;
+  box-shadow: 0 44px 96px -52px rgba(0, 0, 0, 0.92), 0 0 0 1px rgba(255, 255, 255, 0.05);
   transform: translateY(-3px);
-}
-
-.kov-login-card:hover::after,
-.kov-login-card:focus-within::after {
-  opacity: 1;
 }
 
 /* The fields lift with the card. A border that only reacts on focus leaves
@@ -90,8 +77,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  /* ::after dropped from this list along with the gradient it used to fade:
+     the pseudo-element has no styles left, so it had no transition to kill. */
   .kov-login-card,
-  .kov-login-card::after,
   .kov-login-social {
     transition: none;
   }
