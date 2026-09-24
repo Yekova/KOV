@@ -8,11 +8,11 @@ import { GlassCard } from "@/components/ui/GlassCard";
 export type AdminSearchItem = {
   title: string;
   subtitle?: string;
-  category: "Clients" | "Projets" | "Leads" | "Devis" | "Factures" | "Documents";
+  category: "Clients" | "Projets" | "Leads" | "Devis" | "Factures" | "Documents" | "Prompts";
   href: string;
 };
 
-const CATEGORIES = ["Tout", "Clients", "Projets", "Leads", "Devis", "Factures", "Documents"] as const;
+const CATEGORIES = ["Tout", "Clients", "Projets", "Leads", "Devis", "Factures", "Documents", "Prompts"] as const;
 
 // Prefetch-once-and-filter-client-side, same technique already proven by
 // GreetingSearchPanel in the client portal — this agency's data volume
@@ -87,7 +87,7 @@ export function GlobalAdminSearch({ items }: { items: AdminSearchItem[] }) {
           <circle cx="11" cy="11" r="7" />
           <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
-        <span className="flex-1">Rechercher un client, projet, lead, devis…</span>
+        <span className="flex-1">Rechercher un client, projet, lead, prompt…</span>
         <span
           className="text-[10px] uppercase tracking-widest border px-1.5 py-0.5"
           style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
@@ -118,7 +118,7 @@ export function GlobalAdminSearch({ items }: { items: AdminSearchItem[] }) {
                 ref={inputRef}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Rechercher un client, projet, lead, devis…"
+                placeholder="Rechercher un client, projet, lead, prompt…"
                 className="flex-1 bg-transparent text-kov-bone placeholder:text-kov-steel"
               />
               <span
@@ -157,7 +157,7 @@ export function GlobalAdminSearch({ items }: { items: AdminSearchItem[] }) {
 
             <div className="mt-6 max-h-[50vh] overflow-y-auto">
               {!query.trim() ? (
-                <p className="text-kov-steel text-sm p-3">Tapez pour rechercher dans vos clients, projets et leads.</p>
+                <p className="text-kov-steel text-sm p-3">Tapez pour rechercher dans vos clients, projets, leads et prompts.</p>
               ) : results.length === 0 ? (
                 <p className="text-kov-steel text-sm p-3">Aucun résultat — essayez une autre recherche.</p>
               ) : (

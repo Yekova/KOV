@@ -298,3 +298,95 @@ body {
     font-size: 11px;
   }
 }
+
+/* Le rendu Markdown d'un prompt, dans /admin/prompts.
+ *
+ * Volontairement séparé de .kov-post-body, qui habille les articles du
+ * Journal : celui-ci est lu dans un panneau étroit, en typographie dense,
+ * et il doit surtout rendre lisibles des blocs de code — ce que .kov-post-body
+ * ne fait pas, puisqu'il n'a de règle ni pour pre ni pour code.
+ *
+ * Le HTML vient de renderPromptMarkdown(), qui échappe l'entrée avant
+ * d'appliquer la moindre règle : les seules balises présentes sont celles
+ * que cette fonction écrit. */
+.kov-prompt-markdown {
+  color: var(--kov-concrete);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.kov-prompt-markdown > * + * {
+  margin-top: 0.75em;
+}
+
+.kov-prompt-markdown h2,
+.kov-prompt-markdown h3,
+.kov-prompt-markdown h4,
+.kov-prompt-markdown h5,
+.kov-prompt-markdown h6 {
+  color: var(--kov-bone);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-top: 1.4em;
+}
+
+.kov-prompt-markdown strong {
+  color: var(--kov-bone);
+}
+
+.kov-prompt-markdown ul,
+.kov-prompt-markdown ol {
+  padding-left: 1.2em;
+}
+
+.kov-prompt-markdown ul {
+  list-style: disc;
+}
+
+.kov-prompt-markdown ol {
+  list-style: decimal;
+}
+
+.kov-prompt-markdown li + li {
+  margin-top: 0.25em;
+}
+
+.kov-prompt-markdown blockquote {
+  border-left: 2px solid var(--kov-border);
+  padding-left: 0.9em;
+  color: var(--kov-steel);
+}
+
+.kov-prompt-markdown a {
+  color: var(--kov-red);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.kov-prompt-markdown hr {
+  border: 0;
+  border-top: 1px solid var(--kov-border);
+}
+
+.kov-prompt-markdown .kov-md-code {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.92em;
+  color: var(--kov-bone);
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
+  padding: 0.1em 0.35em;
+}
+
+.kov-prompt-markdown .kov-md-pre {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--kov-bone);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--kov-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+}

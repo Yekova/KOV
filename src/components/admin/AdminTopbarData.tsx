@@ -6,8 +6,12 @@ import type { NotificationItem } from "./NotificationBell";
 const SEARCH_LIMIT = 200;
 
 // Isolated in its own Suspense boundary (see admin/layout.tsx) — this is the
-// heaviest part of the admin shell (9 queries for the search index and
+// heaviest part of the admin shell (12 queries for the search index and
 // picker options), so it must never block route transitions or the sidebar.
+//
+// Chaque requête revient en { data, error } : une table absente rend data
+// null et non une exception, donc la palette continue de fonctionner tant
+// que la migration des prompts n'est pas appliquée.
 export async function AdminTopbarData({ userId }: { userId: string }) {
   // Server Component executed once per request, not re-rendered client-side —
   // "now" for a "last 24h" query is legitimately request-time data, not impure
@@ -27,6 +31,7 @@ export async function AdminTopbarData({ userId }: { userId: string }) {
     { data: documentRows },
     { data: activityRows },
     { data: recentLeadRows },
+    { data: promptRows },
   ] = await Promise.all([
     supabaseAdmin.from("profiles").select("full_name, is_online").eq("id", userId).maybeSingle(),
     supabaseAdmin.from("leads").select("id", { count: "exact", head: true }).gte("created_at", oneDayAgo),
@@ -51,6 +56,14 @@ export async function AdminTopbarData({ userId }: { userId: string }) {
       .order("created_at", { ascending: false })
       .limit(8),
     supabaseAdmin.from("leads").select("id, name, created_at").order("created_at", { ascending: false }).limit(5),
+    // Les prompts archivés sont hors palette : on les retrouve dans la
+    // bibliothèque en choisissant ce statut, pas en tapant deux lettres.
+    supabaseAdmin
+      .from("prompts")
+      .select("id, title, description")
+      .neq("status", "archived")
+      .order("updated_at", { ascending: false })
+      .limit(SEARCH_LIMIT),
   ]);
 
   const clientNameById = new Map((clientProfiles ?? []).map((c) => [c.id, c.full_name || c.company || c.email]));
@@ -90,6 +103,16 @@ export async function AdminTopbarData({ userId }: { userId: string }) {
       title: d.filename,
       category: "Documents" as const,
       href: d.project_id ? `/admin/projects/${d.project_id}` : `/admin/clients`,
+    })),
+    // Vers ?use=<id>, qui ouvre directement le formulaire de variables.
+    // Le §25 demandait Maj+Entrée pour ce geste ; une URL le fait aussi
+    // bien, survit à un rechargement, se partage, et ne demande pas
+    // d'apprendre un raccourci invisible.
+    ...(promptRows ?? []).map((p) => ({
+      title: p.title,
+      subtitle: p.description ?? undefined,
+      category: "Prompts" as const,
+      href: `/admin/prompts?use=${p.id}`,
     })),
   ];
 

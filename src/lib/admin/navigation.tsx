@@ -144,6 +144,20 @@ export const adminNavigation: AdminNavSection[] = [
         ),
       },
       {
+        // La bibliothèque de prompts : un outil de production interne, donc
+        // "Entreprise" et pas "Système" — on y passe pour travailler, pas
+        // pour configurer.
+        id: "prompts",
+        label: "Prompts",
+        href: "/admin/prompts",
+        icon: (
+          <>
+            <path d="M9 8l-4 4 4 4" />
+            <path d="M15 8l4 4-4 4" />
+          </>
+        ),
+      },
+      {
         id: "billing",
         label: "Facturation",
         href: "/admin/billing",
