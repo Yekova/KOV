@@ -1,6 +1,7 @@
 import { ProjectsEditorial } from "@/components/home/projects/ProjectsEditorial";
 import { ProjectsGrid } from "@/components/home/projects/ProjectsGrid";
 import { ProjectsProof } from "@/components/home/projects/ProjectsProof";
+import { ScrollScene } from "@/components/ui/ScrollScene";
 import { fetchShowcaseProjects } from "@/lib/showcase/projects";
 
 // The projects section: an editorial column beside an aligned grid of six
@@ -30,16 +31,22 @@ export async function WorkGallery() {
       />
 
       <div className="relative grid grid-cols-1 lg:grid-cols-[minmax(0,34fr)_minmax(0,66fr)] gap-14 lg:gap-16">
+        {/* Not wrapped, and that is deliberate: this column is lg:sticky, and
+            a transform on it or on any ancestor turns it into the scroll
+            container sticky resolves against, which silently un-sticks it.
+            The grid beside it has no such constraint. */}
         <ProjectsEditorial />
-        <ProjectsGrid projects={shown} />
+        <ScrollScene stagger selector="[data-scroll-item]" spacing="tight">
+          <ProjectsGrid projects={shown} />
+        </ScrollScene>
       </div>
 
       {/* The grid shows what exists; this says what it took. Full width under
           both columns, and it renders only the projects that actually have a
           story — today two of six. */}
-      <div className="relative">
+      <ScrollScene className="relative" parallax={26}>
         <ProjectsProof projects={shown} />
-      </div>
+      </ScrollScene>
     </section>
   );
 }

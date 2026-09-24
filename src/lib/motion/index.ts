@@ -17,5 +17,5 @@
 export { motion, stagger, type MotionSpeed, type StaggerSpacing } from "./timing";
 export { LIQUID_EASE, REVEAL_EASE, GSAP_LIQUID_EASE, GSAP_REVEAL_EASE } from "./easing";
 export { gsap, ScrollTrigger, initGsap } from "./scroll";
-export { prefersReducedMotion } from "./reducedMotion";
+export { prefersReducedMotion, scrollScenesEnabled } from "./reducedMotion";
 export { fadeUpIn, dissolve, staggerReveal, pinAndTrack } from "./transitions";

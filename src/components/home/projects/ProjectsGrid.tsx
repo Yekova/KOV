@@ -18,6 +18,10 @@ export function ProjectsGrid({ projects }: { projects: Project[] }) {
       {projects.map((project) => (
         <div
           key={project.slug}
+          // An animation hook, not a style: ScrollScene staggers these on
+          // desktop. A data attribute rather than a class, so restyling the
+          // card can never silently detach the motion from it.
+          data-scroll-item
           className="h-[264px] lg:h-[var(--card-h)]"
           style={{ ["--card-h" as string]: `${CARD_HEIGHT}px` }}
         >

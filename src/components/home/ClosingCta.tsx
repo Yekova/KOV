@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/Button";
 import { KovCTA } from "@/components/ui/KovCTA";
+import { ScrollScene } from "@/components/ui/ScrollScene";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { SectionVeil } from "@/components/home/SectionVeil";
@@ -29,7 +30,10 @@ export function ClosingCta() {
           animated background it covers. The content below must stay inside
           its own `relative` wrapper, or the veil paints over it. */}
       <SectionVeil />
-      <div className="relative">
+      {/* Desktop-only scrubbed drift: motion while scrolling, not only on
+          arrival. ScrollScene owns the element it transforms, so the Reveal
+          inside keeps its own and neither overwrites the other. */}
+      <ScrollScene className="relative" parallax={20}>
       <Reveal variant="blur">
         <div className="max-w-[1000px] mx-auto">
           <SectionHeading
@@ -69,7 +73,7 @@ export function ClosingCta() {
           </div>
         </div>
       </Reveal>
-      </div>
+      </ScrollScene>
     </section>
   );
 }

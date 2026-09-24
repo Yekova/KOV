@@ -1,3 +1,4 @@
+import { ScrollScene } from "@/components/ui/ScrollScene";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { SectionVeil } from "@/components/home/SectionVeil";
@@ -48,7 +49,10 @@ export function PhilosophyStatement() {
           animated background it covers. The content below must stay inside
           its own `relative` wrapper, or the veil paints over it. */}
       <SectionVeil />
-      <div className="relative">
+      {/* Desktop-only scrubbed drift: motion while scrolling, not only on
+          arrival. ScrollScene owns the element it transforms, so the Reveal
+          inside keeps its own and neither overwrites the other. */}
+      <ScrollScene className="relative" parallax={24}>
       <Reveal variant="blur">
         <SectionHeading
           eyebrow="Constats"
@@ -109,7 +113,7 @@ export function PhilosophyStatement() {
           </Reveal>
         ))}
       </ol>
-      </div>
+      </ScrollScene>
     </section>
   );
 }

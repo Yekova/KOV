@@ -1,3 +1,4 @@
+import { ScrollScene } from "@/components/ui/ScrollScene";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { SectionVeil } from "@/components/home/SectionVeil";
@@ -21,7 +22,12 @@ export function ProcessTimeline() {
           content below must stay inside its own `relative` wrapper, or the
           veil paints over it. */}
       <SectionVeil />
-      <div className="relative">
+      {/* A gentle scrubbed drift on the whole block, desktop only. It reads
+          as motion *while* scrolling rather than motion *on arrival*, which
+          is what the section was missing: it had two threshold fades and
+          nothing in between. ScrollScene renders its own element for the
+          transform, so the Reveal inside keeps its own. */}
+      <ScrollScene className="relative" parallax={24}>
         <Reveal variant="blur">
           <SectionHeading
             eyebrow="Processus"
@@ -39,7 +45,7 @@ export function ProcessTimeline() {
         <Reveal variant="fade" delay={0.08}>
           <ProcessGallery />
         </Reveal>
-      </div>
+      </ScrollScene>
     </section>
   );
 }
