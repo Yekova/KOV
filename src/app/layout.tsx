@@ -56,11 +56,26 @@ export const metadata: Metadata = {
   // réelles du site : création, refonte, immersif.
   description:
     "Création et refonte de sites internet sur mesure à Bordeaux. Design, développement, motion, et un studio virtuel à visiter.",
+  // No `images` here, deliberately, and that absence is the whole point.
+  //
+  // It used to list the wordmark PNG, which is 1116x209: a 5.34:1 logo strip
+  // declared as twitter:card summary_large_image, a format that wants about
+  // 1.91:1. Shared to LinkedIn, WhatsApp or Slack, every page but the
+  // homepage previewed as a squashed or letterboxed band.
+  //
+  // Setting it here also silently beat the real card. app/opengraph-image.tsx
+  // renders a proper 1200x630, and file-based images ARE inherited by nested
+  // segments; a config `images` array on the root layout overrides them for
+  // every page that inherits this metadata. Verified by removing it and
+  // reading the built HTML: /creation-site-internet, /projets and /faq all
+  // resolve /opengraph-image now, where they resolved the PNG before.
+  //
+  // Articles keep setting their own (their cover), and fall back to this
+  // card when they have none, which several currently do.
   openGraph: {
     siteName: "KOV",
     locale: "fr_FR",
     type: "website",
-    images: ["/kov/brand/kov-wordmark-bone.png"],
   },
   twitter: {
     card: "summary_large_image",
