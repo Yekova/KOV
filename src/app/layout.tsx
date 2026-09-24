@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Archivo_Black, Inter, Geist_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { SiteChrome } from "@/components/layout/SiteChrome";
 import { CustomCursor } from "@/components/ui/CustomCursor";
 import { CookieConsent } from "@/components/layout/CookieConsent";
@@ -90,6 +91,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <CustomCursor />
         <SiteChrome>{children}</SiteChrome>
         <CookieConsent />
+        <Analytics />
       </body>
     </html>
   );
