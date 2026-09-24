@@ -4,7 +4,8 @@ import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { slugifyPrompt } from "@/lib/prompts/template";
 import { promptBlockSchema, type PromptBlockInput } from "./schema";
-import { STARTER_BLOCKS, STARTER_PROMPTS } from "./starter";
+import { STARTER_BLOCKS, STARTER_PROMPTS, type StarterPrompt } from "./starter";
+import { MOCKUP_CATEGORY, MOCKUP_PROMPTS } from "./starterMockup";
 
 // Le classement de la bibliothèque : catégories, collections, tags, blocs.
 // Séparé de actions.ts, qui porte déjà le cycle de vie d'un prompt — deux
@@ -293,6 +294,81 @@ export async function deletePromptBlock(id: string): Promise<{ error: string | n
   return { error: null };
 }
 
+/** Pose un prompt de pack : la ligne, sa v1, ses variables, ses tags.
+ *
+ *  Partagé par les deux packs. Rend false sans crier si l'insertion échoue
+ *  — un slug déjà pris, typiquement — pour qu'un pack partiellement présent
+ *  s'installe quand même sur ce qui manque au lieu de tout abandonner. */
+async function insertStarterPrompt(
+  starter: StarterPrompt,
+  categoryId: string | null,
+  userId: string,
+  changeNote: string
+): Promise<boolean> {
+  const { data: created, error } = await supabaseAdmin
+    .from("prompts")
+    .insert({
+      title: starter.title,
+      slug: slugifyPrompt(starter.title),
+      description: starter.description,
+      content: starter.content,
+      category_id: categoryId,
+      type: starter.type,
+      target_tool: starter.targetTool,
+      status: "active",
+      version_number: 1,
+      created_by: userId,
+    })
+    .select("id")
+    .single();
+
+  if (error || !created) return false;
+  const id = created.id as string;
+
+  await supabaseAdmin.from("prompt_versions").insert({
+    prompt_id: id,
+    version_number: 1,
+    content: starter.content,
+    change_note: changeNote,
+    created_by: userId,
+  });
+
+  if (starter.variables.length) {
+    await supabaseAdmin.from("prompt_variables").insert(
+      starter.variables.map((variable, index) => ({
+        prompt_id: id,
+        key: variable.key,
+        label: variable.label,
+        type: variable.type,
+        placeholder: variable.placeholder ?? null,
+        options_json: variable.options ?? [],
+        required: variable.required ?? false,
+        sort_order: index,
+      }))
+    );
+  }
+
+  if (starter.tags.length) {
+    // Par slug : deux noms différents peuvent donner le même, et Postgres
+    // refuse deux lignes de même clé de conflit dans un seul upsert.
+    const bySlug = new Map(starter.tags.map((name) => [slugifyPrompt(name), name]));
+    const { data: tagRows } = await supabaseAdmin
+      .from("prompt_tags")
+      .upsert(
+        Array.from(bySlug.entries()).map(([slug, name]) => ({ name, slug })),
+        { onConflict: "slug" }
+      )
+      .select("id");
+    if (tagRows?.length) {
+      await supabaseAdmin
+        .from("prompt_tag_links")
+        .insert(tagRows.map((tag) => ({ prompt_id: id, tag_id: tag.id as string })));
+    }
+  }
+
+  return true;
+}
+
 // ── Bibliothèque de départ ───────────────────────────────────────────────
 
 /** Ce que propose une bibliothèque vide.
@@ -325,69 +401,14 @@ export async function installStarterLibrary(): Promise<{ error: string | null; p
   const categoryBySlug = new Map((categories ?? []).map((row) => [row.slug as string, row.id as string]));
 
   let prompts = 0;
-
   for (const starter of STARTER_PROMPTS) {
-    const { data: created, error } = await supabaseAdmin
-      .from("prompts")
-      .insert({
-        title: starter.title,
-        slug: slugifyPrompt(starter.title),
-        description: starter.description,
-        content: starter.content,
-        category_id: categoryBySlug.get(starter.categorySlug) ?? null,
-        type: starter.type,
-        target_tool: starter.targetTool,
-        status: "active",
-        version_number: 1,
-        created_by: user.id,
-      })
-      .select("id")
-      .single();
-
-    if (error || !created) continue;
-    const id = created.id as string;
-    prompts += 1;
-
-    await supabaseAdmin.from("prompt_versions").insert({
-      prompt_id: id,
-      version_number: 1,
-      content: starter.content,
-      change_note: "Bibliothèque de départ",
-      created_by: user.id,
-    });
-
-    if (starter.variables.length) {
-      await supabaseAdmin.from("prompt_variables").insert(
-        starter.variables.map((variable, index) => ({
-          prompt_id: id,
-          key: variable.key,
-          label: variable.label,
-          type: variable.type,
-          placeholder: variable.placeholder ?? null,
-          options_json: variable.options ?? [],
-          required: variable.required ?? false,
-          sort_order: index,
-        }))
-      );
-    }
-
-    if (starter.tags.length) {
-      // Par slug : deux noms différents peuvent donner le même, et Postgres
-      // refuse deux lignes de même clé de conflit dans un seul upsert.
-      const bySlug = new Map(starter.tags.map((name) => [slugifyPrompt(name), name]));
-      const { data: tagRows } = await supabaseAdmin
-        .from("prompt_tags")
-        .upsert(
-          Array.from(bySlug.entries()).map(([slug, name]) => ({ name, slug })),
-          { onConflict: "slug" }
-        )
-        .select("id");
-      if (tagRows?.length) {
-        await supabaseAdmin
-          .from("prompt_tag_links")
-          .insert(tagRows.map((tag) => ({ prompt_id: id, tag_id: tag.id as string })));
-      }
-    }
+    const inserted = await insertStarterPrompt(
+      starter,
+      categoryBySlug.get(starter.categorySlug) ?? null,
+      user.id,
+      "Bibliothèque de départ"
+    );
+    if (inserted) prompts += 1;
   }
 
   const { error: blockError } = await supabaseAdmin.from("prompt_blocks").insert(
@@ -404,4 +425,72 @@ export async function installStarterLibrary(): Promise<{ error: string | null; p
   );
 
   return { error: null, prompts, blocks: blockError ? 0 : STARTER_BLOCKS.length };
+}
+
+// ── Pack « Maquette site web » ───────────────────────────────────────────
+
+/** Installe les dix étapes de construction d'une maquette.
+ *
+ *  Contrairement à la bibliothèque de départ, ce pack se pose sur une
+ *  bibliothèque déjà peuplée : il crée sa catégorie si elle manque et
+ *  ignore les prompts dont le slug existe déjà. Relancer ne double donc
+ *  rien, et complète ce qui a été supprimé par erreur.
+ *
+ *  La catégorie est créée ici et non dans la migration : la migration peut
+ *  déjà être appliquée quand ce pack arrive, et une migration qu'on
+ *  retouche après coup est une migration qui ne sera jamais rejouée. */
+export async function installMockupPack(): Promise<{
+  error: string | null;
+  installed: number;
+  skipped: number;
+}> {
+  const user = await requireAdmin();
+
+  const { error: readError } = await supabaseAdmin.from("prompts").select("id").limit(1);
+  if (readError) {
+    return {
+      error: "La table prompts est introuvable — la migration n'a pas encore été appliquée.",
+      installed: 0,
+      skipped: 0,
+    };
+  }
+
+  // upsert plutôt que insert : la catégorie peut avoir été créée à la main,
+  // ou par une première exécution de ce même pack.
+  await supabaseAdmin
+    .from("prompt_categories")
+    .upsert(
+      { name: MOCKUP_CATEGORY.name, slug: MOCKUP_CATEGORY.slug, sort_order: MOCKUP_CATEGORY.sortOrder },
+      { onConflict: "slug" }
+    );
+
+  const { data: category } = await supabaseAdmin
+    .from("prompt_categories")
+    .select("id")
+    .eq("slug", MOCKUP_CATEGORY.slug)
+    .maybeSingle();
+
+  const slugs = MOCKUP_PROMPTS.map((prompt) => slugifyPrompt(prompt.title));
+  const { data: existing } = await supabaseAdmin.from("prompts").select("slug").in("slug", slugs);
+  const taken = new Set((existing ?? []).map((row) => row.slug as string));
+
+  let installed = 0;
+  let skipped = 0;
+
+  for (const prompt of MOCKUP_PROMPTS) {
+    if (taken.has(slugifyPrompt(prompt.title))) {
+      skipped += 1;
+      continue;
+    }
+    const ok = await insertStarterPrompt(
+      prompt,
+      (category?.id as string | undefined) ?? null,
+      user.id,
+      "Pack maquette site web"
+    );
+    if (ok) installed += 1;
+    else skipped += 1;
+  }
+
+  return { error: null, installed, skipped };
 }

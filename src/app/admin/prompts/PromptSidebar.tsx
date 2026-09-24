@@ -141,7 +141,7 @@ export function PromptSidebar({
           href="/admin/prompts/collections"
           className="block px-2.5 py-1.5 text-xs text-kov-steel hover:text-kov-bone transition-colors"
         >
-          Gérer catégories et collections
+          Classement et packs
         </Link>
         <Link
           href="/admin/prompts/builder"

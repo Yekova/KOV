@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowDown, ArrowUp, Check, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, Loader2, Pencil, Plus, Sparkles, Trash2 } from "lucide-react";
 import {
   createPromptCategory,
   createPromptCollection,
@@ -11,6 +11,8 @@ import {
   deletePromptCollection,
   getPromptCategories,
   getPromptCollections,
+  installMockupPack,
+  installStarterLibrary,
   renamePromptCategory,
   reorderPromptCategories,
 } from "./library-actions";
@@ -302,11 +304,98 @@ function CollectionsPanel() {
   );
 }
 
+/** Les packs de prompts.
+ *
+ *  Un pack n'est pas une démonstration : c'est un jeu de gabarits écrits
+ *  pour ce studio, qu'on pose puis qu'on modifie. Ils vivent ici plutôt
+ *  qu'en accueil de bibliothèque parce qu'on les installe une fois et
+ *  qu'un bouton permanent en tête de liste vieillirait mal. */
+function PacksPanel() {
+  const queryClient = useQueryClient();
+
+  const mockup = useMutation({
+    mutationFn: installMockupPack,
+    onSuccess: (result) => {
+      if (result.error) return toast.error(result.error);
+      queryClient.invalidateQueries();
+      toast.success(
+        result.installed === 0
+          ? "Pack déjà installé, rien à ajouter."
+          : `${result.installed} prompts installés${result.skipped ? `, ${result.skipped} déjà présents` : ""}`
+      );
+    },
+    onError: () => toast.error("L'installation a échoué."),
+  });
+
+  const base = useMutation({
+    mutationFn: installStarterLibrary,
+    onSuccess: (result) => {
+      if (result.error) return toast.error(result.error);
+      queryClient.invalidateQueries();
+      toast.success(`${result.prompts} prompts et ${result.blocks} blocs installés`);
+    },
+    onError: () => toast.error("L'installation a échoué."),
+  });
+
+  const PACK =
+    "flex flex-wrap items-center gap-4 border px-4 py-3";
+
+  return (
+    <Panel
+      title="Packs"
+      hint="Des jeux de gabarits prêts à poser. Tout est modifiable et supprimable ensuite."
+    >
+      <div className={PACK} style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}>
+        <div className="flex-1 min-w-[16rem]">
+          <p className="text-kov-bone text-sm">Maquette site web · 10 étapes</p>
+          <p className="text-kov-steel text-xs mt-1 leading-relaxed">
+            Du cadrage à la revue avant développement, dans l&apos;ordre. Chaque étape prend en entrée la sortie
+            de la précédente. Réinstallable : les prompts déjà présents sont ignorés.
+          </p>
+        </div>
+        <button
+          type="button"
+          disabled={mockup.isPending}
+          onClick={() => mockup.mutate()}
+          className="inline-flex items-center gap-2 px-4 py-2.5 text-[11px] uppercase tracking-widest text-kov-white transition-colors disabled:opacity-50 shrink-0"
+          style={{ background: "var(--kov-red)", borderRadius: "var(--radius-sm)" }}
+        >
+          {mockup.isPending ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />}
+          Installer
+        </button>
+      </div>
+
+      <div className={PACK} style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}>
+        <div className="flex-1 min-w-[16rem]">
+          <p className="text-kov-bone text-sm">Base de départ · 8 prompts et 7 blocs</p>
+          <p className="text-kov-steel text-xs mt-1 leading-relaxed">
+            Gabarits généraux pour cette base de code, et les blocs du Builder. Ne s&apos;installe que sur une
+            bibliothèque vide.
+          </p>
+        </div>
+        <button
+          type="button"
+          disabled={base.isPending}
+          onClick={() => base.mutate()}
+          className="inline-flex items-center gap-2 border px-4 py-2.5 text-[11px] uppercase tracking-widest text-kov-bone transition-colors hover:border-kov-red disabled:opacity-50 shrink-0"
+          style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
+        >
+          {base.isPending ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />}
+          Installer
+        </button>
+      </div>
+    </Panel>
+  );
+}
+
 export function CollectionsManager() {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <CategoriesPanel />
-      <CollectionsPanel />
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <CategoriesPanel />
+        <CollectionsPanel />
+      </div>
+      <PacksPanel />
     </div>
   );
 }
