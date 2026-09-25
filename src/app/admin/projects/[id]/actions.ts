@@ -186,18 +186,32 @@ export async function createPhase(projectId: string, name: string) {
   revalidatePath(`/admin/projects/${projectId}`);
 }
 
-// Convenience insert of KOV's own example phase set (see KOV_DEFAULT_PHASES)
-// — not an auto-seed, only fires when the admin clicks the button. Appends
-// after whatever phases already exist rather than replacing them.
-export async function addDefaultPhases(projectId: string, names: readonly string[]) {
+// Insertion de commodité des sept phases KOV (voir lib/process/phases) —
+// pas un amorçage automatique, ça ne part que si l'admin clique. S'ajoute
+// après les phases existantes plutôt que de les remplacer.
+//
+// Prend désormais des objets et non des noms : project_phases.description
+// existe depuis sa migration et n'a jamais rien reçu. La remplir avec la
+// phrase déjà écrite dans processSteps.ts permet au portail client
+// d'expliquer à quoi sert chaque phase — du contenu déjà rédigé, pas du
+// texte inventé pour l'occasion.
+export async function addDefaultPhases(
+  projectId: string,
+  phases: readonly { name: string; description?: string }[]
+) {
   await requireAdmin();
 
   const { count } = await supabaseAdmin.from("project_phases").select("id", { count: "exact", head: true }).eq("project_id", projectId);
   const startPosition = count ?? 0;
 
-  const { error } = await supabaseAdmin
-    .from("project_phases")
-    .insert(names.map((name, index) => ({ project_id: projectId, name, position: startPosition + index })));
+  const { error } = await supabaseAdmin.from("project_phases").insert(
+    phases.map((phase, index) => ({
+      project_id: projectId,
+      name: phase.name,
+      description: phase.description ?? null,
+      position: startPosition + index,
+    }))
+  );
   if (error) throw new Error("L'ajout des phases a échoué.");
 
   revalidatePath(`/admin/projects/${projectId}`);

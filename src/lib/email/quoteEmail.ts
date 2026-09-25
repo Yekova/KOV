@@ -52,3 +52,80 @@ export async function quoteEmailHtml(data: QuoteEmailData) {
 
   return emailLayout({ preheader: `Votre devis ${data.reference} — ${formatEuros(data.totalCents)}`, body });
 }
+
+// ── Devis signé ──────────────────────────────────────────────────────────
+//
+// Deux courriels déclenchés par le webhook Yousign. Ils enregistrent un fait
+// accompli — quelqu'un a signé — et n'affirment rien d'autre : pas de date
+// de démarrage, pas de prochaine étape, pas de montant à payer. Ces
+// décisions appartiennent à l'admin, qui les prendra depuis son espace.
+
+export interface QuoteSignedEmailData {
+  recipientName: string;
+  reference: string;
+  totalCents: number;
+  signedAt: string;
+}
+
+export function quoteSignedClientSubject(data: QuoteSignedEmailData) {
+  return `Votre devis ${data.reference} est signé — KOV`;
+}
+
+export async function quoteSignedClientHtml(data: QuoteSignedEmailData) {
+  const firstName = data.recipientName.split(" ")[0] || data.recipientName;
+
+  const body = `
+    <p style="margin:0 0 16px; color:#0a0a0a; font-size:15px; line-height:1.6;">Bonjour ${firstName},</p>
+    <p style="margin:0 0 24px; color:#0a0a0a; font-size:15px; line-height:1.6;">
+      Votre signature a bien été enregistrée le ${formatDate(data.signedAt)}. Vous trouverez le devis
+      contresigné en pièce jointe : conservez-le, il fait foi.
+    </p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f3f1; border-radius:6px; margin-bottom:24px;">
+      <tr>
+        <td style="padding:20px 24px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="color:#777774; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; padding-bottom:4px;">Référence</td>
+              <td style="color:#777774; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; padding-bottom:4px; text-align:right;">Total</td>
+            </tr>
+            <tr>
+              <td style="color:#0a0a0a; font-size:16px; font-weight:bold;">${data.reference}</td>
+              <td style="color:#e31e24; font-size:20px; font-weight:bold; text-align:right;">${formatEuros(data.totalCents)}</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+    <p style="margin:0 0 8px; color:#0a0a0a; font-size:15px; line-height:1.6;">
+      On revient vers vous rapidement pour la suite. Une question d'ici là : répondez directement à cet email.
+    </p>
+    <p style="margin:24px 0 0; color:#0a0a0a; font-size:15px; line-height:1.6;">
+      À bientôt,<br />
+      L'équipe KOV
+    </p>
+  `;
+
+  return emailLayout({ preheader: `Devis ${data.reference} signé`, body });
+}
+
+export function quoteSignedAdminSubject(data: QuoteSignedEmailData) {
+  return `Devis ${data.reference} signé par ${data.recipientName}`;
+}
+
+export async function quoteSignedAdminHtml(data: QuoteSignedEmailData) {
+  const body = `
+    <p style="margin:0 0 16px; color:#0a0a0a; font-size:15px; line-height:1.6;">
+      <strong>${data.recipientName}</strong> a signé électroniquement le devis
+      <strong>${data.reference}</strong> le ${formatDate(data.signedAt)}.
+    </p>
+    <p style="margin:0 0 24px; color:#0a0a0a; font-size:15px; line-height:1.6;">
+      Montant : ${formatEuros(data.totalCents)}. Le document contresigné est enregistré dans l'espace du client.
+    </p>
+    <p style="margin:0; color:#777774; font-size:13px; line-height:1.6;">
+      La facture et le projet ne sont pas créés automatiquement : le type de facture, le pourcentage
+      d'acompte et l'échéance sont des décisions commerciales, pas des valeurs déductibles.
+    </p>
+  `;
+
+  return emailLayout({ preheader: `Devis ${data.reference} signé`, body });
+}

@@ -191,10 +191,12 @@ export const PROJECT_PHASE_STATUS_LABELS: Record<ProjectPhaseStatus, string> = {
   blocked: "Bloquée",
 };
 
-// KOV's own default phase set — a convenience "add these" button in the
-// phase UI, not an auto-seeded/hardcoded system (see docs comment in the
-// plan: templates are a later, separate concern).
-export const KOV_DEFAULT_PHASES = ["Discovery", "Structure", "Design", "Development", "Motion", "Launch", "Evolution"] as const;
+// Les sept phases KOV, ré-exportées depuis lib/process/phases, qui les
+// dérive de la méthode publiée sur le site. Ce fichier en portait une
+// seconde copie, en anglais — et comme le portail client lit
+// project_phases, le client lisait « Discovery » après avoir lu
+// « Découvrir » sur la page d'accueil. Une liste, une langue.
+export { KOV_PHASES, KOV_PHASE_NAMES } from "@/lib/process/phases";
 
 // How a lead asked to be recontacted, captured by the /contact wizard.
 export const CONTACT_METHODS = ["phone", "video", "in_person"] as const;

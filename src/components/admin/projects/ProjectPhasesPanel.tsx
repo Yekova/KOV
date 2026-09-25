@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { createPhase, renamePhase, updatePhaseStatus, deletePhase, addDefaultPhases } from "@/app/admin/projects/[id]/actions";
-import { PROJECT_PHASE_STATUSES, PROJECT_PHASE_STATUS_LABELS, KOV_DEFAULT_PHASES } from "@/lib/admin/status";
+import { PROJECT_PHASE_STATUSES, PROJECT_PHASE_STATUS_LABELS, KOV_PHASES } from "@/lib/admin/status";
 
 type Phase = { id: string; name: string; status: string };
 
@@ -99,7 +99,7 @@ export function ProjectPhasesPanel({ projectId, phases }: { projectId: string; p
           Ajouter
         </Button>
         {phases.length === 0 && (
-          <Button type="button" variant="ghost" disabled={isPending} onClick={() => run(() => addDefaultPhases(projectId, KOV_DEFAULT_PHASES))}>
+          <Button type="button" variant="ghost" disabled={isPending} onClick={() => run(() => addDefaultPhases(projectId, KOV_PHASES))}>
             Ajouter les phases KOV
           </Button>
         )}

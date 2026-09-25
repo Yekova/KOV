@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import "server-only";
 
 // Thin wrapper around Yousign's v3 REST API (signature_requests), isolated
@@ -109,6 +110,14 @@ export async function verifyWebhookSignature(rawBody: string, signatureHeader: s
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey("raw", encoder.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   const signatureBuffer = await crypto.subtle.sign("HMAC", key, encoder.encode(rawBody));
-  const computed = Buffer.from(signatureBuffer).toString("hex");
-  return computed === signatureHeader;
+  const computed = Buffer.from(signatureBuffer);
+  const provided = Buffer.from(signatureHeader, "hex");
+
+  // timingSafeEqual et non === : une comparaison de chaînes s'arrête au
+  // premier caractère différent, donc sa durée révèle combien de caractères
+  // de tête sont corrects. Répétée, elle laisse reconstruire la signature
+  // octet par octet. La fonction exige deux tampons de même longueur, d'où
+  // le test préalable — qui, lui, ne fuite que la longueur, publique.
+  if (computed.length !== provided.length) return false;
+  return timingSafeEqual(computed, provided);
 }

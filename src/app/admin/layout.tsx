@@ -6,6 +6,7 @@ import { AdminTopbarData } from "@/components/admin/AdminTopbarData";
 import { AdminTopbarSkeleton } from "@/components/admin/AdminTopbarSkeleton";
 import { MobileNavProvider } from "@/components/ui/MobileNavContext";
 import { TaskPanelProvider } from "@/components/admin/tasks/TaskPanelContext";
+import { AdminProviders } from "@/components/admin/AdminProviders";
 
 // requireAdmin() reads cookies(), which makes this whole layout dynamic —
 // per Next.js's own docs, a loading.tsx in a page below this layout cannot
@@ -29,7 +30,9 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
             <AdminTopbarData userId={user.id} />
           </Suspense>
           <div className="flex-1">
-            <TaskPanelProvider>{children}</TaskPanelProvider>
+            <AdminProviders>
+              <TaskPanelProvider>{children}</TaskPanelProvider>
+            </AdminProviders>
           </div>
         </div>
       </div>
