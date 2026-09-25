@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Select } from "@/components/ui/Select";
 import { createLead } from "@/app/admin/leads/actions";
-import { createProject } from "@/app/admin/clients/actions";
+import { createClient, createProject } from "@/app/admin/clients/actions";
 import { createTask } from "@/app/admin/projects/actions";
 import { PRIORITIES, PRIORITY_LABELS, LEAD_SOURCES, LEAD_SOURCE_LABELS } from "@/lib/admin/status";
 
@@ -21,9 +21,9 @@ type QuickActionMenuProps = {
 const FIELD_CLASS =
   "w-full bg-transparent border px-3 py-2 text-kov-bone text-sm focus:outline-none focus:border-kov-red transition-colors";
 
-type ActiveModal = "lead" | "project" | "task" | null;
+type ActiveModal = "lead" | "client" | "project" | "task" | null;
 
-const ACTIONS = { lead: createLead, project: createProject, task: createTask } as const;
+const ACTIONS = { lead: createLead, client: createClient, project: createProject, task: createTask } as const;
 
 export function QuickActionMenu({ clients, projects, admins }: QuickActionMenuProps) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -119,13 +119,14 @@ export function QuickActionMenu({ clients, projects, admins }: QuickActionMenuPr
               >
                 Nouvelle tâche
               </button>
-              <div className="border-t my-2" style={{ borderColor: "var(--glass-border)" }} />
-              <div className="px-4 py-2.5 text-sm text-kov-steel flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => openModal("client")}
+                className="w-full text-left px-4 py-2.5 text-sm text-kov-bone hover:text-kov-red transition-colors"
+              >
                 Nouveau client
-                <span className="text-[10px] uppercase tracking-widest border px-1.5 py-0.5" style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}>
-                  Bientôt
-                </span>
-              </div>
+              </button>
+              <div className="border-t my-2" style={{ borderColor: "var(--glass-border)" }} />
               <div className="px-4 py-2.5 text-sm text-kov-steel flex items-center justify-between">
                 Nouvelle facture
                 <span className="text-[10px] uppercase tracking-widest border px-1.5 py-0.5" style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}>
@@ -171,6 +172,30 @@ export function QuickActionMenu({ clients, projects, admins }: QuickActionMenuPr
                 {error && <p className="text-kov-red text-xs">{error}</p>}
                 <Button type="submit" variant="primary" className="w-full justify-center" disabled={isPending}>
                   {isPending ? "Création…" : "Créer le lead"}
+                </Button>
+              </form>
+            )}
+
+            {activeModal === "client" && (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <p className="font-display text-kov-bone text-lg uppercase mb-2">Nouveau client</p>
+                <p className="text-kov-steel text-xs -mt-2">
+                  Une invitation lui sera envoyée pour qu&apos;il crée son accès à l&apos;espace client.
+                </p>
+                <input name="full_name" placeholder="Nom complet" required className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
+                <input name="email" type="email" placeholder="Email" required className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
+                <input name="company" placeholder="Entreprise (facultatif)" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
+                <input name="phone" placeholder="Téléphone (facultatif)" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
+                <Select
+                  name="account_manager_id"
+                  placeholder="Responsable de compte (facultatif)"
+                  options={admins.map((a) => ({ value: a.id, label: a.label }))}
+                  className={FIELD_CLASS}
+                  style={{ borderColor: "var(--kov-border)" }}
+                />
+                {error && <p className="text-kov-red text-xs">{error}</p>}
+                <Button type="submit" variant="primary" className="w-full justify-center" disabled={isPending}>
+                  {isPending ? "Création…" : "Créer le client"}
                 </Button>
               </form>
             )}

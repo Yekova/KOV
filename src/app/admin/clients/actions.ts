@@ -20,6 +20,53 @@ import { getEmailProviderForSender } from "@/lib/email/resolveProvider";
 import { invoiceEmailHtml, invoiceEmailSubject } from "@/lib/email/invoiceEmail";
 import { toDbLineItems, fromDbLineItems, parseLineItemsFromForm } from "@/lib/billing/quoteLineItems";
 import { revalidateClient } from "@/lib/revalidateClient";
+import { provisionClient } from "@/lib/clients/provision";
+
+/** Crée un client sans passer par un lead.
+ *
+ *  Jusqu'ici le seul chemin était `convertLeadToClient`, donc intégrer un
+ *  client venu par recommandation obligeait à fabriquer un faux lead. Le
+ *  menu « + Nouvelle action » l'annonçait d'ailleurs comme « Bientôt »
+ *  depuis le début.
+ *
+ *  Passe par le même `provisionClient` que la conversion : un seul chemin
+ *  de création reste un seul chemin. */
+export async function createClient(formData: FormData): Promise<{ error: string | null; clientId?: string }> {
+  const admin = await requireAdmin();
+
+  const email = formData.get("email");
+  const fullName = formData.get("full_name");
+  const company = formData.get("company");
+  const phone = formData.get("phone");
+  const accountManagerId = formData.get("account_manager_id");
+
+  if (typeof email !== "string" || !email.trim()) return { error: "Email requis." };
+  if (typeof fullName !== "string" || !fullName.trim()) return { error: "Nom requis." };
+
+  try {
+    const { userId } = await provisionClient({
+      email,
+      fullName,
+      company: typeof company === "string" ? company : null,
+      phone: typeof phone === "string" ? phone : null,
+      accountManagerId: typeof accountManagerId === "string" && accountManagerId ? accountManagerId : null,
+    });
+
+    const actorName = await getActorDisplayName(admin.id);
+    await logActivity({
+      clientId: userId,
+      type: "milestone",
+      title: "Bienvenue chez KOV",
+      adminTitle: `${actorName} a créé le client ${fullName.trim()}`,
+      actorId: admin.id,
+    });
+
+    revalidatePath("/admin/clients");
+    return { error: null, clientId: userId };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "La création du client a échoué." };
+  }
+}
 
 export async function archiveClient(clientId: string) {
   await requireAdmin();
@@ -147,6 +194,12 @@ export async function updateProject(projectId: string, formData: FormData) {
 
   if (!existing) throw new Error("Projet introuvable.");
 
+  // name, category et description manquaient ici alors que createProject
+  // les accepte : une faute de frappe à la création était définitive à
+  // travers l'interface.
+  const name = formData.get("name");
+  const category = formData.get("category");
+  const description = formData.get("description");
   const status = formData.get("status");
   const pipelineStage = formData.get("pipeline_stage");
   const progress = formData.get("progress_percent");
@@ -166,6 +219,9 @@ export async function updateProject(projectId: string, formData: FormData) {
   const { error } = await supabaseAdmin
     .from("projects")
     .update({
+      name: typeof name === "string" && name.trim() ? name.trim() : undefined,
+      category: typeof category === "string" && category.trim() ? category.trim() : undefined,
+      description: typeof description === "string" ? description.trim() || null : undefined,
       status: statusValue,
       pipeline_stage: typeof pipelineStage === "string" && isPipelineStage(pipelineStage) ? pipelineStage : undefined,
       progress_percent: progressValue,

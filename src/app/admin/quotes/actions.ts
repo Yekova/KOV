@@ -41,6 +41,7 @@ export async function createQuote(formData: FormData): Promise<{ error: string |
   const recipientEmail = formData.get("recipient_email");
   const clientId = formData.get("client_id");
   const leadId = formData.get("lead_id");
+  const projectId = formData.get("project_id");
   const validUntil = formData.get("valid_until");
   const discountEur = formData.get("discount_eur");
 
@@ -55,6 +56,10 @@ export async function createQuote(formData: FormData): Promise<{ error: string |
 
   const clientIdValue = typeof clientId === "string" && clientId ? clientId : null;
   const leadIdValue = typeof leadId === "string" && leadId ? leadId : null;
+  // La colonne existait depuis la création de la table, lue trois fois par
+  // convertQuoteToInvoice et écrite par personne. C'est la ligne qui
+  // manquait pour qu'une facture connaisse son projet.
+  const projectIdValue = typeof projectId === "string" && projectId ? projectId : null;
   const recipientEmailValue = typeof recipientEmail === "string" && recipientEmail.trim() ? recipientEmail.trim() : null;
   const validUntilValue = typeof validUntil === "string" && validUntil ? validUntil : null;
 
@@ -87,6 +92,7 @@ export async function createQuote(formData: FormData): Promise<{ error: string |
     id: quoteId,
     client_id: clientIdValue,
     lead_id: leadIdValue,
+    project_id: projectIdValue,
     reference: reference.trim(),
     recipient_name: recipientName.trim(),
     recipient_email: recipientEmailValue,
@@ -140,6 +146,39 @@ export async function updateQuoteStatus(quoteId: string, status: string) {
       actorId: admin.id,
     });
   }
+
+  revalidatePath("/admin/quotes");
+}
+
+/** Rattache un devis à un projet après coup.
+ *
+ *  L'ordre normal est d'ailleurs celui-là : on chiffre avant d'ouvrir le
+ *  projet, donc le projet n'existe pas encore au moment du devis. Sans ce
+ *  chemin, quotes.project_id ne pouvait être rempli qu'à la création, et
+ *  la facture issue du devis restait sans projet.
+ *
+ *  Le projet doit appartenir au client du devis : une facture rattachée au
+ *  dossier de quelqu'un d'autre est pire qu'une facture sans dossier. */
+export async function linkQuoteToProject(quoteId: string, projectId: string) {
+  await requireAdmin();
+
+  const { data: quote } = await supabaseAdmin.from("quotes").select("client_id").eq("id", quoteId).maybeSingle();
+  if (!quote) throw new Error("Devis introuvable.");
+  if (!quote.client_id) throw new Error("Rattachez d'abord ce devis à un client.");
+
+  const { data: project } = await supabaseAdmin
+    .from("projects")
+    .select("id")
+    .eq("id", projectId)
+    .eq("client_id", quote.client_id)
+    .maybeSingle();
+  if (!project) throw new Error("Ce projet n'appartient pas au client du devis.");
+
+  const { error } = await supabaseAdmin
+    .from("quotes")
+    .update({ project_id: projectId, updated_at: new Date().toISOString() })
+    .eq("id", quoteId);
+  if (error) throw new Error("La liaison au projet a échoué.");
 
   revalidatePath("/admin/quotes");
 }
@@ -416,6 +455,14 @@ export async function convertQuoteToInvoice(
 
   const { data: client } = await supabaseAdmin.from("profiles").select("full_name, company, email").eq("id", clientId).maybeSingle();
 
+  // Deux bugs à une ligne d'écart : project_id était recopié sur la facture
+  // (plus bas) mais le PDF recevait projectName: null en dur, donc même une
+  // fois la colonne enfin remplie le document n'aurait pas nommé le projet.
+  // createInvoice, lui, le fait correctement depuis le début.
+  const { data: project } = quote.project_id
+    ? await supabaseAdmin.from("projects").select("name").eq("id", quote.project_id).maybeSingle()
+    : { data: null };
+
   const invoiceId = crypto.randomUUID();
   const pdfPath = `${clientId}/invoices/${invoiceId}.pdf`;
   const issuedAt = new Date().toISOString();
@@ -431,7 +478,7 @@ export async function convertQuoteToInvoice(
     clientName: client?.full_name || quote.recipient_name,
     clientCompany: client?.company ?? null,
     clientEmail: client?.email ?? quote.recipient_email,
-    projectName: null,
+    projectName: (project as { name: string } | null)?.name ?? null,
     lineItems,
   });
   await uploadClientFileBuffer(pdfPath, pdfBuffer, "application/pdf");

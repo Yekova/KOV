@@ -9,9 +9,11 @@ import { NewQuoteForm } from "./NewQuoteForm";
 export function NewQuoteModal({
   clients,
   leads,
+  projects,
 }: {
-  clients: { id: string; label: string }[];
+  clients: { id: string; label: string; email: string }[];
   leads: { id: string; label: string; email: string }[];
+  projects: { id: string; label: string; clientId: string }[];
 }) {
   const [open, setOpen] = useState(false);
 
@@ -44,7 +46,7 @@ export function NewQuoteModal({
                   </svg>
                 </button>
               </div>
-              <NewQuoteForm clients={clients} leads={leads} onSuccess={() => setOpen(false)} />
+              <NewQuoteForm clients={clients} leads={leads} projects={projects} onSuccess={() => setOpen(false)} />
             </GlassCard>
           </div>,
           document.body

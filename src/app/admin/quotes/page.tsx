@@ -40,15 +40,30 @@ export default async function AdminQuotesPage(props: PageProps<"/admin/quotes">)
   const tabParam = typeof searchParams.status === "string" ? searchParams.status : "";
   const activeTab: QuoteStatus = isQuoteStatus(tabParam) ? tabParam : "sent";
 
-  const [{ data: quotes }, { data: clients }, { data: leads }] = await Promise.all([
+  const [{ data: quotes }, { data: clients }, { data: leads }, { data: projects }] = await Promise.all([
     supabaseAdmin.from("quotes").select("*").order("created_at", { ascending: false }),
     supabaseAdmin.from("profiles").select("id, full_name, email, company").eq("role", "client").order("full_name"),
     supabaseAdmin.from("leads").select("id, name, email, company").order("created_at", { ascending: false }),
+    supabaseAdmin.from("projects").select("id, name, client_id").order("name"),
   ]);
 
   const allQuotes = quotes ?? [];
-  const clientOptions = (clients ?? []).map((c) => ({ id: c.id, label: `${c.full_name || c.company || c.email}` }));
+  // L'email voyage avec l'option : le formulaire le retapait alors que la
+  // donnée était déjà dans le navigateur.
+  const clientOptions = (clients ?? []).map((c) => ({
+    id: c.id,
+    label: `${c.full_name || c.company || c.email}`,
+    email: c.email as string,
+  }));
   const leadOptions = (leads ?? []).map((l) => ({ id: l.id, label: `${l.name}${l.company ? ` (${l.company})` : ""}`, email: l.email }));
+  // quotes.project_id existait depuis le début : lu trois fois dans
+  // convertQuoteToInvoice, écrit nulle part. D'où des factures sans projet
+  // et un PDF qui ne le nommait jamais.
+  const projectOptions = (projects ?? []).map((p) => ({
+    id: p.id as string,
+    label: p.name as string,
+    clientId: p.client_id as string,
+  }));
 
   // KPIs — computed from real data only, no fabricated deltas.
   const activeQuotes = allQuotes.filter((quo) => quo.status === "draft" || quo.status === "sent");
@@ -88,7 +103,7 @@ export default async function AdminQuotesPage(props: PageProps<"/admin/quotes">)
           <h1 className="font-display text-kov-bone text-2xl uppercase">Devis</h1>
           <p className="text-kov-steel text-sm mt-1">Suivi et gestion de tous vos devis.</p>
         </div>
-        <NewQuoteModal clients={clientOptions} leads={leadOptions} />
+        <NewQuoteModal clients={clientOptions} leads={leadOptions} projects={projectOptions} />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

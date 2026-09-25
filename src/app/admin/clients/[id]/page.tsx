@@ -132,6 +132,17 @@ export default async function AdminClientDetailPage(props: PageProps<"/admin/cli
       <section>
         <h2 className="text-xs uppercase tracking-widest text-kov-steel mb-4">Projets</h2>
 
+        {/* projects.category est du texte libre, et le rester est le bon
+            choix : aucun code ne s'y branche, un enum serait une contrainte
+            sans consommateur. Cette liste de suggestions donne la cohérence
+            à coût nul — « Site vitrine » cesse de cohabiter avec « site
+            vitrine » sans interdire une catégorie neuve. */}
+        <datalist id="project-categories">
+          {Array.from(new Set(projectRows.map((p) => p.category).filter(Boolean))).map((category) => (
+            <option key={category as string} value={category as string} />
+          ))}
+        </datalist>
+
         <div className="space-y-4 mb-8">
           {projectRows.length === 0 && <p className="text-kov-steel text-sm">Aucun projet pour l&apos;instant.</p>}
           {projectRows.map((project) => {
@@ -149,10 +160,30 @@ export default async function AdminClientDetailPage(props: PageProps<"/admin/cli
                 className="border p-4 flex flex-wrap items-end gap-4"
                 style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-md)" }}
               >
-                <div>
-                  <p className="text-kov-bone text-sm">{project.name}</p>
-                  <p className="text-kov-steel text-xs mt-1">{project.category}</p>
-                </div>
+                {/* Le nom et la catégorie étaient affichés en texte mort :
+                    updateProject ne les acceptait pas, donc une faute de
+                    frappe à la création était définitive. */}
+                <label className="text-xs text-kov-steel">
+                  Nom
+                  <input
+                    type="text"
+                    name="name"
+                    defaultValue={project.name}
+                    className={FIELD_CLASS}
+                    style={{ borderColor: "var(--kov-border)" }}
+                  />
+                </label>
+                <label className="text-xs text-kov-steel">
+                  Catégorie
+                  <input
+                    type="text"
+                    name="category"
+                    defaultValue={project.category}
+                    list="project-categories"
+                    className={FIELD_CLASS}
+                    style={{ borderColor: "var(--kov-border)" }}
+                  />
+                </label>
                 <label className="text-xs text-kov-steel">
                   Statut
                   <Select

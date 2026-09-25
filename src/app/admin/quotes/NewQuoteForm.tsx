@@ -19,15 +19,57 @@ const EMPTY_ROW: LineItemRow = { description: "", quantity: "1", unitPriceEur: "
 export function NewQuoteForm({
   clients,
   leads,
+  projects,
   onSuccess,
 }: {
-  clients: { id: string; label: string }[];
+  clients: { id: string; label: string; email: string }[];
   leads: { id: string; label: string; email: string }[];
+  projects: { id: string; label: string; clientId: string }[];
   onSuccess?: () => void;
 }) {
   const [rows, setRows] = useState<LineItemRow[]>([{ ...EMPTY_ROW }]);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+
+  // Le destinataire était retapé alors que l'option choisie portait déjà
+  // son nom et son email : la page les envoyait au composant, qui les
+  // ignorait. Choisir un client ou un lead les remplit désormais.
+  //
+  // Contrôlés plutôt que `defaultValue` : il faut pouvoir les réécrire
+  // quand la sélection change, tout en laissant l'admin corriger ensuite
+  // — un devis part parfois au comptable et non au signataire.
+  const [clientId, setClientId] = useState("");
+  const [leadId, setLeadId] = useState("");
+  const [recipientName, setRecipientName] = useState("");
+  const [recipientEmail, setRecipientEmail] = useState("");
+
+  function pickClient(id: string) {
+    setClientId(id);
+    if (!id) return;
+    // Un client et un lead sont deux origines différentes du même devis :
+    // en choisir un efface l'autre plutôt que de laisser croire aux deux.
+    setLeadId("");
+    const client = clients.find((c) => c.id === id);
+    if (client) {
+      setRecipientName(client.label);
+      setRecipientEmail(client.email ?? "");
+    }
+  }
+
+  function pickLead(id: string) {
+    setLeadId(id);
+    if (!id) return;
+    setClientId("");
+    const lead = leads.find((l) => l.id === id);
+    if (lead) {
+      setRecipientName(lead.label.replace(/\s*\(.*\)$/, ""));
+      setRecipientEmail(lead.email ?? "");
+    }
+  }
+
+  // Un projet n'a de sens qu'avec son propre client : proposer ceux des
+  // autres produirait une facture rattachée au mauvais dossier.
+  const projectChoices = clientId ? projects.filter((p) => p.clientId === clientId) : [];
 
   const subtotalCents = rows.reduce((sum, row) => {
     const qty = parseFloat(row.quantity.replace(",", "."));
@@ -74,18 +116,11 @@ export function NewQuoteForm({
           <input type="text" name="reference" required placeholder="D-2026-01" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
         </label>
         <label className="text-xs text-kov-steel">
-          Destinataire
-          <input type="text" name="recipient_name" required placeholder="Nom" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
-        </label>
-        <label className="text-xs text-kov-steel">
-          Email destinataire
-          <input type="email" name="recipient_email" placeholder="contact@..." className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
-        </label>
-        <label className="text-xs text-kov-steel">
           Client existant (facultatif)
           <Select
             name="client_id"
-            defaultValue=""
+            value={clientId}
+            onChange={pickClient}
             options={[{ value: "", label: "— Aucun —" }, ...clients.map((c) => ({ value: c.id, label: c.label }))]}
             className={FIELD_CLASS}
             style={{ borderColor: "var(--kov-border)" }}
@@ -95,12 +130,50 @@ export function NewQuoteForm({
           Lead (facultatif)
           <Select
             name="lead_id"
-            defaultValue=""
+            value={leadId}
+            onChange={pickLead}
             options={[{ value: "", label: "— Aucun —" }, ...leads.map((l) => ({ value: l.id, label: l.label }))]}
             className={FIELD_CLASS}
             style={{ borderColor: "var(--kov-border)" }}
           />
         </label>
+        <label className="text-xs text-kov-steel">
+          Destinataire
+          <input
+            type="text"
+            name="recipient_name"
+            required
+            placeholder="Nom"
+            value={recipientName}
+            onChange={(e) => setRecipientName(e.target.value)}
+            className={FIELD_CLASS}
+            style={{ borderColor: "var(--kov-border)" }}
+          />
+        </label>
+        <label className="text-xs text-kov-steel">
+          Email destinataire
+          <input
+            type="email"
+            name="recipient_email"
+            placeholder="contact@..."
+            value={recipientEmail}
+            onChange={(e) => setRecipientEmail(e.target.value)}
+            className={FIELD_CLASS}
+            style={{ borderColor: "var(--kov-border)" }}
+          />
+        </label>
+        {projectChoices.length > 0 && (
+          <label className="text-xs text-kov-steel">
+            Projet (facultatif)
+            <Select
+              name="project_id"
+              defaultValue=""
+              options={[{ value: "", label: "— Aucun —" }, ...projectChoices.map((p) => ({ value: p.id, label: p.label }))]}
+              className={FIELD_CLASS}
+              style={{ borderColor: "var(--kov-border)" }}
+            />
+          </label>
+        )}
         <label className="text-xs text-kov-steel">
           Valable jusqu&apos;au
           <input type="date" name="valid_until" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
