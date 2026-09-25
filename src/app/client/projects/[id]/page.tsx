@@ -8,6 +8,13 @@ import { GlassCard } from "@/components/ui/GlassCard";
 import { FolderIcon } from "@/lib/documentIcons";
 import { DocumentGrid, type DocumentGridItem } from "@/components/documents/DocumentGrid";
 import { PROJECT_STATUS_LABELS, type ProjectStatus } from "@/lib/portal/status";
+import {
+  PHASE_STATUS_LABELS,
+  deriveCurrentPhase,
+  deriveProgress,
+  type PhaseStatus,
+  type ProjectPhase,
+} from "@/lib/portal/progress";
 import { getClientDocumentPreviewUrl, downloadDocument } from "@/app/client/documents/actions";
 
 export const metadata: Metadata = {
@@ -40,11 +47,20 @@ export default async function ClientProjectDetailPage(props: PageProps<"/client/
 
   const { data: project } = await supabaseAdmin
     .from("projects")
-    .select("id, name, category, status, client_id, progress_percent")
+    .select(
+      "id, name, category, status, client_id, progress_percent, next_deadline_date, deadline_phase_label, project_phases(id, name, status, position)"
+    )
     .eq("id", projectId)
     .maybeSingle();
 
   if (!project || project.client_id !== user.id) notFound();
+
+  // Ce que le client voyait jusqu'ici de son projet : son nom, son statut,
+  // et ses documents. Les phases existaient côté admin depuis le début et
+  // ne traversaient jamais — c'est ce que cette page corrige.
+  const phases = [...((project.project_phases ?? []) as ProjectPhase[])].sort((a, b) => a.position - b.position);
+  const progress = deriveProgress(phases, project.progress_percent);
+  const currentPhase = deriveCurrentPhase(phases, project.deadline_phase_label);
 
   const breadcrumb = await getBreadcrumb(currentFolderId, projectId);
 
@@ -103,6 +119,72 @@ export default async function ClientProjectDetailPage(props: PageProps<"/client/
         </div>
         <p className="text-kov-steel text-sm mt-1">{project.category}</p>
       </div>
+
+      <GlassCard className="p-6">
+        <div className="flex flex-wrap items-baseline justify-between gap-2 mb-4">
+          <h2 className="text-xs uppercase tracking-widest text-kov-steel">Avancement</h2>
+          {currentPhase.label && (
+            <p className="text-kov-steel text-xs">
+              En cours :{" "}
+              <span className="text-kov-bone">{currentPhase.label}</span>
+              {currentPhase.status && currentPhase.status !== "in_progress" && (
+                <span className="text-kov-steel"> — {PHASE_STATUS_LABELS[currentPhase.status]}</span>
+              )}
+            </p>
+          )}
+        </div>
+
+        <div
+          className="h-1.5 w-full overflow-hidden mb-2"
+          style={{ background: "var(--kov-border)", borderRadius: "var(--radius-pill)" }}
+        >
+          <div className="h-full" style={{ width: `${progress.percent}%`, background: "var(--kov-red)" }} />
+        </div>
+        <p className="text-kov-steel text-xs">
+          {progress.percent}% complété
+          {progress.total > 0 && (
+            <span>
+              {" "}
+              — {progress.completed} phase{progress.completed > 1 ? "s" : ""} terminée
+              {progress.completed > 1 ? "s" : ""} sur {progress.total}
+            </span>
+          )}
+        </p>
+
+        {phases.length > 0 && (
+          <ol className="mt-6 space-y-0">
+            {phases.map((phase, index) => {
+              const status = (phase.status as PhaseStatus) ?? "not_started";
+              const done = status === "completed";
+              const isCurrent = currentPhase.label === phase.name && !done;
+              return (
+                <li key={phase.id} className="flex gap-4">
+                  {/* La colonne de gauche dessine le fil : une pastille par
+                      phase, reliée à la suivante sauf pour la dernière. */}
+                  <div className="flex flex-col items-center shrink-0">
+                    <span
+                      aria-hidden="true"
+                      className="w-2.5 h-2.5 rounded-full mt-1.5"
+                      style={{
+                        background: done ? "var(--kov-red)" : isCurrent ? "var(--kov-bone)" : "var(--kov-border)",
+                      }}
+                    />
+                    {index < phases.length - 1 && (
+                      <span aria-hidden="true" className="w-px flex-1 my-1" style={{ background: "var(--kov-border)" }} />
+                    )}
+                  </div>
+                  <div className="pb-5 min-w-0">
+                    <p className="text-sm" style={{ color: done || isCurrent ? "var(--kov-bone)" : "var(--kov-steel)" }}>
+                      {phase.name}
+                    </p>
+                    <p className="text-kov-steel text-xs mt-0.5">{PHASE_STATUS_LABELS[status] ?? phase.status}</p>
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+        )}
+      </GlassCard>
 
       <GlassCard className="p-6">
         <h2 className="text-xs uppercase tracking-widest text-kov-steel mb-4">Documents</h2>

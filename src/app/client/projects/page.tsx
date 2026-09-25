@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { PROJECT_STATUS_LABELS, type ProjectStatus } from "@/lib/portal/status";
+import { deriveCurrentPhase, deriveProgress, type ProjectPhase } from "@/lib/portal/progress";
 
 export const metadata: Metadata = {
   title: "Mes projets — KOV",
@@ -14,11 +15,24 @@ export default async function ClientProjectsPage() {
 
   const { data: projects } = await supabaseAdmin
     .from("projects")
-    .select("id, name, category, status, progress_percent, next_deadline_date, deadline_phase_label")
+    .select(
+      "id, name, category, status, progress_percent, next_deadline_date, deadline_phase_label, project_phases(id, name, status, position)"
+    )
     .eq("client_id", user.id)
     .order("created_at", { ascending: false });
 
-  const rows = projects ?? [];
+  // Même règle que partout : les phases l'emportent sur les champs saisis.
+  const rows = (projects ?? []).map((project) => {
+    const phases = (project.project_phases ?? []) as ProjectPhase[];
+    const progress = deriveProgress(phases, project.progress_percent);
+    return {
+      ...project,
+      progress_percent: progress.percent,
+      phaseCount: progress.total,
+      completedPhases: progress.completed,
+      deadline_phase_label: deriveCurrentPhase(phases, project.deadline_phase_label).label,
+    };
+  });
 
   return (
     <main className="px-6 md:px-10 py-10 max-w-[1400px] mx-auto w-full">
@@ -47,7 +61,16 @@ export default async function ClientProjectsPage() {
               <div className="h-1.5 w-full overflow-hidden mb-2" style={{ background: "var(--kov-border)", borderRadius: "var(--radius-pill)" }}>
                 <div className="h-full" style={{ width: `${p.progress_percent}%`, background: "var(--kov-red)" }} />
               </div>
-              <p className="text-kov-steel text-xs mb-3">{p.progress_percent}% complété</p>
+              <p className="text-kov-steel text-xs mb-3">
+                {p.progress_percent}% complété
+                {p.phaseCount > 0 && (
+                  <span className="text-kov-steel">
+                    {" "}
+                    — {p.completedPhases} phase{p.completedPhases > 1 ? "s" : ""} terminée
+                    {p.completedPhases > 1 ? "s" : ""} sur {p.phaseCount}
+                  </span>
+                )}
+              </p>
 
               {p.next_deadline_date && (
                 <p className="text-kov-steel text-xs">

@@ -9,6 +9,12 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function NewsletterSection() {
   const [email, setEmail] = useState("");
+  // Pot de miel et horodatage de rendu, comme le formulaire de contact :
+  // un robot remplit tous les champs et poste immédiatement, un humain ne
+  // fait ni l'un ni l'autre. Même initialisation paresseuse que
+  // ContactWizard, pour que les deux formulaires se lisent pareil.
+  const [honeypot, setHoneypot] = useState("");
+  const [renderedAt] = useState(() => Date.now());
   const [sent, setSent] = useState(false);
   const [isPending, setIsPending] = useState(false);
 
@@ -19,7 +25,7 @@ export function NewsletterSection() {
       return;
     }
     setIsPending(true);
-    subscribeNewsletter(email)
+    subscribeNewsletter({ email, website: honeypot, renderedAt })
       .then((result) => {
         if (result.error) {
           toast.error("Une erreur est survenue");
@@ -45,6 +51,19 @@ export function NewsletterSection() {
           <p className="text-kov-red text-sm uppercase tracking-widest">Merci, à bientôt dans votre boîte mail.</p>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row items-center gap-3 justify-center">
+            {/* Pot de miel — invisible pour un visiteur, rempli par les
+                robots qui remplissent tout. Déplacé hors écran plutôt que
+                masqué en display:none, que certains robots savent ignorer. */}
+            <input
+              type="text"
+              name="website"
+              value={honeypot}
+              onChange={(e) => setHoneypot(e.target.value)}
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+              style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }}
+            />
             <input
               type="email"
               value={email}

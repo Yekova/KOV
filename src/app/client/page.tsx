@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { requireUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getPublicAssetUrl } from "@/lib/portal/storage";
+import { deriveCurrentPhase, deriveProgress, type ProjectPhase } from "@/lib/portal/progress";
 import { markActivityRead } from "./actions";
 import { GreetingSearchPanel, type PortalSearchItem } from "@/components/client/dashboard/GreetingSearchPanel";
 import { StatusDonutCard } from "@/components/client/dashboard/StatusDonutCard";
@@ -22,7 +23,12 @@ export default async function ClientDashboardPage() {
       supabaseAdmin.from("profiles").select("full_name, account_manager_id").eq("id", user.id).maybeSingle(),
       supabaseAdmin
         .from("projects")
-        .select("id, name, category, status, progress_percent, thumbnail_path, next_deadline_date, deadline_phase_label")
+        // Une seule chaîne littérale, jamais concaténée : supabase-js infère le
+        // type des colonnes depuis le littéral, et une concaténation le fait
+        // retomber sur GenericStringError.
+        .select(
+          "id, name, category, status, progress_percent, thumbnail_path, next_deadline_date, deadline_phase_label, project_phases(id, name, status, position)"
+        )
         .eq("client_id", user.id)
         .order("created_at", { ascending: false }),
       supabaseAdmin
@@ -53,7 +59,18 @@ export default async function ClientDashboardPage() {
 
   await markActivityRead(user.id);
 
-  const projectRows = projects ?? [];
+  // Les phases font foi dès qu'il y en a : voir lib/portal/progress.ts. La
+  // dérivation se fait ici, à la frontière de données, pour que les cartes
+  // reçoivent exactement la forme qu'elles recevaient déjà. Les phases sont
+  // ramenées par la même requête, pas par une requête de plus.
+  const projectRows = (projects ?? []).map((project) => {
+    const phases = (project.project_phases ?? []) as ProjectPhase[];
+    return {
+      ...project,
+      progress_percent: deriveProgress(phases, project.progress_percent).percent,
+      deadline_phase_label: deriveCurrentPhase(phases, project.deadline_phase_label).label,
+    };
+  });
 
   const manager = profile?.account_manager_id
     ? await supabaseAdmin

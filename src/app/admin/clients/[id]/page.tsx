@@ -19,6 +19,7 @@ import { InvoiceRowActions } from "@/components/admin/invoices/InvoiceRowActions
 import { InvoiceStatusSelect } from "@/components/admin/invoices/InvoiceStatusSelect";
 import { DeleteDocumentButton } from "./DeleteDocumentButton";
 import { ArchiveClientButton } from "./ArchiveClientButton";
+import { deriveCurrentPhase, deriveProgress, type ProjectPhase } from "@/lib/portal/progress";
 
 export const metadata: Metadata = {
   title: "Client — Admin KOV",
@@ -44,7 +45,11 @@ export default async function AdminClientDetailPage(props: PageProps<"/admin/cli
   const [{ data: admins }, { data: projects }, { data: documents }, { data: invoices }, { data: threads }] =
     await Promise.all([
       supabaseAdmin.from("profiles").select("id, full_name, email").eq("role", "admin").is("archived_at", null).order("full_name"),
-      supabaseAdmin.from("projects").select("*").eq("client_id", clientId).order("created_at", { ascending: false }),
+      supabaseAdmin
+        .from("projects")
+        .select("*, project_phases(id, name, status, position)")
+        .eq("client_id", clientId)
+        .order("created_at", { ascending: false }),
       supabaseAdmin
         .from("documents")
         .select("id, filename, created_at, uploaded_by, project_id")
@@ -131,6 +136,12 @@ export default async function AdminClientDetailPage(props: PageProps<"/admin/cli
           {projectRows.length === 0 && <p className="text-kov-steel text-sm">Aucun projet pour l&apos;instant.</p>}
           {projectRows.map((project) => {
             const updateProjectWithId = updateProject.bind(null, project.id);
+            // Même règle de lecture que le portail client, importée du même
+            // module : si les deux divergeaient, l'admin réglerait un
+            // chiffre en croyant régler celui que le client voit.
+            const phases = (project.project_phases ?? []) as ProjectPhase[];
+            const progress = deriveProgress(phases, project.progress_percent);
+            const currentPhase = deriveCurrentPhase(phases, project.deadline_phase_label);
             return (
               <form
                 key={project.id}
@@ -192,18 +203,36 @@ export default async function AdminClientDetailPage(props: PageProps<"/admin/cli
                     style={{ borderColor: "var(--kov-border)" }}
                   />
                 </label>
-                <label className="text-xs text-kov-steel">
-                  Avancement %
-                  <input
-                    type="number"
-                    name="progress_percent"
-                    min={0}
-                    max={100}
-                    defaultValue={project.progress_percent}
-                    className={`${FIELD_CLASS} w-24`}
-                    style={{ borderColor: "var(--kov-border)" }}
-                  />
-                </label>
+                {/* Dès qu'un projet a des phases, ce sont elles qui font
+                    l'avancement affiché au client. Le champ de saisie
+                    disparaît alors au lieu de rester là à accepter un
+                    nombre que personne ne lira : un champ ignoré est pire
+                    qu'un champ absent, parce qu'on croit l'avoir réglé. */}
+                {phases.length > 0 ? (
+                  <div className="text-xs text-kov-steel">
+                    Avancement
+                    <p className="text-kov-bone text-sm mt-1">
+                      {progress.percent}%{" "}
+                      <span className="text-kov-steel">
+                        ({progress.completed}/{progress.total} phases)
+                      </span>
+                    </p>
+                    <p className="mt-0.5">Calculé depuis les phases</p>
+                  </div>
+                ) : (
+                  <label className="text-xs text-kov-steel">
+                    Avancement %
+                    <input
+                      type="number"
+                      name="progress_percent"
+                      min={0}
+                      max={100}
+                      defaultValue={project.progress_percent}
+                      className={`${FIELD_CLASS} w-24`}
+                      style={{ borderColor: "var(--kov-border)" }}
+                    />
+                  </label>
+                )}
                 <label className="text-xs text-kov-steel">
                   Échéance
                   <input
@@ -214,16 +243,29 @@ export default async function AdminClientDetailPage(props: PageProps<"/admin/cli
                     style={{ borderColor: "var(--kov-border)" }}
                   />
                 </label>
-                <label className="text-xs text-kov-steel">
-                  Phase
-                  <input
-                    type="text"
-                    name="deadline_phase_label"
-                    defaultValue={project.deadline_phase_label ?? ""}
-                    className={FIELD_CLASS}
-                    style={{ borderColor: "var(--kov-border)" }}
-                  />
-                </label>
+                {phases.length > 0 ? (
+                  <div className="text-xs text-kov-steel">
+                    Phase en cours
+                    <p className="text-kov-bone text-sm mt-1">{currentPhase.label ?? "Toutes terminées"}</p>
+                    <p className="mt-0.5">
+                      Depuis les phases —{" "}
+                      <Link href={`/admin/projects/${project.id}`} className="hover:text-kov-red transition-colors">
+                        les modifier
+                      </Link>
+                    </p>
+                  </div>
+                ) : (
+                  <label className="text-xs text-kov-steel">
+                    Phase
+                    <input
+                      type="text"
+                      name="deadline_phase_label"
+                      defaultValue={project.deadline_phase_label ?? ""}
+                      className={FIELD_CLASS}
+                      style={{ borderColor: "var(--kov-border)" }}
+                    />
+                  </label>
+                )}
                 <Button type="submit" variant="secondary">
                   Mettre à jour
                 </Button>
