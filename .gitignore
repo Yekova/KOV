@@ -46,3 +46,16 @@ __pycache__/
 
 # Supabase CLI scratch state, not project config
 supabase/.temp/
+
+# Skills d'agent installés via `npx skills add`.
+# Outillage, pas code produit : ils se réinstallent d'une commande, et les
+# versionner ici mettrait cinquante dossiers tiers dans chaque diff du site.
+# Retirez ces deux lignes si vous voulez au contraire les figer pour l'équipe.
+# Seulement la partie tierce : les skills se réinstallent d'une commande, et
+# les versionner mettrait cinquante dossiers externes dans chaque diff du
+# site. Ce que VOUS écrivez dans .agents/ reste suivi — c'est votre contexte
+# de marque, il a plus de valeur que le code qui l'utilise.
+.agents/skills/
+.claude/skills/
+# Sauf celui-ci, déjà versionné avant l'arrivée des autres et propre au projet.
+!.claude/skills/ui-ux-pro-max/
