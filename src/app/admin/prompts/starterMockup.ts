@@ -1,4 +1,5 @@
 import type { StarterPrompt } from "./starter";
+import { CLARIFIER, INTERDITS } from "./starterFragments";
 
 // Le pack « Maquette site web » : les dix premières étapes de construction,
 // dans l'ordre.
@@ -24,17 +25,72 @@ import type { StarterPrompt } from "./starter";
 
 export const MOCKUP_CATEGORY = { name: "Maquette site web", slug: "maquette-site-web", sortOrder: 5 };
 
-/** Repris à l'identique dans les dix, en dernière section. C'est la règle
- *  permanente du studio, et un prompt qui ne la porte pas produit tôt ou
- *  tard un chiffre que personne ne peut sourcer. */
-const INTERDITS = `# INTERDITS
-- Ne rien inventer : chiffre, note, avis, témoignage, prix, délai, référence
-  client, qualification, adresse, ni donnée structurée.
-- Ce qui manque est listé comme « à fournir », jamais comblé par une
-  vraisemblance.
-- Aucune promesse que le studio n'a pas confirmée.`;
-
 export const MOCKUP_PROMPTS: StarterPrompt[] = [
+  {
+    title: "00 · Entretien de cadrage",
+    description: "Un entretien question par question, qui produit le cadrage que l'étape 01 attend.",
+    categorySlug: MOCKUP_CATEGORY.slug,
+    type: "build",
+    targetTool: "generic",
+    tags: ["maquette", "entretien", "cadrage"],
+    variables: [
+      {
+        key: "contexte",
+        label: "Ce que vous savez déjà",
+        type: "textarea",
+        placeholder: "Nom, activité, ce qui a déclenché le projet. Même incomplet.",
+        required: true,
+      },
+      { key: "profondeur", label: "Profondeur", type: "select", options: ["Express", "Standard", "Approfondi"] },
+    ],
+    content: `# RÔLE
+Directeur de clientèle. Tu mènes un entretien, tu ne fais pas remplir un
+questionnaire.
+
+# OBJECTIF
+Obtenir en une conversation de quoi alimenter les étapes 01 à 10 sans avoir
+à y revenir.
+
+# CE QUE JE SAIS DÉJÀ
+{{contexte}}
+
+Profondeur souhaitée : {{profondeur}}
+Express tient en trois questions, Standard en six, Approfondi en dix.
+
+# MÉTHODE
+Une question à la fois, et tu attends ma réponse avant la suivante. Adapte
+chaque question à ce que je viens de répondre : c'est ce qui sépare un
+entretien d'une liste.
+
+Couvre dans cet ordre, en sautant tout ce que le contexte donne déjà :
+1. L'activité, dite comme je la dirais à un client, pas comme une plaquette.
+2. Qui doit agir en arrivant sur le site, et dans quel état d'esprit.
+3. D'où viennent les contacts aujourd'hui, sans le site.
+4. Ce qui fait dire oui, et ce qui fait partir.
+5. Les preuves réellement disponibles, et lesquelles manquent.
+6. Ce qui existe déjà : marque, textes, photographies, projets.
+7. Ce qui est imposé : échéance, contraintes légales, contenus obligatoires.
+8. Ce qu'on ne veut surtout pas, visuellement et dans le ton.
+
+Reformule en une ligne après chaque réponse, et laisse-moi corriger.
+Si une réponse reste vague, redemande une fois avec un exemple concret.
+Une fois, pas deux : mieux vaut noter « à préciser » que m'épuiser.
+
+# FORMAT DE SORTIE
+Quand tu as de quoi, annonce « Voici le cadrage » et produis un bloc prêt à
+coller dans l'étape 01 :
+- Activité, en une phrase.
+- Personne visée, un paragraphe.
+- Action principale attendue, action secondaire.
+- Trois objections, et la preuve qui répond à chacune ou « à fournir ».
+- Matière disponible, et matière manquante.
+- Contraintes.
+- Ce qu'on s'interdit.
+
+${INTERDITS}
+- Ne remplis jamais une réponse à ma place : si je n'ai pas répondu, écris
+  « à préciser ».`,
+  },
   {
     title: "01 · Cadrage et objectif de conversion",
     description: "La promesse, l'action principale et l'inventaire des preuves réellement disponibles.",
@@ -206,6 +262,8 @@ Intention : {{emotions}}
 Références : {{references}}
 Contraintes de marque : {{contraintes_marque}}
 
+${CLARIFIER}
+
 # MÉTHODE
 1. Choisis une couleur de fond, une couleur de texte, deux neutres et un
    seul accent. L'accent est réservé aux actions : s'il sert aussi de
@@ -302,6 +360,8 @@ Direction artistique :
 Action principale : {{action_principale}}
 Preuve immédiate : {{preuve_immediate}}
 
+${CLARIFIER}
+
 # MÉTHODE
 1. Écris la version téléphone en premier, et conçois la version bureau comme
    un élargissement de celle-ci. Le mobile n'est pas la version bureau
@@ -352,6 +412,8 @@ Matière disponible :
 {{contenu_disponible}}
 
 Ton : {{ton}}
+
+${CLARIFIER}
 
 # MÉTHODE
 1. Écris du côté du lecteur : nomme les choses comme il les reconnaît, pas

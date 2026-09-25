@@ -6,6 +6,7 @@ import { slugifyPrompt } from "@/lib/prompts/template";
 import { promptBlockSchema, type PromptBlockInput } from "./schema";
 import { STARTER_BLOCKS, STARTER_PROMPTS, type StarterPrompt } from "./starter";
 import { MOCKUP_CATEGORY, MOCKUP_PROMPTS } from "./starterMockup";
+import { BUILD_CATEGORY, BUILD_PROMPTS } from "./starterBuild";
 
 // Le classement de la bibliothèque : catégories, collections, tags, blocs.
 // Séparé de actions.ts, qui porte déjà le cycle de vie d'un prompt — deux
@@ -439,11 +440,11 @@ export async function installStarterLibrary(): Promise<{ error: string | null; p
  *  La catégorie est créée ici et non dans la migration : la migration peut
  *  déjà être appliquée quand ce pack arrive, et une migration qu'on
  *  retouche après coup est une migration qui ne sera jamais rejouée. */
-export async function installMockupPack(): Promise<{
-  error: string | null;
-  installed: number;
-  skipped: number;
-}> {
+async function installPipelinePack(
+  category: { name: string; slug: string; sortOrder: number },
+  prompts: typeof MOCKUP_PROMPTS,
+  changeNote: string
+): Promise<{ error: string | null; installed: number; skipped: number }> {
   const user = await requireAdmin();
 
   const { error: readError } = await supabaseAdmin.from("prompts").select("id").limit(1);
@@ -460,37 +461,40 @@ export async function installMockupPack(): Promise<{
   await supabaseAdmin
     .from("prompt_categories")
     .upsert(
-      { name: MOCKUP_CATEGORY.name, slug: MOCKUP_CATEGORY.slug, sort_order: MOCKUP_CATEGORY.sortOrder },
+      { name: category.name, slug: category.slug, sort_order: category.sortOrder },
       { onConflict: "slug" }
     );
 
-  const { data: category } = await supabaseAdmin
+  const { data: row } = await supabaseAdmin
     .from("prompt_categories")
     .select("id")
-    .eq("slug", MOCKUP_CATEGORY.slug)
+    .eq("slug", category.slug)
     .maybeSingle();
 
-  const slugs = MOCKUP_PROMPTS.map((prompt) => slugifyPrompt(prompt.title));
+  const slugs = prompts.map((prompt) => slugifyPrompt(prompt.title));
   const { data: existing } = await supabaseAdmin.from("prompts").select("slug").in("slug", slugs);
   const taken = new Set((existing ?? []).map((row) => row.slug as string));
 
   let installed = 0;
   let skipped = 0;
 
-  for (const prompt of MOCKUP_PROMPTS) {
+  for (const prompt of prompts) {
     if (taken.has(slugifyPrompt(prompt.title))) {
       skipped += 1;
       continue;
     }
-    const ok = await insertStarterPrompt(
-      prompt,
-      (category?.id as string | undefined) ?? null,
-      user.id,
-      "Pack maquette site web"
-    );
+    const ok = await insertStarterPrompt(prompt, (row?.id as string | undefined) ?? null, user.id, changeNote);
     if (ok) installed += 1;
     else skipped += 1;
   }
 
   return { error: null, installed, skipped };
+}
+
+export async function installMockupPack() {
+  return installPipelinePack(MOCKUP_CATEGORY, MOCKUP_PROMPTS, "Pack maquette site web");
+}
+
+export async function installBuildPack() {
+  return installPipelinePack(BUILD_CATEGORY, BUILD_PROMPTS, "Pack construction et mise en ligne");
 }

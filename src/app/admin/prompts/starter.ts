@@ -1,4 +1,5 @@
 import type { PromptType, TargetTool, VariableType } from "./schema";
+import { CLARIFIER } from "./starterFragments";
 
 // La bibliothèque de départ, posée par installStarterLibrary().
 //
@@ -354,6 +355,12 @@ Toute évolution de schéma passe par une migration versionnée.
 RLS activé sur chaque table, jamais désactivé pour simplifier.
 Les écritures d'administration passent par le rôle service, derrière un
 contrôle de rôle applicatif.`,
+  },
+  {
+    name: "Questions avant de produire",
+    description: "Fait poser au modèle les questions qui changent le résultat, et seulement celles-là.",
+    category: "Méthode",
+    content: CLARIFIER,
   },
   {
     name: "Livrables et vérification",

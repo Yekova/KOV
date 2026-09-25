@@ -11,6 +11,7 @@ import {
   deletePromptCollection,
   getPromptCategories,
   getPromptCollections,
+  installBuildPack,
   installMockupPack,
   installStarterLibrary,
   renamePromptCategory,
@@ -327,6 +328,20 @@ function PacksPanel() {
     onError: () => toast.error("L'installation a échoué."),
   });
 
+  const build = useMutation({
+    mutationFn: installBuildPack,
+    onSuccess: (result) => {
+      if (result.error) return toast.error(result.error);
+      queryClient.invalidateQueries();
+      toast.success(
+        result.installed === 0
+          ? "Pack déjà installé, rien à ajouter."
+          : `${result.installed} prompts installés${result.skipped ? `, ${result.skipped} déjà présents` : ""}`
+      );
+    },
+    onError: () => toast.error("L'installation a échoué."),
+  });
+
   const base = useMutation({
     mutationFn: installStarterLibrary,
     onSuccess: (result) => {
@@ -347,10 +362,10 @@ function PacksPanel() {
     >
       <div className={PACK} style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}>
         <div className="flex-1 min-w-[16rem]">
-          <p className="text-kov-bone text-sm">Maquette site web · 10 étapes</p>
+          <p className="text-kov-bone text-sm">Maquette site web · étapes 00 à 10</p>
           <p className="text-kov-steel text-xs mt-1 leading-relaxed">
-            Du cadrage à la revue avant développement, dans l&apos;ordre. Chaque étape prend en entrée la sortie
-            de la précédente. Réinstallable : les prompts déjà présents sont ignorés.
+            De l&apos;entretien de cadrage à la revue avant développement. Chaque étape prend en entrée la sortie de
+            la précédente. Réinstallable : les prompts déjà présents sont ignorés.
           </p>
         </div>
         <button
@@ -367,7 +382,27 @@ function PacksPanel() {
 
       <div className={PACK} style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}>
         <div className="flex-1 min-w-[16rem]">
-          <p className="text-kov-bone text-sm">Base de départ · 8 prompts et 7 blocs</p>
+          <p className="text-kov-bone text-sm">Construction et mise en ligne · étapes 11 à 20</p>
+          <p className="text-kov-steel text-xs mt-1 leading-relaxed">
+            La suite directe : composants, contenu réel, formulaires, performance, accessibilité, référencement,
+            recette, lancement, mesure, reprise.
+          </p>
+        </div>
+        <button
+          type="button"
+          disabled={build.isPending}
+          onClick={() => build.mutate()}
+          className="inline-flex items-center gap-2 px-4 py-2.5 text-[11px] uppercase tracking-widest text-kov-white transition-colors disabled:opacity-50 shrink-0"
+          style={{ background: "var(--kov-red)", borderRadius: "var(--radius-sm)" }}
+        >
+          {build.isPending ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />}
+          Installer
+        </button>
+      </div>
+
+      <div className={PACK} style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}>
+        <div className="flex-1 min-w-[16rem]">
+          <p className="text-kov-bone text-sm">Base de départ · 8 prompts et 8 blocs</p>
           <p className="text-kov-steel text-xs mt-1 leading-relaxed">
             Gabarits généraux pour cette base de code, et les blocs du Builder. Ne s&apos;installe que sur une
             bibliothèque vide.
