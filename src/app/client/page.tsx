@@ -3,6 +3,8 @@ import { requireUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getPublicAssetUrl } from "@/lib/portal/storage";
 import { deriveCurrentPhase, deriveProgress, type ProjectPhase } from "@/lib/portal/progress";
+import { isInvoiceOverdue } from "@/lib/portal/status";
+import { ActionRequiredCard, type ActionItem } from "@/components/client/dashboard/ActionRequiredCard";
 import { markActivityRead } from "./actions";
 import { GreetingSearchPanel, type PortalSearchItem } from "@/components/client/dashboard/GreetingSearchPanel";
 import { StatusDonutCard } from "@/components/client/dashboard/StatusDonutCard";
@@ -37,15 +39,17 @@ export default async function ClientDashboardPage() {
         .eq("client_id", user.id)
         .order("created_at", { ascending: false })
         .limit(30),
+      // Les deux requêtes existaient déjà pour l'index de recherche : on
+      // élargit le select plutôt que d'en ajouter deux.
       supabaseAdmin
         .from("invoices")
-        .select("id, reference")
+        .select("id, reference, status, due_at, amount_cents")
         .eq("client_id", user.id)
         .order("issued_at", { ascending: false })
         .limit(30),
       supabaseAdmin
         .from("quotes")
-        .select("id, reference")
+        .select("id, reference, status, signed_at, signing_url, total_cents")
         .eq("client_id", user.id)
         .order("created_at", { ascending: false })
         .limit(30),
@@ -88,6 +92,42 @@ export default async function ClientDashboardPage() {
         (a, b) => new Date(a.next_deadline_date).getTime() - new Date(b.next_deadline_date).getTime()
       )[0] ?? null;
 
+  // ── Ce qui attend le client ───────────────────────────────────────────
+  //
+  // Un devis envoyé et non signé, une facture en retard : les deux objets
+  // les plus importants du portail étaient à un clic d'une page que
+  // personne n'ouvre spontanément.
+  const actionItems: ActionItem[] = [
+    ...(quotes ?? [])
+      .filter((quote) => quote.status === "sent" && !quote.signed_at)
+      .map((quote) => ({
+        id: `quote-${quote.id}`,
+        label: `Devis ${quote.reference} à signer`,
+        detail: quote.signing_url ? "Signature électronique en attente" : "En attente de votre retour",
+        href: "/client/quotes",
+        urgent: true,
+      })),
+    ...(invoices ?? [])
+      .filter((invoice) => isInvoiceOverdue(invoice.status, invoice.due_at))
+      .map((invoice) => ({
+        id: `invoice-${invoice.id}`,
+        label: `Facture ${invoice.reference} en retard`,
+        detail: `Échéance dépassée le ${new Date(invoice.due_at as string).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}`,
+        href: "/client/invoices",
+        urgent: true,
+      })),
+    ...(invoices ?? [])
+      .filter((invoice) => invoice.status === "sent" && !isInvoiceOverdue(invoice.status, invoice.due_at))
+      .map((invoice) => ({
+        id: `invoice-due-${invoice.id}`,
+        label: `Facture ${invoice.reference} à régler`,
+        detail: invoice.due_at
+          ? `Avant le ${new Date(invoice.due_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}`
+          : "Sans échéance",
+        href: "/client/invoices",
+      })),
+  ];
+
   const searchIndex: PortalSearchItem[] = [
     ...projectRows.map((p) => ({ label: p.name, sublabel: p.category, href: "/client/projects" })),
     ...(documents ?? []).map((d) => ({ label: d.filename, sublabel: "Document", href: "/client/documents" })),
@@ -124,6 +164,8 @@ export default async function ClientDashboardPage() {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           <div className="xl:col-span-2 space-y-6">
             <GreetingSearchPanel fullName={profile?.full_name ?? null} searchIndex={searchIndex} />
+
+            <ActionRequiredCard items={actionItems} />
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <StatusDonutCard projects={projectRows} />

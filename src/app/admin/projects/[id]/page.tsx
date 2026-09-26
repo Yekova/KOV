@@ -105,7 +105,11 @@ export default async function AdminProjectDetailPage(props: PageProps<"/admin/pr
       )
       .eq("project_id", projectId)
       .order("position"),
-    supabaseAdmin.from("project_phases").select("id, project_id, name, status, position").eq("project_id", projectId).order("position"),
+    supabaseAdmin
+      .from("project_phases")
+      .select("id, project_id, name, status, position, start_date, due_date")
+      .eq("project_id", projectId)
+      .order("position"),
     supabaseAdmin.from("profiles").select("id, full_name, email").eq("role", "admin").is("archived_at", null).order("full_name"),
   ]);
 

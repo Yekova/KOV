@@ -183,13 +183,15 @@ export function isProjectPhaseStatus(value: string): value is ProjectPhaseStatus
   return (PROJECT_PHASE_STATUSES as readonly string[]).includes(value);
 }
 
-export const PROJECT_PHASE_STATUS_LABELS: Record<ProjectPhaseStatus, string> = {
-  not_started: "Pas commencée",
-  in_progress: "En cours",
-  review: "Relecture",
-  completed: "Terminée",
-  blocked: "Bloquée",
-};
+// Les libellés viennent de lib/portal/progress, côté client.
+//
+// Il y en avait deux jeux pour les mêmes cinq états : l'admin disait « Pas
+// commencée » et « Bloquée » là où le client lisait « À venir » et « En
+// attente ». Deux vocabulaires pour une même réalité, et c'est celui du
+// client qui a été gardé — c'est le seul des deux qui est lu par quelqu'un
+// d'extérieur, et « bloquée » se lit comme un reproche quand on ignore
+// qu'il s'agit d'un mot d'équipe.
+export { PHASE_STATUS_LABELS as PROJECT_PHASE_STATUS_LABELS } from "@/lib/portal/progress";
 
 // Les sept phases KOV, ré-exportées depuis lib/process/phases, qui les
 // dérive de la méthode publiée sur le site. Ce fichier en portait une

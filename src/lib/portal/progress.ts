@@ -29,6 +29,12 @@ export interface ProjectPhase {
   name: string;
   status: string;
   position: number;
+  /** Renseignés depuis l'admin, affichés au client quand ils existent. Les
+   *  colonnes existaient depuis la création de la table sans que rien ne
+   *  les écrive ; les listes qui n'en ont pas besoin ne les demandent pas. */
+  description?: string | null;
+  start_date?: string | null;
+  due_date?: string | null;
 }
 
 export interface DerivedProgress {
@@ -95,4 +101,18 @@ export function groupPhasesByProject<T extends { project_id: string }>(rows: T[]
     grouped.set(row.project_id, [...(grouped.get(row.project_id) ?? []), row]);
   }
   return grouped;
+}
+
+/** « Du 3 au 18 mars », ou juste l'une des deux bornes, ou rien.
+ *
+ *  Rend une chaîne vide plutôt qu'un tiret quand les deux dates manquent :
+ *  une colonne qui affiche « — » à chaque ligne apprend à ne plus être lue. */
+export function formatPhaseDates(startDate?: string | null, dueDate?: string | null): string {
+  const format = (value: string) =>
+    new Date(`${value}T00:00:00`).toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
+
+  if (startDate && dueDate) return `du ${format(startDate)} au ${format(dueDate)}`;
+  if (dueDate) return `jusqu'au ${format(dueDate)}`;
+  if (startDate) return `depuis le ${format(startDate)}`;
+  return "";
 }

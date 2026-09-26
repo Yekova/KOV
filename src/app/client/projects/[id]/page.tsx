@@ -12,6 +12,7 @@ import {
   PHASE_STATUS_LABELS,
   deriveCurrentPhase,
   deriveProgress,
+  formatPhaseDates,
   type PhaseStatus,
   type ProjectPhase,
 } from "@/lib/portal/progress";
@@ -48,7 +49,7 @@ export default async function ClientProjectDetailPage(props: PageProps<"/client/
   const { data: project } = await supabaseAdmin
     .from("projects")
     .select(
-      "id, name, category, status, client_id, progress_percent, next_deadline_date, deadline_phase_label, project_phases(id, name, status, position)"
+      "id, name, category, status, client_id, progress_percent, next_deadline_date, deadline_phase_label, project_phases(id, name, status, position, description, start_date, due_date)"
     )
     .eq("id", projectId)
     .maybeSingle();
@@ -151,6 +152,19 @@ export default async function ClientProjectDetailPage(props: PageProps<"/client/
           )}
         </p>
 
+        {/* Ce que le portail ne disait jamais : ce qu'on attend du client.
+            Même « rien pour l'instant » est une information — sans elle, il
+            ne sait pas s'il bloque le projet. */}
+        <p className="text-kov-concrete text-sm mt-4 pt-4 border-t" style={{ borderColor: "var(--kov-border)" }}>
+          {currentPhase.label
+            ? currentPhase.status === "review"
+              ? `« ${currentPhase.label} » attend votre relecture.`
+              : `Nous travaillons sur « ${currentPhase.label} ». Aucune action attendue de votre part.`
+            : phases.length > 0
+              ? "Toutes les phases sont terminées."
+              : "Aucune action attendue de votre part."}
+        </p>
+
         {phases.length > 0 && (
           <ol className="mt-6 space-y-0">
             {phases.map((phase, index) => {
@@ -177,7 +191,18 @@ export default async function ClientProjectDetailPage(props: PageProps<"/client/
                     <p className="text-sm" style={{ color: done || isCurrent ? "var(--kov-bone)" : "var(--kov-steel)" }}>
                       {phase.name}
                     </p>
-                    <p className="text-kov-steel text-xs mt-0.5">{PHASE_STATUS_LABELS[status] ?? phase.status}</p>
+                    <p className="text-kov-steel text-xs mt-0.5">
+                      {PHASE_STATUS_LABELS[status] ?? phase.status}
+                      {/* Les dates ne s'affichent que renseignées : une
+                          ligne « — » à chaque phase apprend à ne plus lire
+                          la colonne. */}
+                      {formatPhaseDates(phase.start_date, phase.due_date) && (
+                        <span> · {formatPhaseDates(phase.start_date, phase.due_date)}</span>
+                      )}
+                    </p>
+                    {phase.description && (
+                      <p className="text-kov-steel text-xs mt-1 leading-relaxed">{phase.description}</p>
+                    )}
                   </div>
                 </li>
               );

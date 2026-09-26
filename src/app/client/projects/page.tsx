@@ -61,7 +61,7 @@ export default async function ClientProjectsPage() {
               <div className="h-1.5 w-full overflow-hidden mb-2" style={{ background: "var(--kov-border)", borderRadius: "var(--radius-pill)" }}>
                 <div className="h-full" style={{ width: `${p.progress_percent}%`, background: "var(--kov-red)" }} />
               </div>
-              <p className="text-kov-steel text-xs mb-3">
+              <p className="text-kov-steel text-xs mb-1">
                 {p.progress_percent}% complété
                 {p.phaseCount > 0 && (
                   <span className="text-kov-steel">
@@ -71,6 +71,15 @@ export default async function ClientProjectsPage() {
                   </span>
                 )}
               </p>
+
+              {/* La phase en cours n'apparaissait que si une échéance était
+                  renseignée : le client lisait « 3 sur 7 » sans jamais
+                  savoir laquelle était en cours. */}
+              {p.deadline_phase_label && (
+                <p className="text-kov-steel text-xs mb-3">
+                  En cours : <span className="text-kov-bone">{p.deadline_phase_label}</span>
+                </p>
+              )}
 
               {p.next_deadline_date && (
                 <p className="text-kov-steel text-xs">
@@ -82,12 +91,11 @@ export default async function ClientProjectsPage() {
                       year: "numeric",
                     })}
                   </span>
-                  {p.deadline_phase_label ? ` — ${p.deadline_phase_label}` : ""}
                 </p>
               )}
 
               <Link href={`/client/projects/${p.id}`} className="inline-block text-kov-red text-xs uppercase tracking-widest hover:underline mt-4">
-                Voir les documents →
+                Voir le projet →
               </Link>
             </GlassCard>
           ))}

@@ -7,6 +7,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { uploadClientFile, createSignedDownloadUrl, deleteClientFile } from "@/lib/portal/storage";
 import { logActivity, getActorDisplayName } from "@/lib/activity";
 import { isProjectPhaseStatus } from "@/lib/admin/status";
+import { revalidateClient } from "@/lib/revalidateClient";
 
 export async function createDocumentFolder(formData: FormData) {
   const admin = await requireAdmin();
@@ -244,4 +245,34 @@ export async function deletePhase(phaseId: string, projectId: string) {
   if (error) throw new Error("La suppression a échoué.");
 
   revalidatePath(`/admin/projects/${projectId}`);
+}
+
+/** Les dates d'une phase.
+ *
+ *  project_phases.start_date et due_date existent depuis la création de la
+ *  table et rien ne les écrivait. Le portail client peut désormais les
+ *  afficher, mais il fallait d'abord pouvoir les saisir — sinon la colonne
+ *  ne serait qu'un emplacement vide de plus. */
+export async function updatePhaseDates(
+  phaseId: string,
+  projectId: string,
+  dates: { startDate?: string | null; dueDate?: string | null }
+) {
+  await requireAdmin();
+
+  const { error } = await supabaseAdmin
+    .from("project_phases")
+    .update({
+      start_date: dates.startDate !== undefined ? dates.startDate || null : undefined,
+      due_date: dates.dueDate !== undefined ? dates.dueDate || null : undefined,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", phaseId);
+  if (error) throw new Error("La mise à jour des dates a échoué.");
+
+  revalidatePath(`/admin/projects/${projectId}`);
+  // Le client voit désormais ces dates : les deux espaces doivent bouger
+  // ensemble, sinon il lit une échéance périmée.
+  const { data: project } = await supabaseAdmin.from("projects").select("client_id").eq("id", projectId).maybeSingle();
+  if (project?.client_id) revalidateClient(project.client_id as string);
 }

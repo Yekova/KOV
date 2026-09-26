@@ -3,10 +3,17 @@
 import { useState, useTransition } from "react";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
-import { createPhase, renamePhase, updatePhaseStatus, deletePhase, addDefaultPhases } from "@/app/admin/projects/[id]/actions";
+import {
+  createPhase,
+  renamePhase,
+  updatePhaseStatus,
+  updatePhaseDates,
+  deletePhase,
+  addDefaultPhases,
+} from "@/app/admin/projects/[id]/actions";
 import { PROJECT_PHASE_STATUSES, PROJECT_PHASE_STATUS_LABELS, KOV_PHASES } from "@/lib/admin/status";
 
-type Phase = { id: string; name: string; status: string };
+type Phase = { id: string; name: string; status: string; start_date?: string | null; due_date?: string | null };
 
 export function ProjectPhasesPanel({ projectId, phases }: { projectId: string; phases: Phase[] }) {
   const [isPending, startTransition] = useTransition();
@@ -56,6 +63,31 @@ export function ProjectPhasesPanel({ projectId, phases }: { projectId: string; p
                 className="bg-transparent border px-3 py-1.5 text-kov-bone text-xs uppercase tracking-widest disabled:opacity-50"
                 style={{ borderRadius: "var(--radius-sm)", borderColor: "var(--kov-border)" }}
               />
+              {/* Les deux colonnes existaient depuis la création de la
+                  table et rien ne les écrivait. Le client les voit
+                  maintenant : il fallait d'abord pouvoir les saisir. */}
+              <label className="text-kov-steel text-[11px] flex items-center gap-1.5">
+                Du
+                <input
+                  type="date"
+                  defaultValue={phase.start_date ?? ""}
+                  disabled={isPending}
+                  onChange={(e) => run(() => updatePhaseDates(phase.id, projectId, { startDate: e.target.value }))}
+                  className="bg-transparent border px-2 py-1 text-kov-bone text-xs disabled:opacity-50"
+                  style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
+                />
+              </label>
+              <label className="text-kov-steel text-[11px] flex items-center gap-1.5">
+                Au
+                <input
+                  type="date"
+                  defaultValue={phase.due_date ?? ""}
+                  disabled={isPending}
+                  onChange={(e) => run(() => updatePhaseDates(phase.id, projectId, { dueDate: e.target.value }))}
+                  className="bg-transparent border px-2 py-1 text-kov-bone text-xs disabled:opacity-50"
+                  style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
+                />
+              </label>
               <button
                 type="button"
                 disabled={isPending}
