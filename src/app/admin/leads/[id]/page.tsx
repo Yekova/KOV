@@ -110,7 +110,22 @@ export default async function AdminLeadDetailPage(props: PageProps<"/admin/leads
 
       <LeadEmailPanel leadId={lead.id} />
 
-      <LeadDetailActions leadId={lead.id} initialNotes={lead.notes} convertedProfileId={lead.converted_profile_id} />
+      <LeadDetailActions
+        leadId={lead.id}
+        initialNotes={lead.notes}
+        convertedProfileId={lead.converted_profile_id}
+        lead={{
+          name: lead.name,
+          email: lead.email,
+          company: lead.company,
+          phone: lead.phone,
+          assignedTo: lead.assigned_to,
+          projectType: lead.project_type,
+          budgetCents: lead.budget_cents,
+          message: lead.message,
+        }}
+        admins={adminOptions}
+      />
     </main>
   );
 }

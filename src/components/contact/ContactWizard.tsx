@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { GlassSurface } from "@/components/ui/GlassSurface";
 import { Button } from "@/components/ui/Button";
 import { REVEAL_EASE } from "@/lib/motion/easing";
@@ -179,6 +180,7 @@ export function ContactWizard() {
   // Lazy initializer, not a render-time Date.now() call — see components/ui/Reveal.tsx.
   const [renderedAt] = useState(() => Date.now());
   const [honeypot, setHoneypot] = useState("");
+  const [consent, setConsent] = useState(false);
 
   // Same hand-rolled "leave then enter" sequence used for the enter-only
   // case in components/ui/Reveal.tsx — here both directions matter, since
@@ -277,13 +279,18 @@ export function ContactWizard() {
 
   async function handleSubmit() {
     setSubmitStatus("submitting");
-    // The leads table has no dedicated budget column and adding one is a
-    // schema change beyond what this feature asked for — folded into the
-    // same project_type aggregate that already carries focus/extraThemes
-    // rather than introducing a migration.
-    const projectType = [answers.focus, ...answers.extraThemes, `Budget : ${formatBudget(answers.budget)}`]
-      .filter(Boolean)
-      .join(", ");
+    // Le budget est désormais envoyé comme un nombre, dans sa propre
+    // colonne. Il était jusqu'ici concaténé en toutes lettres dans
+    // project_type, sur un commentaire affirmant que leads n'avait pas de
+    // colonne budget — c'était faux, budget_cents existe depuis la
+    // migration 20260819110100. Conséquence : le score, le KPI « valeur
+    // potentielle » et la variable d'email étaient aveugles au budget de
+    // tous les leads venus du site.
+    //
+    // La valeur du curseur est un entier exact (pas de fourchette), donc
+    // l'écrire telle quelle n'invente rien. Le cas du plafond, que
+    // formatBudget rend « 30 000 € + », reste lisible dans l'admin.
+    const projectType = [answers.focus, ...answers.extraThemes].filter(Boolean).join(", ");
     try {
       const response = await fetch("/api/contact", {
         method: "POST",
@@ -296,7 +303,9 @@ export function ContactWizard() {
           contact_method: answers.contact_method,
           timeline: answers.timeline,
           project_type: projectType,
+          budget_eur: answers.budget,
           message: answers.message,
+          consent: consent,
           website: honeypot,
           rendered_at: renderedAt,
         }),
@@ -608,13 +617,37 @@ export function ContactWizard() {
               className={`${FIELD_CLASS} resize-none`}
               style={{ borderColor: "var(--kov-border)" }}
             />
+            {/* Il n'existait aucune case de consentement, alors que quatre
+                colonnes RGPD attendaient dans la table sans que rien ne les
+                remplisse. Sans elle, le seul état honnête pour un lead
+                était « inconnu » — et le rester pour tous les anciens. */}
+            <label className="flex items-start gap-3 mt-6 text-kov-steel text-xs leading-relaxed cursor-pointer">
+              <input
+                type="checkbox"
+                checked={consent}
+                onChange={(e) => setConsent(e.target.checked)}
+                className="accent-kov-red mt-0.5 shrink-0"
+              />
+              <span>
+                J&apos;accepte que KOV conserve ces informations pour me recontacter au sujet de ma demande.{" "}
+                <Link href="/legal/confidentialite" className="text-kov-concrete underline hover:text-kov-red transition-colors">
+                  Politique de confidentialité
+                </Link>
+              </span>
+            </label>
+
             {submitStatus === "error" && (
               <p role="alert" className="text-kov-red text-sm mt-4">
                 Une erreur est survenue. Réessayez dans un instant.
               </p>
             )}
             <div className="flex justify-end mt-8">
-              <Button type="button" variant="primary" onClick={handleSubmit} disabled={submitStatus === "submitting"}>
+              <Button
+                type="button"
+                variant="primary"
+                onClick={handleSubmit}
+                disabled={submitStatus === "submitting" || !consent}
+              >
                 {submitStatus === "submitting" ? "Envoi…" : "Envoyer →"}
               </Button>
             </div>

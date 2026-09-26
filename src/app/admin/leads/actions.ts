@@ -5,6 +5,9 @@ import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { isLeadSource } from "@/lib/admin/status";
 import { provisionClient } from "@/lib/clients/provision";
+import { createProjectRow } from "@/app/admin/clients/actions";
+import { addDefaultPhases } from "@/app/admin/projects/[id]/actions";
+import { KOV_PHASES } from "@/lib/process/phases";
 import { logActivity, getActorDisplayName } from "@/lib/activity";
 import { logLeadInteraction } from "@/lib/leads/interactions";
 import { recomputeLeadScore } from "@/lib/leads/recomputeScore";
@@ -156,7 +159,26 @@ export async function updateLeadNotes(leadId: string, formData: FormData) {
  *  client : les notes commerciales internes n'ont rien à faire derrière
  *  cette porte.
  */
-export async function convertLeadToClient(leadId: string) {
+export interface ConvertLeadInput {
+  fullName?: string;
+  email?: string;
+  company?: string | null;
+  phone?: string | null;
+  accountManagerId?: string | null;
+  /** Le premier projet, créé dans le même appel. Null pour ne rien créer. */
+  project?: {
+    name: string;
+    category: string;
+    budgetEur?: string | null;
+    description?: string | null;
+    withDefaultPhases: boolean;
+  } | null;
+}
+
+export async function convertLeadToClient(
+  leadId: string,
+  input?: ConvertLeadInput
+): Promise<{ clientId: string; projectId?: string; projectError?: string }> {
   const admin = await requireAdmin();
 
   const { data: lead } = await supabaseAdmin
@@ -168,13 +190,13 @@ export async function convertLeadToClient(leadId: string) {
   if (lead.converted_profile_id) throw new Error("Ce lead a déjà été converti en client.");
 
   const { userId } = await provisionClient({
-    email: lead.email,
-    fullName: lead.name,
-    company: lead.company,
-    phone: lead.phone,
+    email: input?.email?.trim() || lead.email,
+    fullName: input?.fullName?.trim() || lead.name,
+    company: input?.company !== undefined ? input.company : lead.company,
+    phone: input?.phone !== undefined ? input.phone : lead.phone,
     // Si le lead n'a pas de responsable, on n'en choisit pas un : désigner
     // par défaut le seul administrateur reviendrait à l'inventer.
-    accountManagerId: lead.assigned_to,
+    accountManagerId: input?.accountManagerId !== undefined ? input.accountManagerId : lead.assigned_to,
   });
 
   await linkLeadQuotesToClient(leadId, userId);
@@ -205,6 +227,44 @@ export async function convertLeadToClient(leadId: string) {
   revalidatePath("/admin/leads");
   revalidatePath(`/admin/leads/${leadId}`);
   revalidatePath("/admin/clients");
+
+  // ── Le premier projet, dans le même appel ─────────────────────────────
+  //
+  // Sans ça il existait une fenêtre où le lead était converti et le client
+  // sans projet, l'admin devant naviguer vers une autre page pour finir le
+  // travail. Un seul appel ferme cette fenêtre.
+  //
+  // En cas d'échec partiel, on N'ANNULE PAS. L'email d'invitation est déjà
+  // parti et ne se dé-envoie pas : défaire le client laisserait quelqu'un
+  // avec un lien vers un compte inexistant. On renvoie l'erreur du projet
+  // et l'admin la voit.
+  if (input?.project) {
+    try {
+      const formData = new FormData();
+      formData.set("client_id", userId);
+      formData.set("name", input.project.name);
+      formData.set("category", input.project.category);
+      formData.set("pipeline_stage", "discovery");
+      if (input.project.budgetEur) formData.set("budget_eur", input.project.budgetEur);
+      if (input.project.description) formData.set("description", input.project.description);
+
+      const { projectId } = await createProjectRow(formData);
+
+      // Les phases font foi pour l'avancement (lib/portal/progress.ts), donc
+      // les poser change la première connexion du client : une frise à 0 %
+      // au lieu d'une carte vide.
+      if (input.project.withDefaultPhases) {
+        await addDefaultPhases(projectId, KOV_PHASES);
+      }
+
+      return { clientId: userId, projectId };
+    } catch (err) {
+      return {
+        clientId: userId,
+        projectError: err instanceof Error ? err.message : "La création du projet a échoué.",
+      };
+    }
+  }
 
   return { clientId: userId };
 }

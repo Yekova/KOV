@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { logLeadInteraction } from "@/lib/leads/interactions";
 import { sendEmail } from "@/lib/email/brevo";
 import { leadConfirmationSubject, leadConfirmationHtml, newLeadNotificationSubject, newLeadNotificationHtml } from "@/lib/email/leadEmail";
 
@@ -65,21 +66,51 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid timeline" }, { status: 400 });
   }
 
-  const { error } = await supabaseAdmin.from("leads").insert({
-    name,
-    email,
-    phone: phone || null,
-    message: message || null,
-    company: company || null,
-    project_type: projectType || null,
-    contact_method: contactMethod || null,
-    timeline: timeline || null,
-    source: "site_web",
-  });
+  // Le budget arrive enfin dans sa propre colonne. Il était concaténé en
+  // toutes lettres dans project_type, sur un commentaire affirmant que
+  // budget_cents n'existait pas — il existe depuis 20260819110100. Le
+  // score, le KPI « valeur potentielle » et la variable d'email étaient
+  // donc aveugles au budget de tous les leads venus du site.
+  const budgetEur = typeof body.budget_eur === "number" && Number.isFinite(body.budget_eur) ? body.budget_eur : null;
+  const budgetCents = budgetEur !== null && budgetEur >= 0 ? Math.round(budgetEur * 100) : null;
 
-  if (error) {
+  // Le consentement n'est enregistré que s'il a réellement été coché. Rien
+  // n'est déduit du seul fait d'avoir utilisé le formulaire : ce serait
+  // fabriquer un fait juridique.
+  const consentGiven = body.consent === true;
+
+  const { data: created, error } = await supabaseAdmin
+    .from("leads")
+    .insert({
+      name,
+      email,
+      phone: phone || null,
+      message: message || null,
+      company: company || null,
+      project_type: projectType || null,
+      budget_cents: budgetCents,
+      contact_method: contactMethod || null,
+      timeline: timeline || null,
+      source: "site_web",
+      consent_status: consentGiven ? "given" : "unknown",
+      consent_source: consentGiven ? "formulaire de contact" : null,
+      consent_at: consentGiven ? new Date().toISOString() : null,
+    })
+    .select("id")
+    .single();
+
+  if (error || !created) {
     return NextResponse.json({ error: "Could not submit — try again shortly" }, { status: 500 });
   }
+
+  // La chronologie d'un lead venu du site commençait vide : seul createLead
+  // écrivait une interaction, pas la route publique.
+  await logLeadInteraction({
+    leadId: created.id as string,
+    type: "form",
+    actorId: null,
+    content: "Formulaire de contact du site",
+  });
 
   // Best effort — a failed email must never fail the form submission itself,
   // the lead is already safely recorded at this point.

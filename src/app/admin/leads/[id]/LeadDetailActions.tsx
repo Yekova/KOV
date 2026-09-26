@@ -3,23 +3,37 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
-import { updateLeadNotes, convertLeadToClient } from "../actions";
+import { FIELD_CLASS } from "@/components/ui/fieldStyles";
+import { updateLeadNotes } from "../actions";
+import { ConvertLeadFlow } from "./ConvertLeadFlow";
 
-const FIELD_CLASS =
-  "w-full bg-transparent border px-3 py-2 text-kov-bone text-sm focus:outline-none focus:border-kov-red transition-colors";
+type PickerOption = { id: string; label: string };
 
 export function LeadDetailActions({
   leadId,
   initialNotes,
   convertedProfileId,
+  lead,
+  admins,
 }: {
   leadId: string;
   initialNotes: string | null;
   convertedProfileId: string | null;
+  lead: {
+    name: string;
+    email: string;
+    company: string | null;
+    phone: string | null;
+    assignedTo: string | null;
+    projectType: string | null;
+    budgetCents: number | null;
+    message: string | null;
+  };
+  admins: PickerOption[];
 }) {
   const [notes, setNotes] = useState(initialNotes ?? "");
   const [isSavingNotes, startSavingNotes] = useTransition();
-  const [isConverting, startConverting] = useTransition();
+  const [converting, setConverting] = useState(false);
   const [notesSaved, setNotesSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -74,27 +88,24 @@ export function LeadDetailActions({
           </p>
         ) : (
           <>
-            <Button
-              type="button"
-              variant="primary"
-              disabled={isConverting}
-              onClick={() => {
-                if (!window.confirm("Convertir ce lead en client ? Un email d'invitation lui sera envoyé pour créer son accès.")) return;
-                setError(null);
-                startConverting(async () => {
-                  try {
-                    await convertLeadToClient(leadId);
-                  } catch (err) {
-                    setError(err instanceof Error ? err.message : "La conversion a échoué.");
-                  }
-                });
-              }}
-            >
-              {isConverting ? "Conversion…" : "Convertir en client"}
+            {/* Le window.confirm a disparu : la conversion crée un compte,
+                envoie un email et peut créer un projet — trois décisions
+                qu'une boîte « OK / Annuler » ne permet pas de prendre. */}
+            <Button type="button" variant="primary" onClick={() => setConverting(true)}>
+              Convertir en client
             </Button>
             <p className="text-kov-steel text-xs mt-2">
-              Crée un compte client et envoie un email d&apos;invitation pour définir son mot de passe.
+              Crée le compte, envoie l&apos;invitation, rattache les devis du lead, et peut créer le premier
+              projet avec ses phases.
             </p>
+            {converting && (
+              <ConvertLeadFlow
+                leadId={leadId}
+                lead={lead}
+                admins={admins}
+                onDone={() => setConverting(false)}
+              />
+            )}
           </>
         )}
       </section>

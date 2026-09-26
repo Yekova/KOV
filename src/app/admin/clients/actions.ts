@@ -122,7 +122,14 @@ function parseEuroToCents(value: FormDataEntryValue | null): number | null {
   return Number.isFinite(cents) && cents >= 0 ? cents : null;
 }
 
-export async function createProject(formData: FormData) {
+/** Le corps réel, qui rend l'identifiant du projet créé.
+ *
+ *  Séparé de createProject parce que ce dernier est utilisé tel quel comme
+ *  `<form action={createProject}>`, ce qui impose une signature rendant
+ *  Promise<void>. La conversion guidée d'un lead, elle, a besoin de l'id
+ *  pour y rattacher les phases et y renvoyer l'admin. Une fonction pour
+ *  chaque usage plutôt qu'une signature tordue pour les deux. */
+export async function createProjectRow(formData: FormData): Promise<{ projectId: string }> {
   const admin = await requireAdmin();
 
   const clientId = formData.get("client_id");
@@ -182,6 +189,12 @@ export async function createProject(formData: FormData) {
   });
 
   revalidateClient(clientId);
+  return { projectId: data.id as string };
+}
+
+/** La version utilisable comme `<form action>`. */
+export async function createProject(formData: FormData) {
+  await createProjectRow(formData);
 }
 
 export async function updateProject(projectId: string, formData: FormData) {
