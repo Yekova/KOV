@@ -6,6 +6,8 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { LeadStatusSelect } from "../LeadStatusSelect";
 import { AssignLeadSelect } from "../AssignLeadSelect";
 import { LeadDetailActions } from "./LeadDetailActions";
+import { LeadEditForm } from "./LeadEditForm";
+import { LeadTimeline } from "./LeadTimeline";
 import { CONTACT_METHOD_LABELS, LEAD_TIMELINE_LABELS, isContactMethod, isLeadTimeline } from "@/lib/admin/status";
 import { getLeadStatuses } from "@/lib/leads/statuses";
 import { LeadEmailPanel } from "@/components/email/LeadEmailPanel";
@@ -93,6 +95,18 @@ export default async function AdminLeadDetailPage(props: PageProps<"/admin/leads
           <p className="text-kov-bone text-sm whitespace-pre-wrap">{lead.message}</p>
         </div>
       )}
+
+      {/* La fiche était entièrement en lecture seule : corriger un
+          téléphone venu du formulaire public demandait d'ouvrir le tableau
+          de bord Supabase. */}
+      <div className="border-t pt-8" style={{ borderColor: "var(--kov-border)" }}>
+        <LeadEditForm lead={lead} admins={adminOptions} />
+      </div>
+
+      <div className="border-t pt-8" style={{ borderColor: "var(--kov-border)" }}>
+        <p className="text-kov-steel text-xs uppercase tracking-widest mb-4">Historique</p>
+        <LeadTimeline leadId={lead.id} />
+      </div>
 
       <LeadEmailPanel leadId={lead.id} />
 

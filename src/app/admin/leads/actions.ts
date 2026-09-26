@@ -325,3 +325,161 @@ export async function createLead(formData: FormData): Promise<{ error: string | 
   revalidatePath("/admin/leads");
   return { error: null };
 }
+
+// ── Modifier un lead ─────────────────────────────────────────────────────
+//
+// Il n'existait aucun formulaire d'édition. Quatorze des trente colonnes de
+// la table n'avaient aucun chemin d'écriture — civilité, prénom, nom,
+// fonction, site, LinkedIn, tags, prochaine action et sa date, et toute la
+// trace de consentement. La migration 20260901140100 promet pourtant en
+// commentaire que « l'admin peut corriger n'importe quel cas depuis le
+// formulaire d'édition du lead ». Ce formulaire n'a jamais été écrit, et
+// une faute de frappe dans un téléphone venu du formulaire de contact ne se
+// corrigeait que dans le tableau de bord Supabase.
+
+export interface LeadInput {
+  title?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  company?: string | null;
+  jobTitle?: string | null;
+  website?: string | null;
+  linkedinUrl?: string | null;
+  projectType?: string | null;
+  timeline?: string | null;
+  budgetEur?: string | null;
+  tags?: string[];
+  nextActionNote?: string | null;
+  nextActionDate?: string | null;
+  nextActionOwnerId?: string | null;
+  consentStatus?: string | null;
+  marketingOptIn?: boolean;
+  notes?: string | null;
+}
+
+const orNull = (value: string | null | undefined) => (value && value.trim() ? value.trim() : null);
+
+export async function updateLead(leadId: string, input: LeadInput): Promise<{ error: string | null }> {
+  const admin = await requireAdmin();
+
+  const { data: existing } = await supabaseAdmin
+    .from("leads")
+    .select("consent_status, name, first_name, last_name")
+    .eq("id", leadId)
+    .maybeSingle();
+  if (!existing) return { error: "Lead introuvable." };
+
+  if (input.email !== undefined && !orNull(input.email)) return { error: "Email requis." };
+
+  // `name` est ce que le formulaire public écrit, `first_name`/`last_name`
+  // ce que le moteur d'emails lit pour personnaliser. Les deux existaient
+  // sans jamais être réconciliés. Règle retenue : le prénom et le nom sont
+  // les champs saisis, et `name` en est recomposé — sinon les deux dérivent
+  // et l'email s'adresse à quelqu'un d'autre que la fiche.
+  const firstName = orNull(input.firstName);
+  const lastName = orNull(input.lastName);
+  const composed = [firstName, lastName].filter(Boolean).join(" ");
+  const nameValue = composed || orNull(input.name) || existing.name;
+
+  const budgetCents = (() => {
+    if (input.budgetEur === undefined) return undefined;
+    const raw = orNull(input.budgetEur);
+    if (!raw) return null;
+    const cents = Math.round(parseFloat(raw.replace(",", ".").replace(/\s/g, "")) * 100);
+    return Number.isFinite(cents) && cents >= 0 ? cents : null;
+  })();
+
+  // Le consentement n'est pas un champ comme les autres : sa date est
+  // horodatée par l'action, jamais saisie, et chaque changement laisse une
+  // trace. La colonne porte l'état courant, le journal porte l'histoire.
+  const consentChanged =
+    input.consentStatus !== undefined && input.consentStatus !== existing.consent_status;
+
+  const { error } = await supabaseAdmin
+    .from("leads")
+    .update({
+      title: input.title !== undefined ? orNull(input.title) : undefined,
+      first_name: input.firstName !== undefined ? firstName : undefined,
+      last_name: input.lastName !== undefined ? lastName : undefined,
+      name: nameValue,
+      email: input.email !== undefined ? orNull(input.email) : undefined,
+      phone: input.phone !== undefined ? orNull(input.phone) : undefined,
+      company: input.company !== undefined ? orNull(input.company) : undefined,
+      job_title: input.jobTitle !== undefined ? orNull(input.jobTitle) : undefined,
+      website: input.website !== undefined ? orNull(input.website) : undefined,
+      linkedin_url: input.linkedinUrl !== undefined ? orNull(input.linkedinUrl) : undefined,
+      project_type: input.projectType !== undefined ? orNull(input.projectType) : undefined,
+      timeline: input.timeline !== undefined ? orNull(input.timeline) : undefined,
+      budget_cents: budgetCents,
+      tags: input.tags !== undefined ? input.tags : undefined,
+      next_action_note: input.nextActionNote !== undefined ? orNull(input.nextActionNote) : undefined,
+      next_action_date: input.nextActionDate !== undefined ? orNull(input.nextActionDate) : undefined,
+      next_action_owner_id: input.nextActionOwnerId !== undefined ? orNull(input.nextActionOwnerId) : undefined,
+      consent_status: input.consentStatus !== undefined ? orNull(input.consentStatus) : undefined,
+      consent_at: consentChanged && input.consentStatus === "given" ? new Date().toISOString() : undefined,
+      marketing_opt_in: input.marketingOptIn !== undefined ? input.marketingOptIn : undefined,
+      notes: input.notes !== undefined ? orNull(input.notes) : undefined,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", leadId);
+
+  if (error) return { error: "L'enregistrement a échoué." };
+
+  if (consentChanged) {
+    await logLeadInteraction({
+      leadId,
+      type: "note",
+      actorId: admin.id,
+      content: `Consentement : ${existing.consent_status ?? "inconnu"} → ${input.consentStatus}`,
+      metadata: { from: existing.consent_status, to: input.consentStatus },
+    });
+  }
+
+  await recomputeLeadScore(leadId);
+
+  revalidatePath("/admin/leads");
+  revalidatePath(`/admin/leads/${leadId}`);
+  return { error: null };
+}
+
+export interface LeadInteractionRow {
+  id: string;
+  type: string;
+  content: string;
+  createdAt: string;
+  actorName: string | null;
+}
+
+/** La chronologie d'un lead.
+ *
+ *  lead_interactions est écrite à chaque changement de statut, à chaque
+ *  email et à chaque soumission de formulaire depuis sa création — et
+ *  n'était lue nulle part, sauf par un count() dans le calcul du score. Une
+ *  histoire complète existait en base et n'avait jamais été affichée. */
+export async function getLeadInteractions(leadId: string): Promise<LeadInteractionRow[]> {
+  await requireAdmin();
+
+  const { data } = await supabaseAdmin
+    .from("lead_interactions")
+    .select("id, type, content, created_at, profiles(full_name)")
+    .eq("lead_id", leadId)
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  return ((data ?? []) as unknown as {
+    id: string;
+    type: string;
+    content: string | null;
+    created_at: string;
+    profiles: { full_name: string | null } | null;
+  }[]).map((row) => ({
+    id: row.id,
+    type: row.type,
+    content: row.content ?? "",
+    createdAt: row.created_at,
+    actorName: row.profiles?.full_name ?? null,
+  }));
+}
