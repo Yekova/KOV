@@ -14,6 +14,7 @@ import { isQuoteStatus, QUOTE_STATUS_LABELS, isInvoiceKind, type InvoiceKind } f
 import { toDbLineItems, fromDbLineItems, parseLineItemsFromForm } from "@/lib/billing/quoteLineItems";
 import { generateInvoicePdfBuffer } from "@/lib/billing/generatePdf";
 import { revalidateClient } from "@/lib/revalidateClient";
+import { getBusinessInfo } from "@/lib/billing/businessInfo";
 
 function parseEuroToCents(value: FormDataEntryValue | null): number {
   if (typeof value !== "string" || !value.trim()) return 0;
@@ -45,8 +46,12 @@ export async function createQuote(formData: FormData): Promise<{ error: string |
   const validUntil = formData.get("valid_until");
   const discountEur = formData.get("discount_eur");
 
-  if (typeof reference !== "string" || !reference.trim()) return { error: "Référence requise." };
   if (typeof recipientName !== "string" || !recipientName.trim()) return { error: "Nom du destinataire requis." };
+
+  // Laissée vide, la référence est attribuée par la base (trigger
+  // assign_document_reference). Une valeur fournie est respectée, pour
+  // reprendre une numérotation d'historique.
+  const referenceValue = typeof reference === "string" && reference.trim() ? reference.trim() : null;
 
   const lineItems = parseLineItemsFromForm(formData.get("line_items"));
   if (lineItems.length === 0) return { error: "Au moins une ligne de devis est requise." };
@@ -65,18 +70,49 @@ export async function createQuote(formData: FormData): Promise<{ error: string |
 
   const quoteId = crypto.randomUUID();
   const pdfPath = `quotes/${quoteId}.pdf`;
+  const createdAt = new Date().toISOString();
+
+  // Insertion d'abord : le PDF ne peut plus précéder la ligne, il ne
+  // connaîtrait pas son propre numéro. Évite aussi de déposer un PDF dans
+  // le bucket quand l'insertion est refusée.
+  const { data: created, error } = await supabaseAdmin
+    .from("quotes")
+    .insert({
+      id: quoteId,
+      client_id: clientIdValue,
+      lead_id: leadIdValue,
+      project_id: projectIdValue,
+      reference: referenceValue,
+      recipient_name: recipientName.trim(),
+      recipient_email: recipientEmailValue,
+      line_items: toDbLineItems(lineItems),
+      subtotal_cents: subtotalCents,
+      discount_cents: discountCents,
+      total_cents: totalCents,
+      valid_until: validUntilValue,
+      created_at: createdAt,
+    })
+    .select("reference")
+    .single();
+
+  if (error || !created) {
+    if (error?.code === "23505") return { error: "Cette référence est déjà utilisée." };
+    return { error: "La création du devis a échoué." };
+  }
+
+  const assignedReference = created.reference as string;
 
   const pdfFile = formData.get("pdf_file");
   if (pdfFile instanceof File && pdfFile.size > 0) {
-    // Admin supplied their own PDF (e.g. a custom-formatted devis) — use it
-    // as-is instead of generating one from the template. The line items
-    // above still drive the stored subtotal/total shown in the app and email.
+    // PDF fourni par l'admin (devis mis en page ailleurs) — utilisé tel
+    // quel. Les lignes saisies continuent de piloter le total stocké et
+    // affiché dans l'application et dans l'email.
     if (pdfFile.type !== "application/pdf") return { error: "Le fichier personnalisé doit être un PDF." };
     await uploadClientFile(pdfPath, pdfFile);
   } else {
     const pdfBuffer = await generateQuotePdfBuffer({
-      reference: reference.trim(),
-      createdAt: new Date().toISOString(),
+      reference: assignedReference,
+      createdAt,
       validUntil: validUntilValue,
       recipientName: recipientName.trim(),
       recipientEmail: recipientEmailValue,
@@ -88,23 +124,7 @@ export async function createQuote(formData: FormData): Promise<{ error: string |
     await uploadClientFileBuffer(pdfPath, pdfBuffer, "application/pdf");
   }
 
-  const { error } = await supabaseAdmin.from("quotes").insert({
-    id: quoteId,
-    client_id: clientIdValue,
-    lead_id: leadIdValue,
-    project_id: projectIdValue,
-    reference: reference.trim(),
-    recipient_name: recipientName.trim(),
-    recipient_email: recipientEmailValue,
-    line_items: toDbLineItems(lineItems),
-    subtotal_cents: subtotalCents,
-    discount_cents: discountCents,
-    total_cents: totalCents,
-    valid_until: validUntilValue,
-    pdf_storage_path: pdfPath,
-  });
-
-  if (error) return { error: "La création du devis a échoué (référence déjà utilisée ?)." };
+  await supabaseAdmin.from("quotes").update({ pdf_storage_path: pdfPath }).eq("id", quoteId);
 
   if (clientIdValue) {
     const actorName = await getActorDisplayName(admin.id);
@@ -112,9 +132,9 @@ export async function createQuote(formData: FormData): Promise<{ error: string |
       clientId: clientIdValue,
       type: "quote",
       title: "Devis créé",
-      adminTitle: `${actorName} a créé le devis ${reference.trim()}`,
+      adminTitle: `${actorName} a créé le devis ${assignedReference}`,
       actorId: admin.id,
-      description: `Devis ${reference.trim()}`,
+      description: `Devis ${assignedReference}`,
     });
   }
 
@@ -439,7 +459,10 @@ export async function convertQuoteToInvoice(
   const depositPercent = formData.get("deposit_percent");
   const totalProject = formData.get("total_project_eur");
 
-  if (typeof reference !== "string" || !reference.trim()) return { error: "Référence requise." };
+  // Laissée vide, la référence est attribuée par la base. Dériver « F-… »
+  // du numéro du devis, ce que faisait suggestInvoiceReference, produirait
+  // des trous dans la suite des factures.
+  const referenceValue = typeof reference === "string" && reference.trim() ? reference.trim() : null;
 
   const amountCents = parseRequiredEuroToCents(amount);
   if (amountCents === null) return { error: "Montant invalide." };
@@ -450,8 +473,19 @@ export async function convertQuoteToInvoice(
       ? Math.min(100, Math.max(1, parseInt(depositPercent, 10) || 0))
       : null;
   const totalProjectCents = kindValue !== "full" ? parseEuroToCents(totalProject) || null : null;
-  const dueAtValue = typeof dueAt === "string" && dueAt ? new Date(dueAt).toISOString() : null;
   const lineItems = fromDbLineItems(quote.line_items);
+
+  const issuedAt = new Date().toISOString();
+
+  // Même déduction que createInvoice : les conditions de paiement du studio
+  // sont enregistrées, modifiables et déjà publiées sur la page CGV.
+  let dueAtValue = typeof dueAt === "string" && dueAt ? new Date(dueAt).toISOString() : null;
+  if (!dueAtValue) {
+    const { paymentTermsDays } = await getBusinessInfo();
+    const due = new Date(issuedAt);
+    due.setDate(due.getDate() + paymentTermsDays);
+    dueAtValue = due.toISOString();
+  }
 
   const { data: client } = await supabaseAdmin.from("profiles").select("full_name, company, email").eq("id", clientId).maybeSingle();
 
@@ -465,10 +499,38 @@ export async function convertQuoteToInvoice(
 
   const invoiceId = crypto.randomUUID();
   const pdfPath = `${clientId}/invoices/${invoiceId}.pdf`;
-  const issuedAt = new Date().toISOString();
+
+  // Insertion d'abord : le PDF ne connaîtrait pas son propre numéro avant
+  // que la base ne l'attribue. Une insertion refusée ne laisse donc plus
+  // non plus de PDF orphelin dans le bucket.
+  const { data: created, error: invoiceError } = await supabaseAdmin
+    .from("invoices")
+    .insert({
+      id: invoiceId,
+      client_id: clientId,
+      project_id: quote.project_id,
+      reference: referenceValue,
+      amount_cents: amountCents,
+      status: "sent",
+      issued_at: issuedAt,
+      due_at: dueAtValue,
+      kind: kindValue,
+      deposit_percent: depositPercentValue,
+      total_project_cents: totalProjectCents,
+      line_items: toDbLineItems(lineItems),
+    })
+    .select("reference")
+    .single();
+
+  if (invoiceError || !created) {
+    if (invoiceError?.code === "23505") return { error: "Cette référence est déjà utilisée." };
+    return { error: "La création de la facture a échoué." };
+  }
+
+  const assignedReference = created.reference as string;
 
   const pdfBuffer = await generateInvoicePdfBuffer({
-    reference: reference.trim(),
+    reference: assignedReference,
     issuedAt,
     dueAt: dueAtValue,
     kind: kindValue,
@@ -482,23 +544,7 @@ export async function convertQuoteToInvoice(
     lineItems,
   });
   await uploadClientFileBuffer(pdfPath, pdfBuffer, "application/pdf");
-
-  const { error: invoiceError } = await supabaseAdmin.from("invoices").insert({
-    id: invoiceId,
-    client_id: clientId,
-    project_id: quote.project_id,
-    reference: reference.trim(),
-    amount_cents: amountCents,
-    status: "sent",
-    pdf_storage_path: pdfPath,
-    issued_at: issuedAt,
-    due_at: dueAtValue,
-    kind: kindValue,
-    deposit_percent: depositPercentValue,
-    total_project_cents: totalProjectCents,
-    line_items: toDbLineItems(lineItems),
-  });
-  if (invoiceError) return { error: "La création de la facture a échoué (référence déjà utilisée ?)." };
+  await supabaseAdmin.from("invoices").update({ pdf_storage_path: pdfPath }).eq("id", invoiceId);
 
   const { error: quoteError } = await supabaseAdmin
     .from("quotes")
@@ -512,9 +558,9 @@ export async function convertQuoteToInvoice(
     projectId: quote.project_id,
     type: "invoice",
     title: "Facture émise",
-    adminTitle: `${actorName} a converti le devis ${quote.reference} en facture ${reference.trim()}`,
+    adminTitle: `${actorName} a converti le devis ${quote.reference} en facture ${assignedReference}`,
     actorId: admin.id,
-    description: `Facture ${reference.trim()} (depuis le devis ${quote.reference})`,
+    description: `Facture ${assignedReference} (depuis le devis ${quote.reference})`,
   });
 
   revalidateClient(clientId);

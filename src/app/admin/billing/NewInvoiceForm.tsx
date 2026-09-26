@@ -57,7 +57,10 @@ export function NewInvoiceForm({
         </label>
         <label className="text-xs text-kov-steel">
           Référence
-          <input type="text" name="reference" required placeholder="F-2026-01" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
+          {/* Attribuée par la base : la numérotation des factures doit
+              rester continue, et un numéro tapé de mémoire ne le garantit
+              pas. Le champ reste ouvert pour reprendre un historique. */}
+          <input type="text" name="reference" placeholder="Automatique" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
         </label>
         <label className="text-xs text-kov-steel">
           Montant (€)

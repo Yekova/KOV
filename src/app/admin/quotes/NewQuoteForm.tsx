@@ -111,9 +111,19 @@ export function NewQuoteForm({
       style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-md)" }}
     >
       <div className="flex flex-wrap items-end gap-4">
+        {/* Attribuée par la base, dans la transaction de l'insertion : la
+            numérotation reste continue même si une création échoue. Le
+            champ reste ouvert pour reprendre un numéro d'historique. */}
         <label className="text-xs text-kov-steel">
           Référence
-          <input type="text" name="reference" required placeholder="D-2026-01" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
+          <input
+            type="text"
+            name="reference"
+            placeholder="Automatique"
+            className={FIELD_CLASS}
+            style={{ borderColor: "var(--kov-border)" }}
+          />
+          <span className="block text-kov-steel text-[11px] mt-1">Laissez vide : D-2026-001, D-2026-002…</span>
         </label>
         <label className="text-xs text-kov-steel">
           Client existant (facultatif)

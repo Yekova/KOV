@@ -21,6 +21,7 @@ import { invoiceEmailHtml, invoiceEmailSubject } from "@/lib/email/invoiceEmail"
 import { toDbLineItems, fromDbLineItems, parseLineItemsFromForm } from "@/lib/billing/quoteLineItems";
 import { revalidateClient } from "@/lib/revalidateClient";
 import { provisionClient } from "@/lib/clients/provision";
+import { getBusinessInfo } from "@/lib/billing/businessInfo";
 
 /** Crée un client sans passer par un lead.
  *
@@ -383,7 +384,12 @@ export async function createInvoice(formData: FormData): Promise<{ error: string
   const lineItems = parseLineItemsFromForm(formData.get("line_items"));
 
   if (typeof clientId !== "string" || !clientId) return { error: "Client invalide." };
-  if (typeof reference !== "string" || !reference.trim()) return { error: "Référence requise." };
+
+  // La référence n'est plus requise : laissée vide, elle est attribuée par
+  // le trigger assign_document_reference, dans la transaction de
+  // l'insertion. Une valeur fournie est respectée — c'est l'échappatoire
+  // pour reprendre un numéro d'historique.
+  const referenceValue = typeof reference === "string" && reference.trim() ? reference.trim() : null;
 
   const amountCents = parseEuroToCents(amount);
   if (amountCents === null) return { error: "Montant invalide." };
@@ -397,15 +403,59 @@ export async function createInvoice(formData: FormData): Promise<{ error: string
 
   const projectIdValue = typeof projectId === "string" && projectId ? projectId : null;
   const issuedAt = new Date().toISOString();
-  const dueAtValue = typeof dueAt === "string" && dueAt ? new Date(dueAt).toISOString() : null;
+
+  // L'échéance se déduit des conditions de paiement du studio, qui sont
+  // déjà enregistrées, déjà modifiables dans les réglages et déjà publiées
+  // sur la page CGV. Les retaper à chaque facture n'ajoutait rien.
+  let dueAtValue = typeof dueAt === "string" && dueAt ? new Date(dueAt).toISOString() : null;
+  if (!dueAtValue) {
+    const { paymentTermsDays } = await getBusinessInfo();
+    const due = new Date(issuedAt);
+    due.setDate(due.getDate() + paymentTermsDays);
+    dueAtValue = due.toISOString();
+  }
 
   const invoiceId = crypto.randomUUID();
   const pdfPath = `${clientId}/invoices/${invoiceId}.pdf`;
 
+  // ── Insertion d'abord, PDF ensuite ────────────────────────────────────
+  //
+  // L'ordre inverse était possible tant que la référence était saisie à la
+  // main. Elle est maintenant attribuée par la base : le PDF ne peut plus
+  // être fabriqué avant, il ne connaîtrait pas son propre numéro.
+  //
+  // Bénéfice secondaire : une insertion refusée ne laisse plus un PDF
+  // orphelin dans le bucket, ce qu'elle faisait jusqu'ici.
+  const { data: created, error } = await supabaseAdmin
+    .from("invoices")
+    .insert({
+      id: invoiceId,
+      client_id: clientId,
+      project_id: projectIdValue,
+      reference: referenceValue,
+      amount_cents: amountCents,
+      status: "sent",
+      issued_at: issuedAt,
+      due_at: dueAtValue,
+      kind: kindValue,
+      deposit_percent: depositPercentValue,
+      total_project_cents: totalProjectCents,
+      line_items: toDbLineItems(lineItems),
+    })
+    .select("reference")
+    .single();
+
+  if (error || !created) {
+    if (error?.code === "23505") return { error: "Cette référence est déjà utilisée." };
+    return { error: "La création de la facture a échoué." };
+  }
+
+  const assignedReference = created.reference as string;
+
   if (pdfFile instanceof File && pdfFile.size > 0) {
-    // Admin supplied their own PDF (e.g. a custom-formatted invoice) — use it
-    // as-is instead of generating one from the template. The <input accept>
-    // is only a browser hint, so the real type is checked here too.
+    // PDF fourni par l'admin (facture mise en page ailleurs) — utilisé tel
+    // quel. L'attribut accept n'est qu'une indication du navigateur, d'où
+    // la vérification du type réel ici.
     if (pdfFile.type !== "application/pdf") return { error: "Le fichier personnalisé doit être un PDF." };
     await uploadClientFile(pdfPath, pdfFile);
   } else {
@@ -419,7 +469,7 @@ export async function createInvoice(formData: FormData): Promise<{ error: string
       : { data: null };
 
     const pdfBuffer = await generateInvoicePdfBuffer({
-      reference: reference.trim(),
+      reference: assignedReference,
       issuedAt,
       dueAt: dueAtValue,
       kind: kindValue,
@@ -435,23 +485,7 @@ export async function createInvoice(formData: FormData): Promise<{ error: string
     await uploadClientFileBuffer(pdfPath, pdfBuffer, "application/pdf");
   }
 
-  const { error } = await supabaseAdmin.from("invoices").insert({
-    id: invoiceId,
-    client_id: clientId,
-    project_id: projectIdValue,
-    reference: reference.trim(),
-    amount_cents: amountCents,
-    status: "sent",
-    pdf_storage_path: pdfPath,
-    issued_at: issuedAt,
-    due_at: dueAtValue,
-    kind: kindValue,
-    deposit_percent: depositPercentValue,
-    total_project_cents: totalProjectCents,
-    line_items: toDbLineItems(lineItems),
-  });
-
-  if (error) return { error: "La création de la facture a échoué." };
+  await supabaseAdmin.from("invoices").update({ pdf_storage_path: pdfPath }).eq("id", invoiceId);
 
   const actorName = await getActorDisplayName(admin.id);
 
@@ -460,9 +494,9 @@ export async function createInvoice(formData: FormData): Promise<{ error: string
     projectId: projectIdValue,
     type: "invoice",
     title: "Facture émise",
-    adminTitle: `${actorName} a émis la facture ${reference.trim()}`,
+    adminTitle: `${actorName} a émis la facture ${assignedReference}`,
     actorId: admin.id,
-    description: `Facture ${reference.trim()}`,
+    description: `Facture ${assignedReference}`,
   });
 
   revalidateClient(clientId);
@@ -523,6 +557,20 @@ export async function deleteInvoice(invoiceId: string) {
     .maybeSingle();
   if (!invoice) throw new Error("Facture introuvable.");
   if (invoice.status === "paid") throw new Error("Une facture payée ne peut pas être supprimée — annulez-la si besoin de la retirer.");
+
+  // Une facture numérotée par la séquence ne se supprime pas : son numéro
+  // fait partie d'une suite qui doit rester continue. La retirer laisserait
+  // exactement le trou que la numérotation automatique sert à empêcher.
+  //
+  // Le même refus existe en base (trigger forbid_numbered_invoice_delete),
+  // parce que le tableau de bord Supabase est précisément l'endroit où
+  // quelqu'un irait « réparer » une facture à la main. Ici, c'est pour le
+  // dire en français plutôt que de laisser remonter une erreur Postgres.
+  if (/^F-\d{4}-\d{3,}$/.test(invoice.reference)) {
+    throw new Error(
+      `La facture ${invoice.reference} est numérotée : elle s'annule, elle ne se supprime pas. Passez son statut à « Annulée » pour la retirer du suivi tout en gardant la numérotation continue.`
+    );
+  }
 
   const { error } = await supabaseAdmin.from("invoices").delete().eq("id", invoiceId);
   if (error) throw new Error("La suppression a échoué.");

@@ -27,7 +27,9 @@ export function NewClientInvoiceForm({ clientId }: { clientId: string }) {
       <input type="hidden" name="client_id" value={clientId} />
       <label className="text-xs text-kov-steel">
         Référence
-        <input type="text" name="reference" required placeholder="F-2026-01" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
+        {/* Attribuée par la base : la numérotation des factures doit rester
+            continue, et un numéro tapé de mémoire ne le garantit pas. */}
+        <input type="text" name="reference" placeholder="Automatique" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
       </label>
       <label className="text-xs text-kov-steel">
         Montant (€)

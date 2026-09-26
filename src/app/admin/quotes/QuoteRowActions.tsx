@@ -17,14 +17,13 @@ import { InvoiceKindFields } from "@/components/admin/invoices/InvoiceKindFields
 
 const FIELD_CLASS = "bg-transparent border px-3 py-2 text-kov-bone text-sm focus:outline-none focus:border-kov-red transition-colors";
 
-// A devis reference like "D-2026-01" suggests "F-2026-01" for the invoice —
-// just a starting point in the input, not enforced; anything else typed by
-// the admin is used as-is.
-function suggestInvoiceReference(quoteReference: string) {
-  return quoteReference.startsWith("D-") ? `F-${quoteReference.slice(2)}` : "";
-}
+// suggestInvoiceReference a disparu ici : elle transformait « D-2026-01 »
+// en « F-2026-01 » et rendait une chaîne vide pour tout ce qui ne commençait
+// pas par D-. La numérotation des factures est désormais attribuée par la
+// base, dans la transaction de l'insertion, donc dériver un numéro du devis
+// produirait des trous dans la suite des factures.
 
-function ConvertToInvoiceForm({ quoteId, reference, totalCents, onDone }: { quoteId: string; reference: string; totalCents: number; onDone: () => void }) {
+function ConvertToInvoiceForm({ quoteId, totalCents, onDone }: { quoteId: string; totalCents: number; onDone: () => void }) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -53,9 +52,7 @@ function ConvertToInvoiceForm({ quoteId, reference, totalCents, onDone }: { quot
         <input
           type="text"
           name="reference"
-          required
-          defaultValue={suggestInvoiceReference(reference)}
-          placeholder="F-2026-01"
+          placeholder="Automatique"
           className={FIELD_CLASS}
           style={{ borderColor: "var(--kov-border)" }}
         />
@@ -266,7 +263,7 @@ export function QuoteRowActions({
       {error && <span className="text-kov-red text-xs">{error}</span>}
 
       {converting && clientId && (
-        <ConvertToInvoiceForm quoteId={quoteId} reference={reference} totalCents={totalCents} onDone={() => setConverting(false)} />
+        <ConvertToInvoiceForm quoteId={quoteId} totalCents={totalCents} onDone={() => setConverting(false)} />
       )}
     </div>
   );
