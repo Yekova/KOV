@@ -3,12 +3,22 @@
 import { useRef, useState, useTransition, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/Button";
-import { GlassCard } from "@/components/ui/GlassCard";
+import { Modal } from "@/components/ui/Modal";
 import { Select } from "@/components/ui/Select";
+import { FIELD_CLASS } from "@/components/ui/fieldStyles";
+import { NewLeadForm } from "@/app/admin/leads/NewLeadForm";
+import { ProjectForm } from "@/components/admin/projects/ProjectForm";
 import { createLead } from "@/app/admin/leads/actions";
 import { createClient, createProject } from "@/app/admin/clients/actions";
 import { createTask } from "@/app/admin/projects/actions";
-import { PRIORITIES, PRIORITY_LABELS, LEAD_SOURCES, LEAD_SOURCE_LABELS } from "@/lib/admin/status";
+import { PRIORITIES, PRIORITY_LABELS } from "@/lib/admin/status";
+
+const MODAL_TITLES = {
+  lead: "Nouveau lead",
+  client: "Nouveau client",
+  project: "Nouveau projet",
+  task: "Nouvelle tâche",
+} as const;
 
 type PickerOption = { id: string; label: string };
 
@@ -17,9 +27,6 @@ type QuickActionMenuProps = {
   projects: PickerOption[];
   admins: PickerOption[];
 };
-
-const FIELD_CLASS =
-  "w-full bg-transparent border px-3 py-2 text-kov-bone text-sm focus:outline-none focus:border-kov-red transition-colors";
 
 type ActiveModal = "lead" | "client" | "project" | "task" | null;
 
@@ -138,42 +145,24 @@ export function QuickActionMenu({ clients, projects, admins }: QuickActionMenuPr
           document.body
         )}
 
-      {activeModal &&
-        createPortal(
-          <div
-            role="dialog"
-            aria-modal="true"
-            className="fixed inset-0 flex items-center justify-center px-4"
-            style={{ zIndex: "var(--z-modal)", background: "rgba(10,10,10,0.7)" }}
-            onClick={() => {
-              setActiveModal(null);
-              setError(null);
-            }}
-          >
-          <GlassCard variant="solid" className="w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
-            {activeModal === "lead" && (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <p className="font-display text-kov-bone text-lg uppercase mb-2">Nouveau lead</p>
-                <input name="name" placeholder="Nom" required className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
-                <input name="email" type="email" placeholder="Email" required className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
-                <input name="phone" placeholder="Téléphone (facultatif)" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
-                <input name="company" placeholder="Entreprise (facultatif)" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
-                <input name="project_type" placeholder="Type de projet (facultatif)" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
-                <input name="budget_eur" placeholder="Budget estimé € (facultatif)" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
-                <Select
-                  name="source"
-                  defaultValue="autre"
-                  placeholder="Source"
-                  options={LEAD_SOURCES.map((s) => ({ value: s, label: LEAD_SOURCE_LABELS[s] }))}
-                  className={FIELD_CLASS}
-                  style={{ borderColor: "var(--kov-border)" }}
-                />
-                <textarea name="message" placeholder="Message (facultatif)" rows={3} className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
-                {error && <p className="text-kov-red text-xs">{error}</p>}
-                <Button type="submit" variant="primary" className="w-full justify-center" disabled={isPending}>
-                  {isPending ? "Création…" : "Créer le lead"}
-                </Button>
-              </form>
+      {/* Le formulaire de lead et celui de projet sont maintenant importés
+          plutôt que recopiés ici. Les deux copies avaient déjà divergé :
+          celle-ci avait perdu le champ « délai » que NewLeadForm porte,
+          donc un lead créé depuis la barre du haut le perdait en silence. */}
+      <Modal
+        open={activeModal !== null}
+        onClose={() => {
+          setActiveModal(null);
+          setError(null);
+        }}
+        title={MODAL_TITLES[activeModal ?? "lead"]}
+        size="sm"
+        closeOnBackdrop={false}
+      >
+            {activeModal === "lead" && <NewLeadForm onSuccess={() => setActiveModal(null)} />}
+
+            {activeModal === "project" && (
+              <ProjectForm clients={clients} admins={admins} onSuccess={() => setActiveModal(null)} />
             )}
 
             {activeModal === "client" && (
@@ -196,43 +185,6 @@ export function QuickActionMenu({ clients, projects, admins }: QuickActionMenuPr
                 {error && <p className="text-kov-red text-xs">{error}</p>}
                 <Button type="submit" variant="primary" className="w-full justify-center" disabled={isPending}>
                   {isPending ? "Création…" : "Créer le client"}
-                </Button>
-              </form>
-            )}
-
-            {activeModal === "project" && (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <p className="font-display text-kov-bone text-lg uppercase mb-2">Nouveau projet</p>
-                <Select
-                  name="client_id"
-                  defaultValue=""
-                  placeholder="Choisir un client…"
-                  options={clients.map((c) => ({ value: c.id, label: c.label }))}
-                  className={FIELD_CLASS}
-                  style={{ borderColor: "var(--kov-border)" }}
-                />
-                <input name="name" placeholder="Nom du projet" required className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
-                <input name="category" placeholder="Catégorie" required className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
-                <Select
-                  name="project_manager_id"
-                  defaultValue=""
-                  placeholder="Chef de projet (facultatif)"
-                  options={admins.map((a) => ({ value: a.id, label: a.label }))}
-                  className={FIELD_CLASS}
-                  style={{ borderColor: "var(--kov-border)" }}
-                />
-                <input name="budget_eur" placeholder="Budget € (facultatif)" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
-                <Select
-                  name="priority"
-                  defaultValue=""
-                  placeholder="Priorité (facultatif)"
-                  options={PRIORITIES.map((p) => ({ value: p, label: PRIORITY_LABELS[p] }))}
-                  className={FIELD_CLASS}
-                  style={{ borderColor: "var(--kov-border)" }}
-                />
-                {error && <p className="text-kov-red text-xs">{error}</p>}
-                <Button type="submit" variant="primary" className="w-full justify-center" disabled={isPending}>
-                  {isPending ? "Création…" : "Créer le projet"}
                 </Button>
               </form>
             )}
@@ -273,10 +225,7 @@ export function QuickActionMenu({ clients, projects, admins }: QuickActionMenuPr
                 </Button>
               </form>
             )}
-          </GlassCard>
-          </div>,
-          document.body
-        )}
+      </Modal>
     </div>
   );
 }

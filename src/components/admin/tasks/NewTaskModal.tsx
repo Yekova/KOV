@@ -1,16 +1,13 @@
 "use client";
 
 import { useState, useTransition, type FormEvent } from "react";
-import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/Button";
-import { GlassCard } from "@/components/ui/GlassCard";
+import { Modal } from "@/components/ui/Modal";
 import { Select } from "@/components/ui/Select";
+import { FIELD_CLASS } from "@/components/ui/fieldStyles";
 import { createTask } from "@/app/admin/projects/actions";
 import { PRIORITIES, PRIORITY_LABELS } from "@/lib/admin/status";
 import type { PickerOption } from "./types";
-
-const FIELD_CLASS =
-  "w-full bg-transparent border px-3 py-2 text-kov-bone text-sm focus:outline-none focus:border-kov-red transition-colors";
 
 export function NewTaskModal({
   projects,
@@ -57,19 +54,8 @@ export function NewTaskModal({
         + Nouvelle tâche
       </Button>
 
-      {open &&
-        createPortal(
-          <div
-            role="dialog"
-            aria-modal="true"
-            className="fixed inset-0 flex items-center justify-center px-4"
-            style={{ zIndex: "var(--z-modal)", background: "rgba(10,10,10,0.7)" }}
-            onClick={() => setOpen(false)}
-          >
-            <GlassCard variant="solid" className="w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
+      <Modal open={open} onClose={() => setOpen(false)} title="Nouvelle tâche" size="sm" closeOnBackdrop={false}>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <p className="font-display text-kov-bone text-lg uppercase mb-2">Nouvelle tâche</p>
-
                 {fixedProjectId ? (
                   <input type="hidden" name="project_id" value={fixedProjectId} />
                 ) : (
@@ -116,10 +102,7 @@ export function NewTaskModal({
                   {isPending ? "Création…" : "Créer la tâche"}
                 </Button>
               </form>
-            </GlassCard>
-          </div>,
-          document.body
-        )}
+      </Modal>
     </>
   );
 }
