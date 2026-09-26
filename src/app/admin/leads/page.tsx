@@ -10,6 +10,7 @@ import { LeadSourceDonut } from "@/components/admin/leads/LeadSourceDonut";
 import { LeadsListView } from "@/components/admin/leads/LeadsListView";
 import { normalizeLeadSource } from "@/lib/admin/status";
 import type { LeadRow } from "@/components/admin/leads/types";
+import { NewLeadModal } from "./NewLeadModal";
 
 export const metadata: Metadata = {
   title: "Leads — Admin KOV",
@@ -89,6 +90,10 @@ export default async function AdminLeadsPage(props: PageProps<"/admin/leads">) {
           <h1 className="font-display text-kov-bone text-2xl uppercase">Leads</h1>
           <p className="text-kov-steel text-sm mt-1">Suivi et conversion de vos opportunités commerciales.</p>
         </div>
+        {/* Le bouton était enterré dans LeadsListView, sous cinq indicateurs,
+            un entonnoir et un camembert — alors que /admin/devis et
+            /admin/facturation mettent le leur dans l'en-tête. */}
+        <NewLeadModal />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">

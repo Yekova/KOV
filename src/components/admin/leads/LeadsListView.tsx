@@ -11,7 +11,6 @@ import { bulkUpdateLeadStatus, bulkAssignLead } from "@/app/admin/leads/actions"
 import { LeadStatusSelect } from "@/app/admin/leads/LeadStatusSelect";
 import { LeadSourceSelect } from "@/app/admin/leads/LeadSourceSelect";
 import { AssignLeadSelect } from "@/app/admin/leads/AssignLeadSelect";
-import { NewLeadModal } from "@/app/admin/leads/NewLeadModal";
 import { EmptyState } from "@/components/admin/EmptyState";
 import { LeadBoard } from "./LeadBoard";
 import type { LeadStatusRow } from "@/lib/leads/statuses";
@@ -165,7 +164,6 @@ export function LeadsListView({
             </button>
           ))}
         </div>
-        <NewLeadModal />
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
