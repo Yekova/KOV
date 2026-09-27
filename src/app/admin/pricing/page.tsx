@@ -64,6 +64,14 @@ export default async function PricingPage() {
             marché. Aucun montant ne se saisit à la main.
           </p>
         </div>
+
+        <Link
+          href="/admin/pricing/new"
+          className="px-6 py-3 bg-kov-red text-kov-white text-xs uppercase tracking-widest hover:bg-kov-red-signal transition-colors"
+          style={{ borderRadius: "var(--radius-sm)" }}
+        >
+          Nouveau chiffrage
+        </Link>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -113,7 +121,7 @@ export default async function PricingPage() {
       <section>
         <h2 className="text-xs uppercase tracking-widest text-kov-steel mb-4">Chiffrages</h2>
         {rows.length === 0 ? (
-          <EmptyState message="Aucun chiffrage. Le configurateur arrive à la prochaine étape ; en attendant, la grille montre ce que produit chaque offre par défaut." />
+          <EmptyState message="Aucun chiffrage pour l'instant. « Nouveau chiffrage » ouvre le configurateur ; la grille montre ce que produit chaque offre par défaut." />
         ) : (
           <ul className="space-y-2">
             {rows.map((row) => {
