@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { getActiveProjectsKpi, getMonthlyRevenueKpi } from "@/lib/admin/kpis";
+import { getActiveProjectsKpi, getConversionSnapshot, getMoneySnapshot } from "@/lib/admin/kpis";
+import { getAgenda } from "@/lib/admin/agenda";
+import { CommercialPipeline, type PipelineLead } from "@/components/admin/dashboard/CommercialPipeline";
+import { AgendaCard } from "@/components/admin/dashboard/AgendaCard";
 import { KpiCard } from "@/components/admin/dashboard/KpiCard";
 import { StatCard } from "@/components/admin/StatCard";
 import { DashboardHeader } from "@/components/admin/dashboard/DashboardHeader";
@@ -21,6 +24,16 @@ export const metadata: Metadata = {
 
 const CATEGORY_COLORS = ["var(--kov-red)", "#5B8DEF", "#9B6DFF", "#F5A524", "#3FB27F", "#F5629B"];
 const MONTH_LABELS = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
+
+// Trente jours, et ce n'est pas une valeur ronde prise au hasard : à trois
+// semaines la fenêtre ratait une facture due au vingt-cinquième jour, soit
+// exactement le genre d'échéance qu'on veut voir venir. Un mois est aussi
+// l'unité dans laquelle on pense sa trésorerie.
+//
+// Les jalons de projet tombent bien plus loin (cinq mois pour les projets
+// actuels) : ils ont leur place sur la fiche projet, pas dans un agenda
+// qu'on consulte le matin.
+const AGENDA_WINDOW_DAYS = 30;
 
 function formatEuros(cents: number): string {
   return (cents / 100).toLocaleString("fr-FR", { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + " €";
@@ -81,7 +94,10 @@ export default async function AdminDashboardPage() {
     supabaseAdmin.from("project_tasks").select("id", { count: "exact", head: true }),
     supabaseAdmin.from("project_tasks").select("id", { count: "exact", head: true }).eq("status", "in_progress"),
     supabaseAdmin.from("invoices").select("amount_cents").in("status", ["sent", "overdue"]),
-    supabaseAdmin.from("leads").select("id, status, created_at"),
+    // Élargi : la même lecture sert au compteur de leads actifs et au
+    // pipeline commercial, qui a besoin du nom, de l'entreprise et du
+    // budget. Une requête, deux usages.
+    supabaseAdmin.from("leads").select("id, name, company, project_type, status, created_at, budget_cents"),
     supabaseAdmin
       .from("task_time_entries")
       .select("minutes")
@@ -171,6 +187,15 @@ export default async function AdminDashboardPage() {
     dueDate: t.due_date,
   }));
 
+  const pipelineLeads: PipelineLead[] = (allLeads ?? []).map((l) => ({
+    id: l.id,
+    name: l.name,
+    company: l.company,
+    projectType: l.project_type,
+    budgetCents: l.budget_cents,
+    status: l.status,
+  }));
+
   const leadFeedItems = (recentLeads ?? []).map((l) => ({
     id: l.id,
     name: l.name,
@@ -181,9 +206,11 @@ export default async function AdminDashboardPage() {
     budget_cents: l.budget_cents,
   }));
 
-  const [activeProjectsKpi, monthlyRevenueKpi] = await Promise.all([
+  const [activeProjectsKpi, money, conversion, agenda] = await Promise.all([
     Promise.resolve(getActiveProjectsKpi(projectRows)),
-    getMonthlyRevenueKpi(),
+    getMoneySnapshot(),
+    getConversionSnapshot(),
+    getAgenda(AGENDA_WINDOW_DAYS),
   ]);
   const currentAdminName = adminRows.find((a) => a.id === user.id)?.full_name ?? null;
 
@@ -254,14 +281,30 @@ export default async function AdminDashboardPage() {
       <main className="relative px-6 py-10 max-w-[1800px] mx-auto w-full space-y-6">
         <DashboardHeader fullName={currentAdminName} />
 
+        {/* ── La ligne d'argent ──────────────────────────────────────────
+            Signé et encaissé se lisent ensemble : c'est leur écart qui est
+            l'information. Le dashboard n'affichait que l'encaissé du mois,
+            donc un studio qui avait vendu sans être payé ne voyait qu'un
+            zéro sans cause. */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-          <KpiCard
-            label="Chiffre d'affaires (mois)"
-            value={formatEuros(monthlyRevenueKpi.value)}
-            evolutionPercent={monthlyRevenueKpi.evolutionPercent}
-            isNew={monthlyRevenueKpi.isNew}
-            evolutionCaption="vs mois dernier"
-            sparkline={monthlyRevenueKpi.sparkline}
+          <StatCard
+            label="CA signé"
+            value={formatEuros(money.signedCents)}
+            caption={`${money.signedCount} devis accepté${money.signedCount > 1 ? "s" : ""}`}
+          />
+          <StatCard
+            label="CA encaissé"
+            value={formatEuros(money.collectedCents)}
+            caption={
+              money.collectedCount > 0
+                ? `${money.collectedCount} facture${money.collectedCount > 1 ? "s" : ""} payée${money.collectedCount > 1 ? "s" : ""}`
+                : "Aucune facture réglée"
+            }
+          />
+          <StatCard
+            label="Reste à encaisser"
+            value={formatEuros(pendingInvoiceCents)}
+            caption={`${(pendingInvoiceRows ?? []).length} facture${(pendingInvoiceRows ?? []).length > 1 ? "s" : ""} en attente`}
           />
           <KpiCard
             label="Projets en cours"
@@ -271,40 +314,50 @@ export default async function AdminDashboardPage() {
             evolutionCaption="nouveaux ce mois"
             sparkline={activeProjectsKpi.sparkline}
           />
+          <StatCard label="Leads actifs" value={String(activeLeads.length)} caption={`+${newLeadsThisMonth} ce mois`} />
+          {/* Le taux ne s'affiche jamais seul : « 100 % » sur deux dossiers
+              clos dit surtout qu'on n'a encore rien perdu. Le dénominateur
+              est ce qui permet de savoir si le chiffre veut dire quelque
+              chose, donc il reste visible. */}
           <StatCard
-            label="Tâches en cours"
-            value={`${inProgressTaskCount ?? 0} / ${totalTaskCount ?? 0}`}
-            caption={`${tasksInProgressPercent}% du total`}
-            progress={tasksInProgressPercent}
-            progressColor="#F5A524"
-          />
-          <StatCard
-            label="Factures en attente"
-            value={formatEuros(pendingInvoiceCents)}
-            caption={`${(pendingInvoiceRows ?? []).length} facture${(pendingInvoiceRows ?? []).length > 1 ? "s" : ""}`}
-          />
-          <StatCard label="Leads en cours" value={String(activeLeads.length)} caption={`+${newLeadsThisMonth} ce mois`} />
-          <StatCard
-            label="Heures aujourd'hui"
-            value={`${Math.floor(todayHours)}h${String(todayMinutes % 60).padStart(2, "0")}`}
-            caption="Objectif : 8h"
-            progress={Math.min(100, Math.round((todayHours / 8) * 100))}
-            progressColor="#3FB27F"
+            label="Taux de conversion"
+            value={conversion.percent === null ? "—" : `${conversion.percent}%`}
+            caption={
+              conversion.resolved === 0
+                ? "Aucun lead encore clos"
+                : `${conversion.won} gagné${conversion.won > 1 ? "s" : ""} sur ${conversion.resolved} clos`
+            }
           />
         </div>
 
+        {/* ── Le haut du tunnel ──────────────────────────────────────────
+            Le pipeline commercial passe devant le pipeline projet : ce qui
+            n'est pas encore vendu se regarde avant ce qui l'est déjà. */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           <div className="xl:col-span-2">
-            <ProjectPipeline initialProjects={pipelineProjects} />
+            <CommercialPipeline leads={pipelineLeads} statuses={leadStatuses} />
           </div>
-          <LeadFeed leads={leadFeedItems} statuses={leadStatuses} />
+          <AgendaCard events={agenda} windowDays={AGENDA_WINDOW_DAYS} />
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          <TeamWorkload members={teamMembers} />
           <div className="xl:col-span-2 space-y-6">
-            <ProjectTable projects={recentProjectsForTable} title="Projets récents" viewAllHref="/admin/projects" />
+            <ProjectTable projects={recentProjectsForTable} title="Projets en cours" viewAllHref="/admin/projects" />
             <TaskFeed tasks={taskFeedItems} />
+          </div>
+          <div className="space-y-6">
+            <LeadFeed leads={leadFeedItems} statuses={leadStatuses} />
+            <TeamWorkload members={teamMembers} />
+            {/* Les heures du jour quittent la ligne d'indicateurs : c'est
+                une mesure de charge, pas un indicateur d'activité
+                commerciale. Elle se lit à côté de la charge d'équipe. */}
+            <StatCard
+              label="Heures aujourd'hui"
+              value={`${Math.floor(todayHours)}h${String(todayMinutes % 60).padStart(2, "0")}`}
+              caption={`${inProgressTaskCount ?? 0} tâche${(inProgressTaskCount ?? 0) > 1 ? "s" : ""} en cours sur ${totalTaskCount ?? 0}`}
+              progress={tasksInProgressPercent}
+              progressColor="#F5A524"
+            />
           </div>
         </div>
 
@@ -315,7 +368,14 @@ export default async function AdminDashboardPage() {
           <Donut title="Répartition des revenus" segments={categorySegments} centerLabel="Payé (12 mois)" formatValue={formatEuros} />
         </div>
 
-        <ActivityFeed items={activity ?? []} />
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          <div className="xl:col-span-2">
+            <ActivityFeed items={activity ?? []} />
+          </div>
+          {/* Le pipeline projet reste, mais en second plan : il dit où en
+              est ce qui est vendu, pas ce qu'il reste à vendre. */}
+          <ProjectPipeline initialProjects={pipelineProjects} />
+        </div>
       </main>
     </div>
   );

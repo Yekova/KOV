@@ -100,3 +100,78 @@ export async function getMonthlyRevenueKpi(): Promise<KpiResult> {
 
   return { value: currentSum, evolutionPercent: percent, isNew, sparkline };
 }
+
+// ── Les deux chiffres qui manquaient au tableau de bord ──────────────────
+//
+// Le dashboard affichait « chiffre d'affaires du mois », calculé sur les
+// factures payées. C'est le CA encaissé, et c'est une information — mais
+// prise seule elle ne dit rien de ce qui a été vendu. Un studio qui a signé
+// pour 2 700 € et encaissé 0 € doit voir les deux nombres l'un à côté de
+// l'autre : c'est leur écart qui est l'information, pas leur valeur.
+//
+// Aucun des deux n'invente quoi que ce soit : le premier somme les devis
+// dont le client a dit oui, le second les factures effectivement réglées.
+
+export type MoneySnapshot = {
+  signedCents: number;
+  signedCount: number;
+  collectedCents: number;
+  collectedCount: number;
+};
+
+// Pas de champ « signé moins encaissé » ici, volontairement. Il supposerait
+// que toute facture provienne d'un devis accepté, ce qui n'est pas le cas :
+// createInvoice permet d'émettre une facture sans devis, et les données
+// actuelles le montrent déjà (5 050 € facturés pour 2 700 € signés). Le
+// reste à encaisser se lit sur les factures réellement émises, pas sur une
+// soustraction qui aurait l'air juste.
+
+export async function getMoneySnapshot(): Promise<MoneySnapshot> {
+  const [{ data: accepted }, { data: paid }] = await Promise.all([
+    supabaseAdmin.from("quotes").select("total_cents").eq("status", "accepted"),
+    supabaseAdmin.from("invoices").select("amount_cents").eq("status", "paid"),
+  ]);
+
+  const signedCents = (accepted ?? []).reduce((sum, row) => sum + (row.total_cents ?? 0), 0);
+  const collectedCents = (paid ?? []).reduce((sum, row) => sum + (row.amount_cents ?? 0), 0);
+
+  return {
+    signedCents,
+    signedCount: (accepted ?? []).length,
+    collectedCents,
+    collectedCount: (paid ?? []).length,
+  };
+}
+
+export type ConversionSnapshot = {
+  /** Null quand aucun lead n'est encore clos : un taux sans dénominateur
+   *  n'est pas un taux, et « 0 % » se lirait comme un échec. */
+  percent: number | null;
+  won: number;
+  resolved: number;
+};
+
+/** Le taux de conversion, avec son dénominateur.
+ *
+ *  Affiché seul, un pourcentage calculé sur deux leads clos ressemble à un
+ *  indicateur de vanité — et « 100 % » sur deux dossiers dit surtout qu'on
+ *  n'a encore rien perdu. La carte montre donc toujours « n gagnés sur m
+ *  clos » à côté : c'est ce qui permet de savoir si le chiffre veut dire
+ *  quelque chose.
+ *
+ *  Aucune évolution mois sur mois : à ce volume, elle serait du bruit
+ *  présenté comme une tendance. */
+export async function getConversionSnapshot(): Promise<ConversionSnapshot> {
+  const { data: statuses } = await supabaseAdmin.from("lead_statuses").select("key, is_won, is_lost");
+  const wonKeys = new Set((statuses ?? []).filter((s) => s.is_won).map((s) => s.key as string));
+  const lostKeys = new Set((statuses ?? []).filter((s) => s.is_lost).map((s) => s.key as string));
+
+  const { data: leads } = await supabaseAdmin.from("leads").select("status");
+  const rows = leads ?? [];
+
+  const won = rows.filter((l) => wonKeys.has(l.status as string)).length;
+  const lost = rows.filter((l) => lostKeys.has(l.status as string)).length;
+  const resolved = won + lost;
+
+  return { percent: resolved > 0 ? Math.round((won / resolved) * 100) : null, won, resolved };
+}
