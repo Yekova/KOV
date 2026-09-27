@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { EmptyState } from "@/components/admin/EmptyState";
+import { DeleteConfigurationButton } from "@/components/admin/pricing/DeleteConfigurationButton";
 import { getDefaultSettingsVersionId, getPricingCatalog, getOldestBenchmarkDate } from "@/lib/pricing/catalog";
 import { computeCostOfSale } from "@/lib/pricing/costOfSale";
 import { formatEuros } from "@/lib/pricing/money";
@@ -25,7 +26,7 @@ export default async function PricingPage() {
     getOldestBenchmarkDate(),
     supabaseAdmin
       .from("pricing_configurations")
-      .select("id, title, status, version, created_at, snapshot")
+      .select("id, title, status, version, created_at, snapshot, quote_id")
       .order("created_at", { ascending: false })
       .limit(25),
   ]);
@@ -127,11 +128,14 @@ export default async function PricingPage() {
             {rows.map((row) => {
               const snapshot = row.snapshot as { priceExclVatCents?: number } | null;
               return (
-                <li key={row.id as string}>
+                <li
+                  key={row.id as string}
+                  className="flex items-center border transition-colors hover:border-kov-red"
+                  style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
+                >
                   <Link
                     href={`/admin/pricing/${row.id}`}
-                    className="flex flex-wrap items-baseline justify-between gap-3 border px-4 py-3 transition-colors hover:border-kov-red"
-                    style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
+                    className="flex flex-wrap items-baseline justify-between gap-3 flex-1 min-w-0 px-4 py-3"
                   >
                     <span className="text-kov-bone text-sm">
                       {row.title as string}
@@ -144,6 +148,16 @@ export default async function PricingPage() {
                       {snapshot?.priceExclVatCents != null && <> · {formatEuros(snapshot.priceExclVatCents)} HT</>}
                     </span>
                   </Link>
+                  {/* Le bouton vit à CÔTÉ du lien, pas dedans : un bouton
+                      imbriqué dans une ancre n'est pas du HTML valide, et
+                      le clavier s'y perd. */}
+                  {!row.quote_id && (
+                    <DeleteConfigurationButton
+                      configurationId={row.id as string}
+                      title={row.title as string}
+                      compact
+                    />
+                  )}
                 </li>
               );
             })}

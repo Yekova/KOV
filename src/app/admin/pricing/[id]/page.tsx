@@ -109,6 +109,7 @@ export default async function PricingConfigurationPage({ params }: { params: Pro
 
         <ConfigurationActions
           configurationId={id}
+          title={row.title as string}
           status={row.status as string}
           hasQuote={Boolean(row.quote_id)}
         />

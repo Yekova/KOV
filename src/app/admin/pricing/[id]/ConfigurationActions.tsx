@@ -6,16 +6,19 @@ import { toast } from "sonner";
 import { Modal } from "@/components/ui/Modal";
 import { FIELD_CLASS, FIELD_LABEL, FIELD_STYLE } from "@/components/ui/fieldStyles";
 import { AlertList } from "@/components/admin/pricing/AlertList";
-import { duplicateConfiguration, markConfigurationLost } from "../new/actions";
+import { duplicateConfiguration, markConfigurationLost } from "../actions";
+import { DeleteConfigurationButton } from "@/components/admin/pricing/DeleteConfigurationButton";
 import { generateQuoteFromConfiguration } from "./actions";
 import type { PricingAlert } from "@/lib/pricing/alerts";
 
 export function ConfigurationActions({
   configurationId,
+  title,
   status,
   hasQuote,
 }: {
   configurationId: string;
+  title: string;
   status: string;
   hasQuote: boolean;
 }) {
@@ -98,6 +101,15 @@ export function ConfigurationActions({
         >
           Marquer perdu
         </button>
+      )}
+
+      {!hasQuote && (
+        <DeleteConfigurationButton
+          configurationId={configurationId}
+          title={title}
+          redirectTo="/admin/pricing"
+          label="Supprimer"
+        />
       )}
 
       {/* ── La dérogation ──────────────────────────────────────────────── */}
