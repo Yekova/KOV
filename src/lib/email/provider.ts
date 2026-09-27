@@ -13,6 +13,10 @@ export interface SendEmailInput {
   html: string;
   text?: string;
   attachments?: EmailAttachment[];
+  /** Déduplique un envoi rejoué. Honoré par Resend (24 h), ignoré par les
+   *  autres fournisseurs, qui n'ont rien d'équivalent. Indispensable aux
+   *  relances : un cron relancé ne doit pas écrire deux fois au client. */
+  idempotencyKey?: string;
 }
 
 export interface SendEmailResult {
