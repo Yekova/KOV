@@ -119,22 +119,24 @@ Je ne change rien : la spec dit « le test signale sans modifier les taux », et
 
 ## 3. Schéma proposé
 
-Treize tables, toutes préfixées `pricing_`, toutes en RLS sans policy (lecture par `supabaseAdmin`, convention établie du dépôt depuis `quotes` et `business_settings`).
+Douze tables, toutes préfixées `pricing_`, toutes en RLS sans policy (lecture par `supabaseAdmin`, convention établie du dépôt depuis `quotes` et `business_settings`).
 
 ### Référentiel — ce qui se paramètre
 
 | Table | Contenu | Lien |
 |---|---|---|
 | `pricing_settings_versions` | année, régime (`micro` / `is`), rémunération cible, taux de cotisations, charges fixes, amortissements, jours facturables, coefficients, TJM plancher, marge cible, indexation, TVA + date d'effet | racine de toute version |
-| `pricing_roles` | code, libellé, taux de vente, coût freelance, `internal_only`, `default_subcontracted` | `settings_version_id` |
-| `pricing_offers` | clé, libellé, prix de référence, coûts externes, délai, échéancier par défaut (jsonb) | `settings_version_id` |
-| `pricing_modules` | clé, libellé, round (R0–R7), unité de quantité, coûts externes, facultatif, dépendances, incompatibilités | `settings_version_id` |
+| `pricing_roles` | code, libellé, taux de vente, coût freelance, `internal_only`, `default_subcontracted` | catalogue |
+| `pricing_offers` | clé, libellé, prix de référence, coûts externes, délai, échéancier par défaut (jsonb) | catalogue |
+| `pricing_modules` | clé, libellé, round (R0–R7), unité de quantité, coûts externes, facultatif, dépendances, incompatibilités | catalogue |
 | `pricing_module_role_days` | jours `numeric(6,2)` par rôle | `module_id` + `role_code` |
 | `pricing_offer_default_modules` | composition par défaut d'une offre, quantité par défaut | `offer_id` + `module_id` |
-| `pricing_subscriptions` | formule, prix mensuel, jours mensuels, externes mensuels, engagement minimal | `settings_version_id` |
+| `pricing_subscriptions` | formule, prix mensuel, jours mensuels, externes mensuels, engagement minimal | catalogue |
 | `pricing_market_bands` | bande freelance / agence / premium par offre | `offer_id` |
 | `pricing_market_benchmarks` | libellé, valeur, unité, séniorité, zone, source, URL, date de consultation, nature | autonome |
 | `pricing_text_templates` | inclus / non inclus / hypothèses / description de module | clé |
+
+**Une seule table est versionnée : `pricing_settings_versions`.** Le reste du catalogue porte des valeurs de BASE 2027 que l'indexation de la version déplace toutes ensemble — taux, prix de référence, bandes, abonnements. Cloner le catalogue à chaque changement de taux aurait produit soixante lignes dupliquées par an pour un seul coefficient, et deux jeux de chiffres à tenir d'accord. L'histoire d'un devis, elle, est protégée par son `snapshot`.
 
 `archived_at` partout, **jamais de suppression physique** : la spec l'exige pour les modules déjà utilisés, et la même règle appliquée partout évite d'avoir à se demander laquelle des deux s'applique.
 

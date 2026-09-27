@@ -64,6 +64,21 @@ export const adminNavigation: AdminNavSection[] = [
         ),
       },
       {
+        // Avant les devis, parce que c'est l'ordre du travail réel : on
+        // chiffre, puis on édite le devis à partir du chiffrage.
+        id: "pricing",
+        label: "Pricing",
+        href: "/admin/pricing",
+        icon: (
+          <>
+            <path d="M4 20V6a2 2 0 0 1 2-2h8l6 6v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" />
+            <path d="M14 4v6h6" />
+            <path d="M12 12v6" />
+            <path d="M9.5 14h5" />
+          </>
+        ),
+      },
+      {
         id: "quotes",
         label: "Devis",
         href: "/admin/quotes",
