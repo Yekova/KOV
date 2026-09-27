@@ -27,7 +27,7 @@ export default async function PricingConfigurationPage({ params }: { params: Pro
 
   const { data: row } = await supabaseAdmin
     .from("pricing_configurations")
-    .select("id, title, status, version, parent_id, segment, client_vat_regime, selection, conditions, snapshot, settings_version_id, client_id, lead_id, quote_id, lost_reason, created_at")
+    .select("id, title, status, version, parent_id, segment, client_vat_regime, selection, conditions, snapshot, settings_version_id, client_id, lead_id, quote_id, lost_reason, override_reason, override_at, created_at")
     .eq("id", id)
     .maybeSingle();
 
@@ -93,9 +93,25 @@ export default async function PricingConfigurationPage({ params }: { params: Pro
           {row.lost_reason && (
             <p className="text-kov-steel text-sm mt-2">Motif de perte : {row.lost_reason as string}</p>
           )}
+          {/* La dérogation reste lisible sur la fiche, pas seulement en
+              base : un devis parti malgré une alerte bloquante doit porter
+              la raison à côté de lui, pas dans un journal qu'on n'ouvre
+              jamais. */}
+          {row.override_reason && (
+            <p className="text-kov-steel text-sm mt-2">
+              Dérogation : {row.override_reason as string}
+              {row.override_at && (
+                <> · {new Date(row.override_at as string).toLocaleDateString("fr-FR")}</>
+              )}
+            </p>
+          )}
         </div>
 
-        <ConfigurationActions configurationId={id} status={row.status as string} />
+        <ConfigurationActions
+          configurationId={id}
+          status={row.status as string}
+          hasQuote={Boolean(row.quote_id)}
+        />
       </div>
 
       {quote && (

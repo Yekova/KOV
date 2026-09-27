@@ -5,20 +5,30 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Modal } from "@/components/ui/Modal";
 import { FIELD_CLASS, FIELD_LABEL, FIELD_STYLE } from "@/components/ui/fieldStyles";
+import { AlertList } from "@/components/admin/pricing/AlertList";
 import { duplicateConfiguration, markConfigurationLost } from "../new/actions";
+import { generateQuoteFromConfiguration } from "./actions";
+import type { PricingAlert } from "@/lib/pricing/alerts";
 
 export function ConfigurationActions({
   configurationId,
   status,
+  hasQuote,
 }: {
   configurationId: string;
   status: string;
+  hasQuote: boolean;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+
   const [lostOpen, setLostOpen] = useState(false);
   const [reason, setReason] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [savingLost, setSavingLost] = useState(false);
+
+  const [generating, setGenerating] = useState(false);
+  const [blockingAlerts, setBlockingAlerts] = useState<PricingAlert[] | null>(null);
+  const [overrideReason, setOverrideReason] = useState("");
 
   function handleDuplicate() {
     startTransition(async () => {
@@ -32,21 +42,43 @@ export function ConfigurationActions({
     });
   }
 
-  async function handleLost() {
-    setSaving(true);
-    const result = await markConfigurationLost(configurationId, reason);
-    setSaving(false);
+  async function generate(withOverride?: string) {
+    setGenerating(true);
+    const result = await generateQuoteFromConfiguration(configurationId, withOverride);
+    setGenerating(false);
+
+    // Un refus bloquant n'est pas une erreur de saisie : on montre CE QUI
+    // bloque, avec son correctif, plutôt qu'un toast rouge qui disparaît
+    // avant d'avoir été lu.
+    if (result.blockingAlerts) {
+      setBlockingAlerts(result.blockingAlerts);
+      return;
+    }
     if (result.error) {
       toast.error(result.error);
       return;
     }
-    toast.success("Chiffrage marqué perdu.");
-    setLostOpen(false);
+
+    setBlockingAlerts(null);
+    setOverrideReason("");
+    toast.success(`Devis ${result.reference} généré.`);
     router.refresh();
   }
 
   return (
     <div className="flex flex-wrap gap-2">
+      {!hasQuote && status === "draft" && (
+        <button
+          type="button"
+          onClick={() => generate()}
+          disabled={generating}
+          className="px-5 py-2.5 bg-kov-red text-kov-white text-xs uppercase tracking-widest hover:bg-kov-red-signal transition-colors disabled:opacity-50"
+          style={{ borderRadius: "var(--radius-sm)" }}
+        >
+          {generating ? "Génération…" : "Générer le devis"}
+        </button>
+      )}
+
       <button
         type="button"
         onClick={handleDuplicate}
@@ -57,7 +89,7 @@ export function ConfigurationActions({
         {pending ? "…" : "Dupliquer en v+1"}
       </button>
 
-      {status !== "lost" && (
+      {status !== "lost" && !hasQuote && (
         <button
           type="button"
           onClick={() => setLostOpen(true)}
@@ -68,6 +100,59 @@ export function ConfigurationActions({
         </button>
       )}
 
+      {/* ── La dérogation ──────────────────────────────────────────────── */}
+      <Modal
+        open={blockingAlerts !== null}
+        onClose={() => setBlockingAlerts(null)}
+        title="Ce chiffrage est bloqué"
+        size="md"
+        closeOnBackdrop={false}
+      >
+        <div className="space-y-5">
+          <p className="text-kov-steel text-sm">
+            La génération est refusée tant que ceci n&apos;est pas corrigé. Vous pouvez passer outre, mais le
+            motif sera enregistré avec votre nom et la date.
+          </p>
+
+          {blockingAlerts && <AlertList alerts={blockingAlerts} />}
+
+          <div>
+            <label className={FIELD_LABEL} htmlFor="override-reason">
+              Motif de la dérogation <span className="text-kov-red">*</span>
+            </label>
+            <input
+              id="override-reason"
+              value={overrideReason}
+              onChange={(event) => setOverrideReason(event.target.value)}
+              placeholder="Projet de référence accepté à perte, validé le…"
+              className={`${FIELD_CLASS} mt-1`}
+              style={FIELD_STYLE}
+            />
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => generate(overrideReason)}
+              disabled={generating || !overrideReason.trim()}
+              className="px-5 py-2.5 bg-kov-red text-kov-white text-xs uppercase tracking-widest hover:bg-kov-red-signal transition-colors disabled:opacity-50"
+              style={{ borderRadius: "var(--radius-sm)" }}
+            >
+              {generating ? "…" : "Générer malgré tout"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setBlockingAlerts(null)}
+              className="px-5 py-2.5 border text-xs uppercase tracking-widest text-kov-steel hover:text-kov-bone transition-colors"
+              style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
+            >
+              Revenir au chiffrage
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ── La perte ───────────────────────────────────────────────────── */}
       <Modal open={lostOpen} onClose={() => setLostOpen(false)} title="Marquer ce chiffrage perdu" size="sm">
         <div className="space-y-4">
           <div>
@@ -92,12 +177,23 @@ export function ConfigurationActions({
           <div className="flex gap-2">
             <button
               type="button"
-              onClick={handleLost}
-              disabled={saving || !reason.trim()}
+              onClick={async () => {
+                setSavingLost(true);
+                const result = await markConfigurationLost(configurationId, reason);
+                setSavingLost(false);
+                if (result.error) {
+                  toast.error(result.error);
+                  return;
+                }
+                toast.success("Chiffrage marqué perdu.");
+                setLostOpen(false);
+                router.refresh();
+              }}
+              disabled={savingLost || !reason.trim()}
               className="px-5 py-2.5 bg-kov-red text-kov-white text-xs uppercase tracking-widest hover:bg-kov-red-signal transition-colors disabled:opacity-50"
               style={{ borderRadius: "var(--radius-sm)" }}
             >
-              {saving ? "…" : "Confirmer"}
+              {savingLost ? "…" : "Confirmer"}
             </button>
             <button
               type="button"

@@ -12,6 +12,7 @@ import { createSignatureRequest } from "@/lib/yousign/client";
 import { quoteEmailHtml, quoteEmailSubject } from "@/lib/email/quoteEmail";
 import { isQuoteStatus, QUOTE_STATUS_LABELS, isInvoiceKind, type InvoiceKind } from "@/lib/portal/status";
 import { toDbLineItems, fromDbLineItems, parseLineItemsFromForm } from "@/lib/billing/quoteLineItems";
+import type { CreateQuoteRecordInput, CreateQuoteRecordResult } from "@/lib/billing/quoteRecord";
 import { generateInvoicePdfBuffer } from "@/lib/billing/generatePdf";
 import { revalidateClient } from "@/lib/revalidateClient";
 import { getBusinessInfo } from "@/lib/billing/businessInfo";
@@ -34,6 +35,18 @@ function parseRequiredEuroToCents(value: FormDataEntryValue | null): number | nu
 // Returns { error } instead of throwing for expected/validation failures —
 // see the comment on convertQuoteToInvoice for why (Next.js 16 redacts
 // thrown Server Action error messages in production).
+//
+// ── POURQUOI CETTE FONCTION EST COUPÉE EN DEUX ───────────────────────────
+//
+// createQuote ne prenait qu'un FormData, et c'était la seule porte d'entrée
+// du module. Le configurateur de pricing, lui, arrive avec un objet déjà
+// calculé : passer par un FormData construit à la main aurait été un
+// déguisement, et aurait perdu le typage au passage.
+//
+// Le corps est donc descendu dans createQuoteRecord, et createQuote est
+// devenue l'enveloppe qui parse le formulaire. Aucun comportement ne
+// change : même ordre d'écriture, même gestion d'erreur, même journal.
+// C'est exactement le découpage déjà fait pour createProjectRow.
 export async function createQuote(formData: FormData): Promise<{ error: string | null }> {
   const admin = await requireAdmin();
 
@@ -48,25 +61,43 @@ export async function createQuote(formData: FormData): Promise<{ error: string |
 
   if (typeof recipientName !== "string" || !recipientName.trim()) return { error: "Nom du destinataire requis." };
 
-  // Laissée vide, la référence est attribuée par la base (trigger
-  // assign_document_reference). Une valeur fournie est respectée, pour
-  // reprendre une numérotation d'historique.
-  const referenceValue = typeof reference === "string" && reference.trim() ? reference.trim() : null;
-
   const lineItems = parseLineItemsFromForm(formData.get("line_items"));
   if (lineItems.length === 0) return { error: "Au moins une ligne de devis est requise." };
-  const subtotalCents = lineItems.reduce((sum, item) => sum + item.quantity * item.unitPriceCents, 0);
-  const discountCents = Math.min(subtotalCents, parseEuroToCents(discountEur));
-  const totalCents = subtotalCents - discountCents;
 
-  const clientIdValue = typeof clientId === "string" && clientId ? clientId : null;
-  const leadIdValue = typeof leadId === "string" && leadId ? leadId : null;
-  // La colonne existait depuis la création de la table, lue trois fois par
-  // convertQuoteToInvoice et écrite par personne. C'est la ligne qui
-  // manquait pour qu'une facture connaisse son projet.
-  const projectIdValue = typeof projectId === "string" && projectId ? projectId : null;
-  const recipientEmailValue = typeof recipientEmail === "string" && recipientEmail.trim() ? recipientEmail.trim() : null;
-  const validUntilValue = typeof validUntil === "string" && validUntil ? validUntil : null;
+  const pdfFile = formData.get("pdf_file");
+  if (pdfFile instanceof File && pdfFile.size > 0 && pdfFile.type !== "application/pdf") {
+    return { error: "Le fichier personnalisé doit être un PDF." };
+  }
+
+  const subtotalCents = lineItems.reduce((sum, item) => sum + item.quantity * item.unitPriceCents, 0);
+
+  const result = await createQuoteRecord({
+    // Laissée vide, la référence est attribuée par la base (trigger
+    // assign_document_reference). Une valeur fournie est respectée, pour
+    // reprendre une numérotation d'historique.
+    reference: typeof reference === "string" && reference.trim() ? reference.trim() : null,
+    recipientName: recipientName.trim(),
+    recipientEmail: typeof recipientEmail === "string" && recipientEmail.trim() ? recipientEmail.trim() : null,
+    clientId: typeof clientId === "string" && clientId ? clientId : null,
+    leadId: typeof leadId === "string" && leadId ? leadId : null,
+    // La colonne existait depuis la création de la table, lue trois fois par
+    // convertQuoteToInvoice et écrite par personne. C'est la ligne qui
+    // manquait pour qu'une facture connaisse son projet.
+    projectId: typeof projectId === "string" && projectId ? projectId : null,
+    validUntil: typeof validUntil === "string" && validUntil ? validUntil : null,
+    lineItems,
+    discountCents: Math.min(subtotalCents, parseEuroToCents(discountEur)),
+    customPdf: pdfFile instanceof File && pdfFile.size > 0 ? pdfFile : null,
+    actorId: admin.id,
+  });
+
+  return { error: result.error };
+}
+
+export async function createQuoteRecord(input: CreateQuoteRecordInput): Promise<CreateQuoteRecordResult> {
+  const subtotalCents = input.lineItems.reduce((sum, item) => sum + item.quantity * item.unitPriceCents, 0);
+  const discountCents = Math.min(subtotalCents, Math.max(0, input.discountCents));
+  const totalCents = subtotalCents - discountCents;
 
   const quoteId = crypto.randomUUID();
   const pdfPath = `quotes/${quoteId}.pdf`;
@@ -79,17 +110,17 @@ export async function createQuote(formData: FormData): Promise<{ error: string |
     .from("quotes")
     .insert({
       id: quoteId,
-      client_id: clientIdValue,
-      lead_id: leadIdValue,
-      project_id: projectIdValue,
-      reference: referenceValue,
-      recipient_name: recipientName.trim(),
-      recipient_email: recipientEmailValue,
-      line_items: toDbLineItems(lineItems),
+      client_id: input.clientId,
+      lead_id: input.leadId,
+      project_id: input.projectId,
+      reference: input.reference,
+      recipient_name: input.recipientName,
+      recipient_email: input.recipientEmail,
+      line_items: toDbLineItems(input.lineItems),
       subtotal_cents: subtotalCents,
       discount_cents: discountCents,
       total_cents: totalCents,
-      valid_until: validUntilValue,
+      valid_until: input.validUntil,
       created_at: createdAt,
     })
     .select("reference")
@@ -102,21 +133,23 @@ export async function createQuote(formData: FormData): Promise<{ error: string |
 
   const assignedReference = created.reference as string;
 
-  const pdfFile = formData.get("pdf_file");
-  if (pdfFile instanceof File && pdfFile.size > 0) {
+  if (input.customPdf) {
     // PDF fourni par l'admin (devis mis en page ailleurs) — utilisé tel
     // quel. Les lignes saisies continuent de piloter le total stocké et
     // affiché dans l'application et dans l'email.
-    if (pdfFile.type !== "application/pdf") return { error: "Le fichier personnalisé doit être un PDF." };
-    await uploadClientFile(pdfPath, pdfFile);
+    await uploadClientFile(pdfPath, input.customPdf);
   } else {
     const pdfBuffer = await generateQuotePdfBuffer({
       reference: assignedReference,
       createdAt,
-      validUntil: validUntilValue,
-      recipientName: recipientName.trim(),
-      recipientEmail: recipientEmailValue,
-      lineItems,
+      validUntil: input.validUntil,
+      recipientName: input.recipientName,
+      recipientEmail: input.recipientEmail,
+      recipientAddress: input.recipientAddress ?? null,
+      recipientSiren: input.recipientSiren ?? null,
+      recipientVatNumber: input.recipientVatNumber ?? null,
+      pricing: input.pricing ?? null,
+      lineItems: input.lineItems,
       subtotalCents,
       discountCents,
       totalCents,
@@ -126,20 +159,20 @@ export async function createQuote(formData: FormData): Promise<{ error: string |
 
   await supabaseAdmin.from("quotes").update({ pdf_storage_path: pdfPath }).eq("id", quoteId);
 
-  if (clientIdValue) {
-    const actorName = await getActorDisplayName(admin.id);
+  if (input.clientId) {
+    const actorName = await getActorDisplayName(input.actorId);
     await logActivity({
-      clientId: clientIdValue,
+      clientId: input.clientId,
       type: "quote",
       title: "Devis créé",
       adminTitle: `${actorName} a créé le devis ${assignedReference}`,
-      actorId: admin.id,
+      actorId: input.actorId,
       description: `Devis ${assignedReference}`,
     });
   }
 
   revalidatePath("/admin/quotes");
-  return { error: null };
+  return { error: null, quoteId, reference: assignedReference };
 }
 
 export async function updateQuoteStatus(quoteId: string, status: string) {
