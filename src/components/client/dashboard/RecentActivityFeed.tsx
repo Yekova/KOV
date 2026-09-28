@@ -54,7 +54,9 @@ export function RecentActivityFeed({ items }: { items: ActivityItem[] }) {
       ) : (
         <ul className="space-y-4">
           {items.map((item) => (
-            <li key={item.id} className="flex items-start gap-3">
+            // L'élément arrive de 4px plus haut : dans un fil, ce qui est nouveau
+            // doit se distinguer de ce qui était déjà là.
+            <li key={item.id} className="kov-enter flex items-start gap-3">
               <span
                 className="w-8 h-8 shrink-0 flex items-center justify-center text-kov-red"
                 style={{ background: "var(--kov-graphite)", borderRadius: "var(--radius-sm)" }}

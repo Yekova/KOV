@@ -81,12 +81,12 @@ function NavLinks({ pathname, openRequestsCount, onNavigate }: { pathname: strin
             key={item.href}
             href={item.href}
             onClick={onNavigate}
-            className="flex items-center gap-3 px-3 py-2.5 text-xs uppercase tracking-widest transition-colors"
+            data-active={isActive}
+            className="kov-nav-item flex items-center gap-3 px-3 py-2.5 text-xs uppercase tracking-widest"
             style={{
               borderRadius: "var(--radius-sm)",
               color: isActive ? "var(--kov-bone)" : "var(--kov-steel)",
-              background: isActive ? "var(--glass-bg)" : "transparent",
-              border: isActive ? "1px solid var(--glass-border)" : "1px solid transparent",
+              background: isActive ? "rgba(255,255,255,0.05)" : "transparent",
             }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0">
@@ -95,7 +95,11 @@ function NavLinks({ pathname, openRequestsCount, onNavigate }: { pathname: strin
             <span className="flex-1">{item.label}</span>
             {item.badge === "requests" && openRequestsCount > 0 && (
               <span
-                className="w-5 h-5 flex items-center justify-center text-[10px] text-kov-white"
+                // La clé porte la valeur : quand le compteur change, React
+                // remonte l'élément et l'animation rejoue. Sans elle, le
+                // chiffre changerait sans que rien ne le signale.
+                key={openRequestsCount}
+                className="kov-badge w-5 h-5 flex items-center justify-center text-[10px] text-kov-white"
                 style={{ background: "var(--kov-red)", borderRadius: "var(--radius-pill)" }}
               >
                 {openRequestsCount}

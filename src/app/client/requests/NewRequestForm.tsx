@@ -1,33 +1,35 @@
 "use client";
 
-import { useRef, useState, useTransition, type FormEvent } from "react";
-import { Button } from "@/components/ui/Button";
+import { useRef } from "react";
+import { KovActionButton } from "@/components/ui/KovActionButton";
+import { useKovAction } from "@/lib/useKovAction";
 import { createRequestThread } from "./actions";
 
 const FIELD_CLASS =
-  "w-full bg-transparent border py-2.5 px-3 text-kov-bone placeholder:text-kov-steel text-sm focus:outline-none focus:border-kov-red transition-colors";
+  "kov-field w-full bg-transparent border py-2.5 px-3 text-kov-bone placeholder:text-kov-concrete/70 text-sm focus:outline-none";
 
 export function NewRequestForm({ projects }: { projects: { id: string; name: string }[] }) {
   const formRef = useRef<HTMLFormElement>(null);
-  const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
-
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    setError(null);
-    startTransition(async () => {
-      try {
-        await createRequestThread(formData);
-        formRef.current?.reset();
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "L'envoi a échoué.");
-      }
-    });
-  }
+  const action = useKovAction({
+    success: "Demande envoyée. Le studio vous répond ici.",
+    fallbackError: "L'envoi a échoué.",
+  });
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
+    <form
+      ref={formRef}
+      onSubmit={(event) => {
+        event.preventDefault();
+        const formData = new FormData(event.currentTarget);
+        action.run(async () => {
+          await createRequestThread(formData);
+          // Vidé seulement après un envoi réussi : un échec doit rendre le
+          // texte, pas le faire disparaître.
+          formRef.current?.reset();
+        });
+      }}
+      className="space-y-4"
+    >
       <input
         type="text"
         name="subject"
@@ -44,9 +46,9 @@ export function NewRequestForm({ projects }: { projects: { id: string; name: str
           style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
         >
           <option value="">Projet concerné (facultatif)</option>
-          {projects.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
+          {projects.map((project) => (
+            <option key={project.id} value={project.id}>
+              {project.name}
             </option>
           ))}
         </select>
@@ -59,11 +61,17 @@ export function NewRequestForm({ projects }: { projects: { id: string; name: str
         className={FIELD_CLASS}
         style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
       />
-      <div className="flex items-center gap-4">
-        <Button type="submit" variant="primary" disabled={isPending}>
-          {isPending ? "Envoi…" : "Envoyer"}
-        </Button>
-        {error && <p className="text-kov-red text-sm">{error}</p>}
+      <div className="flex flex-wrap items-center gap-4">
+        <KovActionButton state={action.state} onStateSettled={action.reset}>
+          Envoyer
+        </KovActionButton>
+        {/* Le toast dit déjà l'erreur ; celle-ci reste à côté du champ,
+            parce qu'un toast disparaît et qu'on relit son formulaire. */}
+        {action.error && (
+          <p role="alert" className="text-sm" style={{ color: "var(--kov-red)" }}>
+            {action.error}
+          </p>
+        )}
       </div>
     </form>
   );

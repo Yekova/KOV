@@ -58,6 +58,29 @@
   --glass-shadow-full: inset 0 1px 0 var(--glass-highlight), inset 0 0 0 1px rgba(255, 255, 255, 0.03),
     0 8px 30px var(--glass-shadow);
 
+  /* ── Mouvement ──────────────────────────────────────────────────────
+     Il n'y en avait aucun : chaque transition du site portait sa propre
+     durée et sa propre courbe, écrites à la main là où elles tombaient.
+     Ces six valeurs sont le vocabulaire commun.
+
+     Les durées viennent de ce qu'une interaction doit rendre : un survol
+     doit être quasi instantané, une modale doit avoir le temps d'arriver,
+     un succès doit se lire avant de disparaître. Rien ne dépasse la
+     seconde, parce qu'au-delà on attend au lieu de comprendre.
+
+     --ease-kov est la courbe d'entrée : un départ franc, une arrivée qui
+     s'éteint. C'est ce qui fait qu'un élément semble se poser plutôt que
+     s'arrêter. --ease-exit est l'inverse, pour les sorties : ce qui part
+     n'a pas besoin d'être regardé, donc ça accélère. */
+  --motion-press: 100ms;
+  --motion-fast: 150ms;
+  --motion-base: 220ms;
+  --motion-slow: 320ms;
+  --motion-success: 700ms;
+
+  --ease-kov: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+
   /* Z-index scale — see /docs/KOV-MOTION.md, never improvise a z-index outside this scale.
      --z-canvas is deliberately negative, not 0: per CSS's own painting order, a
      *positioned* element (anything using this scale) with a positive/auto z-index

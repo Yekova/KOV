@@ -5,6 +5,8 @@ import { ClientSidebarBadges } from "@/components/client/ClientSidebarBadges";
 import { PortalTopbarData } from "@/components/client/PortalTopbarData";
 import { PortalTopbarSkeleton } from "@/components/client/PortalTopbarSkeleton";
 import { MobileNavProvider } from "@/components/ui/MobileNavContext";
+import { PortalProviders } from "@/components/client/PortalProviders";
+import { PortalPageTransition } from "@/components/client/PortalPageTransition";
 import "./portal.css";
 
 // requireUser() reads cookies(), which makes this whole layout dynamic —
@@ -20,18 +22,20 @@ export default async function ClientLayout({ children }: LayoutProps<"/client">)
   const user = await requireUser();
 
   return (
-    <MobileNavProvider>
-      <div className="kov-portal min-h-screen flex" style={{ background: "var(--kov-black)" }}>
-        <Suspense fallback={<PortalSidebar openRequestsCount={0} />}>
-          <ClientSidebarBadges userId={user.id} />
-        </Suspense>
-        <div className="flex-1 flex flex-col min-w-0">
-          <Suspense fallback={<PortalTopbarSkeleton />}>
-            <PortalTopbarData userId={user.id} />
+    <PortalProviders>
+      <MobileNavProvider>
+        <div className="kov-portal min-h-screen flex" style={{ background: "var(--kov-black)" }}>
+          <Suspense fallback={<PortalSidebar openRequestsCount={0} />}>
+            <ClientSidebarBadges userId={user.id} />
           </Suspense>
-          <div className="flex-1">{children}</div>
+          <div className="flex-1 flex flex-col min-w-0">
+            <Suspense fallback={<PortalTopbarSkeleton />}>
+              <PortalTopbarData userId={user.id} />
+            </Suspense>
+            <PortalPageTransition>{children}</PortalPageTransition>
+          </div>
         </div>
-      </div>
-    </MobileNavProvider>
+      </MobileNavProvider>
+    </PortalProviders>
   );
 }

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { GlassCard } from "@/components/ui/GlassCard";
+import { KovEmptyState } from "@/components/ui/KovStates";
 import {
   REQUEST_WAITING_COLORS,
   REQUEST_WAITING_LABELS,
@@ -63,7 +64,10 @@ export default async function ClientRequestsPage() {
       <GlassCard className="p-6">
         <p className="text-xs uppercase tracking-widest text-kov-steel mb-4">Vos demandes</p>
         {rows.length === 0 ? (
-          <p className="text-kov-steel text-sm">Aucune demande pour l&apos;instant.</p>
+          <KovEmptyState
+            title="Aucune demande pour l'instant"
+            description="Écrivez au studio depuis le formulaire ci-dessus. Chaque échange reste ici, et vous voyez toujours qui doit répondre."
+          />
         ) : (
           <ul>
             {rows.map((thread) => {

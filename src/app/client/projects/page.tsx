@@ -3,6 +3,8 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { GlassCard } from "@/components/ui/GlassCard";
+import { KovProgress } from "@/components/ui/KovProgress";
+import { KovEmptyState } from "@/components/ui/KovStates";
 import { PROJECT_STATUS_COLORS, PROJECT_STATUS_LABELS, type ProjectStatus } from "@/lib/portal/status";
 import { deriveCurrentPhase, deriveProgress, type ProjectPhase } from "@/lib/portal/progress";
 
@@ -39,8 +41,12 @@ export default async function ClientProjectsPage() {
       <h1 className="font-display text-kov-bone text-2xl uppercase mb-8">Mes projets</h1>
 
       {rows.length === 0 ? (
-        <GlassCard className="p-8">
-          <p className="text-kov-steel text-sm">Aucun projet pour l&apos;instant.</p>
+        <GlassCard className="p-6">
+          <KovEmptyState
+            title="Aucun projet pour l'instant"
+            description="Dès que le studio ouvre un projet à votre nom, il apparaît ici avec ses phases, son avancement et ses échéances."
+            action={{ label: "Écrire au studio", href: "/client/requests" }}
+          />
         </GlassCard>
       ) : (
         <div className="space-y-4">
@@ -64,10 +70,11 @@ export default async function ClientProjectsPage() {
                 </span>
               </div>
 
-              <div className="h-1.5 w-full overflow-hidden mb-2" style={{ background: "var(--kov-border)", borderRadius: "var(--radius-pill)" }}>
-                <div
-                  className="h-full"
-                  style={{ width: `${p.progress_percent}%`, background: PROJECT_STATUS_COLORS[p.status] ?? "var(--kov-red)" }}
+              <div className="mb-2">
+                <KovProgress
+                  percent={p.progress_percent}
+                  color={PROJECT_STATUS_COLORS[p.status] ?? "var(--kov-red)"}
+                  label={`Avancement de ${p.name}`}
                 />
               </div>
               <p className="text-kov-steel text-xs mb-1">

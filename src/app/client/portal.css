@@ -82,3 +82,93 @@
     transition: none;
   }
 }
+
+/* ── Les champs ──────────────────────────────────────────────────────── */
+
+/* Le focus était un simple changement de couleur de bordure, instantané.
+ * Il garde la bordure rouge, et gagne un halo très local — assez pour que
+ * l'œil sache où il est revenu après un coup d'œil ailleurs, pas assez
+ * pour faire briller le formulaire. */
+.kov-field {
+  transition:
+    border-color var(--motion-fast) var(--ease-kov),
+    box-shadow var(--motion-fast) var(--ease-kov),
+    background-color var(--motion-fast) var(--ease-kov);
+}
+
+.kov-field:hover:not(:focus) {
+  border-color: rgba(231, 231, 229, 0.18) !important;
+}
+
+.kov-field:focus {
+  border-color: var(--kov-red) !important;
+  box-shadow: 0 0 0 3px rgba(227, 30, 36, 0.12);
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* Un champ invalide ne le dit qu'après une tentative de soumission :
+   :user-invalid n'est vrai qu'une fois le champ quitté ou le formulaire
+   envoyé. :invalid seul rougirait chaque champ requis dès le chargement,
+   avant que quiconque ait rien fait de mal. */
+.kov-field:user-invalid {
+  border-color: rgba(227, 30, 36, 0.6) !important;
+}
+
+/* ── La barre latérale ───────────────────────────────────────────────── */
+
+.kov-nav-item {
+  position: relative;
+  transition:
+    background-color var(--motion-fast) var(--ease-kov),
+    color var(--motion-fast) var(--ease-kov);
+}
+
+.kov-nav-item > * {
+  transition: transform var(--motion-fast) var(--ease-kov);
+}
+
+.kov-nav-item:hover > * {
+  transform: translateX(2px);
+}
+
+.kov-nav-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* L'actif porte un filet rouge à gauche plutôt qu'un bloc rouge : la
+   couleur de signal marque la position, elle ne remplit pas la surface. */
+.kov-nav-item[data-active="true"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  border-radius: 999px;
+  background: var(--kov-red);
+}
+
+/* Le compteur grandit quand sa valeur change — animation jouée au montage,
+   et la clé React porte la valeur, donc elle rejoue à chaque changement. */
+@keyframes kov-badge-in {
+  from { transform: scale(0.6); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.kov-badge {
+  animation: kov-badge-in var(--motion-base) var(--ease-kov);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kov-field,
+  .kov-nav-item,
+  .kov-nav-item > * {
+    transition: none;
+  }
+  .kov-nav-item:hover > * {
+    transform: none;
+  }
+  .kov-badge {
+    animation: none;
+  }
+}

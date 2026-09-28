@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useTransition, type FormEvent } from "react";
+import { useState } from "react";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Button } from "@/components/ui/Button";
+import { KovActionButton } from "@/components/ui/KovActionButton";
+import { useKovAction } from "@/lib/useKovAction";
 import { Portrait } from "@/components/ui/Portrait";
 import { createRequestThread } from "@/app/client/requests/actions";
 
@@ -15,22 +17,13 @@ type Manager = {
 
 export function AccountManagerCard({ manager }: { manager: Manager | null }) {
   const [composing, setComposing] = useState(false);
-  const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
-
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    setError(null);
-    startTransition(async () => {
-      try {
-        await createRequestThread(formData);
-        setComposing(false);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "L'envoi a échoué.");
-      }
-    });
-  }
+  const action = useKovAction({
+    success: "Message envoyé. Vous le retrouverez dans vos demandes.",
+    fallbackError: "L'envoi a échoué.",
+    // Le formulaire se referme seulement si l'envoi a abouti : le refermer
+    // sur une erreur ferait disparaître le texte qu'on vient d'écrire.
+    onSuccess: () => setComposing(false),
+  });
 
   return (
     <GlassCard className="kov-portrait-host p-6 flex flex-col">
@@ -51,20 +44,31 @@ export function AccountManagerCard({ manager }: { manager: Manager | null }) {
           </div>
 
           {composing ? (
-            <form onSubmit={handleSubmit} className="space-y-3 mt-auto">
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                const formData = new FormData(event.currentTarget);
+                action.run(() => createRequestThread(formData));
+              }}
+              className="space-y-3 mt-auto"
+            >
               <input type="hidden" name="subject" value={`Message pour ${manager.full_name || "votre chef de projet"}`} />
               <textarea
                 name="body"
                 rows={3}
                 required
                 placeholder="Votre message…"
-                className="w-full bg-transparent border p-3 text-sm text-kov-bone placeholder:text-kov-steel focus:outline-none focus:border-kov-red transition-colors"
+                className="kov-field w-full bg-transparent border p-3 text-sm text-kov-bone placeholder:text-kov-concrete/70 focus:outline-none"
                 style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-md)" }}
               />
-              {error && <p className="text-kov-red text-xs">{error}</p>}
-              <Button type="submit" variant="primary" className="w-full justify-center" disabled={isPending}>
-                {isPending ? "Envoi…" : "Envoyer"}
-              </Button>
+              {action.error && (
+                <p role="alert" className="text-xs" style={{ color: "var(--kov-red)" }}>
+                  {action.error}
+                </p>
+              )}
+              <KovActionButton state={action.state} onStateSettled={action.reset} className="w-full">
+                Envoyer
+              </KovActionButton>
             </form>
           ) : (
             <Button

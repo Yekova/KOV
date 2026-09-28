@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { GlassCard } from "@/components/ui/GlassCard";
+import { KovProgress } from "@/components/ui/KovProgress";
 import { PROJECT_STATUS_COLORS, PROJECT_STATUS_LABELS, type ProjectStatus } from "@/lib/portal/status";
 
 export type ShowcaseProject = {
@@ -57,7 +58,7 @@ export function ProjectShowcase({ projects }: { projects: ShowcaseProject[] }) {
           {projects.slice(0, 6).map((project) => {
             const color = PROJECT_STATUS_COLORS[project.status] ?? "var(--kov-steel)";
             return (
-              <GlassCard key={project.id} className="overflow-hidden">
+              <GlassCard key={project.id} className="kov-lift overflow-hidden">
                 <Link href={`/client/projects/${project.id}`} className="group block">
                   <span
                     className="relative block h-32 w-full overflow-hidden"
@@ -101,13 +102,11 @@ export function ProjectShowcase({ projects }: { projects: ShowcaseProject[] }) {
                     <span className="mt-0.5 block truncate text-xs text-kov-concrete">{project.category}</span>
 
                     <span className="mt-4 flex items-center gap-3">
-                      <span
-                        className="block h-1.5 flex-1 overflow-hidden"
-                        style={{ background: "var(--kov-border)", borderRadius: "var(--radius-pill)" }}
-                      >
-                        <span
-                          className="block h-full"
-                          style={{ width: `${project.progressPercent}%`, background: color }}
+                      <span className="block flex-1">
+                        <KovProgress
+                          percent={project.progressPercent}
+                          color={color}
+                          label={`Avancement de ${project.name}`}
                         />
                       </span>
                       <span className="shrink-0 text-xs tabular-nums text-kov-bone">{project.progressPercent} %</span>

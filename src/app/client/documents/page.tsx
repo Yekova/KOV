@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { createSignedDownloadUrls } from "@/lib/portal/storage";
 import { GlassCard } from "@/components/ui/GlassCard";
+import { KovEmptyState } from "@/components/ui/KovStates";
 import { DocumentGrid, type DocumentGridItem } from "@/components/documents/DocumentGrid";
 import { getClientDocumentPreviewUrl, downloadDocument } from "./actions";
 import { UploadDocumentForm } from "./UploadDocumentForm";
@@ -67,7 +68,10 @@ export default async function ClientDocumentsPage() {
 
       {rows.length === 0 ? (
         <GlassCard className="p-6">
-          <p className="text-kov-steel text-sm">Aucun document pour l&apos;instant.</p>
+          <KovEmptyState
+            title="Aucun document pour l'instant"
+            description="Les livrables et les pièces de vos projets arrivent ici. Vous pouvez aussi en déposer un vous-même avec le formulaire ci-dessus."
+          />
         </GlassCard>
       ) : (
         groups.map((group) => (

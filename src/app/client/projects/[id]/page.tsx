@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { createSignedDownloadUrls } from "@/lib/portal/storage";
 import { GlassCard } from "@/components/ui/GlassCard";
+import { KovProgress } from "@/components/ui/KovProgress";
 import { FolderIcon } from "@/lib/documentIcons";
 import { DocumentGrid, type DocumentGridItem } from "@/components/documents/DocumentGrid";
 import {
@@ -208,13 +209,11 @@ export default async function ClientProjectDetailPage(props: PageProps<"/client/
           )}
         </div>
 
-        <div
-          className="h-1.5 w-full overflow-hidden mb-2"
-          style={{ background: "var(--kov-border)", borderRadius: "var(--radius-pill)" }}
-        >
-          <div
-            className="h-full"
-            style={{ width: `${progress.percent}%`, background: PROJECT_STATUS_COLORS[project.status] ?? "var(--kov-red)" }}
+        <div className="mb-2">
+          <KovProgress
+            percent={progress.percent}
+            color={PROJECT_STATUS_COLORS[project.status] ?? "var(--kov-red)"}
+            label={`Avancement de ${project.name}`}
           />
         </div>
         <p className="text-kov-steel text-xs">

@@ -1,45 +1,45 @@
 "use client";
 
-import { useState, useTransition, type FormEvent } from "react";
-import { Button } from "@/components/ui/Button";
+import { useRef } from "react";
+import { KovActionButton } from "@/components/ui/KovActionButton";
+import { useKovAction } from "@/lib/useKovAction";
 import { replyToOwnThread } from "../actions";
 
-const FIELD_CLASS =
-  "w-full bg-transparent border py-2.5 px-3 text-kov-bone placeholder:text-kov-steel text-sm focus:outline-none focus:border-kov-red transition-colors";
-
 export function ReplyForm({ threadId }: { threadId: string }) {
-  const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
-
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const formData = new FormData(form);
-    setError(null);
-    startTransition(async () => {
-      try {
-        await replyToOwnThread(threadId, formData);
-        form.reset();
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "L'envoi a échoué.");
-      }
-    });
-  }
+  const formRef = useRef<HTMLFormElement>(null);
+  const action = useKovAction({ success: "Message envoyé.", fallbackError: "L'envoi a échoué." });
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
+    <form
+      ref={formRef}
+      onSubmit={(event) => {
+        event.preventDefault();
+        const formData = new FormData(event.currentTarget);
+        action.run(async () => {
+          await replyToOwnThread(threadId, formData);
+          formRef.current?.reset();
+        });
+      }}
+      className="space-y-3"
+    >
       <textarea
         name="body"
         required
         rows={3}
-        placeholder="Votre réponse…"
-        className={FIELD_CLASS}
-        style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
+        placeholder="Votre message…"
+        className="kov-field w-full border bg-transparent p-3 text-sm text-kov-bone placeholder:text-kov-concrete/70 focus:outline-none"
+        style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-md)" }}
       />
-      {error && <p className="text-kov-red text-sm">{error}</p>}
-      <Button type="submit" variant="primary" disabled={isPending}>
-        {isPending ? "Envoi…" : "Répondre"}
-      </Button>
+      <div className="flex flex-wrap items-center gap-4">
+        <KovActionButton state={action.state} onStateSettled={action.reset}>
+          Envoyer
+        </KovActionButton>
+        {action.error && (
+          <p role="alert" className="text-sm" style={{ color: "var(--kov-red)" }}>
+            {action.error}
+          </p>
+        )}
+      </div>
     </form>
   );
 }
