@@ -1,149 +1,99 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import Link from "next/link";
-import { Search, ChevronDown, ArrowUpRight, Mail, Archive, ArchiveRestore } from "lucide-react";
-import { GlassCard } from "@/components/ui/GlassCard";
+import { Search, ChevronDown } from "lucide-react";
 import { EmptyState } from "@/components/admin/EmptyState";
-import { ProgressBar } from "@/components/admin/ProgressBar";
-import { formatRelativeTime } from "@/lib/formatRelativeTime";
-import { PROJECT_STATUS_LABELS, isProjectStatus } from "@/lib/portal/status";
 import { archiveClient, unarchiveClient } from "@/app/admin/clients/actions";
-import { ClientAvatar } from "@/components/admin/clients/ClientAvatar";
 import { ConfirmDialog } from "@/components/admin/clients/ConfirmDialog";
+import { ClientCard } from "@/components/admin/clients/ClientCard";
+import type { ClientSummary } from "@/lib/admin/clients";
 
-export interface ClientRow {
-  id: string;
-  full_name: string | null;
-  email: string;
-  company: string | null;
-  account_manager_id: string | null;
-  avatar_url: string | null;
-  archived_at: string | null;
-}
-
-export interface ManagerInfo {
-  full_name: string | null;
-  avatar_url: string | null;
-}
-
-export interface ClientProjectInfo {
-  id: string;
-  name: string;
-  status: string;
-  progress_percent: number;
-}
-
-export interface ClientActivityInfo {
-  title: string;
-  admin_title: string | null;
-  created_at: string;
-}
+// La liste des clients, en grille de cartes.
+//
+// C'était une table : nom, email, chef de projet, nombre de projets, date.
+// Une table répond à « qui sont mes clients » ; la question qu'on se pose en
+// ouvrant cet écran est « où en est chacun, et qu'est-ce qui tombe ». Une
+// ligne de tableau n'a pas la place d'y répondre, une carte si.
+//
+// Le panneau latéral d'aperçu disparaît avec la table, et c'est voulu : il
+// affichait le nom, l'email, le nombre de projets et la dernière activité,
+// tous désormais sur la carte elle-même. Garder un panneau pour redire ce
+// qui est déjà à l'écran aurait coûté un tiers de la largeur.
+//
+// Le filtrage, le tri et la recherche restent côté client, sur une seule
+// lecture : c'est la convention de cet admin, et c'est aussi la seule façon
+// d'afficher les compteurs de tous les onglets en même temps.
 
 const SORTS = [
   { id: "recent", label: "Plus récent" },
+  { id: "deadline", label: "Échéance la plus proche" },
+  { id: "activity", label: "Activité la plus récente" },
   { id: "name-asc", label: "Nom A–Z" },
-  { id: "name-desc", label: "Nom Z–A" },
-  { id: "most-active", label: "Plus actif" },
-  { id: "most-projects", label: "Plus de projets" },
+  { id: "progress", label: "Avancement" },
 ] as const;
 type SortId = (typeof SORTS)[number]["id"];
 
-type Filter = "all" | "active" | "archived";
+type TabId = "all" | "in_progress" | "in_review" | "on_hold" | "done" | "no_project" | "archived";
 
-function displayName(client: ClientRow): string {
-  return client.full_name || client.company || "Client sans nom";
+const TAB_LABELS: Record<TabId, string> = {
+  all: "Tous",
+  in_progress: "En cours",
+  in_review: "En validation",
+  on_hold: "En attente",
+  done: "Terminés",
+  no_project: "Sans projet",
+  archived: "Archivés",
+};
+
+const TAB_ORDER: TabId[] = ["all", "in_progress", "in_review", "on_hold", "done", "no_project", "archived"];
+
+function displayName(client: ClientSummary): string {
+  return client.company?.trim() || client.fullName?.trim() || client.email || "Client sans nom";
 }
 
-function StatusPill({ archived }: { archived: boolean }) {
-  return (
-    <span className="inline-flex items-center gap-1.5 text-xs">
-      <span
-        aria-hidden="true"
-        className="w-1.5 h-1.5 rounded-full"
-        style={{ background: archived ? "var(--kov-steel)" : "#3FB27F" }}
-      />
-      <span className="text-kov-steel">{archived ? "Archivé" : "Actif"}</span>
-    </span>
-  );
+function matchesTab(client: ClientSummary, tab: TabId): boolean {
+  // Les archivés ne se mélangent jamais aux actifs : un client archivé n'est
+  // pas « en cours », quel que soit l'état de ses anciens projets.
+  if (tab === "archived") return Boolean(client.archivedAt);
+  if (client.archivedAt) return false;
+  if (tab === "all") return true;
+  if (tab === "no_project") return client.leadProject === null;
+  return client.status === tab;
 }
 
-function ProjectsCell({ projects }: { projects: ClientProjectInfo[] }) {
-  const [open, setOpen] = useState(false);
-  if (projects.length === 0) return <span className="text-kov-steel">0 projet</span>;
-
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        onBlur={() => setTimeout(() => setOpen(false), 150)}
-        className="text-kov-bone hover:text-kov-red transition-colors"
-      >
-        {projects.length} projet{projects.length > 1 ? "s" : ""}
-      </button>
-      {open && (
-        <div
-          className="absolute z-20 top-full left-0 mt-2 w-64 p-3"
-          style={{ background: "var(--kov-graphite)", border: "1px solid var(--glass-border)", borderRadius: "var(--radius-md)", boxShadow: "var(--glass-shadow-full)" }}
-        >
-          <ul className="space-y-3">
-            {projects.map((p) => (
-              <li key={p.id}>
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-kov-bone text-xs truncate">{p.name}</span>
-                  <span className="text-kov-steel text-[10px] uppercase tracking-widest shrink-0">
-                    {isProjectStatus(p.status) ? PROJECT_STATUS_LABELS[p.status] : p.status}
-                  </span>
-                </div>
-                <ProgressBar percent={p.progress_percent} className="mt-1.5" />
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
-  );
-}
-
-export function ClientsWorkspace({
-  clients,
-  managers,
-  projectsByClient,
-  latestActivityByClient,
-}: {
-  clients: ClientRow[];
-  managers: Record<string, ManagerInfo>;
-  projectsByClient: Record<string, ClientProjectInfo[]>;
-  latestActivityByClient: Record<string, ClientActivityInfo | undefined>;
-}) {
+export function ClientsWorkspace({ clients }: { clients: ClientSummary[] }) {
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<Filter>("all");
+  const [tab, setTab] = useState<TabId>("all");
   const [sort, setSort] = useState<SortId>("recent");
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [confirmTarget, setConfirmTarget] = useState<{ client: ClientRow; action: "archive" | "unarchive" } | null>(null);
+  const [confirmTarget, setConfirmTarget] = useState<{ client: ClientSummary; action: "archive" | "unarchive" } | null>(
+    null
+  );
   const [isPending, startTransition] = useTransition();
   const [actionError, setActionError] = useState<string | null>(null);
 
-  const counts = useMemo(
-    () => ({
-      all: clients.length,
-      active: clients.filter((c) => !c.archived_at).length,
-      archived: clients.filter((c) => c.archived_at).length,
-    }),
-    [clients]
+  const counts = useMemo(() => {
+    const result = {} as Record<TabId, number>;
+    for (const id of TAB_ORDER) result[id] = clients.filter((client) => matchesTab(client, id)).length;
+    return result;
+  }, [clients]);
+
+  // Seuls les onglets qui ont quelque chose à montrer. Cinq onglets à zéro
+  // sur deux clients occuperaient une ligne entière pour ne rien dire.
+  const visibleTabs = useMemo(
+    () => TAB_ORDER.filter((id) => id === "all" || counts[id] > 0),
+    [counts]
   );
 
   const visible = useMemo(() => {
-    let rows = clients;
-    if (filter === "active") rows = rows.filter((c) => !c.archived_at);
-    if (filter === "archived") rows = rows.filter((c) => c.archived_at);
+    let rows = clients.filter((client) => matchesTab(client, tab));
 
-    const q = query.trim().toLowerCase();
-    if (q) {
-      rows = rows.filter((c) =>
-        [c.full_name, c.email, c.company].some((field) => field?.toLowerCase().includes(q))
+    const needle = query.trim().toLowerCase();
+    if (needle) {
+      rows = rows.filter((client) =>
+        [client.company, client.fullName, client.email, client.leadProject?.name]
+          .filter((value): value is string => Boolean(value))
+          .some((value) => value.toLowerCase().includes(needle))
       );
     }
 
@@ -152,25 +102,34 @@ export function ClientsWorkspace({
       case "name-asc":
         sorted.sort((a, b) => displayName(a).localeCompare(displayName(b)));
         break;
-      case "name-desc":
-        sorted.sort((a, b) => displayName(b).localeCompare(displayName(a)));
-        break;
-      case "most-active":
+      case "deadline":
+        // Une échéance absente passe après une échéance connue. Ne rien
+        // savoir n'est pas urgent, et remonter ces clients en tête ferait
+        // descendre ceux qui ont une vraie date.
         sorted.sort((a, b) => {
-          const at = latestActivityByClient[a.id]?.created_at ?? "";
-          const bt = latestActivityByClient[b.id]?.created_at ?? "";
-          return bt.localeCompare(at);
+          const left = a.leadProject?.nextDeadlineDate;
+          const right = b.leadProject?.nextDeadlineDate;
+          if (left && right) return left.localeCompare(right);
+          if (left) return -1;
+          if (right) return 1;
+          return 0;
         });
         break;
-      case "most-projects":
-        sorted.sort((a, b) => (projectsByClient[b.id]?.length ?? 0) - (projectsByClient[a.id]?.length ?? 0));
+      case "activity":
+        sorted.sort((a, b) => {
+          const left = a.lastActivity?.createdAt ?? "";
+          const right = b.lastActivity?.createdAt ?? "";
+          return right.localeCompare(left);
+        });
         break;
-      // "recent" — clients arrive already ordered by created_at desc from the server query.
+      case "progress":
+        sorted.sort((a, b) => (b.leadProject?.progressPercent ?? -1) - (a.leadProject?.progressPercent ?? -1));
+        break;
+      default:
+        sorted.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
     }
     return sorted;
-  }, [clients, filter, query, sort, latestActivityByClient, projectsByClient]);
-
-  const selected = clients.find((c) => c.id === selectedId) ?? null;
+  }, [clients, tab, query, sort]);
 
   function runConfirmedAction() {
     if (!confirmTarget) return;
@@ -187,269 +146,100 @@ export function ClientsWorkspace({
   }
 
   return (
-    <div className="grid lg:grid-cols-[1fr_360px] gap-6 items-start">
-      <GlassCard className="p-5 lg:p-6">
-        <div className="flex items-center justify-between gap-4 mb-5 flex-wrap">
-          <p className="text-kov-bone text-sm">Liste des clients</p>
-          {filter !== "archived" ? (
-            <button type="button" onClick={() => setFilter("archived")} className="text-kov-red hover:underline text-xs">
-              Voir les archivés →
-            </button>
-          ) : (
-            <button type="button" onClick={() => setFilter("all")} className="text-kov-steel hover:text-kov-red text-xs transition-colors">
-              ← Retour à tous les clients
-            </button>
-          )}
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3 mb-5">
-          <div className="relative flex-1 min-w-[200px]">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-kov-steel pointer-events-none" />
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Rechercher un client..."
-              className="w-full bg-transparent border pl-9 pr-3 py-2 text-kov-bone text-sm focus:outline-none focus:border-kov-red transition-colors"
-              style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
-            />
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            {(["all", "active", "archived"] as Filter[]).map((f) => (
+    <div>
+      <div className="flex flex-wrap items-center gap-3 mb-5">
+        <div className="flex flex-wrap items-center gap-1.5 flex-1 min-w-[240px]">
+          {visibleTabs.map((id) => {
+            const isActive = tab === id;
+            return (
               <button
-                key={f}
+                key={id}
                 type="button"
-                onClick={() => setFilter(f)}
+                onClick={() => setTab(id)}
+                aria-pressed={isActive}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs uppercase tracking-widest transition-colors"
                 style={{
                   borderRadius: "var(--radius-pill)",
-                  border: `1px solid ${filter === f ? "rgba(227,30,36,0.5)" : "var(--kov-border)"}`,
-                  color: filter === f ? "var(--kov-bone)" : "var(--kov-steel)",
-                  background: filter === f ? "rgba(227,30,36,0.1)" : "transparent",
+                  border: `1px solid ${isActive ? "rgba(227,30,36,0.5)" : "var(--kov-border)"}`,
+                  color: isActive ? "var(--kov-bone)" : "var(--kov-steel)",
+                  background: isActive ? "rgba(227,30,36,0.1)" : "transparent",
                 }}
               >
-                {filter === f && <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-kov-red" />}
-                {f === "all" ? "Tous" : f === "active" ? "Actifs" : "Archivés"}
-                <span className="text-kov-steel">{counts[f]}</span>
+                {TAB_LABELS[id]}
+                <span className="text-kov-steel tabular-nums">{counts[id]}</span>
               </button>
-            ))}
-          </div>
-
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setSortMenuOpen((v) => !v)}
-              onBlur={() => setTimeout(() => setSortMenuOpen(false), 150)}
-              className="flex items-center gap-2 px-3 py-2 text-xs text-kov-steel hover:text-kov-bone transition-colors"
-              style={{ border: "1px solid var(--kov-border)", borderRadius: "var(--radius-sm)" }}
-            >
-              {SORTS.find((s) => s.id === sort)?.label}
-              <ChevronDown size={13} />
-            </button>
-            {sortMenuOpen && (
-              <div
-                className="absolute z-20 right-0 top-full mt-2 py-1 whitespace-nowrap"
-                style={{ background: "var(--kov-graphite)", border: "1px solid var(--glass-border)", borderRadius: "var(--radius-sm)" }}
-              >
-                {SORTS.map((s) => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => setSort(s.id)}
-                    className="block w-full px-4 py-2 text-left text-xs text-kov-steel hover:text-kov-red transition-colors"
-                  >
-                    {s.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+            );
+          })}
         </div>
 
-        {visible.length === 0 ? (
-          <EmptyState message={query ? "Aucun client ne correspond à cette recherche." : "Aucun client pour l'instant."} />
-        ) : (
-          <>
-            <div className="overflow-x-auto hidden md:block">
-              <table className="w-full text-sm text-left">
-                <thead>
-                  <tr className="text-[11px] uppercase tracking-widest text-kov-steel border-b" style={{ borderColor: "var(--kov-border)" }}>
-                    <th className="py-3 pr-4">Client</th>
-                    <th className="py-3 pr-4">Email</th>
-                    <th className="py-3 pr-4">Chef de projet</th>
-                    <th className="py-3 pr-4">Projets</th>
-                    <th className="py-3 pr-4">Dernière activité</th>
-                    <th className="py-3 pr-4">Statut</th>
-                    <th className="py-3 pr-4" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {visible.map((client) => {
-                    const manager = client.account_manager_id ? managers[client.account_manager_id] : undefined;
-                    const activity = latestActivityByClient[client.id];
-                    const isSelected = selectedId === client.id;
-                    return (
-                      <tr
-                        key={client.id}
-                        onClick={() => setSelectedId(client.id)}
-                        className="cursor-pointer align-top transition-colors duration-200"
-                        style={{
-                          borderBottom: "1px solid var(--kov-border)",
-                          background: isSelected ? "rgba(255,255,255,0.03)" : "transparent",
-                          borderLeft: `2px solid ${isSelected ? "var(--kov-red)" : "transparent"}`,
-                        }}
-                      >
-                        <td className="py-4 pr-4">
-                          <div className="flex items-center gap-3">
-                            <ClientAvatar name={client.full_name || client.company} avatarUrl={client.avatar_url} />
-                            <div className="min-w-0">
-                              <p className="text-kov-bone truncate">{displayName(client)}</p>
-                              {client.full_name && client.company && (
-                                <p className="text-kov-steel text-xs truncate">{client.company}</p>
-                              )}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-4 pr-4 text-kov-steel">
-                          <a href={`mailto:${client.email}`} onClick={(e) => e.stopPropagation()} className="hover:text-kov-red transition-colors">
-                            {client.email}
-                          </a>
-                        </td>
-                        <td className="py-4 pr-4">
-                          {manager ? (
-                            <div className="flex items-center gap-2">
-                              <ClientAvatar name={manager.full_name} avatarUrl={manager.avatar_url} size={22} />
-                              <span className="text-kov-steel">{manager.full_name?.split(" ")[0] ?? "—"}</span>
-                            </div>
-                          ) : (
-                            <span className="text-kov-steel">—</span>
-                          )}
-                        </td>
-                        <td className="py-4 pr-4" onClick={(e) => e.stopPropagation()}>
-                          <ProjectsCell projects={projectsByClient[client.id] ?? []} />
-                        </td>
-                        <td className="py-4 pr-4 text-kov-steel">
-                          {activity ? (
-                            <>
-                              <p className="text-kov-bone text-xs">{formatRelativeTime(activity.created_at)}</p>
-                              <p className="text-[11px] mt-0.5 truncate max-w-[160px]">{activity.admin_title ?? activity.title}</p>
-                            </>
-                          ) : (
-                            "Aucune activité"
-                          )}
-                        </td>
-                        <td className="py-4 pr-4">
-                          <StatusPill archived={!!client.archived_at} />
-                        </td>
-                        <td className="py-4 pr-4" onClick={(e) => e.stopPropagation()}>
-                          <div className="flex items-center gap-3 justify-end">
-                            <button
-                              type="button"
-                              onClick={() => setConfirmTarget({ client, action: client.archived_at ? "unarchive" : "archive" })}
-                              aria-label={client.archived_at ? "Réactiver" : "Archiver"}
-                              className="text-kov-steel hover:text-kov-red transition-colors"
-                            >
-                              {client.archived_at ? <ArchiveRestore size={14} /> : <Archive size={14} />}
-                            </button>
-                            <Link href={`/admin/clients/${client.id}`} className="inline-flex items-center gap-1 text-kov-red hover:underline text-xs">
-                              Gérer <ArrowUpRight size={12} />
-                            </Link>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+        <div className="relative min-w-[200px]">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-kov-steel pointer-events-none" />
+          <input
+            type="text"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Rechercher un client, un projet…"
+            className="w-full bg-transparent border pl-9 pr-3 py-2 text-kov-bone text-sm focus:outline-none focus:border-kov-red transition-colors"
+            style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
+          />
+        </div>
 
-            {/* Mobile — cards, not a squeezed 7-column table (spec §33/34). */}
-            <ul className="md:hidden space-y-3">
-              {visible.map((client) => {
-                const activity = latestActivityByClient[client.id];
-                const projectCount = projectsByClient[client.id]?.length ?? 0;
-                return (
-                  <li key={client.id}>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedId(client.id)}
-                      className="w-full text-left p-4"
-                      style={{ background: "var(--kov-graphite)", borderRadius: "var(--radius-md)", border: "1px solid var(--kov-border)" }}
-                    >
-                      <div className="flex items-center gap-3">
-                        <ClientAvatar name={client.full_name || client.company} avatarUrl={client.avatar_url} />
-                        <div className="min-w-0 flex-1">
-                          <p className="text-kov-bone truncate">{displayName(client)}</p>
-                          <p className="text-kov-steel text-xs truncate">{client.email}</p>
-                        </div>
-                        <StatusPill archived={!!client.archived_at} />
-                      </div>
-                      <div className="flex items-center justify-between mt-3 text-xs text-kov-steel">
-                        <span>
-                          {projectCount} projet{projectCount > 1 ? "s" : ""}
-                        </span>
-                        <span>{activity ? formatRelativeTime(activity.created_at) : "Aucune activité"}</span>
-                      </div>
-                      <Link href={`/admin/clients/${client.id}`} className="inline-flex items-center gap-1 text-kov-red text-xs mt-3">
-                        Gérer <ArrowUpRight size={12} />
-                      </Link>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </>
-        )}
-      </GlassCard>
-
-      <div className="lg:sticky lg:top-6">
-        {selected ? (
-          <GlassCard className="p-5">
-            <p className="text-xs uppercase tracking-widest text-kov-steel mb-4">Aperçu client</p>
-            <div className="flex flex-col items-center text-center">
-              <ClientAvatar name={selected.full_name || selected.company} avatarUrl={selected.avatar_url} size={56} />
-              <p className="text-kov-bone mt-3">{displayName(selected)}</p>
-              <p className="text-kov-steel text-xs mt-1">{selected.email}</p>
-              {selected.company && selected.full_name && <p className="text-kov-steel text-xs">{selected.company}</p>}
-              <div className="mt-3">
-                <StatusPill archived={!!selected.archived_at} />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 mt-5">
-              <div className="p-3" style={{ background: "var(--kov-graphite)", borderRadius: "var(--radius-sm)" }}>
-                <p className="text-kov-steel text-[10px] uppercase tracking-widest">Projets</p>
-                <p className="text-kov-bone text-lg mt-1">{projectsByClient[selected.id]?.length ?? 0}</p>
-              </div>
-              <div className="p-3" style={{ background: "var(--kov-graphite)", borderRadius: "var(--radius-sm)" }}>
-                <p className="text-kov-steel text-[10px] uppercase tracking-widest">Dernière activité</p>
-                <p className="text-kov-bone text-xs mt-1.5">
-                  {latestActivityByClient[selected.id] ? formatRelativeTime(latestActivityByClient[selected.id]!.created_at) : "Aucune"}
-                </p>
-              </div>
-            </div>
-
-            <a
-              href={`mailto:${selected.email}`}
-              className="mt-5 flex items-center justify-center gap-2 w-full py-2.5 text-xs uppercase tracking-widest text-kov-bone hover:text-kov-red transition-colors"
-              style={{ border: "1px solid var(--kov-border)", borderRadius: "var(--radius-sm)" }}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setSortMenuOpen((value) => !value)}
+            onBlur={() => setTimeout(() => setSortMenuOpen(false), 150)}
+            aria-expanded={sortMenuOpen}
+            className="flex items-center gap-2 px-3 py-2 text-xs text-kov-steel hover:text-kov-bone transition-colors"
+            style={{ border: "1px solid var(--kov-border)", borderRadius: "var(--radius-sm)" }}
+          >
+            {SORTS.find((entry) => entry.id === sort)?.label}
+            <ChevronDown size={13} />
+          </button>
+          {sortMenuOpen && (
+            <div
+              className="absolute z-20 right-0 top-full mt-2 py-1 whitespace-nowrap"
+              style={{
+                background: "var(--kov-graphite)",
+                border: "1px solid var(--glass-border)",
+                borderRadius: "var(--radius-sm)",
+              }}
             >
-              <Mail size={13} /> Écrire un email
-            </a>
-
-            <Link
-              href={`/admin/clients/${selected.id}`}
-              className="mt-3 flex items-center justify-center gap-2 w-full py-2.5 text-xs uppercase tracking-widest text-kov-bone transition-colors"
-              style={{ background: "rgba(227,30,36,0.15)", border: "1px solid rgba(227,30,36,0.4)", borderRadius: "var(--radius-sm)" }}
-            >
-              Voir la fiche complète <ArrowUpRight size={13} />
-            </Link>
-          </GlassCard>
-        ) : (
-          <p className="text-kov-steel text-sm text-center py-10">Sélectionnez un client pour afficher son aperçu.</p>
-        )}
+              {SORTS.map((entry) => (
+                <button
+                  key={entry.id}
+                  type="button"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => {
+                    setSort(entry.id);
+                    setSortMenuOpen(false);
+                  }}
+                  className="block w-full px-4 py-2 text-left text-xs text-kov-steel hover:text-kov-red transition-colors"
+                >
+                  {entry.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
+
+      {visible.length === 0 ? (
+        <EmptyState
+          message={query ? "Aucun client ne correspond à cette recherche." : "Aucun client dans cet onglet."}
+        />
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {visible.map((client) => (
+            <ClientCard
+              key={client.id}
+              client={client}
+              onArchive={(target) => setConfirmTarget({ client: target, action: "archive" })}
+              onUnarchive={(target) => setConfirmTarget({ client: target, action: "unarchive" })}
+            />
+          ))}
+        </div>
+      )}
 
       <ConfirmDialog
         open={!!confirmTarget}

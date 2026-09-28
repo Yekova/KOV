@@ -1,97 +1,35 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { getPublicAssetUrl } from "@/lib/portal/storage";
-import { StatCard } from "@/components/admin/StatCard";
+import { GlassCard } from "@/components/ui/GlassCard";
 import { Donut, type DonutSegment } from "@/components/admin/Donut";
 import { ActivityFeed, type AdminActivityItem } from "@/components/admin/dashboard/ActivityFeed";
-import { ErrorState } from "@/components/admin/ErrorState";
+import { ClientAvatar } from "@/components/admin/clients/ClientAvatar";
+import { ClientsWorkspace } from "@/components/admin/clients/ClientsWorkspace";
+import { getClientSummaries, clientDisplayName } from "@/lib/admin/clients";
 import { PROJECT_STATUS_LABELS, isProjectStatus } from "@/lib/portal/status";
-import {
-  ClientsWorkspace,
-  type ClientRow,
-  type ManagerInfo,
-  type ClientProjectInfo,
-  type ClientActivityInfo,
-} from "@/components/admin/clients/ClientsWorkspace";
 
-export const metadata: Metadata = {
-  title: "Clients — Admin KOV",
-};
+export const metadata: Metadata = { title: "Clients — Admin KOV" };
 
-// Real-signal-only palette (spec §26/§27): the active/in-progress segment is
-// the one KOV red, everything else is a shade of gray — not the dashboard's
-// own 6-hue CATEGORY_COLORS (src/app/admin/page.tsx), which is deliberately
-// vivid for an unrelated revenue-by-category chart.
+// Palette de signal, pas de décoration : le rouge KOV ne sert qu'à ce qui
+// avance, l'ambre à ce qui attend, le gris au reste. Convention déjà posée
+// sur cet écran avant sa refonte, et conservée telle quelle.
 const STATUS_COLORS: Record<string, string> = {
   in_progress: "var(--kov-red)",
   in_review: "var(--kov-concrete)",
+  on_hold: "#F5A524",
   done: "var(--kov-steel)",
-  on_hold: "var(--kov-muted)",
 };
 
-const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+function formatDeadline(date: string): string {
+  return new Date(`${date}T00:00:00`).toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
+}
 
 export default async function AdminClientsPage() {
   await requireAdmin();
 
-  // One unfiltered fetch (no server-side archived/page params anymore) —
-  // filtering, sorting and search all happen client-side in
-  // ClientsWorkspace, the same "fetch once, filter in useMemo" convention
-  // already used by LeadsListView/GlobalAdminSearch elsewhere in this
-  // admin. That's also the only way to show real Tous/Actifs/Archivés
-  // counts simultaneously without three separate queries.
-  const { data: clientRows, error: clientsError } = await supabaseAdmin
-    .from("profiles")
-    .select("id, full_name, email, company, account_manager_id, avatar_path, created_at, archived_at")
-    .eq("role", "client")
-    .order("created_at", { ascending: false });
-
-  if (clientsError) {
-    return (
-      <main className="px-6 py-10 max-w-6xl mx-auto w-full">
-        <ErrorState message="Impossible de charger les clients." />
-      </main>
-    );
-  }
-
-  const clients = clientRows ?? [];
-  const clientIds = clients.map((c) => c.id);
-
-  const managerIds = Array.from(new Set(clients.map((c) => c.account_manager_id).filter((id): id is string => !!id)));
-  const { data: managerRows } = managerIds.length
-    ? await supabaseAdmin.from("profiles").select("id, full_name, avatar_path").in("id", managerIds)
-    : { data: [] };
-  const managers: Record<string, ManagerInfo> = Object.fromEntries(
-    (managerRows ?? []).map((m) => [m.id, { full_name: m.full_name, avatar_url: getPublicAssetUrl(m.avatar_path) }])
-  );
-
-  const { data: projectRows } = clientIds.length
-    ? await supabaseAdmin.from("projects").select("id, client_id, name, status, progress_percent").in("client_id", clientIds)
-    : { data: [] };
-
-  const projectsByClient: Record<string, ClientProjectInfo[]> = {};
-  const statusCounts: Record<string, number> = {};
-  for (const p of projectRows ?? []) {
-    (projectsByClient[p.client_id] ??= []).push({ id: p.id, name: p.name, status: p.status, progress_percent: p.progress_percent });
-    statusCounts[p.status] = (statusCounts[p.status] ?? 0) + 1;
-  }
-
-  const { data: activityRows } = clientIds.length
-    ? await supabaseAdmin
-        .from("activity_log")
-        .select("client_id, type, title, admin_title, created_at")
-        .in("client_id", clientIds)
-        .order("created_at", { ascending: false })
-    : { data: [] };
-
-  // Already ordered desc — the first row seen per client_id is its latest.
-  const latestActivityByClient: Record<string, ClientActivityInfo> = {};
-  for (const a of activityRows ?? []) {
-    if (!latestActivityByClient[a.client_id]) {
-      latestActivityByClient[a.client_id] = { title: a.title, admin_title: a.admin_title, created_at: a.created_at };
-    }
-  }
+  const clients = await getClientSummaries();
 
   const { data: recentActivity } = await supabaseAdmin
     .from("activity_log")
@@ -99,65 +37,117 @@ export default async function AdminClientsPage() {
     .order("created_at", { ascending: false })
     .limit(8);
 
-  // `new Date()` here, not Date.now() — the lint rule against impure calls
-  // in render flags Date.now() specifically; new Date() with no args reads
-  // the same clock but isn't on its impure-call list (see the identical
-  // pattern already in src/app/admin/page.tsx:32).
-  const sevenDaysAgo = new Date(new Date().getTime() - SEVEN_DAYS_MS).toISOString();
-  const { count: recentActivityCount } = await supabaseAdmin
-    .from("activity_log")
-    .select("id", { count: "exact", head: true })
-    .gte("created_at", sevenDaysAgo);
+  const active = clients.filter((client) => !client.archivedAt);
 
-  const archivedCount = clients.filter((c) => c.archived_at).length;
-  const inProgressCount = statusCounts.in_progress ?? 0;
+  // La répartition porte sur les CLIENTS, pas sur les projets : c'est
+  // l'écran des clients, et un client à trois projets ne doit pas peser
+  // trois fois dans un anneau qui prétend le compter une fois.
+  const statusCounts: Record<string, number> = {};
+  let withoutProject = 0;
+  for (const client of active) {
+    if (!client.status) withoutProject += 1;
+    else statusCounts[client.status] = (statusCounts[client.status] ?? 0) + 1;
+  }
 
-  const rows: ClientRow[] = clients.map((c) => ({
-    id: c.id,
-    full_name: c.full_name,
-    email: c.email,
-    company: c.company,
-    account_manager_id: c.account_manager_id,
-    avatar_url: getPublicAssetUrl(c.avatar_path),
-    archived_at: c.archived_at,
-  }));
-
-  const projectSegments: DonutSegment[] = Object.entries(statusCounts)
-    .filter(([, value]) => value > 0)
-    .map(([status, value]) => ({
+  const segments: DonutSegment[] = [
+    ...Object.entries(statusCounts).map(([status, value]) => ({
       key: status,
       label: isProjectStatus(status) ? PROJECT_STATUS_LABELS[status] : status,
       value,
       color: STATUS_COLORS[status] ?? "var(--kov-steel)",
-    }));
+    })),
+    ...(withoutProject > 0
+      ? [{ key: "none", label: "Sans projet", value: withoutProject, color: "var(--kov-muted)" }]
+      : []),
+  ];
+
+  // Les prochaines échéances se lisent sur les projets déjà chargés : aucune
+  // requête de plus, et la liste ne peut pas contredire les cartes puisque
+  // c'est la même donnée.
+  const followUps = active
+    .filter((client) => client.leadProject?.nextDeadlineDate)
+    .sort((a, b) =>
+      (a.leadProject!.nextDeadlineDate as string).localeCompare(b.leadProject!.nextDeadlineDate as string)
+    )
+    .slice(0, 6);
+
+  const sansSociete = active.filter((client) => !client.company?.trim()).length;
 
   return (
-    <main className="px-6 py-10 max-w-6xl mx-auto w-full">
-      <div className="mb-8">
-        <p className="text-xs uppercase tracking-widest text-kov-steel mb-2">Clients</p>
-        <h1 className="font-display text-kov-bone text-2xl uppercase">Clients</h1>
-        <p className="text-kov-steel text-sm mt-2 max-w-xl">
-          Gérez vos clients, suivez leurs projets et centralisez toutes vos relations au même endroit.
-        </p>
+    <main className="px-6 py-10 max-w-[1600px] mx-auto w-full">
+      <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
+        <div>
+          <h1 className="font-display text-kov-bone text-2xl uppercase">Clients</h1>
+          <p className="text-kov-steel text-sm mt-2 max-w-xl">
+            Où en est chacun, et ce qui tombe ensuite.
+          </p>
+        </div>
+        <Link
+          href="/admin/leads"
+          className="px-5 py-2.5 border text-xs uppercase tracking-widest text-kov-bone hover:border-kov-red hover:text-kov-red transition-colors"
+          style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
+        >
+          Convertir un lead
+        </Link>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard label="Clients total" value={String(clients.length)} caption={clients.length > 1 ? "clients" : "client"} />
-        <StatCard label="Projets en cours" value={String(inProgressCount)} caption="tous clients confondus" />
-        <StatCard label="Clients archivés" value={String(archivedCount)} caption={archivedCount > 1 ? "clients archivés" : "client archivé"} />
-        <StatCard label="Activité récente" value={String(recentActivityCount ?? 0)} caption="interactions sur 7 jours" />
-      </div>
+      <div className="xl:grid xl:grid-cols-[1fr_340px] xl:gap-6 xl:items-start">
+        <ClientsWorkspace clients={clients} />
 
-      <ClientsWorkspace
-        clients={rows}
-        managers={managers}
-        projectsByClient={projectsByClient}
-        latestActivityByClient={latestActivityByClient}
-      />
+        <aside className="mt-8 xl:mt-0 space-y-6 xl:sticky xl:top-6">
+          {segments.length > 0 && (
+            <Donut title="Répartition des clients" segments={segments} centerLabel="clients" />
+          )}
 
-      <div className="grid md:grid-cols-2 gap-6 mt-6">
-        <ActivityFeed items={(recentActivity ?? []) as AdminActivityItem[]} />
-        <Donut title="Répartition des projets" segments={projectSegments} centerLabel="projets" />
+          <GlassCard className="p-5">
+            <p className="text-xs uppercase tracking-widest text-kov-steel mb-4">Prochaines échéances</p>
+            {followUps.length === 0 ? (
+              <p className="text-kov-steel text-sm">
+                Aucune échéance renseignée. Elles se saisissent sur la fiche d&apos;un projet et remontent ici
+                automatiquement.
+              </p>
+            ) : (
+              <ul className="space-y-3">
+                {followUps.map((client) => (
+                  <li key={client.id}>
+                    <Link
+                      href={`/admin/projects/${client.leadProject!.id}`}
+                      className="flex items-start gap-3 group"
+                    >
+                      <ClientAvatar name={clientDisplayName(client)} avatarUrl={client.avatarUrl} size={32} />
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-kov-bone text-sm truncate group-hover:text-kov-red transition-colors">
+                          {clientDisplayName(client)}
+                        </span>
+                        <span className="block text-kov-steel text-[11px] truncate">
+                          {client.leadProject!.nextDeadlineLabel?.trim() || client.leadProject!.name}
+                        </span>
+                        <span className="block text-kov-concrete text-[11px]">
+                          {formatDeadline(client.leadProject!.nextDeadlineDate as string)}
+                        </span>
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </GlassCard>
+
+          <ActivityFeed items={(recentActivity ?? []) as AdminActivityItem[]} />
+
+          {/* Ce qui manque en base, dit une fois plutôt que répété sur chaque
+              carte. C'est la ligne qui fait aller remplir les fiches. */}
+          {sansSociete > 0 && (
+            <GlassCard className="p-5">
+              <p className="text-kov-bone text-sm">
+                {sansSociete} client{sansSociete > 1 ? "s" : ""} sans raison sociale
+              </p>
+              <p className="text-kov-steel text-xs mt-1">
+                Elle apparaît sur les devis et les factures. Sans elle, le document part au nom de la personne.
+              </p>
+            </GlassCard>
+          )}
+        </aside>
       </div>
     </main>
   );
