@@ -36,7 +36,7 @@ export function ProjectShowcase({ projects }: { projects: ShowcaseProject[] }) {
   return (
     <section>
       <div className="mb-4 flex items-center justify-between gap-4">
-        <h2 className="text-xs uppercase tracking-widest text-kov-concrete">Vos projets</h2>
+        <h2 className="font-mono text-[10px] uppercase tracking-[0.3em] text-kov-concrete">Autres projets</h2>
         {projects.length > 0 && (
           <Link href="/client/projects" className="text-xs uppercase tracking-widest text-kov-red hover:underline">
             Voir tous →
@@ -58,7 +58,7 @@ export function ProjectShowcase({ projects }: { projects: ShowcaseProject[] }) {
           {projects.slice(0, 6).map((project) => {
             const color = PROJECT_STATUS_COLORS[project.status] ?? "var(--kov-steel)";
             return (
-              <GlassCard key={project.id} className="kov-lift overflow-hidden">
+              <div key={project.id} className="kov-surface kov-lift overflow-hidden">
                 <Link href={`/client/projects/${project.id}`} className="group block">
                   <span
                     className="relative block h-32 w-full overflow-hidden"
@@ -125,7 +125,7 @@ export function ProjectShowcase({ projects }: { projects: ShowcaseProject[] }) {
                     )}
                   </span>
                 </Link>
-              </GlassCard>
+              </div>
             );
           })}
         </div>

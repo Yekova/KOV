@@ -58,6 +58,21 @@
   --glass-shadow-full: inset 0 1px 0 var(--glass-highlight), inset 0 0 0 1px rgba(255, 255, 255, 0.03),
     0 8px 30px var(--glass-shadow);
 
+  /* ── Les tons de surface ────────────────────────────────────────────
+     Il n'y en avait que deux utilisés en pratique : --kov-carbon pour les
+     barres et le verre pour tout le reste. D'où un espace client où chaque
+     bloc flottait au même niveau, avec la même bordure — l'œil n'avait
+     aucune raison d'aller quelque part plutôt qu'ailleurs.
+
+     Quatre tons, et l'écart entre eux est ce qui remplace une bordure :
+     une surface plus claire est DEVANT, sans qu'on ait à l'entourer d'un
+     trait. C'est la règle qui permet de supprimer des cadres au lieu d'en
+     ajouter. */
+  --kov-void: #08090a;
+  --kov-surface-1: #0e1012;
+  --kov-surface-2: #131518;
+  --kov-surface-3: #191b1f;
+
   /* ── Mouvement ──────────────────────────────────────────────────────
      Il n'y en avait aucun : chaque transition du site portait sa propre
      durée et sa propre courbe, écrites à la main là où elles tombaient.

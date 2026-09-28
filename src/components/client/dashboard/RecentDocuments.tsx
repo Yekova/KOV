@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { GlassCard } from "@/components/ui/GlassCard";
 import { Button } from "@/components/ui/Button";
 import { formatRelativeTime } from "@/lib/formatRelativeTime";
 import { downloadDocument } from "@/app/client/documents/actions";
@@ -25,7 +24,7 @@ function formatSize(bytes: number | null): string | null {
 
 export function RecentDocuments({ documents }: { documents: RecentDocument[] }) {
   return (
-    <GlassCard className="flex flex-col p-6">
+    <div className="kov-surface flex flex-col p-6">
       <div className="mb-5 flex items-center justify-between gap-4">
         <h2 className="text-xs uppercase tracking-widest text-kov-concrete">Documents récents</h2>
         {documents.length > 0 && (
@@ -82,6 +81,6 @@ export function RecentDocuments({ documents }: { documents: RecentDocument[] }) 
           })}
         </ul>
       )}
-    </GlassCard>
+    </div>
   );
 }

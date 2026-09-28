@@ -7,11 +7,10 @@ import { isInvoiceOverdue } from "@/lib/portal/status";
 import { ActionRequiredCard, type ActionItem } from "@/components/client/dashboard/ActionRequiredCard";
 import { DashboardHero } from "@/components/client/dashboard/DashboardHero";
 import { ProjectShowcase, type ShowcaseProject } from "@/components/client/dashboard/ProjectShowcase";
+import { ProjectStoryCard, type FeaturedProject } from "@/components/client/dashboard/ProjectStoryCard";
+import { RelationPanel } from "@/components/client/dashboard/RelationPanel";
 import { UpcomingDeadlines, type Deadline } from "@/components/client/dashboard/UpcomingDeadlines";
 import { RecentDocuments, type RecentDocument } from "@/components/client/dashboard/RecentDocuments";
-import { BillingSummary, type BillingRow } from "@/components/client/dashboard/BillingSummary";
-import { AccountManagerCard } from "@/components/client/dashboard/AccountManagerCard";
-import { RecentActivityFeed } from "@/components/client/dashboard/RecentActivityFeed";
 
 export const metadata: Metadata = {
   title: "Tableau de bord — KOV",
@@ -83,7 +82,33 @@ export default async function ClientDashboardPage() {
         .then((r) => r.data)
     : null;
 
-  const showcase: ShowcaseProject[] = projectRows.map(({ project, progress, current }) => ({
+  // Le projet principal : celui qui avance. À défaut, le plus récent.
+  // Jamais choisi au hasard, et jamais inventé quand il n'y en a aucun.
+  const featuredRow =
+    projectRows.find(({ project }) => project.status === "in_progress") ??
+    projectRows.find(({ project }) => project.status !== "done") ??
+    projectRows[0] ??
+    null;
+
+  const featured: FeaturedProject | null = featuredRow
+    ? {
+        id: featuredRow.project.id,
+        name: featuredRow.project.name,
+        category: featuredRow.project.category,
+        status: featuredRow.project.status,
+        progressPercent: featuredRow.progress.percent,
+        currentPhase: featuredRow.current.label,
+        nextDeadline: featuredRow.project.next_deadline_date,
+        thumbnailUrl: getPublicAssetUrl(featuredRow.project.thumbnail_path),
+        phases: [...featuredRow.phases]
+          .sort((a, b) => a.position - b.position)
+          .map((phase) => ({ id: phase.id, name: phase.name, status: phase.status, dueDate: phase.due_date ?? null })),
+      }
+    : null;
+
+  const showcase: ShowcaseProject[] = projectRows
+    .filter(({ project }) => project.id !== featured?.id)
+    .map(({ project, progress, current }) => ({
     id: project.id,
     name: project.name,
     category: project.category,
@@ -94,6 +119,17 @@ export default async function ClientDashboardPage() {
     nextDeadline: project.next_deadline_date,
     thumbnailUrl: getPublicAssetUrl(project.thumbnail_path),
   }));
+
+  // Le visuel du hero vient du projet principal quand il en a un. Sinon le
+  // visuel KOV — jamais l'image d'un autre projet.
+  const heroImage = featured?.thumbnailUrl ?? "/kov/character/contact-frames/frame-040.jpg";
+
+  // Une phrase d'état, ou rien. Elle ne se remplit que de ce qui est vrai.
+  const statusLine = featured
+    ? featured.currentPhase
+      ? `« ${featured.name} » avance : étape ${featured.currentPhase.toLowerCase()}.`
+      : `« ${featured.name} » est en cours.`
+    : null;
 
   // ── Les échéances ─────────────────────────────────────────────────────
   //
@@ -173,39 +209,13 @@ export default async function ClientDashboardPage() {
   // Des sommes, pas des estimations. paid_at existe en base depuis la
   // migration 20260819110200, donc la comparaison mensuelle est un fait
   // et non une tendance devinée.
-  const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-  const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).getTime();
-
+  // Le total dû, et rien d'autre : la comparaison mensuelle vit sur
+  // l'écran de facturation, où elle a un tableau autour d'elle pour la
+  // rendre lisible. Ici, c'est une ligne dans le panneau Relation.
   let outstandingCents = 0;
-  let paidThisMonthCents = 0;
-  let paidLastMonthCents = 0;
   for (const invoice of invoiceRows) {
     if (invoice.status === "sent") outstandingCents += invoice.amount_cents;
-    if (invoice.status === "paid" && invoice.paid_at) {
-      const paidAt = new Date(invoice.paid_at).getTime();
-      if (paidAt >= monthStart) paidThisMonthCents += invoice.amount_cents;
-      else if (paidAt >= previousMonthStart) paidLastMonthCents += invoice.amount_cents;
-    }
   }
-
-  const billingRows: BillingRow[] = invoiceRows.slice(0, 3).map((invoice) => {
-    const overdue = isInvoiceOverdue(invoice.status, invoice.due_at);
-    return {
-      id: invoice.id,
-      reference: invoice.reference,
-      amountCents: invoice.amount_cents,
-      currency: invoice.currency,
-      label: overdue
-        ? "En retard"
-        : invoice.status === "paid"
-          ? "Payée"
-          : invoice.status === "sent"
-            ? "À régler"
-            : "Brouillon",
-      color: overdue ? "var(--kov-red)" : invoice.status === "paid" ? "#3FB27F" : "#F5A524",
-    };
-  });
 
   const recentDocuments: RecentDocument[] = (documents ?? []).map((document) => ({
     id: document.id,
@@ -215,16 +225,31 @@ export default async function ClientDashboardPage() {
   }));
 
   return (
-    <main className="mx-auto w-full max-w-[1800px] px-6 py-8 md:px-10">
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-        {/* La colonne large porte ce sur quoi on agit, l'étroite ce qui
-            s'est passé. C'est la seule division qui tienne sur cet écran. */}
-        <div className="space-y-6 xl:col-span-2">
-          <DashboardHero fullName={profile?.full_name ?? null} />
+    <main className="mx-auto w-full max-w-[1700px] px-6 py-8 md:px-10">
+      {/* La composition répond aux cinq questions du client, dans l'ordre
+          où il se les pose : où en suis-je (hero), que dois-je faire
+          (action), où en est mon projet (projet principal), quand
+          (échéances), avec quoi (documents), et qui je contacte (relation).
+
+          Trois surfaces primaires seulement — hero, projet principal,
+          relation — et le reste en retrait. C'est ce qui remplace la
+          grille de cartes équivalentes. */}
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="space-y-6">
+          <DashboardHero
+            fullName={profile?.full_name ?? null}
+            imageUrl={heroImage}
+            imageIsProject={Boolean(featured?.thumbnailUrl)}
+            statusLine={statusLine}
+          />
 
           <ActionRequiredCard items={actionItems} />
 
-          <ProjectShowcase projects={showcase} />
+          {featured && <ProjectStoryCard project={featured} />}
+
+          {/* Les autres projets, volontairement plus petits : un seul est
+              mis en scène. */}
+          {showcase.length > 0 && <ProjectShowcase projects={showcase} />}
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <UpcomingDeadlines deadlines={deadlines.slice(0, SHORTLIST)} />
@@ -232,27 +257,26 @@ export default async function ClientDashboardPage() {
           </div>
         </div>
 
-        <div className="space-y-6">
-          <AccountManagerCard
+        <div className="xl:sticky xl:top-6 xl:self-start">
+          <RelationPanel
             manager={
               manager
                 ? {
-                    full_name: manager.full_name,
-                    display_title: manager.display_title,
-                    avatar_url: getPublicAssetUrl(manager.avatar_path),
-                    is_online: manager.is_online,
+                    fullName: manager.full_name,
+                    displayTitle: manager.display_title,
+                    avatarUrl: getPublicAssetUrl(manager.avatar_path),
+                    isOnline: manager.is_online,
                   }
                 : null
             }
-          />
-          <BillingSummary
             outstandingCents={outstandingCents}
             currency={invoiceRows[0]?.currency ?? "EUR"}
-            paidThisMonthCents={paidThisMonthCents}
-            paidLastMonthCents={paidLastMonthCents}
-            rows={billingRows}
+            activity={(activity ?? []).map((row) => ({
+              id: row.id,
+              title: row.title,
+              createdAt: row.created_at,
+            }))}
           />
-          <RecentActivityFeed items={activity ?? []} />
         </div>
       </div>
     </main>

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { GlassCard } from "@/components/ui/GlassCard";
 
 export type Deadline = {
   id: string;
@@ -28,7 +27,7 @@ const MONTHS = ["JANV", "FÉVR", "MARS", "AVR", "MAI", "JUIN", "JUIL", "AOÛT", 
 
 export function UpcomingDeadlines({ deadlines }: { deadlines: Deadline[] }) {
   return (
-    <GlassCard className="flex flex-col p-6">
+    <div className="kov-surface flex flex-col p-6">
       <div className="mb-5 flex items-center justify-between gap-4">
         <h2 className="text-xs uppercase tracking-widest text-kov-concrete">Prochaines échéances</h2>
       </div>
@@ -84,6 +83,6 @@ export function UpcomingDeadlines({ deadlines }: { deadlines: Deadline[] }) {
           })}
         </ul>
       )}
-    </GlassCard>
+    </div>
   );
 }

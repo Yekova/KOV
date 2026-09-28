@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { GlassCard } from "@/components/ui/GlassCard";
 
 // Ce que le client doit faire, au-dessus de la ligne de flottaison.
 //
@@ -23,8 +22,8 @@ export function ActionRequiredCard({ items }: { items: ActionItem[] }) {
   if (items.length === 0) return null;
 
   return (
-    <GlassCard className="p-6">
-      <p className="text-xs uppercase tracking-widest text-kov-red mb-4">
+    <section className="kov-surface--action p-6 sm:p-7">
+      <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-kov-red mb-4">
         {items.length === 1 ? "Une action vous attend" : `${items.length} actions vous attendent`}
       </p>
 
@@ -48,6 +47,6 @@ export function ActionRequiredCard({ items }: { items: ActionItem[] }) {
           </li>
         ))}
       </ul>
-    </GlassCard>
+    </section>
   );
 }

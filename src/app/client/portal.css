@@ -85,3 +85,77 @@
     animation: none;
   }
 }
+
+/* ── La profondeur du fond ───────────────────────────────────────────── */
+
+/* Le portail était posé sur un noir plat, et chaque carte flottait dessus
+ * au même niveau. Trois couches y remédient, toutes très faibles :
+ *
+ *  - une lueur rouge haute à gauche, à 6 % : elle donne une direction à la
+ *    lumière, donc un haut et un bas à l'écran ;
+ *  - un vignettage, qui ramène l'œil vers le centre ;
+ *  - des lignes verticales à 1,5 %, qui donnent une échelle — sans elles,
+ *    un aplat sombre n'a pas de taille.
+ *
+ * Statique, pas animé : un fond qui bouge derrière du texte se paie en
+ * lisibilité et en batterie, et le brief demande de la profondeur, pas du
+ * mouvement. */
+
+.kov-portal {
+  position: relative;
+  background: var(--kov-void);
+  isolation: isolate;
+}
+
+.kov-portal::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(70% 55% at 22% 0%, rgba(160, 12, 18, 0.09), transparent 58%),
+    radial-gradient(90% 70% at 50% 120%, rgba(0, 0, 0, 0.75), transparent 60%),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.015) 0px,
+      rgba(255, 255, 255, 0.015) 1px,
+      transparent 1px,
+      transparent 120px
+    );
+}
+
+/* ── Les familles de surface ─────────────────────────────────────────── */
+
+/* Trois familles, et elles ne se distinguent PAS par leur bordure.
+ * C'est le ton qui dit le niveau : plus clair veut dire plus près. Les
+ * bordures deviennent des liserés très faibles, ou disparaissent. */
+
+.kov-panel {
+  background: linear-gradient(160deg, var(--kov-surface-2) 0%, var(--kov-surface-1) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-glass);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 20px 60px -40px rgba(0, 0, 0, 0.9);
+}
+
+.kov-surface {
+  background: var(--kov-surface-1);
+  border-radius: var(--radius-md);
+}
+
+/* La seule surface qui a le droit à du rouge en fond : celle qui demande
+ * un geste. Le rouge signale, il ne décore pas. */
+.kov-surface--action {
+  background:
+    radial-gradient(90% 140% at 100% 0%, rgba(227, 30, 36, 0.14), transparent 62%),
+    var(--kov-surface-2);
+  border: 1px solid rgba(227, 30, 36, 0.28);
+  border-radius: var(--radius-glass);
+}
+
+/* Un séparateur interne remplace deux bordures de cartes voisines. */
+.kov-divide > * + * {
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
