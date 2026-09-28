@@ -15,6 +15,9 @@ export function revalidateClient(clientId: string) {
   revalidatePath("/client/projects");
   revalidatePath("/client/documents");
   revalidatePath("/client/invoices");
+  // Les deux : /client/quotes existe encore et redirige, mais c'est
+  // /client/invoices qui affiche désormais les devis.
   revalidatePath("/client/quotes");
+  revalidatePath("/client/invoices");
   revalidatePath("/client/requests");
 }

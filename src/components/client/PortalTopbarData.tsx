@@ -10,8 +10,9 @@ function notificationHref(type: string, projectId: string | null): string {
       return "/client/requests";
     case "invoice":
       return "/client/invoices";
+    // Les devis vivent avec les factures depuis la fusion des deux écrans.
     case "quote":
-      return "/client/quotes";
+      return "/client/invoices";
     case "document":
       return projectId ? `/client/projects/${projectId}` : "/client/documents";
     default:
@@ -66,7 +67,7 @@ export async function PortalTopbarData({ userId }: { userId: string }) {
     ...(projects ?? []).map((p) => ({ label: p.name, sublabel: p.category || "Projet", href: `/client/projects/${p.id}` })),
     ...(documents ?? []).map((d) => ({ label: d.filename, sublabel: "Document", href: "/client/documents" })),
     ...(invoices ?? []).map((i) => ({ label: i.reference, sublabel: "Facture", href: "/client/invoices" })),
-    ...(quotes ?? []).map((q) => ({ label: q.reference, sublabel: "Devis", href: "/client/quotes" })),
+    ...(quotes ?? []).map((q) => ({ label: q.reference, sublabel: "Devis", href: "/client/invoices" })),
   ];
 
   const notifications: ClientNotificationItem[] = (recentActivity ?? []).map((a) => ({

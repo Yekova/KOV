@@ -1,85 +1,85 @@
 import type { Metadata } from "next";
 import { requireUser } from "@/lib/auth";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { GlassCard } from "@/components/ui/GlassCard";
-import { Button } from "@/components/ui/Button";
-import { INVOICE_STATUS_LABELS, isInvoiceOverdue, type InvoiceStatus } from "@/lib/portal/status";
-import { formatMoneyPrecise } from "@/lib/pricing/money";
-import { downloadInvoice } from "./actions";
+import { getClientBilling } from "@/lib/portal/billing";
+import { getBusinessInfo } from "@/lib/billing/businessInfo";
+import { ActionRequiredCard, type ActionItem } from "@/components/client/dashboard/ActionRequiredCard";
+import { BillingKpis } from "@/components/client/billing/BillingKpis";
+import { BillingWorkspace } from "@/components/client/billing/BillingWorkspace";
+import { PaymentHistory } from "@/components/client/billing/PaymentHistory";
+import { BillingResources } from "@/components/client/billing/BillingResources";
 
 export const metadata: Metadata = {
-  title: "Facturation — KOV",
+  title: "Facturation & devis — KOV",
 };
 
-export default async function ClientInvoicesPage() {
+// Un seul écran pour les devis et les factures.
+//
+// Ils vivaient sur deux pages, avec deux entrées de menu, alors qu'un devis
+// DEVIENT une facture (quotes.invoice_id) : suivre un montant obligeait à
+// changer d'onglet au milieu de son propre parcours. /client/quotes
+// redirige maintenant ici, et l'entrée « Devis » a quitté le menu.
+export default async function ClientBillingPage() {
   const user = await requireUser();
 
-  const { data: invoices } = await supabaseAdmin
-    .from("invoices")
-    .select("id, reference, amount_cents, currency, status, pdf_storage_path, issued_at, due_at, kind, deposit_percent")
-    .eq("client_id", user.id)
-    .order("issued_at", { ascending: false });
+  const [billing, business] = await Promise.all([getClientBilling(user.id), getBusinessInfo()]);
 
-  const rows = invoices ?? [];
+  const actionItems: ActionItem[] = billing.documents
+    .filter((document) => document.actionable)
+    .map((document) => ({
+      id: `${document.kind}-${document.id}`,
+      label:
+        document.kind === "quote"
+          ? `Devis ${document.reference} à signer`
+          : document.statusLabel === "En retard"
+            ? `Facture ${document.reference} en retard`
+            : `Facture ${document.reference} à régler`,
+      detail:
+        document.dueDate && document.dueInDays !== null
+          ? document.dueInDays < 0
+            ? `Échéance dépassée depuis ${Math.abs(document.dueInDays)} jour${Math.abs(document.dueInDays) > 1 ? "s" : ""}`
+            : `Avant le ${new Date(document.dueDate).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}`
+          : document.kind === "quote"
+            ? "En attente de votre retour"
+            : "Sans échéance",
+      href: "#documents",
+      urgent: document.statusLabel === "En retard",
+    }));
+
+  const payments = billing.documents.filter((document) => document.paidAt);
 
   return (
-    <main className="px-6 md:px-10 py-10 max-w-[1400px] mx-auto w-full">
-      <h1 className="font-display text-kov-bone text-2xl uppercase mb-8">Facturation</h1>
+    <main className="mx-auto w-full max-w-[1600px] space-y-6 px-6 py-8 md:px-10">
+      <div>
+        <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-kov-red">Facturation</p>
+        <h1
+          className="mt-3 font-display uppercase text-kov-bone"
+          style={{ fontSize: "clamp(26px, 3.4vw, 42px)", lineHeight: 1.05, letterSpacing: "-0.025em" }}
+        >
+          Devis &amp; factures<span className="text-kov-red">.</span>
+        </h1>
+        <p className="mt-3 max-w-xl text-sm leading-relaxed text-kov-concrete">
+          Tout ce que le studio vous adresse, au même endroit — de la proposition signée à la facture réglée.
+        </p>
+      </div>
 
-      <GlassCard className="p-6">
-        {rows.length === 0 ? (
-          <p className="text-kov-steel text-sm">Aucune facture pour l&apos;instant.</p>
-        ) : (
-          <ul>
-            {rows.map((invoice) => (
-              <li
-                key={invoice.id}
-                className="flex items-center justify-between gap-4 py-4 border-b last:border-b-0"
-                style={{ borderColor: "var(--kov-border)" }}
-              >
-                <div className="min-w-0">
-                  <p className="text-kov-bone text-sm">
-                    {invoice.reference}
-                    {invoice.kind === "deposit" && (
-                      <span className="text-kov-steel text-xs ml-2 uppercase tracking-widest">
-                        Acompte{invoice.deposit_percent ? ` ${invoice.deposit_percent}%` : ""}
-                      </span>
-                    )}
-                    {invoice.kind === "balance" && <span className="text-kov-steel text-xs ml-2 uppercase tracking-widest">Solde</span>}
-                    {isInvoiceOverdue(invoice.status, invoice.due_at) && (
-                      <span
-                        className="text-[10px] uppercase tracking-widest text-kov-red px-2 py-0.5 ml-2"
-                        style={{ background: "rgba(220,38,38,0.1)", borderRadius: "var(--radius-sm)" }}
-                      >
-                        En retard
-                      </span>
-                    )}
-                  </p>
-                  <p className="text-kov-steel text-xs mt-1">
-                    {new Date(invoice.issued_at).toLocaleDateString("fr-FR")} —{" "}
-                    <span className="tabular-nums">{formatMoneyPrecise(invoice.amount_cents, invoice.currency)}</span>
-                  </p>
-                </div>
-                <div className="flex items-center gap-4 shrink-0">
-                  <span className="text-kov-steel text-xs uppercase tracking-widest">
-                    {INVOICE_STATUS_LABELS[invoice.status as InvoiceStatus] ?? invoice.status}
-                  </span>
-                  {invoice.pdf_storage_path ? (
-                    <form action={downloadInvoice}>
-                      <input type="hidden" name="invoice_id" value={invoice.id} />
-                      <Button type="submit" variant="ghost">
-                        Télécharger →
-                      </Button>
-                    </form>
-                  ) : (
-                    <span className="text-kov-steel text-xs">PDF indisponible</span>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </GlassCard>
+      <BillingKpis
+        quotesToSign={billing.quotesToSign}
+        invoicesToPay={billing.invoicesToPay}
+        outstandingCents={billing.outstandingCents}
+        paidThisMonthCents={billing.paidThisMonthCents}
+        paidLastMonthCents={billing.paidLastMonthCents}
+        currency={billing.currency}
+      />
+
+      <ActionRequiredCard items={actionItems} />
+
+      <div id="documents" className="scroll-mt-6">
+        <BillingWorkspace documents={billing.documents} />
+      </div>
+
+      <PaymentHistory payments={payments} />
+
+      <BillingResources business={business} />
     </main>
   );
 }

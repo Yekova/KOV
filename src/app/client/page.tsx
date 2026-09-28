@@ -144,7 +144,7 @@ export default async function ClientDashboardPage() {
         id: `quote-${quote.id}`,
         label: `Devis ${quote.reference} à signer`,
         detail: quote.signing_url ? "Signature électronique en attente" : "En attente de votre retour",
-        href: "/client/quotes",
+        href: "/client/invoices",
         urgent: true,
       })),
     ...invoiceRows

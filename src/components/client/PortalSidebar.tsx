@@ -41,20 +41,12 @@ const NAV_ITEMS = [
       </>
     ),
   },
-  {
-    href: "/client/quotes",
-    label: "Devis",
-    icon: (
-      <>
-        <path d="M7 3h7l5 5v13H7z" />
-        <path d="M14 3v5h5" />
-        <path d="M9.5 13.5l2 2 4-4.5" />
-      </>
-    ),
-  },
+  // « Devis » a fusionné avec « Facturation » : un devis devient une
+  // facture, les séparer obligeait à suivre un montant d'un onglet à
+  // l'autre. /client/quotes redirige vers /client/invoices.
   {
     href: "/client/invoices",
-    label: "Facturation",
+    label: "Devis & factures",
     icon: (
       <>
         <rect x="3" y="6" width="18" height="13" rx="1.5" />

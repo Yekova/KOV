@@ -315,7 +315,7 @@ export default async function ClientProjectDetailPage(props: PageProps<"/client/
             {quoteRows.map((quote) => (
               <li key={quote.id}>
                 <Link
-                  href="/client/quotes"
+                  href="/client/invoices"
                   className="flex items-center justify-between gap-4 py-3 -mx-2 px-2 hover:bg-white/[0.02] transition-colors"
                 >
                   <span className="min-w-0">

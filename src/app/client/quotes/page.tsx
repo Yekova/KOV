@@ -1,76 +1,12 @@
-import type { Metadata } from "next";
-import { requireUser } from "@/lib/auth";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { GlassCard } from "@/components/ui/GlassCard";
-import { QUOTE_STATUS_LABELS, isQuoteExpired, type QuoteStatus } from "@/lib/portal/status";
-import { fromDbLineItems } from "@/lib/billing/quoteLineItems";
-import { formatEurosPrecise } from "@/lib/pricing/money";
-import { QuoteRowActions } from "./QuoteRowActions";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Devis — KOV",
-};
-
-export default async function ClientQuotesPage() {
-  const user = await requireUser();
-
-  const { data: quotes } = await supabaseAdmin
-    .from("quotes")
-    .select("id, reference, line_items, total_cents, status, valid_until, created_at, signing_url, signed_at")
-    .eq("client_id", user.id)
-    .order("created_at", { ascending: false });
-
-  const rows = quotes ?? [];
-
-  return (
-    <main className="px-6 md:px-10 py-10 max-w-[1400px] mx-auto w-full">
-      <h1 className="font-display text-kov-bone text-2xl uppercase mb-8">Devis</h1>
-
-      <GlassCard className="p-6">
-        {rows.length === 0 ? (
-          <p className="text-kov-steel text-sm">Aucun devis pour l&apos;instant.</p>
-        ) : (
-          <ul>
-            {rows.map((quote) => {
-              const items = fromDbLineItems(quote.line_items);
-              return (
-                <li
-                  key={quote.id}
-                  className="flex flex-wrap items-center justify-between gap-4 py-4 border-b last:border-b-0"
-                  style={{ borderColor: "var(--kov-border)" }}
-                >
-                  <div className="min-w-0">
-                    <p className="text-kov-bone text-sm">
-                      {quote.reference}
-                      {isQuoteExpired(quote.status, quote.valid_until) && (
-                        <span
-                          className="text-[10px] uppercase tracking-widest text-kov-red px-2 py-0.5 ml-2"
-                          style={{ background: "rgba(220,38,38,0.1)", borderRadius: "var(--radius-sm)" }}
-                        >
-                          Expiré
-                        </span>
-                      )}
-                    </p>
-                    <p className="text-kov-steel text-xs mt-1">
-                      {items.length} prestation{items.length > 1 ? "s" : ""}
-                      {quote.valid_until && ` — valable jusqu'au ${new Date(quote.valid_until).toLocaleDateString("fr-FR")}`}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-4 shrink-0">
-                    {/* toFixed(2) donnait « 12450.00 € » à un lecteur français : point
-                        décimal, aucun séparateur de milliers. */}
-                    <span className="text-kov-bone text-sm tabular-nums">{formatEurosPrecise(quote.total_cents)}</span>
-                    <span className="text-kov-steel text-xs uppercase tracking-widest">
-                      {QUOTE_STATUS_LABELS[quote.status as QuoteStatus] ?? quote.status}
-                    </span>
-                    <QuoteRowActions quoteId={quote.id} signingUrl={quote.signing_url} signedAt={quote.signed_at} />
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </GlassCard>
-    </main>
-  );
+// Les devis ont rejoint la facturation.
+//
+// Un devis devient une facture (quotes.invoice_id) : les séparer obligeait
+// le client à suivre un même montant d'un onglet à l'autre. L'entrée
+// « Devis » a quitté le menu ; la route reste et redirige, parce qu'un
+// signet, un e-mail de relance ou une notification plus ancienne ne doit
+// pas tomber sur un 404.
+export default function ClientQuotesPage() {
+  redirect("/client/invoices");
 }
