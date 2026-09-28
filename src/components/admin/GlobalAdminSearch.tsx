@@ -15,7 +15,7 @@ export type AdminSearchItem = {
 const CATEGORIES = ["Tout", "Clients", "Projets", "Leads", "Devis", "Factures", "Documents", "Prompts"] as const;
 
 // Prefetch-once-and-filter-client-side, same technique already proven by
-// GreetingSearchPanel in the client portal — this agency's data volume
+// PortalSearch in the client portal — this agency's data volume
 // doesn't justify a live per-keystroke Server Action (no debounce/race
 // handling needed, zero new failure modes).
 export function GlobalAdminSearch({ items }: { items: AdminSearchItem[] }) {

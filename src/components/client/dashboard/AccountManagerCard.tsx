@@ -3,6 +3,7 @@
 import { useState, useTransition, type FormEvent } from "react";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Button } from "@/components/ui/Button";
+import { Portrait } from "@/components/ui/Portrait";
 import { createRequestThread } from "@/app/client/requests/actions";
 
 type Manager = {
@@ -32,35 +33,20 @@ export function AccountManagerCard({ manager }: { manager: Manager | null }) {
   }
 
   return (
-    <GlassCard className="p-6 flex flex-col">
+    <GlassCard className="kov-portrait-host p-6 flex flex-col">
       <p className="text-xs uppercase tracking-widest text-kov-steel mb-4">Votre chef de projet</p>
 
       {manager ? (
         <>
+          {/* La pastille de présence a quitté la ligne du nom pour le coin du
+              portrait : c'est un état de la personne, pas une ponctuation de
+              son nom. Et elle était rouge — la couleur de signal du site
+              pour dire « en ligne », ce qui n'est pas un signal. */}
           <div className="flex items-center gap-3 mb-6">
-            <span
-              className="w-12 h-12 shrink-0 overflow-hidden flex items-center justify-center text-kov-bone"
-              style={{ borderRadius: "var(--radius-pill)", background: "var(--kov-graphite)" }}
-            >
-              {manager.avatar_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={manager.avatar_url} alt="" className="w-full h-full object-cover" />
-              ) : (
-                (manager.full_name || "K").charAt(0).toUpperCase()
-              )}
-            </span>
+            <Portrait src={manager.avatar_url} name={manager.full_name} size={56} isOnline={manager.is_online} />
             <div className="min-w-0">
-              <p className="text-kov-bone text-sm flex items-center gap-2">
-                <span className="truncate">{manager.full_name || "—"}</span>
-                <span
-                  className="w-1.5 h-1.5 shrink-0"
-                  style={{
-                    background: manager.is_online ? "var(--kov-red)" : "var(--kov-steel)",
-                    borderRadius: "var(--radius-pill)",
-                  }}
-                />
-              </p>
-              <p className="text-kov-steel text-xs">{manager.display_title || "Équipe KOV"}</p>
+              <p className="text-kov-bone text-sm truncate">{manager.full_name || "—"}</p>
+              <p className="text-kov-concrete text-xs mt-0.5">{manager.display_title || "Équipe KOV"}</p>
             </div>
           </div>
 

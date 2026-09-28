@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { getPublicAssetUrl } from "@/lib/portal/storage";
+import { Portrait } from "@/components/ui/Portrait";
 
 export const metadata: Metadata = {
   title: "Équipe KOV — KOV",
@@ -58,31 +59,12 @@ export default async function ClientTeamPage() {
           {team.map((member) => {
             const avatarUrl = getPublicAssetUrl(member.avatar_path);
             return (
-              <GlassCard key={member.id} className="p-6">
+              <GlassCard key={member.id} className="kov-portrait-host p-6">
                 <div className="flex items-center gap-4">
-                  <span
-                    className="w-14 h-14 shrink-0 overflow-hidden flex items-center justify-center text-kov-bone text-lg"
-                    style={{ borderRadius: "var(--radius-pill)", background: "var(--kov-graphite)" }}
-                  >
-                    {avatarUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      (member.full_name || "K").charAt(0).toUpperCase()
-                    )}
-                  </span>
+                  <Portrait src={avatarUrl} name={member.full_name} size={64} isOnline={member.is_online} />
                   <div className="min-w-0 flex-1">
-                    <p className="text-kov-bone text-sm flex items-center gap-2">
-                      <span className="truncate">{member.full_name || "—"}</span>
-                      <span
-                        className="w-1.5 h-1.5 shrink-0"
-                        style={{
-                          background: member.is_online ? "var(--kov-red)" : "var(--kov-steel)",
-                          borderRadius: "var(--radius-pill)",
-                        }}
-                      />
-                    </p>
-                    <p className="text-kov-steel text-xs mt-0.5">{member.display_title || "Équipe KOV"}</p>
+                    <p className="text-kov-bone text-sm truncate">{member.full_name || "—"}</p>
+                    <p className="text-kov-concrete text-xs mt-0.5">{member.display_title || "Équipe KOV"}</p>
                   </div>
                 </div>
 

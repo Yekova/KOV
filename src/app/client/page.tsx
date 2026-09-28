@@ -5,30 +5,28 @@ import { getPublicAssetUrl } from "@/lib/portal/storage";
 import { deriveCurrentPhase, deriveProgress, type ProjectPhase } from "@/lib/portal/progress";
 import { isInvoiceOverdue } from "@/lib/portal/status";
 import { ActionRequiredCard, type ActionItem } from "@/components/client/dashboard/ActionRequiredCard";
-import { GreetingSearchPanel, type PortalSearchItem } from "@/components/client/dashboard/GreetingSearchPanel";
-import { StatusDonutCard } from "@/components/client/dashboard/StatusDonutCard";
-import { NextDeadlineCard } from "@/components/client/dashboard/NextDeadlineCard";
+import { DashboardHero } from "@/components/client/dashboard/DashboardHero";
+import { ProjectShowcase, type ShowcaseProject } from "@/components/client/dashboard/ProjectShowcase";
+import { UpcomingDeadlines, type Deadline } from "@/components/client/dashboard/UpcomingDeadlines";
+import { RecentDocuments, type RecentDocument } from "@/components/client/dashboard/RecentDocuments";
+import { BillingSummary, type BillingRow } from "@/components/client/dashboard/BillingSummary";
 import { AccountManagerCard } from "@/components/client/dashboard/AccountManagerCard";
-import { ActiveProjectsList } from "@/components/client/dashboard/ActiveProjectsList";
 import { RecentActivityFeed } from "@/components/client/dashboard/RecentActivityFeed";
 
 export const metadata: Metadata = {
   title: "Tableau de bord — KOV",
 };
 
-// Ce que la recherche du tableau de bord peut trouver.
-//
-// C'était 30. Chercher une facture plus ancienne renvoyait zéro résultat,
-// sans rien dire — le pire comportement possible pour une recherche. 200
-// couvre l'historique réel d'un client tout en restant borné.
-const SEARCH_INDEX_LIMIT = 200;
+/** Combien d'échéances et de documents la page montre avant de renvoyer
+ *  vers l'écran qui les liste tous. */
+const SHORTLIST = 5;
 
-export default async function ClientDashboardPage(props: PageProps<"/client">) {
+function toIsoDay(value: string): string {
+  return value.slice(0, 10);
+}
+
+export default async function ClientDashboardPage() {
   const user = await requireUser();
-  const searchParams = await props.searchParams;
-  // Posé par la loupe de la barre du haut : le curseur doit arriver dans
-  // le champ, sinon le geste n'aboutit nulle part.
-  const focusSearch = searchParams.search === "1";
 
   const [{ data: profile }, { data: projects }, { data: documents }, { data: invoices }, { data: quotes }, { data: activity }] =
     await Promise.all([
@@ -39,49 +37,41 @@ export default async function ClientDashboardPage(props: PageProps<"/client">) {
         // type des colonnes depuis le littéral, et une concaténation le fait
         // retomber sur GenericStringError.
         .select(
-          "id, name, category, status, progress_percent, thumbnail_path, next_deadline_date, deadline_phase_label, project_phases(id, name, status, position)"
+          "id, name, category, status, progress_percent, thumbnail_path, next_deadline_date, deadline_phase_label, project_phases(id, name, status, position, due_date)"
         )
         .eq("client_id", user.id)
         .order("created_at", { ascending: false }),
       supabaseAdmin
         .from("documents")
-        .select("id, filename")
+        .select("id, filename, size_bytes, created_at")
         .eq("client_id", user.id)
+        .eq("visibility", "client")
         .order("created_at", { ascending: false })
-        .limit(SEARCH_INDEX_LIMIT),
-      // Les deux requêtes existaient déjà pour l'index de recherche : on
-      // élargit le select plutôt que d'en ajouter deux.
+        .limit(SHORTLIST),
       supabaseAdmin
         .from("invoices")
-        .select("id, reference, status, due_at, amount_cents")
+        .select("id, reference, status, due_at, paid_at, amount_cents, currency")
         .eq("client_id", user.id)
-        .order("issued_at", { ascending: false })
-        .limit(SEARCH_INDEX_LIMIT),
+        .order("issued_at", { ascending: false }),
       supabaseAdmin
         .from("quotes")
-        .select("id, reference, status, signed_at, signing_url, total_cents")
+        .select("id, reference, status, signed_at, signing_url")
         .eq("client_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(SEARCH_INDEX_LIMIT),
+        .order("created_at", { ascending: false }),
       supabaseAdmin
         .from("activity_log")
         .select("*")
         .eq("client_id", user.id)
         .order("created_at", { ascending: false })
-        .limit(10),
+        .limit(8),
     ]);
 
-  // Les phases font foi dès qu'il y en a : voir lib/portal/progress.ts. La
-  // dérivation se fait ici, à la frontière de données, pour que les cartes
-  // reçoivent exactement la forme qu'elles recevaient déjà. Les phases sont
-  // ramenées par la même requête, pas par une requête de plus.
+  // Les phases font foi dès qu'il y en a : voir lib/portal/progress.ts.
   const projectRows = (projects ?? []).map((project) => {
     const phases = (project.project_phases ?? []) as ProjectPhase[];
-    return {
-      ...project,
-      progress_percent: deriveProgress(phases, project.progress_percent).percent,
-      deadline_phase_label: deriveCurrentPhase(phases, project.deadline_phase_label).label,
-    };
+    const progress = deriveProgress(phases, project.progress_percent);
+    const current = deriveCurrentPhase(phases, project.deadline_phase_label);
+    return { project, phases, progress, current };
   });
 
   const manager = profile?.account_manager_id
@@ -93,18 +83,60 @@ export default async function ClientDashboardPage(props: PageProps<"/client">) {
         .then((r) => r.data)
     : null;
 
-  const nextDeadlineProject =
-    projectRows
-      .filter((p) => p.next_deadline_date)
-      .sort(
-        (a, b) => new Date(a.next_deadline_date).getTime() - new Date(b.next_deadline_date).getTime()
-      )[0] ?? null;
+  const showcase: ShowcaseProject[] = projectRows.map(({ project, progress, current }) => ({
+    id: project.id,
+    name: project.name,
+    category: project.category,
+    status: project.status,
+    progressPercent: progress.percent,
+    progressSource: progress.source,
+    currentPhase: current.label,
+    nextDeadline: project.next_deadline_date,
+    thumbnailUrl: getPublicAssetUrl(project.thumbnail_path),
+  }));
+
+  // ── Les échéances ─────────────────────────────────────────────────────
+  //
+  // Deux sources réelles, jamais une date fabriquée : l'échéance posée sur
+  // le projet, et la date due des phases qui ne sont pas terminées. Les
+  // doublons sont écartés par leur jour, pour qu'une phase et un projet qui
+  // tombent le même jour ne s'affichent pas deux fois.
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const deadlines: Deadline[] = [];
+  const seenDays = new Set<string>();
+
+  for (const { project, phases, current } of projectRows) {
+    if (project.next_deadline_date) {
+      seenDays.add(`${project.id}-${project.next_deadline_date}`);
+      deadlines.push({
+        id: `project-${project.id}`,
+        date: project.next_deadline_date,
+        label: current.label ?? "Prochaine étape",
+        projectId: project.id,
+        projectName: project.name,
+        overdue: project.next_deadline_date < todayIso,
+      });
+    }
+    for (const phase of phases) {
+      if (!phase.due_date || phase.status === "completed") continue;
+      const day = toIsoDay(phase.due_date);
+      const key = `${project.id}-${day}`;
+      if (seenDays.has(key)) continue;
+      seenDays.add(key);
+      deadlines.push({
+        id: `phase-${phase.id}`,
+        date: day,
+        label: phase.name,
+        projectId: project.id,
+        projectName: project.name,
+        overdue: day < todayIso,
+      });
+    }
+  }
+  deadlines.sort((a, b) => a.date.localeCompare(b.date));
 
   // ── Ce qui attend le client ───────────────────────────────────────────
-  //
-  // Un devis envoyé et non signé, une facture en retard : les deux objets
-  // les plus importants du portail étaient à un clic d'une page que
-  // personne n'ouvre spontanément.
+  const invoiceRows = invoices ?? [];
   const actionItems: ActionItem[] = [
     ...(quotes ?? [])
       .filter((quote) => quote.status === "sent" && !quote.signed_at)
@@ -115,7 +147,7 @@ export default async function ClientDashboardPage(props: PageProps<"/client">) {
         href: "/client/quotes",
         urgent: true,
       })),
-    ...(invoices ?? [])
+    ...invoiceRows
       .filter((invoice) => isInvoiceOverdue(invoice.status, invoice.due_at))
       .map((invoice) => ({
         id: `invoice-${invoice.id}`,
@@ -124,7 +156,7 @@ export default async function ClientDashboardPage(props: PageProps<"/client">) {
         href: "/client/invoices",
         urgent: true,
       })),
-    ...(invoices ?? [])
+    ...invoiceRows
       .filter((invoice) => invoice.status === "sent" && !isInvoiceOverdue(invoice.status, invoice.due_at))
       .map((invoice) => ({
         id: `invoice-due-${invoice.id}`,
@@ -136,81 +168,93 @@ export default async function ClientDashboardPage(props: PageProps<"/client">) {
       })),
   ];
 
-  const searchIndex: PortalSearchItem[] = [
-    ...projectRows.map((p) => ({ label: p.name, sublabel: p.category, href: "/client/projects" })),
-    ...(documents ?? []).map((d) => ({ label: d.filename, sublabel: "Document", href: "/client/documents" })),
-    ...(invoices ?? []).map((i) => ({ label: i.reference, sublabel: "Facture", href: "/client/invoices" })),
-    ...(quotes ?? []).map((q) => ({ label: q.reference, sublabel: "Devis", href: "/client/quotes" })),
-  ];
+  // ── La facturation ────────────────────────────────────────────────────
+  //
+  // Des sommes, pas des estimations. paid_at existe en base depuis la
+  // migration 20260819110200, donc la comparaison mensuelle est un fait
+  // et non une tendance devinée.
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+  const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).getTime();
+
+  let outstandingCents = 0;
+  let paidThisMonthCents = 0;
+  let paidLastMonthCents = 0;
+  for (const invoice of invoiceRows) {
+    if (invoice.status === "sent") outstandingCents += invoice.amount_cents;
+    if (invoice.status === "paid" && invoice.paid_at) {
+      const paidAt = new Date(invoice.paid_at).getTime();
+      if (paidAt >= monthStart) paidThisMonthCents += invoice.amount_cents;
+      else if (paidAt >= previousMonthStart) paidLastMonthCents += invoice.amount_cents;
+    }
+  }
+
+  const billingRows: BillingRow[] = invoiceRows.slice(0, 3).map((invoice) => {
+    const overdue = isInvoiceOverdue(invoice.status, invoice.due_at);
+    return {
+      id: invoice.id,
+      reference: invoice.reference,
+      amountCents: invoice.amount_cents,
+      currency: invoice.currency,
+      label: overdue
+        ? "En retard"
+        : invoice.status === "paid"
+          ? "Payée"
+          : invoice.status === "sent"
+            ? "À régler"
+            : "Brouillon",
+      color: overdue ? "var(--kov-red)" : invoice.status === "paid" ? "#3FB27F" : "#F5A524",
+    };
+  });
+
+  const recentDocuments: RecentDocument[] = (documents ?? []).map((document) => ({
+    id: document.id,
+    filename: document.filename,
+    sizeBytes: document.size_bytes,
+    createdAt: document.created_at,
+  }));
 
   return (
-    <div className="relative isolate">
-      {/* Same pattern as the admin dashboard (src/app/admin/page.tsx) — see
-          that file's comment for why this is `absolute`, not `fixed`, and
-          why the wrapper needs `isolate`. A different photo than admin's,
-          so the two portals don't feel like the same backdrop reused. */}
-      {/* object-position favors the right side of the frame — that's where
-          the gradient below lets it actually show through, behind the
-          narrower widget column rather than the text-heavy greeting panel. */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/kov/character/contact-frames/frame-040.jpg"
-        alt=""
-        aria-hidden="true"
-        className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none -z-10"
-        style={{ objectPosition: "75% center" }}
-      />
-      <div
-        className="absolute inset-0 -z-10"
-        style={{
-          background:
-            "linear-gradient(180deg, rgba(10,10,10,0.5) 0%, rgba(10,10,10,0.3) 45%, var(--kov-black) 90%), linear-gradient(90deg, var(--kov-black) 0%, rgba(10,10,10,0.55) 40%, rgba(10,10,10,0.25) 75%)",
-        }}
-      />
+    <main className="mx-auto w-full max-w-[1800px] px-6 py-8 md:px-10">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        {/* La colonne large porte ce sur quoi on agit, l'étroite ce qui
+            s'est passé. C'est la seule division qui tienne sur cet écran. */}
+        <div className="space-y-6 xl:col-span-2">
+          <DashboardHero fullName={profile?.full_name ?? null} />
 
-      <main className="relative px-6 md:px-10 py-10 max-w-[1800px] mx-auto w-full">
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          <div className="xl:col-span-2 space-y-6">
-            <GreetingSearchPanel
-              fullName={profile?.full_name ?? null}
-              searchIndex={searchIndex}
-              focusSearch={focusSearch}
-            />
+          <ActionRequiredCard items={actionItems} />
 
-            <ActionRequiredCard items={actionItems} />
+          <ProjectShowcase projects={showcase} />
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <StatusDonutCard projects={projectRows} />
-              <NextDeadlineCard project={nextDeadlineProject} today={new Date()} />
-              <AccountManagerCard
-                manager={
-                  manager
-                    ? {
-                        full_name: manager.full_name,
-                        display_title: manager.display_title,
-                        avatar_url: getPublicAssetUrl(manager.avatar_path),
-                        is_online: manager.is_online,
-                      }
-                    : null
-                }
-              />
-            </div>
-          </div>
-
-          <div className="space-y-6">
-            <ActiveProjectsList
-              projects={projectRows.map((p) => ({
-                id: p.id,
-                name: p.name,
-                category: p.category,
-                progress_percent: p.progress_percent,
-                thumbnail_url: getPublicAssetUrl(p.thumbnail_path),
-              }))}
-            />
-            <RecentActivityFeed items={activity ?? []} />
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <UpcomingDeadlines deadlines={deadlines.slice(0, SHORTLIST)} />
+            <RecentDocuments documents={recentDocuments} />
           </div>
         </div>
-      </main>
-    </div>
+
+        <div className="space-y-6">
+          <AccountManagerCard
+            manager={
+              manager
+                ? {
+                    full_name: manager.full_name,
+                    display_title: manager.display_title,
+                    avatar_url: getPublicAssetUrl(manager.avatar_path),
+                    is_online: manager.is_online,
+                  }
+                : null
+            }
+          />
+          <BillingSummary
+            outstandingCents={outstandingCents}
+            currency={invoiceRows[0]?.currency ?? "EUR"}
+            paidThisMonthCents={paidThisMonthCents}
+            paidLastMonthCents={paidLastMonthCents}
+            rows={billingRows}
+          />
+          <RecentActivityFeed items={activity ?? []} />
+        </div>
+      </div>
+    </main>
   );
 }

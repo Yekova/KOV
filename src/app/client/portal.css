@@ -47,3 +47,38 @@
     opacity: 0.7;
   }
 }
+
+/* Le portrait : gris au repos, en couleur au survol.
+ *
+ * Le filtre est sur l'image seule, jamais sur le conteneur : la pastille de
+ * présence et l'initiale de repli doivent garder leur couleur.
+ *
+ * Le survol se déclenche depuis le portrait ET depuis la carte qui
+ * l'accueille (.kov-portrait-host) : sur la carte « votre chef de projet »,
+ * viser exactement la vignette de 48px pour voir un visage s'allumer est une
+ * cible tactile qu'on n'a pas sur un téléphone. :focus-within suit, pour que
+ * le clavier obtienne la même chose que la souris.
+ *
+ * 0.2 plutôt que 0 : un gris complètement désaturé sur un fond presque noir
+ * devient une tache plate. Il reste une trace de teinte, qui fait qu'on lit
+ * une photographie éteinte et non un aplat. */
+
+.kov-portrait__img {
+  filter: grayscale(1) contrast(1.05) brightness(0.92);
+  transition: filter 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.kov-portrait:hover .kov-portrait__img,
+.kov-portrait:focus-within .kov-portrait__img,
+.kov-portrait-host:hover .kov-portrait__img,
+.kov-portrait-host:focus-within .kov-portrait__img {
+  filter: grayscale(0.2) contrast(1) brightness(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* La transition part, l'effet reste : ce réglage demande d'arrêter le
+     mouvement, pas de supprimer un changement d'état au survol. */
+  .kov-portrait__img {
+    transition: none;
+  }
+}

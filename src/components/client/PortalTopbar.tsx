@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { NotificationBell, type ClientNotificationItem } from "./NotificationBell";
+import { PortalSearch, type PortalSearchItem } from "./PortalSearch";
 import { UserMenu } from "./UserMenu";
 import { useMobileNav } from "@/components/ui/MobileNavContext";
 
@@ -13,11 +13,13 @@ export function PortalTopbar({
   avatarUrl,
   unreadCount,
   notifications,
+  searchIndex,
 }: {
   fullName: string | null;
   avatarUrl: string | null;
   unreadCount: number;
   notifications: ClientNotificationItem[];
+  searchIndex: PortalSearchItem[];
 }) {
   const { setOpen } = useMobileNav();
   return (
@@ -33,20 +35,10 @@ export function PortalTopbar({
         </svg>
       </button>
 
-      {/* C'était un lien vers le tableau de bord déguisé en recherche : sur
-          le tableau de bord lui-même, cliquer dessus ne faisait rien. Le
-          paramètre place le curseur dans le champ à l'arrivée, donc le
-          geste aboutit d'où qu'on parte. */}
-      <Link
-        href="/client?search=1"
-        aria-label="Rechercher dans votre espace"
-        className="w-10 h-10 flex items-center justify-center text-kov-bone hover:text-kov-red transition-colors"
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="11" cy="11" r="7" />
-          <line x1="21" y1="21" x2="16.65" y2="16.65" />
-        </svg>
-      </Link>
+      {/* La recherche est ici et non plus au milieu du tableau de bord :
+          chercher une facture depuis la page Documents obligeait à revenir
+          en arrière. Elle est dans la coquille, donc sur chaque écran. */}
+      <PortalSearch items={searchIndex} />
 
       <div className="flex items-center gap-2 ml-auto">
         <NotificationBell unreadCount={unreadCount} items={notifications} />
