@@ -1,23 +1,28 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
-import { GlassSurface } from "@/components/ui/GlassSurface";
 import { login, type LoginState } from "./actions";
 import { LoginLoadingOverlay } from "./LoginLoadingOverlay";
 import { SocialSignIn } from "./SocialSignIn";
 
 const INITIAL_STATE: LoginState = { error: null };
 
-// A filled field rather than the underline the rest of the site uses.
-// Against a photograph an underline is a line on an image; a filled box is
-// a thing you can type into, which is what this screen is for.
+// Un champ plein plutôt que le trait souligné du reste du site : la carte
+// est une surface sombre et unie, et un trait posé dessus se lit comme une
+// décoration. Une boîte se lit comme quelque chose où l'on écrit.
 const FIELD =
   "kov-login-field h-[52px] w-full rounded-xl border bg-white/[0.045] px-4 pr-11 text-[15px] text-kov-bone outline-none placeholder:text-kov-steel/70";
 
 const LABEL = "mb-2 block font-mono text-[9px] uppercase tracking-[0.24em] text-kov-steel";
 
+// La colonne de droite de la carte.
+//
+// Ce qui n'y est pas, et pourquoi : il n'y a pas de case « Rester
+// connecté ». La session Supabase est déjà posée en cookie et dure jusqu'à
+// la déconnexion — une case qui ne commande rien serait une case qui ment.
+// Il n'y a pas non plus de « Créer un compte » : cet espace s'ouvre sur
+// invitation, et le dire est plus honnête qu'un lien qui refuserait.
 export function LoginForm({
   next,
   justReset,
@@ -25,8 +30,8 @@ export function LoginForm({
 }: {
   next?: string;
   justReset?: boolean;
-  /** A message from the OAuth callback, already resolved to prose by the
-   *  page — the component does not know about error codes. */
+  /** Un message du callback OAuth, déjà traduit en phrase par la page — le
+   *  composant ne connaît pas les codes d'erreur. */
   notice?: string | null;
 }) {
   const [state, formAction, isPending] = useActionState(login, INITIAL_STATE);
@@ -36,65 +41,44 @@ export function LoginForm({
     <>
       {isPending && <LoginLoadingOverlay />}
 
-      {/* Real refraction, not a blur.
-          
-          GlassSurface runs an SVG feDisplacementMap over what is behind it,
-          with a per-channel offset — the same recipe as the nav pill. It is
-          worth its cost here and almost nowhere else: this card sits on a
-          photograph of a room with a red light in it, which is exactly the
-          kind of backdrop a displacement filter has something to bend.
-          
-          width/height "auto" so it measures the content rather than being
-          stretched by a percentage with nothing definite to resolve
-          against — the pill learned that the hard way. */}
-      <GlassSurface
-        width="auto"
-        height="auto"
-        borderRadius={26}
-        blur={14}
-        displace={1.4}
-        distortionScale={-160}
-        redOffset={2}
-        greenOffset={9}
-        blueOffset={16}
-        backgroundOpacity={0.1}
-        saturation={1.2}
-        className="kov-login-card w-full max-w-[640px]"
-      >
-        <div className="w-full p-8 sm:p-11">
-        {/* Just the mark. The card sat under an eyebrow, a right-aligned
-            greeting and a heading, which is three registers of type before
-            the first field — on a page whose only job is one form. */}
-        <Image
-          src="/kov/brand/kov-wordmark-bone.png"
-          alt="KOV"
-          width={1116}
-          height={209}
-          className="mx-auto h-6 w-auto"
-          priority
-        />
+      <div className="w-full">
+        <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-kov-red">Espace KOV</p>
 
-        <span aria-hidden="true" className="mx-auto mt-6 block h-px w-10 bg-kov-red" />
+        {/* Le titre de la page. C'est aussi le premier titre qu'un lecteur
+            d'écran atteint, et la plus grosse chose de la colonne — les
+            légendes du carrousel sont volontairement en dessous en taille
+            pour que ces deux rôles ne se disputent pas. */}
+        <h1
+          className="mt-4 font-display text-kov-bone"
+          style={{ fontSize: "clamp(28px, 3vw, 38px)", lineHeight: 1.05, letterSpacing: "-0.025em" }}
+        >
+          Connexion<span className="text-kov-red">.</span>
+        </h1>
+
+        <p className="mt-3 text-sm leading-relaxed text-kov-steel">
+          Projets, devis, factures et documents. Reprenez où vous en étiez.
+        </p>
 
         {notice && (
-          <p role="alert" className="mt-7 border-l-2 border-kov-red pl-3 text-sm text-kov-bone">
+          <p role="alert" className="mt-6 border-l-2 border-kov-red pl-3 text-sm text-kov-bone">
             {notice}
           </p>
         )}
 
         {justReset && (
-          <p className="mt-7 border-l-2 border-kov-red pl-3 text-sm text-kov-bone">
+          <p className="mt-6 border-l-2 border-kov-red pl-3 text-sm text-kov-bone">
             Mot de passe mis à jour. Vous pouvez vous connecter.
           </p>
         )}
 
-        <form action={formAction} className="mt-9">
+        <form action={formAction} className="mt-8">
           {next && <input type="hidden" name="next" value={next} />}
 
           <div>
-            {/* A real label, not a placeholder standing in for one: a
-                placeholder disappears the moment someone types, which is
-                exactly when they need to know which field they are in. */}
+            {/* Un vrai label, pas un placeholder qui en tient lieu : le
+                placeholder disparaît à la première frappe, c'est-à-dire
+                exactement au moment où l'on a besoin de savoir dans quel
+                champ on se trouve. */}
             <label htmlFor="email" className={LABEL}>
               Adresse e-mail
             </label>
@@ -126,9 +110,17 @@ export function LoginForm({
           </div>
 
           <div className="mt-5">
-            <label htmlFor="password" className={LABEL}>
-              Mot de passe
-            </label>
+            <div className="flex items-baseline justify-between gap-4">
+              <label htmlFor="password" className={LABEL}>
+                Mot de passe
+              </label>
+              <Link
+                href="/login/forgot"
+                className="mb-2 text-[11px] text-kov-steel underline-offset-4 transition-colors hover:text-kov-red hover:underline"
+              >
+                Oublié ?
+              </Link>
+            </div>
             <div className="relative">
               <input
                 id="password"
@@ -162,25 +154,16 @@ export function LoginForm({
             </div>
           </div>
 
-          <div className="mt-4 flex justify-end">
-            <Link
-              href="/login/forgot"
-              className="text-xs text-kov-steel underline-offset-4 transition-colors hover:text-kov-red hover:underline"
-            >
-              Mot de passe oublié ?
-            </Link>
-          </div>
-
           {state.error && (
             <p role="alert" className="mt-5 border-l-2 border-kov-red pl-3 text-sm text-kov-red">
               {state.error}
             </p>
           )}
 
-          {/* A plain button with a gradient, not the site's primary Button:
-              that one mounts an ogl WebGL context for its specular sheen,
-              and a login screen already carrying a full-bleed photograph
-              does not need a second GPU surface to render one control. */}
+          {/* Un bouton simple avec un dégradé, pas le Button du site : ce
+              dernier monte un contexte WebGL (ogl) pour son reflet, et un
+              écran de connexion n'a pas besoin d'une surface GPU pour
+              rendre une commande. */}
           <button
             type="submit"
             disabled={isPending}
@@ -199,15 +182,25 @@ export function LoginForm({
 
         <SocialSignIn next={next} />
 
-        <p className="mt-7 flex items-center justify-center gap-2 text-xs text-kov-steel">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-            <rect x="5" y="11" width="14" height="9" rx="1.5" />
-            <path d="M8 11V7a4 4 0 0 1 8 0v4" />
-          </svg>
-          Connexion sécurisée et chiffrée
-        </p>
+        <div
+          className="mt-8 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 border-t pt-6"
+          style={{ borderColor: "var(--kov-border)" }}
+        >
+          <p className="text-xs text-kov-steel">
+            Pas encore d&apos;accès ? L&apos;espace s&apos;ouvre sur invitation.{" "}
+            <Link href="/contact" className="text-kov-concrete underline-offset-4 transition-colors hover:text-kov-red hover:underline">
+              Nous écrire
+            </Link>
+          </p>
+          <p className="flex items-center gap-1.5 text-[11px] text-kov-muted">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+              <rect x="5" y="11" width="14" height="9" rx="1.5" />
+              <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+            </svg>
+            Connexion chiffrée
+          </p>
         </div>
-      </GlassSurface>
+      </div>
     </>
   );
 }
