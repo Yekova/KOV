@@ -3,7 +3,31 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getEmailProvider as getBrevoProvider } from "@/lib/email/providers/brevoProvider";
 import { getEmailProvider as getResendProvider, isResendConfigured } from "@/lib/email/providers/resendProvider";
 import { MicrosoftGraphEmailProvider } from "@/lib/email/providers/microsoftGraphProvider";
-import type { EmailProvider } from "@/lib/email/provider";
+import type { EmailProvider, SendEmailInput, SendEmailResult, ProviderMessageStatus } from "@/lib/email/provider";
+import { applySafeMode, isSafeModeEnabled } from "@/lib/email/safeMode";
+
+// Le mode sûr est appliqué ICI, sur le fournisseur, et nulle part ailleurs.
+//
+// Le poser dans chaque appelant reviendrait à espérer que personne n'oublie —
+// et il suffit d'un oubli pour écrire à un vrai client depuis une machine de
+// développement. Enveloppé autour du fournisseur, aucun chemin d'envoi ne
+// peut le contourner : ni les invitations, ni les relances, ni le cron, ni
+// un futur bouton qu'on n'a pas encore écrit.
+class SafeModeEmailProvider implements EmailProvider {
+  constructor(private readonly inner: EmailProvider) {}
+
+  send(input: SendEmailInput): Promise<SendEmailResult> {
+    return this.inner.send(applySafeMode(input));
+  }
+
+  getStatus(providerMessageId: string): Promise<ProviderMessageStatus> {
+    return this.inner.getStatus(providerMessageId);
+  }
+}
+
+function guarded(provider: EmailProvider): EmailProvider {
+  return isSafeModeEnabled() ? new SafeModeEmailProvider(provider) : provider;
+}
 
 // L'expéditeur partagé : Resend dès que sa clé est configurée, Brevo sinon.
 //
@@ -12,7 +36,7 @@ import type { EmailProvider } from "@/lib/email/provider";
 // seule chose à faire, sans se demander quelle valeur remettre dans quel
 // drapeau. Brevo reste câblé et fonctionnel tant que personne ne le retire.
 export function getSharedEmailProvider(): EmailProvider {
-  return isResendConfigured() ? getResendProvider() : getBrevoProvider();
+  return guarded(isResendConfigured() ? getResendProvider() : getBrevoProvider());
 }
 
 // Resolves which provider a given admin's outbound email should use: if
@@ -28,7 +52,7 @@ export async function getEmailProviderForSender(senderId?: string | null): Promi
   if (senderId) {
     const { data } = await supabaseAdmin.from("profiles").select("ms_refresh_token").eq("id", senderId).maybeSingle();
     if (data?.ms_refresh_token) {
-      return new MicrosoftGraphEmailProvider(senderId, data.ms_refresh_token);
+      return guarded(new MicrosoftGraphEmailProvider(senderId, data.ms_refresh_token));
     }
   }
   return getSharedEmailProvider();
