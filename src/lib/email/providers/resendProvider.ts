@@ -67,6 +67,13 @@ export class ResendEmailProvider implements EmailProvider {
         to: [input.toName ? `${input.toName} <${input.to}>` : input.to],
         subject: input.subject,
         html: input.html,
+        // L'adresse de réponse, quand elle diffère de l'expéditeur.
+        //
+        // Elle compte : l'expéditeur peut être une adresse technique d'un
+        // domaine d'envoi, alors qu'un client qui répond doit atteindre une
+        // boîte réellement relevée. Sans elle, une réponse se perd — et le
+        // client, lui, croit avoir répondu.
+        ...(process.env.RESEND_REPLY_TO ? { reply_to: process.env.RESEND_REPLY_TO } : {}),
         ...(input.text ? { text: input.text } : {}),
         ...(input.attachments && input.attachments.length > 0
           ? {

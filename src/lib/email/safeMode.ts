@@ -27,7 +27,20 @@ export function isSafeModeEnabled(): boolean {
   const explicit = process.env.EMAIL_SAFE_MODE?.trim().toLowerCase();
   if (explicit === "true" || explicit === "1") return true;
   if (explicit === "false" || explicit === "0") return false;
-  // Non déclaré : sûr partout sauf en production.
+
+  // Non déclaré : sûr partout sauf en production réelle.
+  //
+  // VERCEL_ENV et NON NODE_ENV. Vercel pose NODE_ENV="production" sur les
+  // déploiements de PRÉVISUALISATION aussi — ils sont construits comme la
+  // production. Se fier à NODE_ENV rendrait donc chaque prévisualisation
+  // capable d'écrire à de vrais clients, ce qui est exactement le risque
+  // que ce fichier existe pour écarter.
+  //
+  // VERCEL_ENV distingue "production", "preview" et "development". Hors
+  // Vercel (poste local, test), la variable est absente et NODE_ENV prend
+  // le relais.
+  const vercelEnv = process.env.VERCEL_ENV;
+  if (vercelEnv) return vercelEnv !== "production";
   return process.env.NODE_ENV !== "production";
 }
 
