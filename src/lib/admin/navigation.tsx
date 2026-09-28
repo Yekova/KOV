@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-export type AdminBadgeSource = "leads" | "tasks";
+export type AdminBadgeSource = "leads" | "tasks" | "requests";
 
 export type AdminNavItem = {
   id: string;
@@ -108,6 +108,19 @@ export const adminNavigation: AdminNavSection[] = [
             <path d="M15.5 20c.3-2.7 1.9-4.6 4-5" />
           </>
         ),
+      },
+      {
+        // Juste après Clients : une demande arrive d'un client, et c'est
+        // depuis ce groupe qu'on travaille une relation déjà signée.
+        id: "requests",
+        label: "Demandes",
+        href: "/admin/requests",
+        icon: (
+          <>
+            <path d="M21 11.5a8.38 8.38 0 0 1-9 8.3 8.5 8.5 0 0 1-3.8-.9L3 20.5l1.6-4.9A8.4 8.4 0 0 1 3.7 11 8.38 8.38 0 0 1 12 2.7a8.38 8.38 0 0 1 9 8.8z" />
+          </>
+        ),
+        badgeSource: "requests",
       },
       {
         id: "projects",
