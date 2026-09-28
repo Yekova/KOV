@@ -226,3 +226,20 @@ export const LEAD_TIMELINE_LABELS: Record<LeadTimeline, string> = {
   week: "Cette semaine",
   month: "Ce mois-ci",
 };
+
+// ── La couleur d'un statut de projet, écrite une fois ────────────────────
+//
+// Elle était définie dans deux écrans avec deux sémantiques opposées : vert
+// pour « en cours » côté Projets, rouge côté Clients. Le même statut ne peut
+// pas vouloir dire deux choses selon l'onglet où on le regarde.
+//
+// Palette de signal, pas de décoration : le rouge KOV ne marque que ce qui
+// avance, l'ambre ce qui attend une décision, le gris ce qui est derrière.
+// Elle est toujours doublée par un libellé — une information portée par la
+// seule couleur est perdue pour une partie des lecteurs.
+export const PROJECT_STATUS_COLORS: Record<string, string> = {
+  in_progress: "var(--kov-red)",
+  in_review: "var(--kov-concrete)",
+  on_hold: "#F5A524",
+  done: "var(--kov-steel)",
+};

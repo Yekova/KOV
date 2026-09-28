@@ -61,11 +61,18 @@ export default async function AdminLeadsPage(props: PageProps<"/admin/leads">) {
   const wonLeads = allLeads.filter((l) => l.status === "won");
   const lostLeads = allLeads.filter((l) => l.status === "lost");
   const resolvedCount = wonLeads.length + lostLeads.length;
-  const conversionRate = resolvedCount > 0 ? Math.round((wonLeads.length / resolvedCount) * 100) : 0;
+  // Null et non zéro quand rien n'est clos : « 0 % » se lirait comme un
+  // échec alors qu'il n'y a simplement pas encore de dénominateur. Même
+  // correction que sur le tableau de bord.
+  const conversionRate = resolvedCount > 0 ? Math.round((wonLeads.length / resolvedCount) * 100) : null;
   const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
   const wonThisMonth = wonLeads.filter((l) => new Date(l.updated_at) >= startOfMonth).length;
   const openLeads = allLeads.filter((l) => l.status !== "won" && l.status !== "lost");
   const potentialValueCents = openLeads.reduce((sum, l) => sum + (l.budget_cents ?? 0), 0);
+  // Le total ne vaut que ce que couvre la saisie : deux leads sur cinq ont
+  // un budget. Annoncer « valeur potentielle » sans dire sur combien de
+  // dossiers elle porte donnerait un chiffre qu'on croirait complet.
+  const openWithBudget = openLeads.filter((l) => (l.budget_cents ?? 0) > 0).length;
   const avgConversionDays =
     wonLeads.length > 0
       ? Math.round(
@@ -84,7 +91,7 @@ export default async function AdminLeadsPage(props: PageProps<"/admin/leads">) {
   }
 
   return (
-    <main className="min-h-screen px-6 py-10 max-w-7xl mx-auto w-full space-y-8">
+    <main className="min-h-screen px-6 py-10 max-w-[1600px] mx-auto w-full space-y-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="font-display text-kov-bone text-2xl uppercase">Leads</h1>
@@ -96,7 +103,7 @@ export default async function AdminLeadsPage(props: PageProps<"/admin/leads">) {
         <NewLeadModal />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard
           label="Nouveaux leads"
           value={String(newLeadsKpi.value)}
@@ -105,10 +112,33 @@ export default async function AdminLeadsPage(props: PageProps<"/admin/leads">) {
           evolutionCaption="vs mois dernier"
           sparkline={newLeadsKpi.sparkline}
         />
-        <StatCard label="Taux de conversion" value={`${conversionRate}%`} caption="Sur les leads clos" />
-        <StatCard label="Leads convertis" value={String(wonLeads.length)} caption={`+${wonThisMonth} ce mois`} />
-        <StatCard label="Valeur potentielle" value={`${(potentialValueCents / 100).toLocaleString("fr-FR")} €`} caption="Leads actifs" />
-        <StatCard label="Temps moyen / conversion" value={avgConversionDays !== null ? `${avgConversionDays} jours` : "—"} caption="Estimation" />
+        <StatCard
+          label="Taux de conversion"
+          value={conversionRate === null ? "—" : `${conversionRate}%`}
+          caption={
+            resolvedCount === 0
+              ? "aucun lead clos"
+              : `${wonLeads.length} gagné${wonLeads.length > 1 ? "s" : ""} sur ${resolvedCount} clos`
+          }
+        />
+        <StatCard
+          label="Valeur potentielle"
+          value={`${(potentialValueCents / 100).toLocaleString("fr-FR")} €`}
+          caption={
+            openWithBudget === 0
+              ? "aucun budget renseigné"
+              : `sur ${openWithBudget} lead${openWithBudget > 1 ? "s" : ""} avec budget`
+          }
+        />
+        <StatCard
+          label="Temps moyen / conversion"
+          value={avgConversionDays !== null ? `${avgConversionDays} jours` : "—"}
+          caption={
+            wonLeads.length === 0
+              ? "aucune conversion"
+              : `sur ${wonLeads.length} conversion${wonLeads.length > 1 ? "s" : ""}${wonThisMonth > 0 ? `, dont ${wonThisMonth} ce mois` : ""}`
+          }
+        />
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
@@ -118,7 +148,13 @@ export default async function AdminLeadsPage(props: PageProps<"/admin/leads">) {
         <LeadSourceDonut counts={sourceCounts} total={allLeads.length} />
       </div>
 
-      <LeadsListView initialLeads={rows} statuses={statuses} admins={adminOptions} initialView={initialView} />
+      <LeadsListView
+        initialLeads={rows}
+        statuses={statuses}
+        admins={adminOptions}
+        initialView={initialView}
+        todayIso={new Date().toISOString().slice(0, 10)}
+      />
     </main>
   );
 }

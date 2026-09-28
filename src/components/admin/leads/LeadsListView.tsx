@@ -2,16 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import Link from "next/link";
 import { toast } from "sonner";
 import { Select } from "@/components/ui/Select";
 import { LEAD_SOURCES, LEAD_SOURCE_LABELS } from "@/lib/admin/status";
-import { leadScoreTier, LEAD_SCORE_TIER_LABELS, LEAD_SCORE_TIER_COLORS } from "@/lib/leads/scoring";
 import { bulkUpdateLeadStatus, bulkAssignLead } from "@/app/admin/leads/actions";
-import { LeadStatusSelect } from "@/app/admin/leads/LeadStatusSelect";
-import { LeadSourceSelect } from "@/app/admin/leads/LeadSourceSelect";
-import { AssignLeadSelect } from "@/app/admin/leads/AssignLeadSelect";
 import { EmptyState } from "@/components/admin/EmptyState";
+import { LeadListCard } from "@/components/admin/leads/LeadListCard";
 import { LeadBoard } from "./LeadBoard";
 import type { LeadStatusRow } from "@/lib/leads/statuses";
 import type { LeadRow, PickerOption } from "./types";
@@ -28,21 +24,21 @@ const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: "value_desc", label: "Valeur décroissante" },
 ];
 
-function formatDate(iso: string | null): string {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
-}
-
 export function LeadsListView({
   initialLeads,
   statuses,
   admins,
   initialView,
+  todayIso,
 }: {
   initialLeads: LeadRow[];
   statuses: LeadStatusRow[];
   admins: PickerOption[];
   initialView: "kanban" | "list";
+  /** Fourni par le serveur : une carte qui lirait l'horloge du navigateur
+   *  pendant son rendu afficherait « dépassée » d'un côté et pas de
+   *  l'autre, à cheval sur minuit. */
+  todayIso: string;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -225,6 +221,23 @@ export function LeadsListView({
         )}
       </div>
 
+      {/* « Tout sélectionner » vivait dans l'en-tête de la table. La table
+          n'existe plus, la case remonte donc au-dessus de la grille, là où
+          elle reste atteignable sans parcourir les cartes. */}
+      {view === "list" && visible.length > 0 && (
+        <label className="flex items-center gap-2 cursor-pointer w-fit">
+          <input
+            type="checkbox"
+            checked={selectedIds.size > 0 && selectedIds.size === visible.length}
+            onChange={toggleSelectAll}
+            className="accent-kov-red"
+          />
+          <span className="text-kov-steel text-xs uppercase tracking-widest">
+            Tout sélectionner · {visible.length}
+          </span>
+        </label>
+      )}
+
       {view === "list" && selectedIds.size > 0 && (
         <div
           className="flex flex-wrap items-center gap-3 p-3"
@@ -267,99 +280,23 @@ export function LeadsListView({
         <LeadBoard leads={filtered} setLeads={setLeads} statuses={statuses} />
       ) : (
         <>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead>
-                <tr className="text-xs uppercase tracking-widest text-kov-steel border-b" style={{ borderColor: "var(--kov-border)" }}>
-                  <th className="py-3 pr-4">
-                    <input
-                      type="checkbox"
-                      checked={visible.length > 0 && selectedIds.size === visible.length}
-                      onChange={toggleSelectAll}
-                      className="accent-kov-red"
-                      aria-label="Tout sélectionner"
-                    />
-                  </th>
-                  <th className="py-3 pr-4">Lead</th>
-                  <th className="py-3 pr-4">Entreprise</th>
-                  <th className="py-3 pr-4">Téléphone</th>
-                  <th className="py-3 pr-4">Source</th>
-                  <th className="py-3 pr-4">Score</th>
-                  <th className="py-3 pr-4">Valeur potentielle</th>
-                  <th className="py-3 pr-4">Statut</th>
-                  <th className="py-3 pr-4">Dernière interaction</th>
-                  <th className="py-3 pr-4">Prochaine action</th>
-                  <th className="py-3 pr-4">Responsable</th>
-                  <th className="py-3 pr-4">Créé le</th>
-                </tr>
-              </thead>
-              <tbody>
-                {visible.map((lead) => {
-                  const tier = leadScoreTier(lead.score);
-                  return (
-                    <tr key={lead.id} className="border-b align-top" style={{ borderColor: "var(--kov-border)" }}>
-                      <td className="py-4 pr-4">
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.has(lead.id)}
-                          onChange={() => toggleSelect(lead.id)}
-                          className="accent-kov-red"
-                          aria-label={`Sélectionner ${lead.name}`}
-                        />
-                      </td>
-                      <td className="py-4 pr-4">
-                        <Link href={`/admin/leads/${lead.id}`} className="text-kov-bone hover:text-kov-red transition-colors">
-                          {lead.name}
-                        </Link>
-                        <p className="text-kov-steel text-xs mt-0.5">
-                          <a href={`mailto:${lead.email}`} className="hover:text-kov-red transition-colors">
-                            {lead.email}
-                          </a>
-                        </p>
-                      </td>
-                      <td className="py-4 pr-4 text-kov-steel">{lead.company || "—"}</td>
-                      <td className="py-4 pr-4 text-kov-steel whitespace-nowrap">{lead.phone || "—"}</td>
-                      <td className="py-4 pr-4">
-                        <LeadSourceSelect leadId={lead.id} source={lead.source} />
-                      </td>
-                      <td className="py-4 pr-4">
-                        {tier ? (
-                          <span
-                            className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] uppercase tracking-widest border"
-                            style={{ color: LEAD_SCORE_TIER_COLORS[tier], borderColor: LEAD_SCORE_TIER_COLORS[tier], borderRadius: "var(--radius-pill)" }}
-                          >
-                            {lead.score} — {LEAD_SCORE_TIER_LABELS[tier]}
-                          </span>
-                        ) : (
-                          <span className="text-kov-steel">—</span>
-                        )}
-                      </td>
-                      <td className="py-4 pr-4 text-kov-bone whitespace-nowrap">
-                        {lead.budgetCents ? `${(lead.budgetCents / 100).toLocaleString("fr-FR")} €` : "—"}
-                      </td>
-                      <td className="py-4 pr-4">
-                        <LeadStatusSelect leadId={lead.id} status={lead.status} statuses={statuses} />
-                      </td>
-                      <td className="py-4 pr-4 text-kov-steel whitespace-nowrap">{formatDate(lead.lastContactedAt)}</td>
-                      <td className="py-4 pr-4 text-kov-steel">
-                        {lead.nextActionDate ? (
-                          <>
-                            <p className="whitespace-nowrap">{formatDate(lead.nextActionDate)}</p>
-                            {lead.nextActionNote && <p className="text-xs truncate max-w-[160px]">{lead.nextActionNote}</p>}
-                          </>
-                        ) : (
-                          "—"
-                        )}
-                      </td>
-                      <td className="py-4 pr-4">
-                        <AssignLeadSelect leadId={lead.id} assignedTo={lead.assignedTo} admins={admins} />
-                      </td>
-                      <td className="py-4 pr-4 text-kov-steel whitespace-nowrap">{formatDate(lead.createdAt)}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          {/* La table de douze colonnes est devenue une grille de cartes.
+              Douze colonnes obligeaient à défiler horizontalement pour lire
+              un lead entier, et la moitié affichait « — » sur la plupart
+              des lignes. La sélection groupée est conservée : la case vit
+              maintenant en haut de chaque carte. */}
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {visible.map((lead) => (
+              <LeadListCard
+                key={lead.id}
+                lead={lead}
+                statuses={statuses}
+                admins={admins}
+                selected={selectedIds.has(lead.id)}
+                onToggleSelect={() => toggleSelect(lead.id)}
+                todayIso={todayIso}
+              />
+            ))}
           </div>
 
           {visibleCount < filtered.length && (
