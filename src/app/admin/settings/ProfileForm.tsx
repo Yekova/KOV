@@ -11,10 +11,12 @@ const FIELD_CLASS =
 export function ProfileForm({
   fullName,
   displayTitle,
+  phone,
   avatarUrl,
 }: {
   fullName: string | null;
   displayTitle: string | null;
+  phone: string | null;
   avatarUrl: string | null;
 }) {
   const [isPending, startTransition] = useTransition();
@@ -46,11 +48,21 @@ export function ProfileForm({
 
       <label className="text-xs text-kov-steel">
         Nom
-        <input name="full_name" defaultValue={fullName ?? ""} required className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
+        <input name="full_name" defaultValue={fullName ?? ""} required className={`kov-field ${FIELD_CLASS}`} style={{ borderColor: "var(--kov-border)" }} />
       </label>
       <label className="text-xs text-kov-steel">
         Titre affiché
-        <input name="display_title" defaultValue={displayTitle ?? ""} placeholder="Chef de projet" className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
+        <input name="display_title" defaultValue={displayTitle ?? ""} placeholder="Chef de projet" className={`kov-field ${FIELD_CLASS}`} style={{ borderColor: "var(--kov-border)" }} />
+        <span className="mt-1 block text-[11px] text-kov-steel">
+          Ce que vos clients lisent sous votre nom.
+        </span>
+      </label>
+      <label className="text-xs text-kov-steel">
+        Téléphone
+        <input name="phone" type="tel" defaultValue={phone ?? ""} placeholder="06 12 34 56 78" className={`kov-field ${FIELD_CLASS}`} style={{ borderColor: "var(--kov-border)" }} />
+        <span className="mt-1 block text-[11px] text-kov-steel">
+          Interne : il n&apos;apparaît pas dans l&apos;espace client.
+        </span>
       </label>
       <div className="sm:col-span-2 flex items-center gap-4">
         <Button type="submit" variant="secondary" disabled={isPending}>

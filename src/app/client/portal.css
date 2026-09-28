@@ -1,120 +1,26 @@
-/* Le portail client, et la seule chose qu'il change au thème.
+/* Ce qui n'appartient qu'au portail client.
  *
- * --kov-steel portait tout le texte secondaire de l'espace client : dates,
- * montants, statuts, libellés, légendes, souvent en 10 ou 12px. À #777774
- * il donnait environ 4,4:1 sur le noir, 4,0:1 sur une GlassCard, et une
- * valeur imprévisible sur le tableau de bord, où les cartes sont posées sur
- * une photographie. Le seuil est 4,5:1 : c'était sous la barre partout.
- *
- * Une seule ligne plutôt que 88 remplacements de classe, pour trois
- * raisons. Elle rattrape aussi les cinq endroits qui écrivent
- * var(--kov-steel) en style inline, qu'un remplacement de classe aurait
- * manqués. Elle garde la hiérarchie — l'acier reste le ton discret, il
- * devient seulement lisible, et concrete lui reste plus clair. Et elle ne
- * touche pas le site public, qui garde sa valeur.
- *
- * #8a8a87 donne 5,2:1 sur une GlassCard et 5,7:1 sur le noir.
- *
- * La classe est posée sur la racine du layout ET sur les trois calques
- * envoyés dans <body> par createPortal (barre latérale mobile, cloche,
- * menu utilisateur) : ceux-là sortent de l'arbre, donc ils n'héritent de
- * rien. */
+ * Tout ce qui sert aussi à l'admin a déménagé dans styles/kov-surfaces.css :
+ * portraits, champs, silhouettes, messagerie. Ce qui reste ici ne concerne
+ * que cet espace — sa barre latérale, et son ton de gris. */
 
 .kov-portal {
+  /* --kov-steel portait tout le texte secondaire du portail à environ 4,0:1
+     sur une GlassCard, sous le seuil de 4,5:1, souvent en 10 ou 12px.
+     #8a8a87 donne 5,2:1 sur une GlassCard et 5,7:1 sur le noir.
+
+     Une ligne plutôt que 88 remplacements de classe : elle rattrape aussi
+     les styles inline qui écrivent var(--kov-steel), garde la hiérarchie —
+     l'acier reste le ton discret, il devient seulement lisible — et ne
+     touche pas le site public.
+
+     Pas encore appliqué à l'admin : c'est le même défaut là-bas, mais le
+     corriger changerait l'aspect de trente-neuf écrans d'un coup, ce qui
+     mérite d'être décidé plutôt que subi. */
   --kov-steel: #8a8a87;
 }
 
-/* Le battement des silhouettes de chargement.
- *
- * Écrit ici plutôt qu'avec animate-pulse de Tailwind pour une raison :
- * l'utilitaire ne s'éteint pas sous prefers-reduced-motion, et une page
- * entière qui respire est exactement ce que ce réglage demande d'arrêter.
- * Sans l'animation, les blocs restent visibles — la silhouette informe
- * toujours, elle ne clignote simplement plus. */
-
-@keyframes kov-skeleton-pulse {
-  0%, 100% { opacity: 0.55; }
-  50% { opacity: 0.9; }
-}
-
-.kov-skeleton {
-  animation: kov-skeleton-pulse 1.6s ease-in-out infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .kov-skeleton {
-    animation: none;
-    opacity: 0.7;
-  }
-}
-
-/* Le portrait : gris au repos, en couleur au survol.
- *
- * Le filtre est sur l'image seule, jamais sur le conteneur : la pastille de
- * présence et l'initiale de repli doivent garder leur couleur.
- *
- * Le survol se déclenche depuis le portrait ET depuis la carte qui
- * l'accueille (.kov-portrait-host) : sur la carte « votre chef de projet »,
- * viser exactement la vignette de 48px pour voir un visage s'allumer est une
- * cible tactile qu'on n'a pas sur un téléphone. :focus-within suit, pour que
- * le clavier obtienne la même chose que la souris.
- *
- * 0.2 plutôt que 0 : un gris complètement désaturé sur un fond presque noir
- * devient une tache plate. Il reste une trace de teinte, qui fait qu'on lit
- * une photographie éteinte et non un aplat. */
-
-.kov-portrait__img {
-  filter: grayscale(1) contrast(1.05) brightness(0.92);
-  transition: filter 420ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.kov-portrait:hover .kov-portrait__img,
-.kov-portrait:focus-within .kov-portrait__img,
-.kov-portrait-host:hover .kov-portrait__img,
-.kov-portrait-host:focus-within .kov-portrait__img {
-  filter: grayscale(0.2) contrast(1) brightness(1);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  /* La transition part, l'effet reste : ce réglage demande d'arrêter le
-     mouvement, pas de supprimer un changement d'état au survol. */
-  .kov-portrait__img {
-    transition: none;
-  }
-}
-
-/* ── Les champs ──────────────────────────────────────────────────────── */
-
-/* Le focus était un simple changement de couleur de bordure, instantané.
- * Il garde la bordure rouge, et gagne un halo très local — assez pour que
- * l'œil sache où il est revenu après un coup d'œil ailleurs, pas assez
- * pour faire briller le formulaire. */
-.kov-field {
-  transition:
-    border-color var(--motion-fast) var(--ease-kov),
-    box-shadow var(--motion-fast) var(--ease-kov),
-    background-color var(--motion-fast) var(--ease-kov);
-}
-
-.kov-field:hover:not(:focus) {
-  border-color: rgba(231, 231, 229, 0.18) !important;
-}
-
-.kov-field:focus {
-  border-color: var(--kov-red) !important;
-  box-shadow: 0 0 0 3px rgba(227, 30, 36, 0.12);
-  background-color: rgba(255, 255, 255, 0.02);
-}
-
-/* Un champ invalide ne le dit qu'après une tentative de soumission :
-   :user-invalid n'est vrai qu'une fois le champ quitté ou le formulaire
-   envoyé. :invalid seul rougirait chaque champ requis dès le chargement,
-   avant que quiconque ait rien fait de mal. */
-.kov-field:user-invalid {
-  border-color: rgba(227, 30, 36, 0.6) !important;
-}
-
-/* ── La barre latérale ───────────────────────────────────────────────── */
+/* ── La barre latérale du portail ────────────────────────────────────── */
 
 .kov-nav-item {
   position: relative;
@@ -148,11 +54,17 @@
   background: var(--kov-red);
 }
 
-/* Le compteur grandit quand sa valeur change — animation jouée au montage,
-   et la clé React porte la valeur, donc elle rejoue à chaque changement. */
+/* Le compteur grandit quand sa valeur change : sa clé React porte la
+   valeur, donc React le remonte et l'animation rejoue. */
 @keyframes kov-badge-in {
-  from { transform: scale(0.6); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .kov-badge {
@@ -160,65 +72,16 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .kov-field,
   .kov-nav-item,
   .kov-nav-item > * {
     transition: none;
   }
+
   .kov-nav-item:hover > * {
     transform: none;
   }
+
   .kov-badge {
     animation: none;
   }
-}
-
-/* ── La messagerie ───────────────────────────────────────────────────── */
-
-/* La liste de conversations, et l'actif.
- * Même code que la barre latérale : un filet rouge marque la position, il
- * ne remplit pas la surface. Deux langages différents pour « où je suis »
- * dans un même écran obligeraient à en apprendre deux. */
-.kov-conversation {
-  position: relative;
-  display: flex;
-  transition: background-color var(--motion-fast) var(--ease-kov);
-}
-
-.kov-conversation:hover {
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.kov-conversation[data-active="true"] {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.kov-conversation[data-active="true"]::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 10px;
-  bottom: 10px;
-  width: 2px;
-  border-radius: 999px;
-  background: var(--kov-red);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .kov-conversation {
-    transition: none;
-  }
-}
-
-/* La hauteur de la barre du haut : px-6 py-4 autour d'un champ de 44px.
- * Elle est nommée parce que la messagerie s'en sert pour occuper
- * exactement le reste de l'écran et faire défiler ses colonnes
- * séparément — une valeur en dur à cet endroit se désynchroniserait au
- * premier changement de la barre. */
-.kov-portal {
-  --kov-topbar-h: 76px;
-}
-
-.kov-messaging {
-  height: calc(100dvh - var(--kov-topbar-h));
 }

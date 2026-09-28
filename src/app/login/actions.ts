@@ -40,8 +40,31 @@ export async function login(_prevState: LoginState, formData: FormData): Promise
   redirect(next ?? (profile?.role === "admin" ? "/admin" : "/client"));
 }
 
+// Se déconnecter, et cesser d'apparaître en ligne.
+//
+// Sans cette mise à jour, un admin qui ferme sa session restait « En ligne »
+// pour ses clients jusqu'à sa prochaine visite — le portail affiche sa
+// pastille sur la carte « votre chef de projet » et sur la page Équipe.
+//
+// L'écriture passe avant signOut() : après, il n'y a plus de session d'où
+// tirer l'identité. Et elle ne fait pas échouer la déconnexion si elle
+// échoue elle-même : rester connecté parce qu'un drapeau n'a pas pu
+// s'écrire serait le pire des deux maux.
 export async function logout() {
   const supabase = await createServerSupabaseClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    try {
+      await supabaseAdmin.from("profiles").update({ is_online: false }).eq("id", user.id);
+    } catch {
+      // Sans importance : la déconnexion prime.
+    }
+  }
+
   await supabase.auth.signOut();
   redirect("/login");
 }

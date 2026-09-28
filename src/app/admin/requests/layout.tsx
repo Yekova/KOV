@@ -26,6 +26,9 @@ export default async function AdminRequestsLayout({ children }: { children: Reac
       ? `${thread.lastMessageBy === "admin" ? "Vous : " : ""}${thread.lastMessageExcerpt}`
       : null,
     avatarUrl: thread.clientAvatarUrl,
+    // Le studio voit qui est dans son espace en ce moment : la présence du
+    // client est tenue automatiquement par le portail (PresenceHeartbeat).
+    isOnline: thread.clientIsOnline,
     at: thread.lastMessageAt ?? thread.updatedAt,
     waitingLabel:
       thread.waitingOn === "us" ? "À traiter" : thread.waitingOn === "client" ? "Chez le client" : "Clôturée",

@@ -24,6 +24,9 @@ export async function updateMyProfile(formData: FormData) {
     .update({
       full_name: fullName.trim(),
       display_title: typeof displayTitle === "string" && displayTitle.trim() ? displayTitle.trim() : null,
+      phone: typeof formData.get("phone") === "string" && String(formData.get("phone")).trim()
+        ? String(formData.get("phone")).trim()
+        : null,
       ...(avatarPath === undefined ? {} : { avatar_path: avatarPath }),
       updated_at: new Date().toISOString(),
     })

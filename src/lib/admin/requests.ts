@@ -34,6 +34,8 @@ export interface RequestThreadSummary {
   clientId: string;
   clientName: string;
   clientAvatarUrl: string | null;
+  /** Présence du client, tenue automatiquement par son espace. */
+  clientIsOnline: boolean;
 
   projectId: string | null;
   projectName: string | null;
@@ -71,7 +73,7 @@ export async function getRequestThreads(): Promise<RequestThreadSummary[]> {
       .select("thread_id, body, created_by, created_at")
       .in("thread_id", threadIds)
       .order("created_at", { ascending: false }),
-    supabaseAdmin.from("profiles").select("id, full_name, company, email, avatar_path").in("id", clientIds),
+    supabaseAdmin.from("profiles").select("id, full_name, company, email, avatar_path, is_online").in("id", clientIds),
     projectIds.length
       ? supabaseAdmin.from("projects").select("id, name").in("id", projectIds)
       : Promise.resolve({ data: [] }),
@@ -103,6 +105,7 @@ export async function getRequestThreads(): Promise<RequestThreadSummary[]> {
           (row.email as string | null) ||
           "Client sans nom",
         avatarUrl: getPublicAssetUrl(row.avatar_path as string | null),
+        isOnline: Boolean(row.is_online),
       },
     ])
   );
@@ -129,6 +132,7 @@ export async function getRequestThreads(): Promise<RequestThreadSummary[]> {
       clientId: row.client_id as string,
       clientName: client?.name ?? "Client sans nom",
       clientAvatarUrl: client?.avatarUrl ?? null,
+      clientIsOnline: client?.isOnline ?? false,
 
       projectId: (row.project_id as string | null) ?? null,
       projectName: row.project_id ? (projects.get(row.project_id as string) ?? null) : null,

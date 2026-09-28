@@ -7,6 +7,7 @@ import { AdminTopbarSkeleton } from "@/components/admin/AdminTopbarSkeleton";
 import { MobileNavProvider } from "@/components/ui/MobileNavContext";
 import { TaskPanelProvider } from "@/components/admin/tasks/TaskPanelContext";
 import { AdminProviders } from "@/components/admin/AdminProviders";
+import "@/styles/kov-surfaces.css";
 
 // requireAdmin() reads cookies(), which makes this whole layout dynamic —
 // per Next.js's own docs, a loading.tsx in a page below this layout cannot

@@ -1,0 +1,138 @@
+/* Les surfaces communes à l'admin et au portail client.
+ *
+ * Ce fichier existe parce qu'elles ne l'étaient pas : tout ceci vivait dans
+ * app/client/portal.css, importé par le seul layout client. Les mêmes
+ * composants — Portrait, ConversationList, les champs — étaient donc rendus
+ * SANS AUCUN STYLE côté admin : pas de hauteur pour la messagerie, donc pas
+ * de défilement séparé des colonnes ; pas de ligne active dans la liste ;
+ * pas de portrait en gris.
+ *
+ * La règle qui en découle : une classe utilisée par un composant partagé se
+ * définit ici, jamais dans le CSS d'un seul côté.
+ *
+ * Importé par les deux layouts. */
+
+:root {
+  /* La hauteur de la barre du haut : px-6 py-4 autour d'un champ de 44px.
+     Les deux barres ont la même structure. Elle est nommée parce que la
+     messagerie s'en sert pour occuper exactement le reste de l'écran — une
+     valeur en dur à cet endroit se désynchroniserait au premier changement
+     de la barre. */
+  --kov-topbar-h: 76px;
+}
+
+/* ── Les silhouettes de chargement ───────────────────────────────────── */
+
+@keyframes kov-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+.kov-skeleton {
+  animation: kov-skeleton-pulse 1.6s ease-in-out infinite;
+}
+
+/* ── Le portrait : gris au repos, en couleur au survol ───────────────── */
+
+/* Le filtre est sur l'image seule, jamais sur le conteneur : la pastille de
+ * présence et l'initiale de repli doivent garder leur couleur.
+ *
+ * Le survol se déclenche depuis le portrait ET depuis la carte qui
+ * l'accueille (.kov-portrait-host) : viser exactement une vignette de 48px
+ * pour voir un visage s'allumer n'est pas une cible tactile. :focus-within
+ * suit, pour que le clavier obtienne la même chose que la souris.
+ *
+ * 0.2 plutôt que 0 : un gris complètement désaturé sur un fond presque noir
+ * devient un aplat. Il reste une trace de teinte, qui fait qu'on lit une
+ * photographie éteinte et non une tache. */
+
+.kov-portrait__img {
+  filter: grayscale(1) contrast(1.05) brightness(0.92);
+  transition: filter 420ms var(--ease-kov);
+}
+
+.kov-portrait:hover .kov-portrait__img,
+.kov-portrait:focus-within .kov-portrait__img,
+.kov-portrait-host:hover .kov-portrait__img,
+.kov-portrait-host:focus-within .kov-portrait__img {
+  filter: grayscale(0.2) contrast(1) brightness(1);
+}
+
+/* ── Les champs ──────────────────────────────────────────────────────── */
+
+.kov-field {
+  transition:
+    border-color var(--motion-fast) var(--ease-kov),
+    box-shadow var(--motion-fast) var(--ease-kov),
+    background-color var(--motion-fast) var(--ease-kov);
+}
+
+.kov-field:hover:not(:focus) {
+  border-color: rgba(231, 231, 229, 0.18) !important;
+}
+
+.kov-field:focus {
+  border-color: var(--kov-red) !important;
+  box-shadow: 0 0 0 3px rgba(227, 30, 36, 0.12);
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* :user-invalid et non :invalid — ce dernier est vrai dès le chargement sur
+   tout champ requis, et rougirait un formulaire que personne n'a touché. */
+.kov-field:user-invalid {
+  border-color: rgba(227, 30, 36, 0.6) !important;
+}
+
+/* ── La messagerie ───────────────────────────────────────────────────── */
+
+.kov-messaging {
+  height: calc(100dvh - var(--kov-topbar-h));
+}
+
+.kov-conversation {
+  position: relative;
+  display: flex;
+  transition: background-color var(--motion-fast) var(--ease-kov);
+}
+
+.kov-conversation:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.kov-conversation[data-active="true"] {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Un filet rouge marque la position, il ne remplit pas la surface — même
+   code que les barres latérales. Deux langages pour « où je suis » dans un
+   même écran obligeraient à en apprendre deux. */
+.kov-conversation[data-active="true"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  border-radius: 999px;
+  background: var(--kov-red);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kov-skeleton {
+    animation: none;
+    opacity: 0.7;
+  }
+
+  /* La transition part, l'effet reste : ce réglage demande d'arrêter le
+     mouvement, pas de supprimer un changement d'état au survol. */
+  .kov-portrait__img,
+  .kov-field,
+  .kov-conversation {
+    transition: none;
+  }
+}

@@ -33,3 +33,26 @@ export async function markMyNotificationsRead() {
     .eq("client_id", user.id)
     .is("read_at", null);
 }
+
+// La présence du client, tenue automatiquement.
+//
+// Côté studio, « en ligne » est un interrupteur : on décide d'être
+// joignable. Côté client, personne ne va cliquer sur un bouton pour dire
+// qu'il regarde son espace — donc c'est l'espace qui le dit, à l'ouverture
+// et quand l'onglet revient au premier plan.
+//
+// ── CE QUE ÇA NE PEUT PAS FAIRE ──────────────────────────────────────
+//
+// Un navigateur tué net ne prévient personne. Le drapeau peut donc rester
+// à vrai après le départ. Trois choses le rattrapent : le passage de
+// l'onglet en arrière-plan, la fermeture de l'onglet quand le navigateur
+// veut bien la signaler, et la déconnexion.
+//
+// La solution propre serait une colonne last_seen_at et une présence
+// dérivée (« vu il y a moins de cinq minutes »), qui n'a aucun état à
+// remettre à zéro. Elle demande une migration : à faire le jour où on en
+// passe une autre.
+export async function setMyPresence(online: boolean) {
+  const user = await requireUser();
+  await supabaseAdmin.from("profiles").update({ is_online: online }).eq("id", user.id);
+}

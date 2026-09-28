@@ -7,6 +7,8 @@ import { PortalTopbarSkeleton } from "@/components/client/PortalTopbarSkeleton";
 import { MobileNavProvider } from "@/components/ui/MobileNavContext";
 import { PortalProviders } from "@/components/client/PortalProviders";
 import { PortalPageTransition } from "@/components/client/PortalPageTransition";
+import { PresenceHeartbeat } from "@/components/client/PresenceHeartbeat";
+import "@/styles/kov-surfaces.css";
 import "./portal.css";
 
 // requireUser() reads cookies(), which makes this whole layout dynamic —
@@ -23,6 +25,10 @@ export default async function ClientLayout({ children }: LayoutProps<"/client">)
 
   return (
     <PortalProviders>
+      {/* Ne rend rien : tient profiles.is_online à jour tant que l'espace
+          client est ouvert. Voir le composant pour ce que ça ne peut pas
+          faire. */}
+      <PresenceHeartbeat />
       <MobileNavProvider>
         <div className="kov-portal min-h-screen flex" style={{ background: "var(--kov-black)" }}>
           <Suspense fallback={<PortalSidebar openRequestsCount={0} />}>

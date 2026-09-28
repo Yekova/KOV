@@ -33,6 +33,10 @@ export interface ConversationItem {
   /** Vrai quand la conversation attend un geste de celui qui regarde. */
   needsYou: boolean;
   messageCount: number;
+  /** La présence de l'interlocuteur. undefined ne l'affiche pas du tout —
+   *  c'est le cas côté client, où la conversation est avec le studio et non
+   *  avec une personne dont on suivrait la disponibilité. */
+  isOnline?: boolean;
 }
 
 type Filter = "todo" | "all" | "closed";
@@ -160,7 +164,7 @@ export function ConversationList({
                     data-active={isActive}
                     style={{ borderRadius: "var(--radius-md)" }}
                   >
-                    <Portrait src={item.avatarUrl} name={item.title} size={36} />
+                    <Portrait src={item.avatarUrl} name={item.title} size={36} isOnline={item.isOnline} />
 
                     <span className="min-w-0 flex-1">
                       <span className="flex items-baseline justify-between gap-2">
