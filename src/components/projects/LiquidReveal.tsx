@@ -72,12 +72,33 @@ export function LiquidReveal() {
     const image = new Image();
     let loaded = false;
 
-    const resize = () => {
+    // La mesure, et pourquoi elle ne lit plus window.innerWidth.
+    //
+    // Deux défauts, tous deux visibles « le fond ne colle pas à l'écran » :
+    //
+    // 1. innerWidth compte la barre de défilement, pas le <canvas>. Celui-ci
+    //    est fixed/inset-0, donc sa boîte CSS vaut clientWidth — la barre en
+    //    moins, et KOV en dessine une de 10px. Le bitmap était donc 10px plus
+    //    large que la boîte où le navigateur le comprimait : l'image était
+    //    légèrement réduite et le disque dérivait du curseur, d'autant plus
+    //    qu'on allait vers la droite.
+    //
+    // 2. Le ratio de pixels n'était lu qu'ici, et rien n'écoutait ses
+    //    changements. Faire glisser la fenêtre vers un écran dont le facteur
+    //    d'échelle diffère changeait le ratio sans redimensionner la
+    //    fenêtre : le bitmap gardait la densité de l'autre écran et tout
+    //    était dessiné à la mauvaise échelle. C'est le cas du double écran.
+    //
+    // Le canvas se mesure donc lui-même (ResizeObserver, qui donne sa vraie
+    // boîte et se déclenche aussi bien au redimensionnement de la fenêtre
+    // qu'à tout autre changement), et le ratio est surveillé à part.
+    const apply = (cssWidth: number, cssHeight: number) => {
+      if (cssWidth < 1 || cssHeight < 1) return;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      width = window.innerWidth;
-      height = window.innerHeight;
-      canvas.width = Math.round(width * dpr);
-      canvas.height = Math.round(height * dpr);
+      width = cssWidth;
+      height = cssHeight;
+      canvas.width = Math.round(cssWidth * dpr);
+      canvas.height = Math.round(cssHeight * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       radius = Math.max(RADIUS.min, Math.min(RADIUS.max, Math.min(width, height) * RADIUS.of));
 
@@ -85,7 +106,17 @@ export function LiquidReveal() {
       sprite.height = Math.round(radius * 2 * dpr);
       sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
+      // Poser canvas.width vide le bitmap : ce qui était peint n'existe
+      // plus, donc il n'y a plus rien à effacer au prochain passage.
       dirty = null;
+      // Et on repeint tout de suite si l'on sait où est le curseur, sinon
+      // le fond reste noir jusqu'au prochain mouvement de souris.
+      schedule();
+    };
+
+    const measure = () => {
+      const rect = canvas.getBoundingClientRect();
+      apply(rect.width, rect.height);
     };
 
     /** The picture, sized to cover the viewport. It is 16:9 and a window
@@ -168,8 +199,29 @@ export function LiquidReveal() {
     };
     image.src = SRC;
 
-    resize();
-    window.addEventListener("resize", resize);
+    measure();
+
+    const observer = new ResizeObserver((entries) => {
+      const rect = entries[0]?.contentRect;
+      if (rect) apply(rect.width, rect.height);
+    });
+    observer.observe(canvas);
+
+    // Le ratio de pixels. La requête n'est vraie qu'à cette valeur précise,
+    // donc elle bascule dès qu'il change — et il faut la réarmer sur la
+    // nouvelle valeur à chaque fois, sans quoi elle ne répond qu'une fois.
+    let dprQuery: MediaQueryList | null = null;
+    const onDpr = () => {
+      measure();
+      watchDpr();
+    };
+    function watchDpr() {
+      dprQuery?.removeEventListener("change", onDpr);
+      dprQuery = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
+      dprQuery.addEventListener("change", onDpr);
+    }
+    watchDpr();
+
     window.addEventListener("pointermove", onMove, { passive: true });
     window.addEventListener("pointerout", onOut);
     // A tab left with the cursor mid-screen comes back with the disc
@@ -178,7 +230,8 @@ export function LiquidReveal() {
 
     return () => {
       cancelAnimationFrame(frame);
-      window.removeEventListener("resize", resize);
+      observer.disconnect();
+      dprQuery?.removeEventListener("change", onDpr);
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerout", onOut);
       window.removeEventListener("blur", clear);
