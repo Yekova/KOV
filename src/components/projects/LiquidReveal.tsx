@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import "./LiquidReveal.css";
 
 // 16:9 exactly, from a 9:16 source turned on its side — no crop, so the
 // whole render is in the frame.

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { LiquidReveal } from "@/components/projects/LiquidReveal";
 import { LoginCarousel } from "./LoginCarousel";
 import { LoginForm } from "./LoginForm";
 import "./login.css";
@@ -30,10 +31,11 @@ export const metadata: Metadata = {
 // de l'écran.
 //
 // Ce qui a disparu au passage : le fond plein cadre qui dérivait à la
-// souris (LoginBackdrop). Sa photographie n'est pas perdue, elle est
-// devenue la deuxième vue du carrousel. Une image de fond qui bouge
-// derrière une carte qui contient déjà des images, ce sont deux surfaces
-// qui se disputent le même regard.
+// souris (LoginBackdrop). Le sol est maintenant celui de /projets — le
+// même composant, la même image, le même geste : noir, sauf sous le
+// curseur. Une photographie fixe derrière une carte qui contient déjà des
+// images, c'étaient deux surfaces qui se disputaient le même regard ;
+// celle-ci ne se montre que si on la cherche.
 export default async function LoginPage(props: PageProps<"/login">) {
   const searchParams = await props.searchParams;
   const nextParam = searchParams.next;
@@ -49,33 +51,21 @@ export default async function LoginPage(props: PageProps<"/login">) {
         ? "La connexion avec ce service n'a pas abouti."
         : null;
 
+  // Pas de background sur <main>, et c'est une contrainte, pas un oubli :
+  // LiquidReveal peint sur un calque en z-index -1, qui passe sous le
+  // contenu en flux mais au-dessus du seul fond de la racine. <main> est
+  // ici positionné (relative), donc son fond à lui se peindrait par-dessus
+  // le calque et l'effacerait. Le noir vient du <body>, comme sur /projets.
   return (
-    <main id="kov-main" tabIndex={-1} className="relative min-h-screen" style={{ background: "var(--kov-black)" }}>
-      {/* Le fond.
-
-          Deux halos, et aucun n'est rouge. Le rouge est la couleur de
-          signal du site : il est ici sur une seule chose, le bouton qui
-          soumet le formulaire, et il ne peut pas l'être tant qu'il est
-          aussi la décoration du décor. Celui du haut ouvre l'espace
-          derrière la carte, celui du bas le referme sous le pied de page.
-
-          fixed : le pied de page est un frère de <main>, donc un calque
-          absolu ici ne peindrait rien sous lui. */}
-      <div aria-hidden="true" className="pointer-events-none fixed inset-0" style={{ zIndex: 0 }}>
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(120% 70% at 50% -10%, rgba(150,158,172,0.16) 0%, rgba(10,10,10,0) 58%)",
-          }}
-        />
-        <div
-          className="absolute inset-0"
-          style={{
-            background: "radial-gradient(80% 55% at 50% 108%, rgba(0,0,0,0.85) 0%, rgba(10,10,10,0) 68%)",
-          }}
-        />
-      </div>
+    <main id="kov-main" tabIndex={-1} className="relative min-h-screen">
+      {/* Le même sol que /projets, et le même composant : noir, sauf
+          exactement sous le curseur, où un disque doux découvre l'image.
+          Rien n'est peint tant que la souris n'a pas bougé, et rien ne
+          reste après son passage.
+          
+          Un écran tactile n'a pas de curseur : le composant ne rend alors
+          rien du tout, et la page reste sur son noir. */}
+      <LiquidReveal />
 
       <div className="relative z-[1] mx-auto flex min-h-screen w-full max-w-[1180px] items-center justify-center px-5 py-28 sm:px-6 lg:py-32">
         <div className="kov-login-card w-full">

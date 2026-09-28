@@ -4,7 +4,6 @@ import { useActionState, useState } from "react";
 import Link from "next/link";
 import { login, type LoginState } from "./actions";
 import { LoginLoadingOverlay } from "./LoginLoadingOverlay";
-import { SocialSignIn } from "./SocialSignIn";
 
 const INITIAL_STATE: LoginState = { error: null };
 
@@ -18,11 +17,18 @@ const LABEL = "mb-2 block font-mono text-[9px] uppercase tracking-[0.24em] text-
 
 // La colonne de droite de la carte.
 //
-// Ce qui n'y est pas, et pourquoi : il n'y a pas de case « Rester
-// connecté ». La session Supabase est déjà posée en cookie et dure jusqu'à
-// la déconnexion — une case qui ne commande rien serait une case qui ment.
-// Il n'y a pas non plus de « Créer un compte » : cet espace s'ouvre sur
-// invitation, et le dire est plus honnête qu'un lien qui refuserait.
+// Ce qui n'y est pas, et pourquoi.
+//
+// Pas de connexion par Google, Apple ou Microsoft : retirée à la demande.
+// Le callback /api/auth/callback reste en place et fonctionne, donc la
+// remettre un jour est un composant de boutons à rebrancher, rien de plus.
+//
+// Pas de case « Rester connecté » : la session Supabase est déjà posée en
+// cookie et dure jusqu'à la déconnexion — une case qui ne commande rien
+// serait une case qui ment.
+//
+// Pas de « Créer un compte » : cet espace s'ouvre sur invitation, et le
+// dire est plus honnête qu'un lien qui refuserait.
 export function LoginForm({
   next,
   justReset,
@@ -160,30 +166,34 @@ export function LoginForm({
             </p>
           )}
 
-          {/* Un bouton simple avec un dégradé, pas le Button du site : ce
-              dernier monte un contexte WebGL (ogl) pour son reflet, et un
-              écran de connexion n'a pas besoin d'une surface GPU pour
-              rendre une commande. */}
-          <button
-            type="submit"
-            disabled={isPending}
-            className="group mt-7 flex h-[54px] w-full items-center justify-center gap-2.5 rounded-full text-sm font-medium text-kov-white transition-[filter,transform] duration-300 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70"
-            style={{
-              background: "linear-gradient(100deg, #5e0d10 0%, #e31e24 52%, #6d0f13 100%)",
-              boxShadow: "0 12px 40px -18px rgba(227,30,36,0.9)",
-            }}
-          >
-            {isPending ? "Connexion…" : "Se connecter"}
-            <span aria-hidden="true" className="transition-transform duration-300 group-hover:translate-x-1">
-              →
+          {/* Le bouton.
+              
+              Une seule couleur au repos — de l'os plein, la seule chose
+              claire de la colonne, donc la seule qu'on puisse prendre pour
+              l'action. Le dégradé rouge en trois arrêts qui était ici ne
+              disait rien de plus, et il se battait avec les images, qui
+              sont rouges elles aussi.
+              
+              Le rouge n'a pas disparu : il monte du bas au survol et
+              remplit le bouton. C'est la couleur de l'engagement, et elle
+              arrive au moment où l'on s'apprête à s'engager. La flèche
+              part à droite pendant qu'une autre entre par la gauche — le
+              même geste que le bouton, en plus petit.
+              
+              Pas le Button du site : ce dernier monte un contexte WebGL
+              (ogl) pour son reflet, et un écran de connexion n'a pas
+              besoin d'une surface GPU pour rendre une commande. */}
+          <button type="submit" disabled={isPending} className="kov-login-submit mt-8">
+            <span>{isPending ? "Connexion…" : "Se connecter"}</span>
+            <span aria-hidden="true" className="kov-login-arrow">
+              <span>→</span>
+              <span>→</span>
             </span>
           </button>
         </form>
 
-        <SocialSignIn next={next} />
-
         <div
-          className="mt-8 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 border-t pt-6"
+          className="mt-9 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 border-t pt-6"
           style={{ borderColor: "var(--kov-border)" }}
         >
           <p className="text-xs text-kov-steel">

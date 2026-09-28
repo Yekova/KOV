@@ -1,0 +1,20 @@
+/* Le calque du fond liquide.
+ *
+ * Il vit ici plutôt que dans ProjectsPage.css depuis que /login monte le
+ * même composant : la règle appartient au composant, pas à la première
+ * page qui s'en est servie. Un seul propriétaire, donc une seule règle à
+ * changer si le calque bouge. */
+
+.kov-liq {
+  position: fixed;
+  inset: 0;
+  /* z-index négatif plutôt qu'un calque positif avec le contenu poussé
+     au-dessus : un enfant en index négatif est peint après les fonds de
+     ses ancêtres et avant tout contenu en flux, ce qui est exactement la
+     couche d'un fond — et aucune règle d'empilement de la page n'a à
+     changer. La contrepartie : la page qui le monte ne doit pas peindre
+     de fond sur son propre <main>, sinon elle recouvre le calque. */
+  z-index: -1;
+  /* C'est du décor. Chaque clic, survol et défilement appartient à la page. */
+  pointer-events: none;
+}

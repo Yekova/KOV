@@ -742,10 +742,5 @@
  * — the layer a background belongs in, and nothing else on the page has
  * to change its stacking to make room. */
 
-.kov-liq {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  /* It is scenery. Every click, hover and scroll belongs to the page. */
-  pointer-events: none;
-}
+/* .kov-liq a déménagé dans components/projects/LiquidReveal.css :
+   le composant est maintenant monté par /login aussi. */

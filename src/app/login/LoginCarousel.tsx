@@ -9,49 +9,35 @@ const HOLD_MS = 6000;
 
 type Slide = {
   src: string;
-  /** The mono index drawn above the caption. */
-  index: string;
   title: string;
   line: string;
 };
 
-// Trois salles, et ce que chacune représente.
+// Les vues, et ce qu'elles disent.
 //
-// Les images viennent du site lui-même : le couloir et l'atrium sont ceux
-// du menu global, la salle à la ligne rouge est la photographie qui servait
-// de fond plein cadre à cette page jusqu'ici. Elles ont été recadrées en
-// portrait (1000x1250) dans public/kov/login/carousel/ — rien n'est
-// téléchargé depuis un tiers, rien n'est une banque d'images.
-//
-// Pour changer une image : déposer le fichier à côté des trois autres et
-// changer `src` ici. Le reste du composant ne connaît rien de son contenu.
+// Les images sont celles choisies par le studio, recadrées en portrait
+// 1000x1250 dans public/kov/login/carousel/. Elles sont numérotées dans le
+// dossier pour qu'en ajouter une soit un fichier déposé et une entrée ici —
+// le composant ne connaît rien de leur contenu.
 //
 // Les légendes nomment ce que l'espace contient vraiment — projets, devis,
 // factures, documents — et s'arrêtent là. Aucun chiffre, aucune promesse.
 const SLIDES: readonly Slide[] = [
   {
-    src: "/kov/login/carousel/01-couloir.webp",
-    index: "01",
+    src: "/kov/login/carousel/01.webp",
     title: "Votre projet, phase par phase.",
     line: "L'avancement, tenu à jour par le studio.",
   },
   {
-    src: "/kov/login/carousel/02-hall.webp",
-    index: "02",
-    title: "Devis et factures, au même endroit.",
-    line: "Consultables à tout moment.",
-  },
-  {
-    src: "/kov/login/carousel/03-atrium.webp",
-    index: "03",
-    title: "Vos documents, réunis.",
-    line: "Livrables et pièces du projet.",
+    src: "/kov/login/carousel/02.webp",
+    title: "Devis, factures et documents.",
+    line: "Réunis, et consultables à tout moment.",
   },
 ];
 
 // Le panneau gauche de la carte.
 //
-// Un fondu enchaîné, pas un défilement : trois images sans lien entre elles
+// Un fondu enchaîné, pas un défilement : des images sans lien entre elles
 // n'ont pas d'axe commun, donc rien qui justifie qu'elles glissent dans une
 // direction. Elles se remplacent.
 //
@@ -103,9 +89,8 @@ export function LoginCarousel() {
           }}
         >
           {/* alt vide, et c'est délibéré : la légende juste en dessous dit
-              ce que l'image est là pour dire, et une description de salle
-              lue à voix haute trois fois de suite n'ajouterait rien à un
-              écran de connexion. */}
+              ce que l'image est là pour dire, et ces images sont abstraites
+              — il n'y a pas de sujet à décrire à voix haute. */}
           <Image
             src={item.src}
             alt=""
@@ -117,27 +102,23 @@ export function LoginCarousel() {
         </div>
       ))}
 
-      {/* Le voile. Le couloir a un sol clair en bas au centre : sans lui la
-          légende s'y perdrait. Il monte jusqu'à mi-hauteur, pas plus, pour
-          que l'image garde sa propre lumière. */}
+      {/* Le voile. La première vue a des bandes claires jusqu'en bas à
+          gauche : sans lui, la légende s'y perdrait. Il monte jusqu'à
+          mi-hauteur, pas plus, pour que l'image garde sa propre lumière. */}
       <div
         aria-hidden="true"
         className="absolute inset-0"
         style={{
           background:
-            "linear-gradient(0deg, rgba(6,6,7,0.94) 0%, rgba(6,6,7,0.62) 24%, rgba(6,6,7,0.12) 52%, rgba(6,6,7,0.28) 100%)",
+            "linear-gradient(0deg, rgba(6,6,7,0.94) 0%, rgba(6,6,7,0.66) 24%, rgba(6,6,7,0.14) 54%, rgba(6,6,7,0.24) 100%)",
         }}
       />
 
       {/* Les écritures, en bas à gauche. */}
       <div className="absolute inset-x-0 bottom-0 p-7 sm:p-8">
         <div key={active} className="kov-login-caption">
-          <p className="font-mono text-[10px] tabular-nums tracking-[0.3em] text-kov-steel">
-            {slide.index}
-            <span className="text-kov-muted"> / {SLIDES.length.toString().padStart(2, "0")}</span>
-          </p>
           <p
-            className="mt-3 max-w-[22ch] font-display text-kov-bone"
+            className="max-w-[22ch] font-display text-kov-bone"
             style={{ fontSize: "clamp(18px, 1.5vw, 23px)", lineHeight: 1.22, letterSpacing: "-0.015em" }}
           >
             {slide.title}
@@ -145,10 +126,14 @@ export function LoginCarousel() {
           <p className="mt-2 text-[13px] leading-relaxed text-kov-concrete/80">{slide.line}</p>
         </div>
 
-        {/* Les trois barres. Ce sont des boutons : le carrousel se conduit,
-            il ne se subit pas. La barre active se remplit sur la durée du
-            palier, ce qui dit à la fois où on en est et combien de temps
-            il reste — un point ne dit ni l'un ni l'autre. */}
+        {/* Les barres. Ce sont des boutons : le carrousel se conduit, il ne
+            se subit pas. Celle qui est active se remplit sur la durée du
+            palier, ce qui dit à la fois où on en est et combien de temps il
+            reste — un point ne dit ni l'un ni l'autre.
+
+            Elles sont en os et non en rouge : les images sont maintenant
+            rouges, et une jauge de la même couleur que ce qu'elle recouvre
+            n'est plus une jauge. */}
         <div className="mt-7 flex items-center gap-2">
           {SLIDES.map((item, index) => (
             <button
@@ -171,7 +156,7 @@ export function LoginCarousel() {
                     // et une animation CSS ne rejoue que remontée.
                     className={reduced ? "block h-full w-full" : "kov-login-progress block h-full w-full"}
                     style={{
-                      background: "var(--kov-red)",
+                      background: "var(--kov-bone)",
                       animationDuration: `${HOLD_MS}ms`,
                       animationPlayState: paused ? "paused" : "running",
                     }}
