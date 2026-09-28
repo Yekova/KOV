@@ -54,43 +54,39 @@ export function LoginForm({
       {isPending && <LoginLoadingOverlay />}
 
       <div className="w-full">
-        {/* Le logo, pas un intertitre.
+        {/* Le logo est maintenant le titre de la page.
             
-            Le verrou « mot-symbole + Studio » est celui que le site pose
-            déjà sur l'écran de chargement de cette même connexion
-            (LoginLoadingOverlay) : le PNG de marque ne porte que KOV, et
-            « Studio » est un mot posé à côté, séparé d'un filet. Les deux
-            écrans se suivent à une seconde d'intervalle ; ils doivent
-            montrer la même chose. */}
-        <div className="flex items-center gap-3">
+            « Connexion » a été retiré, et le <h1> ne pouvait pas disparaître
+            avec lui : c'est le premier titre qu'un lecteur d'écran atteint,
+            et une page qui n'en a aucun le laisse sans point d'entrée. Le
+            verrou de marque prend donc le rôle — son nom accessible est
+            « KOV Studio », l'alt de l'image plus le mot à côté. Le mot-symbole
+            passe de 20 à 28px : il n'est plus un sur-titre au-dessus d'un
+            titre, il est le titre.
+            
+            Centré sur la colonne, donc sur les champs, qui en occupent toute
+            la largeur. La ligne en dessous est centrée avec lui : les deux
+            forment un bloc, et un logo centré au-dessus d'un paragraphe
+            aligné à gauche ne se lit pas comme une composition. Les champs,
+            eux, restent à gauche — c'est là qu'on écrit. */}
+        <h1 className="flex items-center justify-center gap-3">
           <Image
             src="/kov/brand/kov-wordmark-bone.png"
             alt="KOV"
             width={1116}
             height={209}
-            className="h-5 w-auto"
+            className="h-7 w-auto"
             priority
           />
           <span
-            className="border-l pl-3 font-mono text-[10px] uppercase tracking-[0.28em] text-kov-steel"
+            className="border-l pl-3 font-mono text-[10px] uppercase tracking-[0.28em] text-kov-concrete"
             style={{ borderColor: "var(--kov-border)" }}
           >
             Studio
           </span>
-        </div>
-
-        {/* Le titre de la page. C'est aussi le premier titre qu'un lecteur
-            d'écran atteint, et la plus grosse chose de la colonne — les
-            légendes du carrousel sont volontairement en dessous en taille
-            pour que ces deux rôles ne se disputent pas. */}
-        <h1
-          className="mt-4 font-display text-kov-bone"
-          style={{ fontSize: "clamp(28px, 3vw, 38px)", lineHeight: 1.05, letterSpacing: "-0.025em" }}
-        >
-          Connexion<span className="text-kov-red">.</span>
         </h1>
 
-        <p className="mt-3 text-sm leading-relaxed text-kov-concrete/85">
+        <p className="mt-5 text-center text-sm leading-relaxed text-kov-concrete/85">
           Projets, devis, factures et documents. Reprenez où vous en étiez.
         </p>
 
