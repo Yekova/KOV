@@ -102,6 +102,25 @@ export function formatEurosPrecise(cents: number): string {
   return EURO_FORMAT_PRECISE.format(cents / 100);
 }
 
+/** Comme formatEurosPrecise, mais pour un montant dont la devise vient de
+ *  la base (invoices.currency). Une devise inconnue ne doit pas faire
+ *  tomber une page de facturation : on retombe sur l'euro et on écrit le
+ *  code à côté, ce qui reste lisible et honnête. */
+export function formatMoneyPrecise(cents: number, currency: string | null | undefined): string {
+  const code = (currency ?? "EUR").toUpperCase();
+  if (code === "EUR") return formatEurosPrecise(cents);
+  try {
+    return new Intl.NumberFormat("fr-FR", {
+      style: "currency",
+      currency: code,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(cents / 100);
+  } catch {
+    return `${formatEurosPrecise(cents)} (${code})`;
+  }
+}
+
 /** 1,6 → « 1,6 j ». Un jour entier ne traîne pas de décimale. */
 export function formatDays(days: number): string {
   const rounded = Math.round(days * 100) / 100;

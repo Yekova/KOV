@@ -7,7 +7,16 @@ import { createSignedDownloadUrl } from "@/lib/portal/storage";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { FolderIcon } from "@/lib/documentIcons";
 import { DocumentGrid, type DocumentGridItem } from "@/components/documents/DocumentGrid";
-import { PROJECT_STATUS_LABELS, type ProjectStatus } from "@/lib/portal/status";
+import {
+  PROJECT_STATUS_COLORS,
+  PROJECT_STATUS_LABELS,
+  REQUEST_WAITING_COLORS,
+  REQUEST_WAITING_LABELS,
+  deriveRequestWaitingOn,
+  INVOICE_STATUS_LABELS,
+  type InvoiceStatus,
+  type ProjectStatus,
+} from "@/lib/portal/status";
 import {
   PHASE_STATUS_LABELS,
   deriveCurrentPhase,
@@ -18,23 +27,41 @@ import {
 } from "@/lib/portal/progress";
 import { getClientDocumentPreviewUrl, downloadDocument } from "@/app/client/documents/actions";
 
-export const metadata: Metadata = {
-  title: "Projet — KOV",
-};
+// Le titre était statique : deux projets ouverts côte à côte affichaient
+// « Projet — KOV » tous les deux, donc l'onglet ne servait à rien. La
+// requête est la même que celle de la page et Next la déduplique.
+export async function generateMetadata(props: PageProps<"/client/projects/[id]">): Promise<Metadata> {
+  const { id } = await props.params;
+  const { data } = await supabaseAdmin.from("projects").select("name").eq("id", id).maybeSingle();
+  return { title: data?.name ? `${data.name} — KOV` : "Projet — KOV" };
+}
 
+// Une requête, pas une par ancêtre.
+//
+// La version précédente rebouclait sur la base dans un while : un
+// aller-retour par niveau de dossier, en série, avant que la page ne
+// puisse rendre quoi que ce soit. Un projet n'a jamais assez de dossiers
+// pour que les ramener tous coûte plus cher que de les chaîner un par un.
 async function getBreadcrumb(folderId: string | null, projectId: string) {
+  if (!folderId) return [];
+
+  const { data: folders } = await supabaseAdmin
+    .from("document_folders")
+    .select("id, name, parent_folder_id")
+    .eq("project_id", projectId);
+
+  const byId = new Map((folders ?? []).map((f) => [f.id, f]));
   const crumbs: { id: string; name: string }[] = [];
-  let currentId = folderId;
-  while (currentId) {
-    const { data } = await supabaseAdmin
-      .from("document_folders")
-      .select("id, name, parent_folder_id")
-      .eq("id", currentId)
-      .eq("project_id", projectId)
-      .maybeSingle();
-    if (!data) break;
-    crumbs.unshift({ id: data.id, name: data.name });
-    currentId = data.parent_folder_id;
+  let currentId: string | null = folderId;
+  // Garde-fou : un cycle dans les parents ferait tourner cette boucle
+  // indéfiniment, et rien en base ne l'interdit.
+  const seen = new Set<string>();
+  while (currentId && !seen.has(currentId)) {
+    seen.add(currentId);
+    const folder = byId.get(currentId);
+    if (!folder) break;
+    crumbs.unshift({ id: folder.id, name: folder.name });
+    currentId = folder.parent_folder_id;
   }
   return crumbs;
 }
@@ -83,13 +110,56 @@ export default async function ClientProjectDetailPage(props: PageProps<"/client/
         .is("folder_id", null)
         .eq("visibility", "client");
 
-  const [{ data: folders }, { data: documents }] = await Promise.all([
-    folderFilter.order("name"),
-    documentFilter.order("created_at", { ascending: false }),
-  ]);
+  const [{ data: folders }, { data: documents }, { data: projectQuotes }, { data: projectInvoices }, { data: projectThreads }] =
+    await Promise.all([
+      folderFilter.order("name"),
+      documentFilter.order("created_at", { ascending: false }),
+      // Ce qui est rattaché à ce projet ailleurs dans le portail. Les trois
+      // tables portent déjà project_id ; rien ici n'est inventé, et la carte
+      // ne s'affiche pas si les trois reviennent vides.
+      supabaseAdmin
+        .from("quotes")
+        .select("id, reference, status, signed_at")
+        .eq("client_id", user.id)
+        .eq("project_id", projectId)
+        .order("created_at", { ascending: false }),
+      supabaseAdmin
+        .from("invoices")
+        .select("id, reference, status")
+        .eq("client_id", user.id)
+        .eq("project_id", projectId)
+        .order("issued_at", { ascending: false }),
+      supabaseAdmin
+        .from("request_threads")
+        .select("id, subject, status")
+        .eq("client_id", user.id)
+        .eq("project_id", projectId)
+        .order("updated_at", { ascending: false }),
+    ]);
 
   const folderRows = folders ?? [];
   const documentRows = documents ?? [];
+
+  const quoteRows = projectQuotes ?? [];
+  const invoiceRows = projectInvoices ?? [];
+  const threadRows = projectThreads ?? [];
+  const hasLinked = quoteRows.length + invoiceRows.length + threadRows.length > 0;
+
+  const lastMessageByThread = new Map<string, string>();
+  if (threadRows.length) {
+    const { data: threadMessages } = await supabaseAdmin
+      .from("request_messages")
+      .select("thread_id, created_by, created_at")
+      .in(
+        "thread_id",
+        threadRows.map((t) => t.id)
+      )
+      .order("created_at", { ascending: false })
+      .limit(200);
+    for (const message of threadMessages ?? []) {
+      if (!lastMessageByThread.has(message.thread_id)) lastMessageByThread.set(message.thread_id, message.created_by);
+    }
+  }
 
   const gridItems: DocumentGridItem[] = await Promise.all(
     documentRows.map(async (doc) => {
@@ -114,7 +184,10 @@ export default async function ClientProjectDetailPage(props: PageProps<"/client/
         </Link>
         <div className="flex items-center gap-4 mt-4">
           <h1 className="font-display text-kov-bone text-2xl uppercase">{project.name}</h1>
-          <span className="text-kov-red text-xs uppercase tracking-widest">
+          <span
+            className="text-xs uppercase tracking-widest"
+            style={{ color: PROJECT_STATUS_COLORS[project.status] ?? "var(--kov-steel)" }}
+          >
             {PROJECT_STATUS_LABELS[project.status as ProjectStatus] ?? project.status}
           </span>
         </div>
@@ -139,7 +212,10 @@ export default async function ClientProjectDetailPage(props: PageProps<"/client/
           className="h-1.5 w-full overflow-hidden mb-2"
           style={{ background: "var(--kov-border)", borderRadius: "var(--radius-pill)" }}
         >
-          <div className="h-full" style={{ width: `${progress.percent}%`, background: "var(--kov-red)" }} />
+          <div
+            className="h-full"
+            style={{ width: `${progress.percent}%`, background: PROJECT_STATUS_COLORS[project.status] ?? "var(--kov-red)" }}
+          />
         </div>
         <p className="text-kov-steel text-xs">
           {progress.percent}% complété
@@ -164,6 +240,16 @@ export default async function ClientProjectDetailPage(props: PageProps<"/client/
               ? "Toutes les phases sont terminées."
               : "Aucune action attendue de votre part."}
         </p>
+
+        {/* Toujours là, même quand il n'y a rien à faire : « j'ai une
+            question sur ce projet » est le geste le plus probable depuis
+            cette page, et il n'existait nulle part. */}
+        <Link
+          href="/client/requests"
+          className="mt-3 inline-flex items-center gap-2 text-kov-red text-xs uppercase tracking-widest hover:underline"
+        >
+          Poser une question sur ce projet →
+        </Link>
 
         {phases.length > 0 && (
           <ol className="mt-6 space-y-0">
@@ -210,6 +296,76 @@ export default async function ClientProjectDetailPage(props: PageProps<"/client/
           </ol>
         )}
       </GlassCard>
+
+      {/* Le projet devient un moyeu.
+          
+          Depuis cette fiche, on ne pouvait atteindre ni le devis du projet,
+          ni sa facture, ni une demande à son sujet : c'était un cul-de-sac.
+          Les trois tables portent déjà project_id, donc ce qui s'affiche
+          ici est réel — et la carte disparaît quand il n'y a rien, plutôt
+          que d'afficher trois rubriques vides.
+          
+          Les liens mènent aux pages de liste : ce sont les écrans où l'on
+          signe, télécharge et répond. Annoncer une vue filtrée qui n'existe
+          pas serait promettre à nouveau ce qu'on ne tient pas. */}
+      {hasLinked && (
+        <GlassCard className="p-6">
+          <h2 className="text-xs uppercase tracking-widest text-kov-steel mb-4">Lié à ce projet</h2>
+          <ul className="divide-y" style={{ borderColor: "var(--kov-border)" }}>
+            {quoteRows.map((quote) => (
+              <li key={quote.id}>
+                <Link
+                  href="/client/quotes"
+                  className="flex items-center justify-between gap-4 py-3 -mx-2 px-2 hover:bg-white/[0.02] transition-colors"
+                >
+                  <span className="min-w-0">
+                    <span className="block text-kov-bone text-sm">Devis {quote.reference}</span>
+                    <span className="block text-kov-steel text-xs mt-0.5">
+                      {quote.signed_at ? "Signé" : quote.status === "sent" ? "À signer" : "Devis"}
+                    </span>
+                  </span>
+                  <span className="text-kov-steel shrink-0">→</span>
+                </Link>
+              </li>
+            ))}
+            {invoiceRows.map((invoice) => (
+              <li key={invoice.id}>
+                <Link
+                  href="/client/invoices"
+                  className="flex items-center justify-between gap-4 py-3 -mx-2 px-2 hover:bg-white/[0.02] transition-colors"
+                >
+                  <span className="min-w-0">
+                    <span className="block text-kov-bone text-sm">Facture {invoice.reference}</span>
+                    <span className="block text-kov-steel text-xs mt-0.5">
+                      {INVOICE_STATUS_LABELS[invoice.status as InvoiceStatus] ?? invoice.status}
+                    </span>
+                  </span>
+                  <span className="text-kov-steel shrink-0">→</span>
+                </Link>
+              </li>
+            ))}
+            {threadRows.map((thread) => {
+              const waitingOn = deriveRequestWaitingOn(thread.status, lastMessageByThread.get(thread.id));
+              return (
+                <li key={thread.id}>
+                  <Link
+                    href={`/client/requests/${thread.id}`}
+                    className="flex items-center justify-between gap-4 py-3 -mx-2 px-2 hover:bg-white/[0.02] transition-colors"
+                  >
+                    <span className="min-w-0">
+                      <span className="block text-kov-bone text-sm truncate">{thread.subject}</span>
+                      <span className="block text-xs mt-0.5" style={{ color: REQUEST_WAITING_COLORS[waitingOn] }}>
+                        {REQUEST_WAITING_LABELS[waitingOn]}
+                      </span>
+                    </span>
+                    <span className="text-kov-steel shrink-0">→</span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </GlassCard>
+      )}
 
       <GlassCard className="p-6">
         <h2 className="text-xs uppercase tracking-widest text-kov-steel mb-4">Documents</h2>

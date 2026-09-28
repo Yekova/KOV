@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
+import { markMyNotificationsRead } from "@/app/client/actions";
 
 export type ClientNotificationItem = {
   id: string;
@@ -27,10 +28,24 @@ export function NotificationBell({ unreadCount, items }: { unreadCount: number; 
   const [position, setPosition] = useState({ top: 0, right: 0 });
   const ref = useRef<HTMLButtonElement>(null);
 
+  // `seen` tient le badge éteint tout de suite, sans attendre l'aller-retour
+  // serveur ni un rafraîchissement de la route : le panneau est ouvert, les
+  // notifications sont vues, la pastille n'a plus de raison d'être là.
+  const [seen, setSeen] = useState(false);
+  const showBadge = unreadCount > 0 && !seen;
+
   function toggle() {
     if (!open && ref.current) {
       const rect = ref.current.getBoundingClientRect();
       setPosition({ top: rect.bottom + 8, right: window.innerWidth - rect.right });
+      if (unreadCount > 0 && !seen) {
+        setSeen(true);
+        // Sans await ni transition : le marquage ne doit rien retarder à
+        // l'écran, et s'il échoue le panneau s'est ouvert quand même — le
+        // badge reviendra à la prochaine navigation, ce qui est le bon
+        // échec pour une notification.
+        void markMyNotificationsRead().catch(() => setSeen(false));
+      }
     }
     setOpen((v) => !v);
   }
@@ -41,14 +56,14 @@ export function NotificationBell({ unreadCount, items }: { unreadCount: number; 
         ref={ref}
         type="button"
         onClick={toggle}
-        aria-label={unreadCount > 0 ? `${unreadCount} notifications non lues` : "Notifications"}
+        aria-label={showBadge ? `${unreadCount} notifications non lues` : "Notifications"}
         className="relative w-10 h-10 flex items-center justify-center text-kov-bone hover:text-kov-red transition-colors"
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M6 9a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 13 6 9z" />
           <path d="M10 19a2 2 0 0 0 4 0" />
         </svg>
-        {unreadCount > 0 && (
+        {showBadge && (
           <span
             className="absolute top-1.5 right-1.5 w-2 h-2"
             style={{ background: "var(--kov-red)", borderRadius: "var(--radius-pill)" }}
@@ -58,7 +73,7 @@ export function NotificationBell({ unreadCount, items }: { unreadCount: number; 
 
       {open &&
         createPortal(
-          <>
+          <div className="kov-portal">
             <div className="fixed inset-0" style={{ zIndex: "var(--z-modal)" }} onClick={() => setOpen(false)} />
             <div
               className="fixed w-80 max-h-[70vh] overflow-y-auto border py-2"
@@ -91,7 +106,7 @@ export function NotificationBell({ unreadCount, items }: { unreadCount: number; 
                 ))
               )}
             </div>
-          </>,
+          </div>,
           document.body
         )}
     </div>

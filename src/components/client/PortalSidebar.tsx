@@ -74,17 +74,9 @@ const NAV_ITEMS = [
       </>
     ),
   },
-  {
-    href: "/client/support",
-    label: "Support",
-    icon: (
-      <>
-        <circle cx="12" cy="12" r="9" />
-        <path d="M9.2 9.2a2.8 2.8 0 1 1 3.9 3c-.9.6-1.1 1-1.1 2" />
-        <circle cx="12" cy="16.6" r="0.3" fill="currentColor" />
-      </>
-    ),
-  },
+  // « Support » a été retiré : c’était une entrée sur huit qui menait à
+  // « cette page arrive bientôt », avec un bouton vers Demandes — une autre
+  // entrée du même menu. La route redirige maintenant vers Demandes.
 ];
 
 function NavLinks({ pathname, openRequestsCount, onNavigate }: { pathname: string | null; openRequestsCount: number; onNavigate?: () => void }) {
@@ -157,7 +149,7 @@ export function PortalSidebar({ openRequestsCount }: { openRequestsCount: number
 
       {mobileOpen &&
         createPortal(
-          <div className="md:hidden fixed inset-0" style={{ zIndex: "var(--z-modal)" }}>
+          <div className="kov-portal md:hidden fixed inset-0" style={{ zIndex: "var(--z-modal)" }}>
             <div className="absolute inset-0" style={{ background: "rgba(10,10,10,0.7)" }} onClick={onCloseMobile} />
             <div className="absolute left-0 top-0 bottom-0 w-72 max-w-[85vw] p-6 flex flex-col" style={{ background: "var(--kov-carbon)" }}>
               <div className="flex items-center justify-between mb-8">

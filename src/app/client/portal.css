@@ -1,0 +1,49 @@
+/* Le portail client, et la seule chose qu'il change au thème.
+ *
+ * --kov-steel portait tout le texte secondaire de l'espace client : dates,
+ * montants, statuts, libellés, légendes, souvent en 10 ou 12px. À #777774
+ * il donnait environ 4,4:1 sur le noir, 4,0:1 sur une GlassCard, et une
+ * valeur imprévisible sur le tableau de bord, où les cartes sont posées sur
+ * une photographie. Le seuil est 4,5:1 : c'était sous la barre partout.
+ *
+ * Une seule ligne plutôt que 88 remplacements de classe, pour trois
+ * raisons. Elle rattrape aussi les cinq endroits qui écrivent
+ * var(--kov-steel) en style inline, qu'un remplacement de classe aurait
+ * manqués. Elle garde la hiérarchie — l'acier reste le ton discret, il
+ * devient seulement lisible, et concrete lui reste plus clair. Et elle ne
+ * touche pas le site public, qui garde sa valeur.
+ *
+ * #8a8a87 donne 5,2:1 sur une GlassCard et 5,7:1 sur le noir.
+ *
+ * La classe est posée sur la racine du layout ET sur les trois calques
+ * envoyés dans <body> par createPortal (barre latérale mobile, cloche,
+ * menu utilisateur) : ceux-là sortent de l'arbre, donc ils n'héritent de
+ * rien. */
+
+.kov-portal {
+  --kov-steel: #8a8a87;
+}
+
+/* Le battement des silhouettes de chargement.
+ *
+ * Écrit ici plutôt qu'avec animate-pulse de Tailwind pour une raison :
+ * l'utilitaire ne s'éteint pas sous prefers-reduced-motion, et une page
+ * entière qui respire est exactement ce que ce réglage demande d'arrêter.
+ * Sans l'animation, les blocs restent visibles — la silhouette informe
+ * toujours, elle ne clignote simplement plus. */
+
+@keyframes kov-skeleton-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 0.9; }
+}
+
+.kov-skeleton {
+  animation: kov-skeleton-pulse 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kov-skeleton {
+    animation: none;
+    opacity: 0.7;
+  }
+}

@@ -5,7 +5,6 @@ import { getPublicAssetUrl } from "@/lib/portal/storage";
 import { deriveCurrentPhase, deriveProgress, type ProjectPhase } from "@/lib/portal/progress";
 import { isInvoiceOverdue } from "@/lib/portal/status";
 import { ActionRequiredCard, type ActionItem } from "@/components/client/dashboard/ActionRequiredCard";
-import { markActivityRead } from "./actions";
 import { GreetingSearchPanel, type PortalSearchItem } from "@/components/client/dashboard/GreetingSearchPanel";
 import { StatusDonutCard } from "@/components/client/dashboard/StatusDonutCard";
 import { NextDeadlineCard } from "@/components/client/dashboard/NextDeadlineCard";
@@ -17,8 +16,19 @@ export const metadata: Metadata = {
   title: "Tableau de bord — KOV",
 };
 
-export default async function ClientDashboardPage() {
+// Ce que la recherche du tableau de bord peut trouver.
+//
+// C'était 30. Chercher une facture plus ancienne renvoyait zéro résultat,
+// sans rien dire — le pire comportement possible pour une recherche. 200
+// couvre l'historique réel d'un client tout en restant borné.
+const SEARCH_INDEX_LIMIT = 200;
+
+export default async function ClientDashboardPage(props: PageProps<"/client">) {
   const user = await requireUser();
+  const searchParams = await props.searchParams;
+  // Posé par la loupe de la barre du haut : le curseur doit arriver dans
+  // le champ, sinon le geste n'aboutit nulle part.
+  const focusSearch = searchParams.search === "1";
 
   const [{ data: profile }, { data: projects }, { data: documents }, { data: invoices }, { data: quotes }, { data: activity }] =
     await Promise.all([
@@ -38,7 +48,7 @@ export default async function ClientDashboardPage() {
         .select("id, filename")
         .eq("client_id", user.id)
         .order("created_at", { ascending: false })
-        .limit(30),
+        .limit(SEARCH_INDEX_LIMIT),
       // Les deux requêtes existaient déjà pour l'index de recherche : on
       // élargit le select plutôt que d'en ajouter deux.
       supabaseAdmin
@@ -46,13 +56,13 @@ export default async function ClientDashboardPage() {
         .select("id, reference, status, due_at, amount_cents")
         .eq("client_id", user.id)
         .order("issued_at", { ascending: false })
-        .limit(30),
+        .limit(SEARCH_INDEX_LIMIT),
       supabaseAdmin
         .from("quotes")
         .select("id, reference, status, signed_at, signing_url, total_cents")
         .eq("client_id", user.id)
         .order("created_at", { ascending: false })
-        .limit(30),
+        .limit(SEARCH_INDEX_LIMIT),
       supabaseAdmin
         .from("activity_log")
         .select("*")
@@ -60,8 +70,6 @@ export default async function ClientDashboardPage() {
         .order("created_at", { ascending: false })
         .limit(10),
     ]);
-
-  await markActivityRead(user.id);
 
   // Les phases font foi dès qu'il y en a : voir lib/portal/progress.ts. La
   // dérivation se fait ici, à la frontière de données, pour que les cartes
@@ -163,7 +171,11 @@ export default async function ClientDashboardPage() {
       <main className="relative px-6 md:px-10 py-10 max-w-[1800px] mx-auto w-full">
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           <div className="xl:col-span-2 space-y-6">
-            <GreetingSearchPanel fullName={profile?.full_name ?? null} searchIndex={searchIndex} />
+            <GreetingSearchPanel
+              fullName={profile?.full_name ?? null}
+              searchIndex={searchIndex}
+              focusSearch={focusSearch}
+            />
 
             <ActionRequiredCard items={actionItems} />
 

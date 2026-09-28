@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Button } from "@/components/ui/Button";
 import { INVOICE_STATUS_LABELS, isInvoiceOverdue, type InvoiceStatus } from "@/lib/portal/status";
+import { formatMoneyPrecise } from "@/lib/pricing/money";
 import { downloadInvoice } from "./actions";
 
 export const metadata: Metadata = {
@@ -56,7 +57,7 @@ export default async function ClientInvoicesPage() {
                   </p>
                   <p className="text-kov-steel text-xs mt-1">
                     {new Date(invoice.issued_at).toLocaleDateString("fr-FR")} —{" "}
-                    {(invoice.amount_cents / 100).toFixed(2)} {invoice.currency}
+                    <span className="tabular-nums">{formatMoneyPrecise(invoice.amount_cents, invoice.currency)}</span>
                   </p>
                 </div>
                 <div className="flex items-center gap-4 shrink-0">

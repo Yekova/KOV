@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { QUOTE_STATUS_LABELS, isQuoteExpired, type QuoteStatus } from "@/lib/portal/status";
 import { fromDbLineItems } from "@/lib/billing/quoteLineItems";
+import { formatEurosPrecise } from "@/lib/pricing/money";
 import { QuoteRowActions } from "./QuoteRowActions";
 
 export const metadata: Metadata = {
@@ -56,7 +57,9 @@ export default async function ClientQuotesPage() {
                     </p>
                   </div>
                   <div className="flex items-center gap-4 shrink-0">
-                    <span className="text-kov-bone text-sm">{(quote.total_cents / 100).toFixed(2)} €</span>
+                    {/* toFixed(2) donnait « 12450.00 € » à un lecteur français : point
+                        décimal, aucun séparateur de milliers. */}
+                    <span className="text-kov-bone text-sm tabular-nums">{formatEurosPrecise(quote.total_cents)}</span>
                     <span className="text-kov-steel text-xs uppercase tracking-widest">
                       {QUOTE_STATUS_LABELS[quote.status as QuoteStatus] ?? quote.status}
                     </span>

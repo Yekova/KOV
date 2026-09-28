@@ -8,8 +8,26 @@ export function isProjectStatus(value: string): value is ProjectStatus {
 export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
   in_progress: "En cours",
   in_review: "En validation",
-  done: "Terminés",
+  done: "Terminé",
   on_hold: "En attente",
+};
+
+// La couleur d'un statut de projet, et c'est la seule.
+//
+// Il y en avait trois : celle-ci (côté admin), une autre dans
+// StatusDonutCard, et sur la liste du portail « tout en rouge », y compris
+// un projet terminé. Le même projet changeait donc de couleur entre deux
+// écrans du même espace.
+//
+// Palette de signal, pas de décoration : le rouge KOV ne marque que ce qui
+// avance, l'ambre ce qui attend une décision, le gris ce qui est derrière.
+// Elle est toujours doublée par un libellé — une information portée par la
+// seule couleur est perdue pour une partie des lecteurs.
+export const PROJECT_STATUS_COLORS: Record<string, string> = {
+  in_progress: "var(--kov-red)",
+  in_review: "var(--kov-concrete)",
+  on_hold: "#F5A524",
+  done: "var(--kov-steel)",
 };
 
 export const INVOICE_KINDS = ["full", "deposit", "balance"] as const;
@@ -67,10 +85,41 @@ export function isRequestThreadStatus(value: string): value is RequestThreadStat
   return (REQUEST_THREAD_STATUSES as readonly string[]).includes(value);
 }
 
+// « Clôturée » et non « Fermée » : c'est le mot que l'admin emploie sur son
+// propre écran, et le même objet ne peut pas porter deux noms selon le
+// côté d'où on le regarde.
 export const REQUEST_THREAD_STATUS_LABELS: Record<RequestThreadStatus, string> = {
   open: "Ouverte",
   answered: "Répondue",
-  closed: "Fermée",
+  closed: "Clôturée",
+};
+
+export const REQUEST_THREAD_STATUS_COLORS: Record<string, string> = {
+  open: "var(--kov-red)",
+  answered: "var(--kov-concrete)",
+  closed: "var(--kov-steel)",
+};
+
+/** Qui doit jouer. Dérivé, jamais stocké — même règle que côté admin
+ *  (lib/admin/requests.ts), pour que les deux côtés ne puissent pas se
+ *  contredire : le dernier message dit tout. */
+export type RequestWaitingOn = "you" | "kov" | "nobody";
+
+export function deriveRequestWaitingOn(status: string, lastMessageBy: string | null | undefined): RequestWaitingOn {
+  if (status === "closed") return "nobody";
+  return lastMessageBy === "admin" ? "you" : "kov";
+}
+
+export const REQUEST_WAITING_LABELS: Record<RequestWaitingOn, string> = {
+  you: "À vous de répondre",
+  kov: "En attente de KOV",
+  nobody: "Clôturée",
+};
+
+export const REQUEST_WAITING_COLORS: Record<RequestWaitingOn, string> = {
+  you: "#F5A524",
+  kov: "var(--kov-concrete)",
+  nobody: "var(--kov-steel)",
 };
 
 // Same rationale as isInvoiceOverdue above — "expired" is a real, selectable

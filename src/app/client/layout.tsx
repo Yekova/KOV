@@ -5,6 +5,7 @@ import { ClientSidebarBadges } from "@/components/client/ClientSidebarBadges";
 import { PortalTopbarData } from "@/components/client/PortalTopbarData";
 import { PortalTopbarSkeleton } from "@/components/client/PortalTopbarSkeleton";
 import { MobileNavProvider } from "@/components/ui/MobileNavContext";
+import "./portal.css";
 
 // requireUser() reads cookies(), which makes this whole layout dynamic —
 // per Next.js's own docs, a loading.js in a page below this layout cannot
@@ -20,7 +21,7 @@ export default async function ClientLayout({ children }: LayoutProps<"/client">)
 
   return (
     <MobileNavProvider>
-      <div className="min-h-screen flex" style={{ background: "var(--kov-black)" }}>
+      <div className="kov-portal min-h-screen flex" style={{ background: "var(--kov-black)" }}>
         <Suspense fallback={<PortalSidebar openRequestsCount={0} />}>
           <ClientSidebarBadges userId={user.id} />
         </Suspense>

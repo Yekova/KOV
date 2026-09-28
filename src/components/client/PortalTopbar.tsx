@@ -33,8 +33,12 @@ export function PortalTopbar({
         </svg>
       </button>
 
+      {/* C'était un lien vers le tableau de bord déguisé en recherche : sur
+          le tableau de bord lui-même, cliquer dessus ne faisait rien. Le
+          paramètre place le curseur dans le champ à l'arrivée, donc le
+          geste aboutit d'où qu'on parte. */}
       <Link
-        href="/client"
+        href="/client?search=1"
         aria-label="Rechercher dans votre espace"
         className="w-10 h-10 flex items-center justify-center text-kov-bone hover:text-kov-red transition-colors"
       >

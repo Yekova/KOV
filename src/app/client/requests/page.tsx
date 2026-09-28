@@ -3,7 +3,11 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { REQUEST_THREAD_STATUS_LABELS, type RequestThreadStatus } from "@/lib/portal/status";
+import {
+  REQUEST_WAITING_COLORS,
+  REQUEST_WAITING_LABELS,
+  deriveRequestWaitingOn,
+} from "@/lib/portal/status";
 import { NewRequestForm } from "./NewRequestForm";
 
 export const metadata: Metadata = {
@@ -34,7 +38,12 @@ export default async function ClientRequestsPage() {
         "thread_id",
         rows.map((t) => t.id)
       )
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      // Borné : la page chargeait l'historique complet de tous les fils
+      // pour n'en garder que le dernier message de chacun. En ordre
+      // décroissant, les 400 derniers couvrent tous les fils actifs ; au
+      // pire, un fil très ancien perd son extrait et s'affiche quand même.
+      .limit(400);
     for (const m of messages ?? []) {
       if (!latestMessageByThread.has(m.thread_id)) {
         latestMessageByThread.set(m.thread_id, { body: m.body, created_by: m.created_by });
@@ -59,6 +68,7 @@ export default async function ClientRequestsPage() {
           <ul>
             {rows.map((thread) => {
               const latest = latestMessageByThread.get(thread.id);
+              const waitingOn = deriveRequestWaitingOn(thread.status, latest?.created_by);
               return (
                 <li key={thread.id} className="border-b last:border-b-0" style={{ borderColor: "var(--kov-border)" }}>
                   <Link href={`/client/requests/${thread.id}`} className="flex items-center justify-between gap-4 py-4 hover:bg-white/[0.02] transition-colors -mx-2 px-2">
@@ -74,8 +84,16 @@ export default async function ClientRequestsPage() {
                         {new Date(thread.updated_at).toLocaleDateString("fr-FR")}
                       </p>
                     </div>
-                    <span className="text-kov-red text-xs uppercase tracking-widest shrink-0">
-                      {REQUEST_THREAD_STATUS_LABELS[thread.status as RequestThreadStatus] ?? thread.status}
+                    {/* Ce que le client ne savait pas lire : « Répondue » ne
+                        dit pas si c'est à LUI de répondre. L'admin dérive
+                        déjà cette information de son côté ; c'est la même
+                        règle, dans le même fichier, pour que les deux ne
+                        puissent pas se contredire. */}
+                    <span
+                      className="text-xs uppercase tracking-widest shrink-0"
+                      style={{ color: REQUEST_WAITING_COLORS[waitingOn] }}
+                    >
+                      {REQUEST_WAITING_LABELS[waitingOn]}
                     </span>
                   </Link>
                 </li>

@@ -11,7 +11,12 @@ const BASE = "relative inline-flex items-center gap-2 text-xs uppercase tracking
 const VARIANT_CLASSES: Record<Variant, string> = {
   primary: "px-6 py-4 bg-kov-red text-kov-white hover:bg-kov-red-signal",
   secondary: "px-6 py-4 border text-kov-bone hover:text-kov-red hover:border-kov-red",
-  ghost: "text-kov-bone hover:text-kov-red",
+  // La zone cliquable, pas la boîte visible : py-3.5/px-2 donnent 44px de
+  // haut, le minimum tactile, et les marges négatives égales les reprennent
+  // pour que rien ne bouge dans les 26 endroits qui utilisent déjà ce
+  // variant. Sans ça, « Télécharger » et « Voir » faisaient 16px de haut,
+  // et la ligne d'un devis en alignait trois côte à côte.
+  ghost: "px-2 -mx-2 py-3.5 -my-3.5 text-kov-bone hover:text-kov-red",
   // group + overflow-hidden: hosts the glass-sheen span below (see
   // GLASS_SHEEN_STYLE) instead of SpecularButtonEffect's tracing shader —
   // the Nav CTA is the one surface on the nav bar itself, and a moving

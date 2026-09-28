@@ -1,12 +1,13 @@
 import { GlassCard } from "@/components/ui/GlassCard";
-import { PROJECT_STATUSES, PROJECT_STATUS_LABELS, type ProjectStatus } from "@/lib/portal/status";
-
-const STATUS_COLORS: Record<ProjectStatus, string> = {
-  in_progress: "var(--kov-red)",
-  in_review: "var(--kov-red-signal)",
-  done: "var(--kov-bone)",
-  on_hold: "var(--kov-steel)",
-};
+// La palette était locale, et c’était la troisième du même portail : un
+// projet terminé était en os ici et en rouge sur la liste. Elle vient
+// maintenant de là où vivent les libellés.
+import {
+  PROJECT_STATUSES,
+  PROJECT_STATUS_COLORS,
+  PROJECT_STATUS_LABELS,
+  type ProjectStatus,
+} from "@/lib/portal/status";
 
 export function StatusDonutCard({ projects }: { projects: { status: string }[] }) {
   const total = projects.length;
@@ -49,7 +50,7 @@ export function StatusDonutCard({ projects }: { projects: { status: string }[] }
                 cy={size / 2}
                 r={radius}
                 fill="none"
-                stroke={STATUS_COLORS[seg.status]}
+                stroke={PROJECT_STATUS_COLORS[seg.status]}
                 strokeWidth={strokeWidth}
                 strokeDasharray={`${seg.arcLen} ${circumference - seg.arcLen}`}
                 strokeDashoffset={-seg.offset}
@@ -66,7 +67,7 @@ export function StatusDonutCard({ projects }: { projects: { status: string }[] }
             <li key={s} className="flex items-center gap-2 whitespace-nowrap">
               <span
                 className="w-2 h-2 shrink-0"
-                style={{ background: STATUS_COLORS[s], borderRadius: "var(--radius-pill)" }}
+                style={{ background: PROJECT_STATUS_COLORS[s], borderRadius: "var(--radius-pill)" }}
               />
               <span className="text-kov-steel">{PROJECT_STATUS_LABELS[s]}</span>
               <span className="text-kov-bone ml-auto pl-2">{counts[s]}</span>

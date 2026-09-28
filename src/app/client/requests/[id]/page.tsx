@@ -4,10 +4,20 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { REQUEST_THREAD_STATUS_LABELS, type RequestThreadStatus } from "@/lib/portal/status";
+import {
+  REQUEST_WAITING_COLORS,
+  REQUEST_WAITING_LABELS,
+  deriveRequestWaitingOn,
+} from "@/lib/portal/status";
 import { ReplyForm } from "./ReplyForm";
 
-export const metadata: Metadata = { title: "Demande — KOV" };
+// Comme la fiche projet : un titre statique rend deux onglets ouverts
+// indiscernables.
+export async function generateMetadata(props: PageProps<"/client/requests/[id]">): Promise<Metadata> {
+  const { id } = await props.params;
+  const { data } = await supabaseAdmin.from("request_threads").select("subject").eq("id", id).maybeSingle();
+  return { title: data?.subject ? `${data.subject} — KOV` : "Demande — KOV" };
+}
 
 export default async function ClientRequestDetailPage(props: PageProps<"/client/requests/[id]">) {
   const user = await requireUser();
@@ -27,6 +37,11 @@ export default async function ClientRequestDetailPage(props: PageProps<"/client/
     .eq("thread_id", threadId)
     .order("created_at", { ascending: true });
 
+  // Le dernier message dit qui doit jouer — même règle que la liste et que
+  // l'écran admin, tirée du même fichier.
+  const lastMessage = (messages ?? [])[(messages ?? []).length - 1];
+  const waitingOn = deriveRequestWaitingOn(thread.status, lastMessage?.created_by);
+
   return (
     <main className="px-6 md:px-10 py-10 max-w-3xl mx-auto w-full space-y-8">
       <div>
@@ -35,8 +50,8 @@ export default async function ClientRequestDetailPage(props: PageProps<"/client/
         </Link>
         <div className="flex flex-wrap items-center gap-4 mt-4">
           <h1 className="font-display text-kov-bone text-2xl uppercase">{thread.subject}</h1>
-          <span className="text-kov-red text-xs uppercase tracking-widest">
-            {REQUEST_THREAD_STATUS_LABELS[thread.status as RequestThreadStatus] ?? thread.status}
+          <span className="text-xs uppercase tracking-widest" style={{ color: REQUEST_WAITING_COLORS[waitingOn] }}>
+            {REQUEST_WAITING_LABELS[waitingOn]}
           </span>
         </div>
       </div>

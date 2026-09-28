@@ -61,7 +61,7 @@ export function UserMenu({ fullName, avatarUrl }: { fullName: string | null; ava
 
       {open &&
         createPortal(
-          <>
+          <div className="kov-portal">
             <div className="fixed inset-0" style={{ zIndex: "var(--z-modal)" }} onClick={() => setOpen(false)} />
             <div
               className="fixed w-48 border py-2"
@@ -94,7 +94,7 @@ export function UserMenu({ fullName, avatarUrl }: { fullName: string | null; ava
                 </button>
               </form>
             </div>
-          </>,
+          </div>,
           document.body
         )}
     </>

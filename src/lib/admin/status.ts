@@ -232,14 +232,7 @@ export const LEAD_TIMELINE_LABELS: Record<LeadTimeline, string> = {
 // Elle était définie dans deux écrans avec deux sémantiques opposées : vert
 // pour « en cours » côté Projets, rouge côté Clients. Le même statut ne peut
 // pas vouloir dire deux choses selon l'onglet où on le regarde.
-//
-// Palette de signal, pas de décoration : le rouge KOV ne marque que ce qui
-// avance, l'ambre ce qui attend une décision, le gris ce qui est derrière.
-// Elle est toujours doublée par un libellé — une information portée par la
-// seule couleur est perdue pour une partie des lecteurs.
-export const PROJECT_STATUS_COLORS: Record<string, string> = {
-  in_progress: "var(--kov-red)",
-  in_review: "var(--kov-concrete)",
-  on_hold: "#F5A524",
-  done: "var(--kov-steel)",
-};
+// La palette a déménagé dans lib/portal/status.ts, où vivent déjà les
+// libellés que les deux côtés importent. Elle est réexportée ici pour que
+// rien n'ait à changer d'import, mais elle n'a plus qu'un propriétaire.
+export { PROJECT_STATUS_COLORS } from "@/lib/portal/status";

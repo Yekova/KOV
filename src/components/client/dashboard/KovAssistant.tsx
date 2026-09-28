@@ -36,7 +36,9 @@ export function KovAssistant() {
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
     >
-      <Link href="/client/support" className="relative block" aria-label="Besoin d'aide ? Contacter KOV">
+      {/* Menait vers /client/support, qui disait « bientôt ». Le geste le
+          plus évident du portail tombait donc dans le vide. */}
+      <Link href="/client/requests" className="relative block" aria-label="Besoin d'aide ? Écrire au studio">
         <div
           className="absolute left-1/2 top-0 px-4 py-2 whitespace-nowrap border transition-all"
           style={{

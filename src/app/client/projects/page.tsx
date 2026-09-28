@@ -3,7 +3,7 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { PROJECT_STATUS_LABELS, type ProjectStatus } from "@/lib/portal/status";
+import { PROJECT_STATUS_COLORS, PROJECT_STATUS_LABELS, type ProjectStatus } from "@/lib/portal/status";
 import { deriveCurrentPhase, deriveProgress, type ProjectPhase } from "@/lib/portal/progress";
 
 export const metadata: Metadata = {
@@ -53,13 +53,22 @@ export default async function ClientProjectsPage() {
                   </Link>
                   <p className="text-kov-steel text-xs uppercase tracking-widest mt-1">{p.category}</p>
                 </div>
-                <span className="text-kov-red text-xs uppercase tracking-widest">
+                {/* La couleur vient du statut, et elle est toujours
+                    doublée par le mot. Avant, tout était rouge — y compris
+                    un projet terminé. */}
+                <span
+                  className="text-xs uppercase tracking-widest"
+                  style={{ color: PROJECT_STATUS_COLORS[p.status] ?? "var(--kov-steel)" }}
+                >
                   {PROJECT_STATUS_LABELS[p.status as ProjectStatus] ?? p.status}
                 </span>
               </div>
 
               <div className="h-1.5 w-full overflow-hidden mb-2" style={{ background: "var(--kov-border)", borderRadius: "var(--radius-pill)" }}>
-                <div className="h-full" style={{ width: `${p.progress_percent}%`, background: "var(--kov-red)" }} />
+                <div
+                  className="h-full"
+                  style={{ width: `${p.progress_percent}%`, background: PROJECT_STATUS_COLORS[p.status] ?? "var(--kov-red)" }}
+                />
               </div>
               <p className="text-kov-steel text-xs mb-1">
                 {p.progress_percent}% complété
