@@ -4,21 +4,64 @@
  * carte est une pièce unique du site, pas un composant réutilisé. */
 
 .kov-login-card {
+  position: relative;
+  /* Le reflet ci-dessous est en z-index -1 : isolate lui donne le contexte
+     d'empilement dans lequel « -1 » veut dire « au-dessus du fond de la
+     carte, sous son contenu ». Sans lui, il remonterait au contexte racine
+     et passerait derrière la carte. (backdrop-filter en crée déjà un ;
+     c'est écrit pour que le jour où le flou disparaît, le reflet ne
+     disparaîsse pas avec lui.) */
+  isolation: isolate;
   /* La carte contient le panneau d'images avec ses propres coins arrondis :
      le rayon extérieur est celui de l'intérieur plus la marge, sinon les
      deux courbes ne sont pas concentriques et le liseré paraît plus épais
      dans les angles. 18 + 10 = 28. */
   padding: 10px;
   border-radius: 28px;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  background: linear-gradient(168deg, rgba(24, 29, 32, 0.86) 0%, rgba(13, 15, 16, 0.92) 62%, rgba(10, 11, 12, 0.94) 100%);
-  -webkit-backdrop-filter: blur(24px) saturate(1.1);
-  backdrop-filter: blur(24px) saturate(1.1);
+  border: 1px solid var(--glass-border);
+
+  /* Liquid glass, la recette du site (voir tokens.css et GlassCard) : une
+     teinte claire translucide, un flou saturé, et un rebord clair en haut.
+     
+     Ce qui était ici avant était un dégradé graphite à 0,86-0,94
+     d'opacité : du verre sur le papier, une plaque opaque à l'œil. La
+     carte laisse maintenant passer ce qu'il y a derrière — et derrière,
+     il y a LiquidReveal, donc le disque rouge se devine à travers la
+     carte quand le curseur passe dessous. C'est la raison d'être du verre
+     ici plutôt qu'un effet en soi.
+     
+     Deux couches de fond, pas une : la teinte claire donne le verre, la
+     couche sombre garde le texte lisible. L'une sans l'autre donnerait
+     soit une vitre grisâtre, soit une plaque. */
+  background:
+    linear-gradient(162deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.028) 46%, rgba(255, 255, 255, 0.015) 100%),
+    linear-gradient(162deg, rgba(18, 21, 23, 0.58) 0%, rgba(10, 11, 12, 0.66) 100%);
+  -webkit-backdrop-filter: blur(26px) saturate(170%);
+  backdrop-filter: blur(26px) saturate(170%);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 1px 0 var(--glass-highlight),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03),
     0 48px 120px -60px rgba(0, 0, 0, 0.95),
     0 8px 40px -24px rgba(0, 0, 0, 0.8);
   transition: border-color 420ms ease, box-shadow 420ms ease;
+}
+
+/* Le reflet. Une seule bande diagonale dans l'angle haut-gauche, légère :
+   c'est ce qui fait qu'une surface se lit comme une épaisseur de verre
+   plutôt que comme un panneau translucide. */
+.kov-login-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    148deg,
+    rgba(255, 255, 255, 0.13) 0%,
+    rgba(255, 255, 255, 0.05) 16%,
+    rgba(255, 255, 255, 0) 38%
+  );
 }
 
 /* :focus-within à égalité avec :hover — quelqu'un qui remplit ce
@@ -26,9 +69,10 @@
    quelqu'un dont le curseur est dessus. */
 .kov-login-card:hover,
 .kov-login-card:focus-within {
-  border-color: rgba(231, 231, 229, 0.2);
+  border-color: rgba(231, 231, 229, 0.26);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
     0 56px 130px -60px rgba(0, 0, 0, 0.98),
     0 8px 40px -24px rgba(0, 0, 0, 0.85);
 }

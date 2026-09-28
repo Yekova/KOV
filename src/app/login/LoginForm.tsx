@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { login, type LoginState } from "./actions";
 import { LoginLoadingOverlay } from "./LoginLoadingOverlay";
@@ -13,7 +14,12 @@ const INITIAL_STATE: LoginState = { error: null };
 const FIELD =
   "kov-login-field h-[52px] w-full rounded-xl border bg-white/[0.045] px-4 pr-11 text-[15px] text-kov-bone outline-none placeholder:text-kov-steel/70";
 
-const LABEL = "mb-2 block font-mono text-[9px] uppercase tracking-[0.24em] text-kov-steel";
+// En concrete et non en steel, et c'est une correction, pas un choix de
+// goût : #777774 sur le fond de la carte donne 3,7:1, sous le seuil de
+// 4,5:1 — et c'est du 9px, la plus petite chose à lire de l'écran. La
+// carte est devenue translucide, ce qui n'a pas créé le problème mais
+// l'a rendu impossible à ignorer. #c6c4bf donne 9,5:1 et reste discret.
+const LABEL = "mb-2 block font-mono text-[9px] uppercase tracking-[0.24em] text-kov-concrete";
 
 // La colonne de droite de la carte.
 //
@@ -48,7 +54,30 @@ export function LoginForm({
       {isPending && <LoginLoadingOverlay />}
 
       <div className="w-full">
-        <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-kov-red">Espace KOV</p>
+        {/* Le logo, pas un intertitre.
+            
+            Le verrou « mot-symbole + Studio » est celui que le site pose
+            déjà sur l'écran de chargement de cette même connexion
+            (LoginLoadingOverlay) : le PNG de marque ne porte que KOV, et
+            « Studio » est un mot posé à côté, séparé d'un filet. Les deux
+            écrans se suivent à une seconde d'intervalle ; ils doivent
+            montrer la même chose. */}
+        <div className="flex items-center gap-3">
+          <Image
+            src="/kov/brand/kov-wordmark-bone.png"
+            alt="KOV"
+            width={1116}
+            height={209}
+            className="h-5 w-auto"
+            priority
+          />
+          <span
+            className="border-l pl-3 font-mono text-[10px] uppercase tracking-[0.28em] text-kov-steel"
+            style={{ borderColor: "var(--kov-border)" }}
+          >
+            Studio
+          </span>
+        </div>
 
         {/* Le titre de la page. C'est aussi le premier titre qu'un lecteur
             d'écran atteint, et la plus grosse chose de la colonne — les
@@ -61,7 +90,7 @@ export function LoginForm({
           Connexion<span className="text-kov-red">.</span>
         </h1>
 
-        <p className="mt-3 text-sm leading-relaxed text-kov-steel">
+        <p className="mt-3 text-sm leading-relaxed text-kov-concrete/85">
           Projets, devis, factures et documents. Reprenez où vous en étiez.
         </p>
 

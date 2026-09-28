@@ -15,8 +15,9 @@ type Slide = {
 
 // Les vues, et ce qu'elles disent.
 //
-// Les images sont celles choisies par le studio, recadrées en portrait
-// 1000x1250 dans public/kov/login/carousel/. Elles sont numérotées dans le
+// Les images sont celles choisies par le studio, recadrées en 4:5
+// dans public/kov/login/carousel/, chacune à la définition que sa source
+// permet — on ne fabrique pas de pixels. Elles sont numérotées dans le
 // dossier pour qu'en ajouter une soit un fichier déposé et une entrée ici —
 // le composant ne connaît rien de leur contenu.
 //
@@ -32,6 +33,11 @@ const SLIDES: readonly Slide[] = [
     src: "/kov/login/carousel/02.webp",
     title: "Devis, factures et documents.",
     line: "Réunis, et consultables à tout moment.",
+  },
+  {
+    src: "/kov/login/carousel/03.webp",
+    title: "Une question ? Écrivez au studio.",
+    line: "Depuis votre espace, et suivie jusqu'à la réponse.",
   },
 ];
 
