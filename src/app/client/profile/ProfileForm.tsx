@@ -2,12 +2,21 @@
 
 import { useState, useTransition, type FormEvent } from "react";
 import { Button } from "@/components/ui/Button";
+import { AvatarField } from "@/components/ui/AvatarField";
 import { updateMyProfile } from "./actions";
 
 const FIELD_CLASS =
   "w-full bg-transparent border py-2.5 px-3 text-kov-bone placeholder:text-kov-steel text-sm focus:outline-none focus:border-kov-red transition-colors";
 
-export function ProfileForm({ fullName, company }: { fullName: string | null; company: string | null }) {
+export function ProfileForm({
+  fullName,
+  company,
+  avatarUrl,
+}: {
+  fullName: string | null;
+  company: string | null;
+  avatarUrl: string | null;
+}) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -28,7 +37,9 @@ export function ProfileForm({ fullName, company }: { fullName: string | null; co
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
+    <form onSubmit={handleSubmit} className="space-y-5 max-w-md">
+      <AvatarField currentUrl={avatarUrl} name={fullName} label="Votre photo" />
+
       <label className="block text-xs text-kov-steel">
         Nom
         <input name="full_name" defaultValue={fullName ?? ""} required className={`${FIELD_CLASS} mt-1`} style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }} />

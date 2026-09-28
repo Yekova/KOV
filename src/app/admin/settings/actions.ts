@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { updateBusinessInfo } from "@/lib/billing/businessInfo";
+import { resolveAvatarPath } from "@/lib/portal/avatar";
 
 export async function updateMyProfile(formData: FormData) {
   const admin = await requireAdmin();
@@ -13,11 +14,17 @@ export async function updateMyProfile(formData: FormData) {
 
   if (typeof fullName !== "string" || !fullName.trim()) throw new Error("Nom requis.");
 
+  // La photo d'un admin n'est pas pour lui : c'est celle que ses clients
+  // voient sur la carte « votre chef de projet » et sur la page Équipe.
+  const { data: current } = await supabaseAdmin.from("profiles").select("avatar_path").eq("id", admin.id).maybeSingle();
+  const avatarPath = await resolveAvatarPath(admin.id, formData, current?.avatar_path ?? null);
+
   const { error } = await supabaseAdmin
     .from("profiles")
     .update({
       full_name: fullName.trim(),
       display_title: typeof displayTitle === "string" && displayTitle.trim() ? displayTitle.trim() : null,
+      ...(avatarPath === undefined ? {} : { avatar_path: avatarPath }),
       updated_at: new Date().toISOString(),
     })
     .eq("id", admin.id);

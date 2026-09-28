@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { createSignedDownloadUrl } from "@/lib/portal/storage";
+import { createSignedDownloadUrls } from "@/lib/portal/storage";
 import { Button } from "@/components/ui/Button";
 import { DocumentGrid, type DocumentGridItem } from "@/components/documents/DocumentGrid";
 import { PROJECT_STATUS_LABELS, type ProjectStatus } from "@/lib/portal/status";
@@ -156,20 +156,20 @@ export default async function AdminProjectDetailPage(props: PageProps<"/admin/pr
   const phaseOptions: PickerOption[] = (phases ?? []).map((p) => ({ id: p.id, label: p.name }));
   const phaseRows = (phases ?? []).map((p) => ({ id: p.id, name: p.name, status: p.status }));
 
-  const gridItems: DocumentGridItem[] = await Promise.all(
-    documentRows.map(async (doc) => {
-      const isImage = doc.mime_type?.startsWith("image/") ?? false;
-      const thumbnailUrl = isImage ? await createSignedDownloadUrl(doc.storage_path, 600) : null;
-      return {
-        id: doc.id,
-        filename: doc.filename,
-        mimeType: doc.mime_type,
-        sizeBytes: doc.size_bytes,
-        createdAt: doc.created_at,
-        thumbnailUrl,
-      };
-    })
+  // Une signature pour toutes les vignettes du dossier, pas une par image.
+  const thumbnailUrls = await createSignedDownloadUrls(
+    documentRows.filter((doc) => doc.mime_type?.startsWith("image/")).map((doc) => doc.storage_path),
+    600
   );
+
+  const gridItems: DocumentGridItem[] = documentRows.map((doc) => ({
+    id: doc.id,
+    filename: doc.filename,
+    mimeType: doc.mime_type,
+    sizeBytes: doc.size_bytes,
+    createdAt: doc.created_at,
+    thumbnailUrl: thumbnailUrls.get(doc.storage_path) ?? null,
+  }));
 
   return (
     <main className="px-6 py-10 max-w-6xl mx-auto w-full space-y-10">

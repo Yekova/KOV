@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getBusinessInfo } from "@/lib/billing/businessInfo";
 import { SettingsForm } from "./SettingsForm";
+import { getPublicAssetUrl } from "@/lib/portal/storage";
 import { ProfileForm } from "./ProfileForm";
 import { EmailAccountConnection } from "@/components/admin/settings/EmailAccountConnection";
 
@@ -13,7 +14,7 @@ export default async function AdminSettingsPage() {
   const user = await requireAdmin();
   const [businessInfo, { data: profile }] = await Promise.all([
     getBusinessInfo(),
-    supabaseAdmin.from("profiles").select("full_name, display_title, ms_connected_email").eq("id", user.id).maybeSingle(),
+    supabaseAdmin.from("profiles").select("full_name, display_title, ms_connected_email, avatar_path").eq("id", user.id).maybeSingle(),
   ]);
 
   return (
@@ -22,7 +23,11 @@ export default async function AdminSettingsPage() {
 
       <section>
         <h2 className="text-xs uppercase tracking-widest text-kov-steel mb-4">Mon profil</h2>
-        <ProfileForm fullName={profile?.full_name ?? null} displayTitle={profile?.display_title ?? null} />
+        <ProfileForm
+          fullName={profile?.full_name ?? null}
+          displayTitle={profile?.display_title ?? null}
+          avatarUrl={getPublicAssetUrl(profile?.avatar_path)}
+        />
       </section>
 
       <section className="border-t pt-8" style={{ borderColor: "var(--kov-border)" }}>

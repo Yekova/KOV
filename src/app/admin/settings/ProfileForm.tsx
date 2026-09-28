@@ -3,11 +3,20 @@
 import { useState, useTransition, type FormEvent } from "react";
 import { updateMyProfile } from "./actions";
 import { Button } from "@/components/ui/Button";
+import { AvatarField } from "@/components/ui/AvatarField";
 
 const FIELD_CLASS =
   "w-full bg-transparent border px-3 py-2 text-kov-bone text-sm focus:outline-none focus:border-kov-red transition-colors";
 
-export function ProfileForm({ fullName, displayTitle }: { fullName: string | null; displayTitle: string | null }) {
+export function ProfileForm({
+  fullName,
+  displayTitle,
+  avatarUrl,
+}: {
+  fullName: string | null;
+  displayTitle: string | null;
+  avatarUrl: string | null;
+}) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -29,6 +38,12 @@ export function ProfileForm({ fullName, displayTitle }: { fullName: string | nul
 
   return (
     <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl">
+      {/* C'est la photo que vos clients voient sur « votre chef de projet »
+          et sur la page Équipe, pas une coquetterie de réglages. */}
+      <div className="sm:col-span-2">
+        <AvatarField currentUrl={avatarUrl} name={fullName} label="Votre photo, vue par vos clients" />
+      </div>
+
       <label className="text-xs text-kov-steel">
         Nom
         <input name="full_name" defaultValue={fullName ?? ""} required className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />

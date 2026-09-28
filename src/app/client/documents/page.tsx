@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { requireUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { createSignedDownloadUrl } from "@/lib/portal/storage";
+import { createSignedDownloadUrls } from "@/lib/portal/storage";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { DocumentGrid, type DocumentGridItem } from "@/components/documents/DocumentGrid";
 import { getClientDocumentPreviewUrl, downloadDocument } from "./actions";
@@ -27,18 +27,21 @@ export default async function ClientDocumentsPage() {
   const rows = documents ?? [];
   const projectNameById = new Map((projects ?? []).map((p) => [p.id, p.name]));
 
-  const toGridItem = async (doc: (typeof rows)[number]): Promise<DocumentGridItem> => {
-    const isImage = doc.mime_type?.startsWith("image/") ?? false;
-    const thumbnailUrl = isImage ? await createSignedDownloadUrl(doc.storage_path, 600) : null;
-    return {
-      id: doc.id,
-      filename: doc.filename,
-      mimeType: doc.mime_type,
-      sizeBytes: doc.size_bytes,
-      createdAt: doc.created_at,
-      thumbnailUrl,
-    };
-  };
+  // Une signature pour toutes les vignettes, pas une par image : la page
+  // faisait un aller-retour Storage par document image à chaque affichage.
+  const thumbnailUrls = await createSignedDownloadUrls(
+    rows.filter((doc) => doc.mime_type?.startsWith("image/")).map((doc) => doc.storage_path),
+    600
+  );
+
+  const toGridItem = (doc: (typeof rows)[number]): DocumentGridItem => ({
+    id: doc.id,
+    filename: doc.filename,
+    mimeType: doc.mime_type,
+    sizeBytes: doc.size_bytes,
+    createdAt: doc.created_at,
+    thumbnailUrl: thumbnailUrls.get(doc.storage_path) ?? null,
+  });
 
   const byProject = new Map<string | null, (typeof rows)[number][]>();
   for (const doc of rows) {
@@ -46,12 +49,10 @@ export default async function ClientDocumentsPage() {
     byProject.set(key, [...(byProject.get(key) ?? []), doc]);
   }
 
-  const groups = await Promise.all(
-    Array.from(byProject.entries()).map(async ([projectId, docs]) => ({
-      label: projectId ? projectNameById.get(projectId) ?? "Projet" : "Général",
-      items: await Promise.all(docs.map(toGridItem)),
-    }))
-  );
+  const groups = Array.from(byProject.entries()).map(([projectId, docs]) => ({
+    label: projectId ? projectNameById.get(projectId) ?? "Projet" : "Général",
+    items: docs.map(toGridItem),
+  }));
 
   const projectRows = projects ?? [];
 
