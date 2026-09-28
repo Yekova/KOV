@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Skills tiers, posés par la CLI `skills` et gérés par elle. Leur code
+    // d'exemple déclenche des avertissements qu'on ne peut pas corriger en
+    // amont, et le bruit ferait perdre la valeur d'un lint à zéro.
+    ".agents/**",
   ]),
 ]);
 
