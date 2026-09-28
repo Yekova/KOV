@@ -2,121 +2,130 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
-import { GlassCard } from "@/components/ui/GlassCard";
-import { ClientAvatar } from "@/components/admin/clients/ClientAvatar";
-import { formatRelativeTime } from "@/lib/formatRelativeTime";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getRequestThread } from "@/lib/admin/requests";
+import { getThreadContext } from "@/lib/portal/requests";
+import { MessageThread, type ThreadMessageView } from "@/components/requests/MessageThread";
+import { ThreadRail } from "@/components/requests/ThreadRail";
 import { RequestReplyForm } from "./RequestReplyForm";
 import { ThreadStatusActions } from "./ThreadStatusActions";
 
-export const metadata: Metadata = { title: "Demande — Admin KOV" };
+export async function generateMetadata(props: PageProps<"/admin/requests/[id]">): Promise<Metadata> {
+  const { id } = await props.params;
+  const { data } = await supabaseAdmin.from("request_threads").select("subject").eq("id", id).maybeSingle();
+  return { title: data?.subject ? `${data.subject} — Admin KOV` : "Demande — Admin KOV" };
+}
 
-const STATUS_LABELS: Record<string, string> = {
-  open: "Ouverte",
-  answered: "Répondue",
-  closed: "Clôturée",
+const WAITING_COLORS: Record<string, string> = {
+  us: "var(--kov-red)",
+  client: "#F5A524",
+  nobody: "var(--kov-steel)",
 };
 
-export default async function AdminRequestThreadPage({ params }: { params: Promise<{ id: string }> }) {
+const WAITING_LABELS: Record<string, string> = {
+  us: "À traiter",
+  client: "Chez le client",
+  nobody: "Clôturée",
+};
+
+export default async function AdminRequestThreadPage(props: PageProps<"/admin/requests/[id]">) {
   await requireAdmin();
-  const { id } = await params;
+  const { id } = await props.params;
 
   const thread = await getRequestThread(id);
   if (!thread) notFound();
 
-  return (
-    <main className="px-6 py-10 max-w-4xl mx-auto w-full space-y-6">
-      <div>
-        <Link
-          href="/admin/requests"
-          className="text-kov-steel text-xs uppercase tracking-widest hover:text-kov-bone transition-colors"
-        >
-          ← Demandes
-        </Link>
-        <div className="flex flex-wrap items-end justify-between gap-4 mt-4">
-          <div className="min-w-0">
-            <h1 className="font-display text-kov-bone text-2xl uppercase">{thread.subject}</h1>
-            <p className="text-kov-steel text-sm mt-1">
-              {STATUS_LABELS[thread.status] ?? thread.status}
-              {" · "}
-              <Link href={`/admin/clients/${thread.clientId}`} className="hover:text-kov-red transition-colors">
-                {thread.clientName}
-              </Link>
-              {thread.projectId && (
-                <>
-                  {" · "}
-                  <Link href={`/admin/projects/${thread.projectId}`} className="hover:text-kov-red transition-colors">
-                    {thread.projectName}
-                  </Link>
-                </>
-              )}
-              {" · ouverte "}
-              {formatRelativeTime(thread.createdAt)}
-            </p>
-          </div>
+  const context = await getThreadContext(id, thread.clientId, thread.projectId);
 
-          <ThreadStatusActions threadId={thread.id} status={thread.status} />
+  const messages: ThreadMessageView[] = thread.messages.map((message) => ({
+    id: message.id,
+    body: message.body,
+    createdAt: message.createdAt,
+    authorName: message.authorName,
+    authorAvatarUrl: message.authorAvatarUrl,
+    // « Vous », côté studio, c'est l'admin. Le même composant de fil sert
+    // aux deux côtés : c'est cette ligne, et elle seule, qui change de bord.
+    mine: message.createdBy === "admin",
+  }));
+
+  return (
+    <div className="flex h-full min-h-0 flex-col xl:flex-row">
+      <div className="flex min-h-0 flex-1 flex-col">
+        <header
+          className="shrink-0 border-b px-6 py-4 md:px-8"
+          style={{ borderColor: "var(--kov-border)", background: "var(--kov-carbon)" }}
+        >
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h2 className="truncate text-[15px] text-kov-bone">{thread.subject}</h2>
+              <p className="mt-0.5 text-xs text-kov-concrete">
+                <Link href={`/admin/clients/${thread.clientId}`} className="transition-colors hover:text-kov-red">
+                  {thread.clientName}
+                </Link>
+                {" · "}
+                {thread.messageCount} message{thread.messageCount > 1 ? "s" : ""}
+                {thread.projectName && (
+                  <>
+                    {" · "}
+                    <Link
+                      href={`/admin/projects/${thread.projectId}`}
+                      className="transition-colors hover:text-kov-red"
+                    >
+                      {thread.projectName}
+                    </Link>
+                  </>
+                )}
+              </p>
+            </div>
+
+            <div className="flex shrink-0 items-center gap-3">
+              <span
+                className="px-2.5 py-1 text-[10px] uppercase tracking-widest"
+                style={{
+                  color: WAITING_COLORS[thread.waitingOn],
+                  border: `1px solid ${WAITING_COLORS[thread.waitingOn]}`,
+                  borderRadius: "var(--radius-pill)",
+                }}
+              >
+                {WAITING_LABELS[thread.waitingOn]}
+                {thread.waitingOn === "us" && thread.waitingDays !== null && thread.waitingDays > 0 && (
+                  <> · {thread.waitingDays} j</>
+                )}
+              </span>
+              <ThreadStatusActions threadId={thread.id} status={thread.status} />
+            </div>
+          </div>
+        </header>
+
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6 md:px-8">
+          <MessageThread messages={messages} />
         </div>
 
-        {thread.waitingOn === "us" && (
-          <p className="text-sm mt-3" style={{ color: "var(--kov-red)" }}>
-            En attente de votre réponse
-            {thread.waitingDays !== null && thread.waitingDays > 0 && ` depuis ${thread.waitingDays} jour${thread.waitingDays > 1 ? "s" : ""}`}
-          </p>
-        )}
+        <div
+          className="shrink-0 border-t px-6 py-4 md:px-8"
+          style={{ borderColor: "var(--kov-border)", background: "var(--kov-carbon)" }}
+        >
+          {thread.status === "closed" ? (
+            <p className="text-sm text-kov-concrete">
+              Cette demande est clôturée. Rouvrez-la pour répondre, ou laissez le client la relancer : son message la
+              rouvre automatiquement.
+            </p>
+          ) : (
+            <RequestReplyForm threadId={thread.id} />
+          )}
+        </div>
       </div>
 
-      <GlassCard className="p-6">
-        <ul className="space-y-5">
-          {thread.messages.map((message) => {
-            const fromUs = message.createdBy === "admin";
-            return (
-              <li key={message.id} className="flex gap-3">
-                <ClientAvatar
-                  name={message.authorName ?? (fromUs ? "KOV" : thread.clientName)}
-                  avatarUrl={fromUs ? null : thread.clientAvatarUrl}
-                  size={32}
-                />
-                <div
-                  className="min-w-0 flex-1 px-4 py-3"
-                  style={{
-                    // Le côté d'où vient le message est porté par la teinte
-                    // du fond ET par le nom de l'auteur, jamais par la seule
-                    // position : un fil qu'on ne peut lire qu'en regardant
-                    // de quel côté penche la bulle est illisible en liste.
-                    background: fromUs ? "var(--kov-graphite)" : "var(--kov-carbon)",
-                    border: "1px solid var(--kov-border)",
-                    borderRadius: "var(--radius-sm)",
-                  }}
-                >
-                  <p className="text-[11px] text-kov-steel">
-                    <span className="text-kov-concrete">
-                      {fromUs ? (message.authorName ?? "Équipe KOV") : thread.clientName}
-                    </span>
-                    {" · "}
-                    {formatRelativeTime(message.createdAt)}
-                  </p>
-                  {/* Texte brut rendu tel quel, retours à la ligne préservés.
-                      Le corps vient d'un client : aucun HTML n'est
-                      interprété, jamais. */}
-                  <p className="text-kov-bone text-sm mt-1.5 whitespace-pre-wrap break-words">{message.body}</p>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      </GlassCard>
-
-      {thread.status === "closed" ? (
-        <GlassCard className="p-5">
-          <p className="text-kov-steel text-sm">
-            Cette demande est clôturée. Rouvrez-la pour répondre, ou laissez le client la relancer : son message
-            la rouvrira automatiquement.
-          </p>
-        </GlassCard>
-      ) : (
-        <RequestReplyForm threadId={thread.id} />
-      )}
-    </main>
+      <aside
+        className="shrink-0 border-t p-5 xl:h-full xl:w-[320px] xl:overflow-y-auto xl:border-l xl:border-t-0"
+        style={{ borderColor: "var(--kov-border)" }}
+      >
+        <ThreadRail
+          context={context}
+          projectHref={(projectId) => `/admin/projects/${projectId}`}
+          documentsHref={`/admin/clients/${thread.clientId}`}
+        />
+      </aside>
+    </div>
   );
 }

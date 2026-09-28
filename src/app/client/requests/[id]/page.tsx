@@ -3,78 +3,113 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { GlassCard } from "@/components/ui/GlassCard";
-import {
-  REQUEST_WAITING_COLORS,
-  REQUEST_WAITING_LABELS,
-  deriveRequestWaitingOn,
-} from "@/lib/portal/status";
+import { getMyRequestThread, getThreadContext } from "@/lib/portal/requests";
+import { REQUEST_WAITING_COLORS, REQUEST_WAITING_LABELS } from "@/lib/portal/status";
+import { MessageThread, type ThreadMessageView } from "@/components/requests/MessageThread";
+import { ThreadRail } from "@/components/requests/ThreadRail";
 import { ReplyForm } from "./ReplyForm";
 
-// Comme la fiche projet : un titre statique rend deux onglets ouverts
-// indiscernables.
 export async function generateMetadata(props: PageProps<"/client/requests/[id]">): Promise<Metadata> {
   const { id } = await props.params;
   const { data } = await supabaseAdmin.from("request_threads").select("subject").eq("id", id).maybeSingle();
-  return { title: data?.subject ? `${data.subject} — KOV` : "Demande — KOV" };
+  return { title: data?.subject ? `${data.subject} — KOV` : "Message — KOV" };
 }
 
-export default async function ClientRequestDetailPage(props: PageProps<"/client/requests/[id]">) {
+// La conversation : le fil au centre, son contexte à droite.
+//
+// La colonne de gauche n'est pas ici — elle est dans le layout, et c'est
+// ce qui permet de passer d'un fil à l'autre sans la recharger.
+export default async function ClientRequestThreadPage(props: PageProps<"/client/requests/[id]">) {
   const user = await requireUser();
   const { id: threadId } = await props.params;
 
-  const { data: thread } = await supabaseAdmin
-    .from("request_threads")
-    .select("id, subject, status, client_id, created_at")
-    .eq("id", threadId)
-    .maybeSingle();
+  const thread = await getMyRequestThread(user.id, threadId);
+  if (!thread) notFound();
 
-  if (!thread || thread.client_id !== user.id) notFound();
+  const context = await getThreadContext(threadId, user.id, thread.summary.projectId);
 
-  const { data: messages } = await supabaseAdmin
-    .from("request_messages")
-    .select("id, body, created_by, created_at")
-    .eq("thread_id", threadId)
-    .order("created_at", { ascending: true });
+  const messages: ThreadMessageView[] = thread.messages.map((message) => ({
+    id: message.id,
+    body: message.body,
+    createdAt: message.createdAt,
+    authorName: message.authorName,
+    authorAvatarUrl: message.authorAvatarUrl,
+    mine: message.createdBy === "client",
+  }));
 
-  // Le dernier message dit qui doit jouer — même règle que la liste et que
-  // l'écran admin, tirée du même fichier.
-  const lastMessage = (messages ?? [])[(messages ?? []).length - 1];
-  const waitingOn = deriveRequestWaitingOn(thread.status, lastMessage?.created_by);
+  const waitingOn = thread.summary.waitingOn;
+  const closed = thread.summary.status === "closed";
 
   return (
-    <main className="px-6 md:px-10 py-10 max-w-3xl mx-auto w-full space-y-8">
-      <div>
-        <Link href="/client/requests" className="text-kov-steel text-xs uppercase tracking-widest hover:text-kov-bone transition-colors">
-          ← Demandes
-        </Link>
-        <div className="flex flex-wrap items-center gap-4 mt-4">
-          <h1 className="font-display text-kov-bone text-2xl uppercase">{thread.subject}</h1>
-          <span className="text-xs uppercase tracking-widest" style={{ color: REQUEST_WAITING_COLORS[waitingOn] }}>
-            {REQUEST_WAITING_LABELS[waitingOn]}
-          </span>
+    <div className="flex h-full min-h-0 flex-col xl:flex-row">
+      {/* Le fil. Il défile seul, et seulement lui : l'en-tête reste visible
+          au-dessus, le champ de réponse reste posé en dessous. Une
+          conversation dont l'en-tête part au premier défilement oblige à
+          remonter pour savoir de quoi on parle. */}
+      <div className="flex min-h-0 flex-1 flex-col">
+        <header
+          className="shrink-0 border-b px-6 py-4 md:px-8"
+          style={{ borderColor: "var(--kov-border)", background: "var(--kov-carbon)" }}
+        >
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h2 className="truncate text-[15px] text-kov-bone">{thread.summary.subject}</h2>
+              <p className="mt-0.5 text-xs text-kov-concrete">
+                {thread.summary.messageCount} message{thread.summary.messageCount > 1 ? "s" : ""}
+                {thread.summary.projectName && (
+                  <>
+                    {" · "}
+                    <Link
+                      href={`/client/projects/${thread.summary.projectId}`}
+                      className="transition-colors hover:text-kov-red"
+                    >
+                      {thread.summary.projectName}
+                    </Link>
+                  </>
+                )}
+              </p>
+            </div>
+
+            <span
+              className="shrink-0 px-2.5 py-1 text-[10px] uppercase tracking-widest"
+              style={{
+                color: REQUEST_WAITING_COLORS[waitingOn],
+                border: `1px solid ${REQUEST_WAITING_COLORS[waitingOn]}`,
+                borderRadius: "var(--radius-pill)",
+              }}
+            >
+              {REQUEST_WAITING_LABELS[waitingOn]}
+            </span>
+          </div>
+        </header>
+
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6 md:px-8">
+          <MessageThread messages={messages} />
+        </div>
+
+        <div
+          className="shrink-0 border-t px-6 py-4 md:px-8"
+          style={{ borderColor: "var(--kov-border)", background: "var(--kov-carbon)" }}
+        >
+          {closed ? (
+            <p className="text-sm text-kov-concrete">
+              Cette conversation est clôturée. Votre prochain message la rouvre automatiquement.
+            </p>
+          ) : null}
+          <ReplyForm threadId={thread.summary.id} />
         </div>
       </div>
 
-      <div className="space-y-4">
-        {(messages ?? []).map((message) => {
-          const isClient = message.created_by === "client";
-          return (
-            <div key={message.id} className={`flex ${isClient ? "justify-end" : "justify-start"}`}>
-              <GlassCard className={`p-4 max-w-[80%] ${isClient ? "" : ""}`} variant={isClient ? "glass" : "solid"}>
-                <p className="text-kov-steel text-[10px] uppercase tracking-widest mb-1.5">
-                  {isClient ? "Vous" : "KOV"} — {new Date(message.created_at).toLocaleString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
-                </p>
-                <p className="text-kov-bone text-sm whitespace-pre-wrap">{message.body}</p>
-              </GlassCard>
-            </div>
-          );
-        })}
-      </div>
-
-      <GlassCard className="p-6">
-        <ReplyForm threadId={thread.id} />
-      </GlassCard>
-    </main>
+      <aside
+        className="shrink-0 border-t p-5 xl:h-full xl:w-[320px] xl:overflow-y-auto xl:border-l xl:border-t-0"
+        style={{ borderColor: "var(--kov-border)" }}
+      >
+        <ThreadRail
+          context={context}
+          projectHref={(projectId) => `/client/projects/${projectId}`}
+          documentsHref="/client/documents"
+        />
+      </aside>
+    </div>
   );
 }

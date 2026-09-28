@@ -161,6 +161,10 @@ export interface RequestMessage {
   createdBy: "client" | "admin";
   createdAt: string;
   authorName: string | null;
+  /** Le portrait de l'auteur. Un fil sans visage se lit comme un journal,
+   *  pas comme un échange — et quand trois personnes du studio écrivent,
+   *  le nom seul oblige à relire chaque ligne pour savoir qui parle. */
+  authorAvatarUrl: string | null;
 }
 
 export interface RequestThreadDetail extends RequestThreadSummary {
@@ -186,9 +190,14 @@ export async function getRequestThread(threadId: string): Promise<RequestThreadD
     )
   );
   const { data: adminRows } = adminIds.length
-    ? await supabaseAdmin.from("profiles").select("id, full_name").in("id", adminIds)
-    : { data: [] };
-  const admins = new Map((adminRows ?? []).map((row) => [row.id as string, (row.full_name as string | null) ?? null]));
+    ? await supabaseAdmin.from("profiles").select("id, full_name, avatar_path").in("id", adminIds)
+    : { data: [] as { id: string; full_name: string | null; avatar_path: string | null }[] };
+  const admins = new Map(
+    (adminRows ?? []).map((row) => [
+      row.id as string,
+      { name: (row.full_name as string | null) ?? null, avatarUrl: getPublicAssetUrl(row.avatar_path as string | null) },
+    ])
+  );
 
   return {
     ...summary,
@@ -199,8 +208,12 @@ export async function getRequestThread(threadId: string): Promise<RequestThreadD
       createdAt: row.created_at as string,
       authorName:
         row.created_by === "admin"
-          ? (admins.get(row.author_admin_id as string) ?? null)
+          ? (admins.get(row.author_admin_id as string)?.name ?? "Équipe KOV")
           : summary.clientName,
+      authorAvatarUrl:
+        row.created_by === "admin"
+          ? (admins.get(row.author_admin_id as string)?.avatarUrl ?? null)
+          : summary.clientAvatarUrl,
     })),
   };
 }

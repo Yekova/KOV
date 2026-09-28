@@ -1,41 +1,54 @@
 import type { Metadata } from "next";
 import { requireAdmin } from "@/lib/auth";
 import { getRequestThreads } from "@/lib/admin/requests";
-import { RequestsTable } from "@/components/admin/requests/RequestsTable";
+import { KovEmptyState } from "@/components/ui/KovStates";
 
 export const metadata: Metadata = { title: "Demandes — Admin KOV" };
 
+// La colonne centrale quand aucun fil n'est ouvert.
+//
+// Elle ne répète pas la liste — celle-ci est à gauche. Elle dit ce qui
+// attend, et depuis combien de temps : c'est la seule information que la
+// liste ne porte pas, parce qu'elle est un total et non une ligne.
 export default async function AdminRequestsPage() {
   await requireAdmin();
   const threads = await getRequestThreads();
 
   const waiting = threads.filter((thread) => thread.waitingOn === "us");
   const oldest = waiting.reduce<number | null>(
-    (max, thread) => (thread.waitingDays === null ? max : max === null ? thread.waitingDays : Math.max(max, thread.waitingDays)),
+    (max, thread) =>
+      thread.waitingDays === null ? max : max === null ? thread.waitingDays : Math.max(max, thread.waitingDays),
     null
   );
 
   return (
-    <main className="px-6 py-10 max-w-[1600px] mx-auto w-full">
-      <div className="mb-8">
-        <h1 className="font-display text-kov-bone text-2xl uppercase">Demandes</h1>
-        <p className="text-kov-steel text-sm mt-2 max-w-xl">
-          Ce que vos clients écrivent depuis leur espace, et qui attend une réponse.
-        </p>
-
-        {/* La seule phrase de l'en-tête, et elle ne s'affiche que s'il y a
-            quelque chose à dire. Les onglets portent déjà les comptes ;
-            l'ancienneté, elle, n'est visible nulle part ailleurs. */}
-        {waiting.length > 0 && (
-          <p className="text-sm mt-3" style={{ color: "var(--kov-red)" }}>
-            {waiting.length} demande{waiting.length > 1 ? "s" : ""} attend
-            {waiting.length > 1 ? "ent" : ""} une réponse
-            {oldest !== null && oldest > 0 && ` · la plus ancienne depuis ${oldest} jour${oldest > 1 ? "s" : ""}`}
+    <main className="mx-auto w-full max-w-2xl px-6 py-14 md:px-10">
+      {threads.length === 0 ? (
+        <KovEmptyState
+          title="Aucune demande pour l'instant"
+          description="Les messages écrits par vos clients depuis leur espace arrivent ici, et la conversation se tient au même endroit."
+        />
+      ) : waiting.length === 0 ? (
+        <KovEmptyState
+          title="Rien à traiter"
+          description="Toutes les conversations attendent une réponse du client, ou sont clôturées. Choisissez-en une à gauche pour la relire."
+        />
+      ) : (
+        <div>
+          <h2 className="font-display text-xl uppercase text-kov-bone">
+            {waiting.length} demande{waiting.length > 1 ? "s" : ""} attend{waiting.length > 1 ? "ent" : ""} votre
+            réponse<span className="text-kov-red">.</span>
+          </h2>
+          {oldest !== null && oldest > 0 && (
+            <p className="mt-3 text-sm text-kov-concrete">
+              La plus ancienne attend depuis {oldest} jour{oldest > 1 ? "s" : ""}.
+            </p>
+          )}
+          <p className="mt-6 text-sm text-kov-concrete">
+            Choisissez une conversation à gauche pour y répondre. Le filtre « À traiter » est actif par défaut.
           </p>
-        )}
-      </div>
-
-      <RequestsTable threads={threads} />
+        </div>
+      )}
     </main>
   );
 }

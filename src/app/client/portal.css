@@ -172,3 +172,53 @@
     animation: none;
   }
 }
+
+/* ── La messagerie ───────────────────────────────────────────────────── */
+
+/* La liste de conversations, et l'actif.
+ * Même code que la barre latérale : un filet rouge marque la position, il
+ * ne remplit pas la surface. Deux langages différents pour « où je suis »
+ * dans un même écran obligeraient à en apprendre deux. */
+.kov-conversation {
+  position: relative;
+  display: flex;
+  transition: background-color var(--motion-fast) var(--ease-kov);
+}
+
+.kov-conversation:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.kov-conversation[data-active="true"] {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.kov-conversation[data-active="true"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  border-radius: 999px;
+  background: var(--kov-red);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kov-conversation {
+    transition: none;
+  }
+}
+
+/* La hauteur de la barre du haut : px-6 py-4 autour d'un champ de 44px.
+ * Elle est nommée parce que la messagerie s'en sert pour occuper
+ * exactement le reste de l'écran et faire défiler ses colonnes
+ * séparément — une valeur en dur à cet endroit se désynchroniserait au
+ * premier changement de la barre. */
+.kov-portal {
+  --kov-topbar-h: 76px;
+}
+
+.kov-messaging {
+  height: calc(100dvh - var(--kov-topbar-h));
+}

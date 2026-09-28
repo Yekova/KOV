@@ -1,111 +1,45 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { KovEmptyState } from "@/components/ui/KovStates";
-import {
-  REQUEST_WAITING_COLORS,
-  REQUEST_WAITING_LABELS,
-  deriveRequestWaitingOn,
-} from "@/lib/portal/status";
 import { NewRequestForm } from "./NewRequestForm";
 
 export const metadata: Metadata = {
-  title: "Demandes — KOV",
+  title: "Messages — KOV",
 };
 
-export default async function ClientRequestsPage() {
+// La colonne centrale quand aucun fil n'est ouvert.
+//
+// Elle ne montre plus la liste des demandes : celle-ci vit à gauche, dans
+// le layout, et la répéter ici serait la même information deux fois sur le
+// même écran. Elle montre ce qu'on vient faire quand on n'a pas de fil à
+// lire — en ouvrir un.
+export default async function ClientNewRequestPage() {
   const user = await requireUser();
 
-  const [{ data: threads }, { data: projects }] = await Promise.all([
-    supabaseAdmin
-      .from("request_threads")
-      .select("id, subject, status, updated_at")
-      .eq("client_id", user.id)
-      .order("updated_at", { ascending: false }),
-    supabaseAdmin.from("projects").select("id, name").eq("client_id", user.id),
-  ]);
-
-  const rows = threads ?? [];
-  const projectRows = projects ?? [];
-
-  const latestMessageByThread = new Map<string, { body: string; created_by: string }>();
-  if (rows.length) {
-    const { data: messages } = await supabaseAdmin
-      .from("request_messages")
-      .select("thread_id, body, created_by, created_at")
-      .in(
-        "thread_id",
-        rows.map((t) => t.id)
-      )
-      .order("created_at", { ascending: false })
-      // Borné : la page chargeait l'historique complet de tous les fils
-      // pour n'en garder que le dernier message de chacun. En ordre
-      // décroissant, les 400 derniers couvrent tous les fils actifs ; au
-      // pire, un fil très ancien perd son extrait et s'affiche quand même.
-      .limit(400);
-    for (const m of messages ?? []) {
-      if (!latestMessageByThread.has(m.thread_id)) {
-        latestMessageByThread.set(m.thread_id, { body: m.body, created_by: m.created_by });
-      }
-    }
-  }
+  const { data: projects } = await supabaseAdmin
+    .from("projects")
+    .select("id, name")
+    .eq("client_id", user.id)
+    .order("created_at", { ascending: false });
 
   return (
-    <main className="px-6 md:px-10 py-10 max-w-[1400px] mx-auto w-full space-y-8">
-      <h1 className="font-display text-kov-bone text-2xl uppercase">Demandes</h1>
+    <main className="mx-auto w-full max-w-2xl px-6 py-10 md:px-10">
+      <h2 className="font-display text-xl uppercase text-kov-bone">
+        Écrire au studio<span className="text-kov-red">.</span>
+      </h2>
+      <p className="mt-3 text-sm leading-relaxed text-kov-concrete">
+        Une question, une remarque, une demande de modification. Chaque échange reste dans sa conversation, et vous
+        voyez toujours qui doit répondre.
+      </p>
 
-      <GlassCard className="p-6" variant="solid">
-        <p className="text-xs uppercase tracking-widest text-kov-steel mb-4">Nouvelle demande</p>
-        <NewRequestForm projects={projectRows} />
+      <GlassCard className="mt-6 p-6" variant="solid">
+        <NewRequestForm projects={projects ?? []} />
       </GlassCard>
 
-      <GlassCard className="p-6">
-        <p className="text-xs uppercase tracking-widest text-kov-steel mb-4">Vos demandes</p>
-        {rows.length === 0 ? (
-          <KovEmptyState
-            title="Aucune demande pour l'instant"
-            description="Écrivez au studio depuis le formulaire ci-dessus. Chaque échange reste ici, et vous voyez toujours qui doit répondre."
-          />
-        ) : (
-          <ul>
-            {rows.map((thread) => {
-              const latest = latestMessageByThread.get(thread.id);
-              const waitingOn = deriveRequestWaitingOn(thread.status, latest?.created_by);
-              return (
-                <li key={thread.id} className="border-b last:border-b-0" style={{ borderColor: "var(--kov-border)" }}>
-                  <Link href={`/client/requests/${thread.id}`} className="flex items-center justify-between gap-4 py-4 hover:bg-white/[0.02] transition-colors -mx-2 px-2">
-                    <div className="min-w-0">
-                      <p className="text-kov-bone text-sm">{thread.subject}</p>
-                      {latest && (
-                        <p className="text-kov-steel text-xs mt-1 truncate">
-                          {latest.created_by === "client" ? "Vous : " : "KOV : "}
-                          {latest.body}
-                        </p>
-                      )}
-                      <p className="text-kov-steel text-xs mt-1">
-                        {new Date(thread.updated_at).toLocaleDateString("fr-FR")}
-                      </p>
-                    </div>
-                    {/* Ce que le client ne savait pas lire : « Répondue » ne
-                        dit pas si c'est à LUI de répondre. L'admin dérive
-                        déjà cette information de son côté ; c'est la même
-                        règle, dans le même fichier, pour que les deux ne
-                        puissent pas se contredire. */}
-                    <span
-                      className="text-xs uppercase tracking-widest shrink-0"
-                      style={{ color: REQUEST_WAITING_COLORS[waitingOn] }}
-                    >
-                      {REQUEST_WAITING_LABELS[waitingOn]}
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </GlassCard>
+      <p className="mt-6 text-xs text-kov-concrete">
+        Le studio reçoit votre message immédiatement et vous répond dans cette même conversation.
+      </p>
     </main>
   );
 }
