@@ -1,6 +1,6 @@
 import "server-only";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { inviteUser } from "@/lib/auth/inviteUser";
+import { inviteUser, type InviteResult } from "@/lib/auth/inviteUser";
 import { clientInviteEmailHtml, clientInviteEmailSubject } from "@/lib/email/inviteEmail";
 
 // La création d'un client, en un seul endroit.
@@ -24,19 +24,31 @@ export interface ProvisionClientInput {
   accountManagerId?: string | null;
 }
 
-export async function provisionClient(input: ProvisionClientInput): Promise<{ userId: string }> {
+export interface ProvisionClientResult {
+  userId: string;
+  /** Le lien d'activation, toujours renvoyé — même quand l'email n'est pas
+   *  parti. C'est ce qui permet à l'admin de le transmettre à la main au
+   *  lieu de perdre la création. */
+  actionLink: string;
+  emailSent: boolean;
+  emailError: string | null;
+  reinvited: boolean;
+}
+
+export async function provisionClient(input: ProvisionClientInput): Promise<ProvisionClientResult> {
   const email = input.email.trim();
   const fullName = input.fullName.trim();
   if (!email) throw new Error("Email requis.");
   if (!fullName) throw new Error("Nom requis.");
 
-  const { userId } = await inviteUser({
+  const invite: InviteResult = await inviteUser({
     email,
     fullName,
     role: "client",
     emailSubject: clientInviteEmailSubject(),
     emailHtml: (actionLink) => clientInviteEmailHtml({ fullName, actionLink }),
   });
+  const { userId } = invite;
 
   // Le responsable de compte n'est accepté que s'il est réellement
   // administrateur. La colonne ne porte pas cette contrainte en base, et
@@ -61,5 +73,11 @@ export async function provisionClient(input: ProvisionClientInput): Promise<{ us
     await supabaseAdmin.from("profiles").update(patch).eq("id", userId);
   }
 
-  return { userId };
+  return {
+    userId,
+    actionLink: invite.actionLink,
+    emailSent: invite.emailSent,
+    emailError: invite.emailError,
+    reinvited: invite.reinvited,
+  };
 }

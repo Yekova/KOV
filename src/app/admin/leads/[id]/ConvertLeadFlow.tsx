@@ -49,6 +49,7 @@ export function ConvertLeadFlow({
   const [isPending, startTransition] = useTransition();
   const [step, setStep] = useState(1);
   const [error, setError] = useState<string | null>(null);
+  const [invite, setInvite] = useState<{ link: string; reason: string | null } | null>(null);
 
   const [client, setClient] = useState({
     fullName: lead.name,
@@ -96,13 +97,31 @@ export function ConvertLeadFlow({
             : null,
         });
 
+        // L'échec arrive maintenant comme une donnée, pas comme une
+        // exception : une exception levée dans une action serveur perd son
+        // message en production et arrive sous forme d'erreur React #441.
+        if (result.error) {
+          setError(result.error);
+          return;
+        }
+
         if (result.projectError) {
-          // Le client existe, le projet non. On ne défait rien : l'email
-          // d'invitation est parti et ne se dé-envoie pas.
+          // Le client existe, le projet non. On ne défait rien : le compte
+          // est créé et le lien d'invitation émis.
           toast.error(`Client créé, mais le projet n'a pas pu l'être : ${result.projectError}`);
         } else {
           toast.success(result.projectId ? "Client et projet créés" : "Client créé");
         }
+
+        // L'email n'est pas parti : la conversion a quand même eu lieu, et
+        // le lien existe. On le montre au lieu de laisser le client sans
+        // moyen d'entrer — et on ne quitte pas l'écran, sinon le lien
+        // disparaîtrait avec lui.
+        if (result.emailSent === false && result.inviteLink) {
+          setInvite({ link: result.inviteLink, reason: result.emailError ?? null });
+          return;
+        }
+
         router.push(result.projectId ? `/admin/projects/${result.projectId}` : `/admin/clients/${result.clientId}`);
       } catch (err) {
         setError(err instanceof Error ? err.message : "La conversion a échoué.");
@@ -116,6 +135,54 @@ export function ConvertLeadFlow({
       : step === 2
         ? !withProject || Boolean(project.name.trim() && project.category.trim())
         : true;
+
+  // Le compte est créé, l'email non parti : cet écran remplace les étapes.
+  // Fermer maintenant ferait perdre le seul moyen d'entrer dont dispose le
+  // client, donc rien d'autre ne s'affiche tant qu'on n'a pas vu le lien.
+  if (invite) {
+    return (
+      <Modal open onClose={onDone} title="Client créé — invitation à transmettre" size="lg" closeOnBackdrop={false}>
+        <p className="text-kov-concrete text-sm">
+          Le compte existe et le lead est converti. En revanche l&apos;email d&apos;invitation n&apos;est pas parti :
+          transmettez ce lien à {client.email} pour qu&apos;il crée son accès.
+        </p>
+
+        {invite.reason && (
+          <p className="text-kov-steel text-xs mt-2">Raison de l&apos;échec : {invite.reason}</p>
+        )}
+
+        <div
+          className="mt-5 p-3 text-xs text-kov-bone break-all"
+          style={{ background: "var(--kov-graphite)", borderRadius: "var(--radius-sm)" }}
+        >
+          {invite.link}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3 mt-5">
+          <Button
+            type="button"
+            variant="primary"
+            onClick={() => {
+              void navigator.clipboard.writeText(invite.link).then(
+                () => toast.success("Lien copié"),
+                () => toast.error("La copie a échoué — sélectionnez le lien à la main.")
+              );
+            }}
+          >
+            Copier le lien
+          </Button>
+          <Button type="button" variant="secondary" onClick={onDone}>
+            Fermer
+          </Button>
+        </div>
+
+        <p className="text-kov-steel text-xs mt-4">
+          Ce lien est à usage unique et expire. Si le client ne s&apos;en sert pas à temps, il pourra passer par
+          « mot de passe oublié » depuis la page de connexion.
+        </p>
+      </Modal>
+    );
+  }
 
   return (
     <Modal open onClose={close} title="Convertir en client" size="lg" closeOnBackdrop={false}>

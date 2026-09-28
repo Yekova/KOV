@@ -175,10 +175,29 @@ export interface ConvertLeadInput {
   } | null;
 }
 
-export async function convertLeadToClient(
-  leadId: string,
-  input?: ConvertLeadInput
-): Promise<{ clientId: string; projectId?: string; projectError?: string }> {
+export interface ConvertLeadResult {
+  /** Non nul équivaut à un échec : rien n'a été créé. */
+  error?: string;
+  clientId?: string;
+  projectId?: string;
+  projectError?: string;
+  /** Le lien d'activation, à transmettre à la main quand l'email n'est pas
+   *  parti. */
+  inviteLink?: string;
+  emailSent?: boolean;
+  emailError?: string;
+}
+
+// ── POURQUOI CETTE FONCTION NE LÈVE PLUS ───────────────────────────────
+//
+// Une exception levée dans une action serveur traverse la frontière SANS
+// son message : en production, React le remplace par son erreur #441,
+// « une erreur est survenue dans le rendu des Server Components ». L'admin
+// voyait donc un code d'erreur React là où la cause était « l'email n'est
+// pas parti ».
+//
+// Un résultat traversé en tant que donnée, lui, arrive intact.
+export async function convertLeadToClient(leadId: string, input?: ConvertLeadInput): Promise<ConvertLeadResult> {
   const admin = await requireAdmin();
 
   const { data: lead } = await supabaseAdmin
@@ -186,18 +205,25 @@ export async function convertLeadToClient(
     .select("name, email, company, phone, assigned_to, status, converted_profile_id")
     .eq("id", leadId)
     .maybeSingle();
-  if (!lead) throw new Error("Lead introuvable.");
-  if (lead.converted_profile_id) throw new Error("Ce lead a déjà été converti en client.");
+  if (!lead) return { error: "Lead introuvable." };
+  if (lead.converted_profile_id) return { error: "Ce lead a déjà été converti en client." };
 
-  const { userId } = await provisionClient({
-    email: input?.email?.trim() || lead.email,
-    fullName: input?.fullName?.trim() || lead.name,
-    company: input?.company !== undefined ? input.company : lead.company,
-    phone: input?.phone !== undefined ? input.phone : lead.phone,
-    // Si le lead n'a pas de responsable, on n'en choisit pas un : désigner
-    // par défaut le seul administrateur reviendrait à l'inventer.
-    accountManagerId: input?.accountManagerId !== undefined ? input.accountManagerId : lead.assigned_to,
-  });
+  let provisioned;
+  try {
+    provisioned = await provisionClient({
+      email: input?.email?.trim() || lead.email,
+      fullName: input?.fullName?.trim() || lead.name,
+      company: input?.company !== undefined ? input.company : lead.company,
+      phone: input?.phone !== undefined ? input.phone : lead.phone,
+      // Si le lead n'a pas de responsable, on n'en choisit pas un : désigner
+      // par défaut le seul administrateur reviendrait à l'inventer.
+      accountManagerId: input?.accountManagerId !== undefined ? input.accountManagerId : lead.assigned_to,
+    });
+  } catch (caught) {
+    return { error: caught instanceof Error ? caught.message : "La création du compte client a échoué." };
+  }
+
+  const { userId, actionLink, emailSent, emailError } = provisioned;
 
   await linkLeadQuotesToClient(leadId, userId);
 
@@ -205,7 +231,7 @@ export async function convertLeadToClient(
     .from("leads")
     .update({ converted_profile_id: userId, status: "won", updated_at: new Date().toISOString() })
     .eq("id", leadId);
-  if (error) throw new Error("La conversion a échoué.");
+  if (error) return { error: "La conversion a échoué." };
 
   const actorName = await getActorDisplayName(admin.id);
   await logActivity({
@@ -257,16 +283,19 @@ export async function convertLeadToClient(
         await addDefaultPhases(projectId, KOV_PHASES);
       }
 
-      return { clientId: userId, projectId };
+      return { clientId: userId, projectId, inviteLink: actionLink, emailSent, emailError: emailError ?? undefined };
     } catch (err) {
       return {
         clientId: userId,
         projectError: err instanceof Error ? err.message : "La création du projet a échoué.",
+        inviteLink: actionLink,
+        emailSent,
+        emailError: emailError ?? undefined,
       };
     }
   }
 
-  return { clientId: userId };
+  return { clientId: userId, inviteLink: actionLink, emailSent, emailError: emailError ?? undefined };
 }
 
 /** Rattache au client les devis émis pendant qu'il n'était encore qu'un lead.
