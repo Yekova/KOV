@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
+import "@/components/ui/kovMotion.css";
 
 // Les fournisseurs client de tout /admin : cache de requêtes et toasts.
 //
@@ -30,11 +31,27 @@ export function AdminProviders({ children }: { children: ReactNode }) {
       {children}
       <Toaster
         theme="dark"
+        // En bas à droite, comme le portail : la barre du haut de l'admin
+        // porte la recherche, les notifications et le compte. Un toast qui
+        // tombe dessus recouvre exactement ce qu'on vient de vouloir
+        // consulter. Les deux espaces parlent maintenant au même endroit.
+        position="bottom-right"
+        // 3,5 s : assez pour lire une phrase, trop court pour gêner.
+        duration={3500}
         toastOptions={{
+          // La classe manquait : les toasts de l'admin n'avaient donc PAS
+          // le liseré vertical coloré qui dit succès, erreur ou
+          // avertissement. Ils étaient gris, tous pareils, et il fallait
+          // lire la phrase entière pour savoir si l'action avait abouti.
+          className: "kov-toast",
           style: {
-            background: "var(--kov-graphite)",
-            border: "1px solid var(--kov-border)",
+            background: "rgba(18,18,18,0.92)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
             color: "var(--kov-bone)",
+            borderRadius: "var(--radius-md)",
+            fontSize: "13px",
           },
         }}
       />

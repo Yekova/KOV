@@ -7,6 +7,7 @@ import { AdminTopbarSkeleton } from "@/components/admin/AdminTopbarSkeleton";
 import { MobileNavProvider } from "@/components/ui/MobileNavContext";
 import { TaskPanelProvider } from "@/components/admin/tasks/TaskPanelContext";
 import { AdminProviders } from "@/components/admin/AdminProviders";
+import { KovPageTransition } from "@/components/ui/KovPageTransition";
 import "@/styles/kov-surfaces.css";
 
 // requireAdmin() reads cookies(), which makes this whole layout dynamic —
@@ -32,7 +33,9 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
           </Suspense>
           <div className="flex-1">
             <AdminProviders>
-              <TaskPanelProvider>{children}</TaskPanelProvider>
+              <TaskPanelProvider>
+                <KovPageTransition>{children}</KovPageTransition>
+              </TaskPanelProvider>
             </AdminProviders>
           </div>
         </div>

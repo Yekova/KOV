@@ -6,7 +6,7 @@ import { PortalTopbarData } from "@/components/client/PortalTopbarData";
 import { PortalTopbarSkeleton } from "@/components/client/PortalTopbarSkeleton";
 import { MobileNavProvider } from "@/components/ui/MobileNavContext";
 import { PortalProviders } from "@/components/client/PortalProviders";
-import { PortalPageTransition } from "@/components/client/PortalPageTransition";
+import { KovPageTransition } from "@/components/ui/KovPageTransition";
 import { PresenceHeartbeat } from "@/components/client/PresenceHeartbeat";
 import "@/styles/kov-surfaces.css";
 import "./portal.css";
@@ -38,7 +38,7 @@ export default async function ClientLayout({ children }: LayoutProps<"/client">)
             <Suspense fallback={<PortalTopbarSkeleton />}>
               <PortalTopbarData userId={user.id} />
             </Suspense>
-            <PortalPageTransition>{children}</PortalPageTransition>
+            <KovPageTransition className="flex-1">{children}</KovPageTransition>
           </div>
         </div>
       </MobileNavProvider>
