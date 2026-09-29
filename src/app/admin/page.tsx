@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   title: "Dashboard — Admin KOV",
 };
 
-const CATEGORY_COLORS = ["var(--kov-red)", "#5B8DEF", "#9B6DFF", "#F5A524", "#3FB27F", "#F5629B"];
+const CATEGORY_COLORS = ["var(--kov-red)", "var(--kov-status-blue)", "var(--kov-status-purple)", "var(--kov-status-orange)", "var(--kov-status-green)", "var(--kov-status-pink)"];
 const MONTH_LABELS = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
 
 // Trente jours, et ce n'est pas une valeur ronde prise au hasard : à trois
@@ -356,7 +356,7 @@ export default async function AdminDashboardPage() {
               value={`${Math.floor(todayHours)}h${String(todayMinutes % 60).padStart(2, "0")}`}
               caption={`${inProgressTaskCount ?? 0} tâche${(inProgressTaskCount ?? 0) > 1 ? "s" : ""} en cours sur ${totalTaskCount ?? 0}`}
               progress={tasksInProgressPercent}
-              progressColor="#F5A524"
+              progressColor="var(--kov-status-orange)"
             />
           </div>
         </div>

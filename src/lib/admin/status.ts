@@ -26,7 +26,7 @@ export const EMAIL_STATUS_COLORS: Record<EmailStatus, string> = {
   draft: "var(--kov-steel)",
   queued: "#E39A2D",
   sent: "#3F8CFF",
-  delivered: "#3FB27F",
+  delivered: "var(--kov-status-green)",
   failed: "var(--kov-red)",
   bounced: "var(--kov-red)",
 };
@@ -70,10 +70,10 @@ export const LEAD_SOURCE_LABELS: Record<LeadSource, string> = {
 
 export const LEAD_SOURCE_COLORS: Record<LeadSource, string> = {
   site_web: "var(--kov-red)",
-  reseaux_sociaux: "#F5A524",
-  recommandation: "#9B6DFF",
-  linkedin: "#5B8DEF",
-  newsletter: "#3FB27F",
+  reseaux_sociaux: "var(--kov-status-orange)",
+  recommandation: "var(--kov-status-purple)",
+  linkedin: "var(--kov-status-blue)",
+  newsletter: "var(--kov-status-green)",
   autre: "var(--kov-steel)",
 };
 
@@ -145,7 +145,7 @@ export const PRIORITY_LABELS: Record<Priority, string> = {
 // "same urgency as the brand's own signal color").
 export const PRIORITY_COLORS: Record<Priority, string> = {
   low: "var(--kov-steel)",
-  medium: "#F5A524",
+  medium: "var(--kov-status-orange)",
   high: "var(--kov-red-signal)",
   urgent: "var(--kov-red)",
 };

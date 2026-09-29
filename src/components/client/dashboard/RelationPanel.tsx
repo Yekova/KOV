@@ -63,7 +63,7 @@ export function RelationPanel({
                   </p>
                   {/* La disponibilité est une donnée réelle : l'admin la
                       règle lui-même. Aucun « répond en 2 h » inventé. */}
-                  <p className="mt-1 text-[11px]" style={{ color: manager.isOnline ? "#3FB27F" : "var(--kov-concrete)" }}>
+                  <p className="mt-1 text-[11px]" style={{ color: manager.isOnline ? "var(--kov-status-green)" : "var(--kov-concrete)" }}>
                     {manager.isOnline ? "Disponible maintenant" : "Absent pour le moment"}
                   </p>
                 </div>

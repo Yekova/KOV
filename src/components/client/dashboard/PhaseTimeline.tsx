@@ -21,7 +21,7 @@ export interface TimelinePhase {
 // Trois états seulement, et leurs couleurs sont celles du reste de
 // l'espace : vert pour fait, rouge pour en cours, gris pour à venir.
 
-const DONE = "#3FB27F";
+const DONE = "var(--kov-status-green)";
 const FUTURE = "var(--kov-muted)";
 
 function stateOf(status: string): "done" | "current" | "future" {

@@ -14,7 +14,7 @@ const LEVEL_LABELS: Record<AlertLevel, string> = {
 
 const LEVEL_COLORS: Record<AlertLevel, string> = {
   blocking: "var(--kov-red)",
-  warning: "#F5A524",
+  warning: "var(--kov-status-orange)",
   info: "var(--kov-steel)",
 };
 

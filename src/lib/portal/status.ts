@@ -26,7 +26,7 @@ export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
 export const PROJECT_STATUS_COLORS: Record<string, string> = {
   in_progress: "var(--kov-red)",
   in_review: "var(--kov-concrete)",
-  on_hold: "#F5A524",
+  on_hold: "var(--kov-status-orange)",
   done: "var(--kov-steel)",
 };
 
@@ -117,7 +117,7 @@ export const REQUEST_WAITING_LABELS: Record<RequestWaitingOn, string> = {
 };
 
 export const REQUEST_WAITING_COLORS: Record<RequestWaitingOn, string> = {
-  you: "#F5A524",
+  you: "var(--kov-status-orange)",
   kov: "var(--kov-concrete)",
   nobody: "var(--kov-steel)",
 };

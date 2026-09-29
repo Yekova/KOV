@@ -88,10 +88,10 @@ export default async function AdminTasksPage(props: PageProps<"/admin/tasks">) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard label="Tâches totales" value={String(totalCount)} caption={`+${createdThisMonth} ce mois`} />
-        <StatCard label="Terminées" value={String(doneCount)} caption={`${pct(doneCount)}% du total`} progress={pct(doneCount)} progressColor="#3FB27F" />
-        <StatCard label="En cours" value={String(inProgressCount)} caption={`${pct(inProgressCount)}% du total`} progress={pct(inProgressCount)} progressColor="#F5A524" />
+        <StatCard label="Terminées" value={String(doneCount)} caption={`${pct(doneCount)}% du total`} progress={pct(doneCount)} progressColor="var(--kov-status-green)" />
+        <StatCard label="En cours" value={String(inProgressCount)} caption={`${pct(inProgressCount)}% du total`} progress={pct(inProgressCount)} progressColor="var(--kov-status-orange)" />
         <StatCard label="En retard" value={String(overdueCount)} caption="Nécessite attention" progress={pct(overdueCount)} progressColor="var(--kov-red)" />
-        <StatCard label="Bloquées" value={String(blockedCount)} caption={`${pct(blockedCount)}% du total`} progress={pct(blockedCount)} progressColor="#9B6DFF" />
+        <StatCard label="Bloquées" value={String(blockedCount)} caption={`${pct(blockedCount)}% du total`} progress={pct(blockedCount)} progressColor="var(--kov-status-purple)" />
       </div>
 
       <TaskManagerView

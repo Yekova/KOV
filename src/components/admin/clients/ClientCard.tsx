@@ -28,7 +28,7 @@ import type { ClientSummary, ClientTeamMember } from "@/lib/admin/clients";
 const STATUS_COLORS: Record<string, string> = {
   in_progress: "var(--kov-red)",
   in_review: "var(--kov-concrete)",
-  on_hold: "#F5A524",
+  on_hold: "var(--kov-status-orange)",
   done: "var(--kov-steel)",
 };
 

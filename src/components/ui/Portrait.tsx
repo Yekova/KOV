@@ -66,7 +66,7 @@ export function Portrait({
             width: Math.max(8, size * 0.2),
             height: Math.max(8, size * 0.2),
             borderRadius: "var(--radius-pill)",
-            background: isOnline ? "#3FB27F" : "var(--kov-steel)",
+            background: isOnline ? "var(--kov-status-green)" : "var(--kov-steel)",
             border: "2px solid var(--kov-carbon)",
           }}
         />

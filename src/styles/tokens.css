@@ -17,6 +17,21 @@
   --kov-muted: #484846;
 
   --kov-border: #272727;
+
+  /* ── Les couleurs d'état ──────────────────────────────────────────
+     Elles étaient écrites en dur dans lib/admin/status.ts et
+     lib/portal/status.ts, donc identiques des deux côtés — ce qui
+     convenait tant que les deux côtés étaient sombres. Depuis que
+     l'admin est clair, le vert à #3FB27F n'y donne plus que 2,97:1 en
+     texte, très en dessous du minimum de 4,5:1.
+     Les valeurs ci-dessous sont celles du fond sombre ; admin-light.css
+     les redéfinit pour le fond clair. Un seul jeu de constantes côté
+     TypeScript, deux jeux de valeurs. */
+  --kov-status-green: #3fb27f;
+  --kov-status-orange: #f5a524;
+  --kov-status-blue: #5b8def;
+  --kov-status-purple: #9b6dff;
+  --kov-status-pink: #f5629b;
   --kov-grid-line: rgba(231, 231, 229, 0.12);
 
   /* Typography scale.

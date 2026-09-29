@@ -21,7 +21,7 @@ export async function generateMetadata(props: PageProps<"/admin/requests/[id]">)
 
 const WAITING_COLORS: Record<string, string> = {
   us: "var(--kov-red)",
-  client: "#F5A524",
+  client: "var(--kov-status-orange)",
   nobody: "var(--kov-steel)",
 };
 

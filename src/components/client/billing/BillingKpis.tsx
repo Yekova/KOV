@@ -60,7 +60,7 @@ export function BillingKpis({
       <Kpi
         label="Devis à signer"
         value={String(quotesToSign)}
-        accent={quotesToSign > 0 ? "#F5A524" : "var(--kov-bone)"}
+        accent={quotesToSign > 0 ? "var(--kov-status-orange)" : "var(--kov-bone)"}
         hint={quotesToSign === 0 ? "Rien en attente" : null}
       />
       <Kpi
@@ -80,7 +80,7 @@ export function BillingKpis({
         value={formatMoneyPrecise(paidThisMonthCents, currency)}
         accent="var(--kov-bone)"
         hint={delta === null ? null : `${delta >= 0 ? "+" : ""}${delta} % vs mois dernier`}
-        hintColor={delta === null ? undefined : delta >= 0 ? "#3FB27F" : "var(--kov-concrete)"}
+        hintColor={delta === null ? undefined : delta >= 0 ? "var(--kov-status-green)" : "var(--kov-concrete)"}
       />
     </div>
   );

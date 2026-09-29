@@ -36,7 +36,7 @@ export default async function AdminRequestsLayout({ children }: { children: Reac
       thread.waitingOn === "us"
         ? "var(--kov-red)"
         : thread.waitingOn === "client"
-          ? "#F5A524"
+          ? "var(--kov-status-orange)"
           : "var(--kov-steel)",
     needsYou: thread.waitingOn === "us",
     messageCount: thread.messageCount,

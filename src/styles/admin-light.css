@@ -75,6 +75,16 @@
   --kov-topbar-h: 68px;
   --kov-grid-line: rgba(0, 0, 0, 0.06);
 
+  /* Les mêmes teintes, assombries jusqu'à passer 4,5:1 sur le fond clair.
+     Mesurées, pas choisies : sur #f7f7f6 les valeurs du thème sombre
+     donnaient 2,97:1 (vert), 2,06:1 (orange), 3,17:1 (bleu) — un texte de
+     statut illisible, et c'est ce que porte chaque badge de l'admin. */
+  --kov-status-green: #2d7e5a;
+  --kov-status-orange: #986616;
+  --kov-status-blue: #476eba;
+  --kov-status-purple: #7f59d1;
+  --kov-status-pink: #b54973;
+
   /* ── Le verre, retourné ─────────────────────────────────────────── */
   /* Sur fond sombre, le verre est un voile BLANC qui éclaircit. Sur fond
      clair il doit faire l'inverse : opacifier vers le blanc et poser une

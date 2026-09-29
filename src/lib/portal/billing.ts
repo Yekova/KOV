@@ -51,8 +51,8 @@ export interface BillingDocument {
   lineCount: number;
 }
 
-const AMBER = "#F5A524";
-const GREEN = "#3FB27F";
+const AMBER = "var(--kov-status-orange)";
+const GREEN = "var(--kov-status-green)";
 
 // Le libellé côté client, et pourquoi il diffère de celui de l'admin.
 //

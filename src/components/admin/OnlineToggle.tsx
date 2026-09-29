@@ -47,7 +47,7 @@ export function OnlineToggle({ isOnline }: { isOnline: boolean }) {
           <span
             aria-hidden="true"
             className="h-2 w-2 shrink-0 rounded-full"
-            style={{ background: online ? "#3FB27F" : "var(--kov-steel)" }}
+            style={{ background: online ? "var(--kov-status-green)" : "var(--kov-steel)" }}
           />
           {online ? "En ligne" : "Hors ligne"}
         </p>
@@ -75,7 +75,7 @@ export function OnlineToggle({ isOnline }: { isOnline: boolean }) {
         <span
           aria-hidden="true"
           className="absolute top-1/2 block h-4 w-4 -translate-y-1/2 rounded-full transition-[left,background-color] duration-200"
-          style={{ left: online ? "26px" : "4px", background: online ? "#3FB27F" : "var(--kov-steel)" }}
+          style={{ left: online ? "26px" : "4px", background: online ? "var(--kov-status-green)" : "var(--kov-steel)" }}
         />
       </button>
     </div>

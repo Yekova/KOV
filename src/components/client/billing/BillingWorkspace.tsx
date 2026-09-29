@@ -394,7 +394,7 @@ function SelectedDocument({ document }: { document: BillingDocument | null }) {
             </div>
             <div className="flex items-baseline justify-between gap-4">
               <dt className="text-xs text-kov-concrete">Remise</dt>
-              <dd className="tabular-nums" style={{ color: "#3FB27F" }}>
+              <dd className="tabular-nums" style={{ color: "var(--kov-status-green)" }}>
                 −{formatMoneyPrecise(document.discountCents ?? 0, document.currency)}
               </dd>
             </div>

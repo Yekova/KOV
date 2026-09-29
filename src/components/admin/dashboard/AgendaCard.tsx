@@ -10,11 +10,11 @@ import type { AgendaEvent, AgendaKind } from "@/lib/admin/agenda";
 // jour, dit la même chose en occupant la place qu'elle mérite.
 
 const KIND_COLORS: Record<AgendaKind, string> = {
-  task: "#F5A524",
+  task: "var(--kov-status-orange)",
   project: "var(--kov-red)",
-  phase: "#5B8DEF",
-  quote: "#9B6DFF",
-  invoice: "#3FB27F",
+  phase: "var(--kov-status-blue)",
+  quote: "var(--kov-status-purple)",
+  invoice: "var(--kov-status-green)",
 };
 
 function formatDay(date: string, today: string, tomorrow: string): string {

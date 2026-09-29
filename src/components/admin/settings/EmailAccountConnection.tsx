@@ -25,7 +25,7 @@ export function EmailAccountConnection({ connectedEmail }: { connectedEmail: str
         réception. Sans connexion, l&apos;envoi continue de passer par l&apos;expéditeur partagé KOV.
       </p>
 
-      {status === "connected" && <p className="text-[#3FB27F] text-xs mt-3">Boîte mail connectée avec succès.</p>}
+      {status === "connected" && <p className="text-[var(--kov-status-green)] text-xs mt-3">Boîte mail connectée avec succès.</p>}
       {status === "error" && <p className="text-kov-red text-xs mt-3">{message || "La connexion a échoué."}</p>}
 
       <div className="flex items-center gap-3 mt-4">

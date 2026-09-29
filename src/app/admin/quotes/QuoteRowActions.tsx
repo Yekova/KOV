@@ -195,7 +195,7 @@ export function QuoteRowActions({
       </Button>
 
       {signedAt ? (
-        <span className="text-[#3FB27F] text-xs uppercase tracking-widest">
+        <span className="text-[var(--kov-status-green)] text-xs uppercase tracking-widest">
           Signé le {new Date(signedAt).toLocaleDateString("fr-FR")}
         </span>
       ) : signatureRequestId || signatureRequested ? (

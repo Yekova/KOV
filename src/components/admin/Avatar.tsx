@@ -1,4 +1,4 @@
-const PALETTE = ["var(--kov-red)", "#5B8DEF", "#9B6DFF", "#F5A524", "#3FB27F", "#F5629B"];
+const PALETTE = ["var(--kov-red)", "var(--kov-status-blue)", "var(--kov-status-purple)", "var(--kov-status-orange)", "var(--kov-status-green)", "var(--kov-status-pink)"];
 
 function colorForName(name: string): string {
   let hash = 0;
