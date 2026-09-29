@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/Button";
+import { KovActionButton } from "@/components/ui/KovActionButton";
+import { useKovAction } from "@/lib/useKovAction";
 import { Select } from "@/components/ui/Select";
 import { Field, Input, Textarea } from "@/components/ui/Field";
 import { FIELD_CLASS, FIELD_STYLE } from "@/components/ui/fieldStyles";
@@ -30,9 +30,12 @@ export function LeadEditForm({
   admins: PickerOption[];
 }) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  const action = useKovAction({
+    success: "Lead enregistré.",
+    fallbackError: "L'enregistrement a échoué.",
+    onSuccess: () => router.refresh(),
+  });
 
   const value = (key: string) => (lead[key] as string | null) ?? "";
   const budgetCents = lead.budget_cents as number | null;
@@ -63,16 +66,10 @@ export function LeadEditForm({
   const set = (patch: Partial<LeadInput>) => setForm((current) => ({ ...current, ...patch }));
 
   function save() {
-    setError(null);
-    startTransition(async () => {
+    action.run(async () => {
+      // updateLead RENVOIE son erreur au lieu de la lever.
       const result = await updateLead(lead.id as string, form);
-      if (result.error) {
-        setError(result.error);
-        toast.error(result.error);
-        return;
-      }
-      toast.success("Lead enregistré");
-      router.refresh();
+      if (result.error) throw new Error(result.error);
     });
   }
 
@@ -227,12 +224,22 @@ export function LeadEditForm({
         </div>
       </section>
 
-      {error && <p className="text-kov-red text-sm">{error}</p>}
+      {action.error && (
+        <p role="alert" className="text-kov-red text-sm">
+          {action.error}
+        </p>
+      )}
 
-      <div className="flex items-center gap-4">
-        <Button type="button" variant="primary" onClick={save} disabled={isPending}>
-          {isPending ? "Enregistrement…" : "Enregistrer"}
-        </Button>
+      <div className="flex flex-wrap items-center gap-4">
+        <KovActionButton
+          type="button"
+          state={action.state}
+          onStateSettled={action.reset}
+          successLabel="Enregistré"
+          onClick={save}
+        >
+          Enregistrer
+        </KovActionButton>
         <button
           type="button"
           onClick={() => setOpen(false)}

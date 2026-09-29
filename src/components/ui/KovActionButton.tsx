@@ -40,6 +40,7 @@ export function KovActionButton({
   children,
   state,
   onStateSettled,
+  loadingLabel,
   successLabel = "Envoyé",
   errorLabel = "Échec",
   variant = "primary",
@@ -53,6 +54,12 @@ export function KovActionButton({
   /** Appelé quand le bouton a fini de montrer son succès ou son erreur,
    *  pour que le parent revienne à "idle" sans gérer de minuterie. */
   onStateSettled?: () => void;
+  /** Ce que l'attente est en train de faire, quand ce n'est pas évident.
+   *  Omis, le libellé ne change pas — c'est le point rouge qui dit que
+   *  ça travaille. À réserver aux actions longues dont l'étape n'est pas
+   *  devinable : « Génération du PDF… » vaut mieux que « Créer le devis »
+   *  figé pendant trois secondes. */
+  loadingLabel?: string;
   successLabel?: string;
   errorLabel?: string;
   variant?: "primary" | "secondary";
@@ -78,7 +85,14 @@ export function KovActionButton({
   }, [state]);
 
   const busy = state === "loading";
-  const label = state === "success" ? successLabel : state === "error" ? errorLabel : children;
+  const label =
+    state === "success"
+      ? successLabel
+      : state === "error"
+        ? errorLabel
+        : busy && loadingLabel
+          ? loadingLabel
+          : children;
 
   return (
     <button

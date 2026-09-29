@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useTransition, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { createQuote } from "./actions";
 import { Button } from "@/components/ui/Button";
+import { KovActionButton } from "@/components/ui/KovActionButton";
+import { useKovAction } from "@/lib/useKovAction";
 import { Select } from "@/components/ui/Select";
 
 const FIELD_CLASS =
@@ -28,8 +30,11 @@ export function NewQuoteForm({
   onSuccess?: () => void;
 }) {
   const [rows, setRows] = useState<LineItemRow[]>([{ ...EMPTY_ROW }]);
-  const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
+  const action = useKovAction({
+    success: "Devis créé.",
+    fallbackError: "La création du devis a échoué.",
+    onSuccess,
+  });
 
   // Le destinataire était retapé alors que l'option choisie portait déjà
   // son nom et son email : la page les envoyait au composant, qui les
@@ -83,24 +88,16 @@ export function NewQuoteForm({
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError(null);
     const form = event.currentTarget;
     const formData = new FormData(form);
     formData.set("line_items", JSON.stringify(rows));
 
-    startTransition(async () => {
-      try {
-        const result = await createQuote(formData);
-        if (result.error) {
-          setError(result.error);
-          return;
-        }
-        setRows([{ ...EMPTY_ROW }]);
-        form.reset();
-        onSuccess?.();
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "La création du devis a échoué.");
-      }
+    action.run(async () => {
+      // createQuote RENVOIE son erreur au lieu de la lever.
+      const result = await createQuote(formData);
+      if (result.error) throw new Error(result.error);
+      setRows([{ ...EMPTY_ROW }]);
+      form.reset();
     });
   }
 
@@ -255,11 +252,23 @@ export function NewQuoteForm({
         <p className="text-kov-bone text-sm">Sous-total : {(subtotalCents / 100).toFixed(2)} €</p>
       </div>
 
-      {error && <p className="text-kov-red text-xs">{error}</p>}
+      {action.error && (
+        <p role="alert" className="text-kov-red text-xs">
+          {action.error}
+        </p>
+      )}
 
-      <Button type="submit" variant="primary" disabled={isPending}>
-        {isPending ? "Génération du PDF…" : "Créer le devis"}
-      </Button>
+      {/* Le seul bouton du projet à porter un libellé d'attente : la
+          génération du PDF prend plusieurs secondes, et un bouton figé
+          sans explication se lit comme un blocage. */}
+      <KovActionButton
+        state={action.state}
+        onStateSettled={action.reset}
+        loadingLabel="Génération du PDF…"
+        successLabel="Créé"
+      >
+        Créer le devis
+      </KovActionButton>
     </form>
   );
 }

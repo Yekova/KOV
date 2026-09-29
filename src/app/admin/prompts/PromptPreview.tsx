@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Copy, Download, Loader2, Pencil, RotateCcw, Wand2, X } from "lucide-react";
+import { Copy, Download, Pencil, RotateCcw, Wand2, X } from "lucide-react";
 import { formatRelativeTime } from "@/lib/formatRelativeTime";
 import { renderPromptMarkdown } from "@/lib/prompts/template";
 import {
@@ -16,6 +16,7 @@ import {
 } from "./actions";
 import { PromptDiff } from "./PromptDiff";
 import { STATUS_LABELS, TOOL_LABELS, TYPE_LABELS, VARIABLE_TYPE_LABELS } from "./schema";
+import { KovSpinner } from "@/components/ui/KovSpinner";
 
 export type PreviewTab = "apercu" | "variables" | "versions" | "stats";
 
@@ -111,7 +112,7 @@ export function PromptPreview({
   if (isLoading) {
     return (
       <div className="flex items-center gap-2 text-kov-steel text-sm p-5">
-        <Loader2 size={15} className="animate-spin" /> Chargement…
+        <KovSpinner size={15} /> Chargement…
       </div>
     );
   }

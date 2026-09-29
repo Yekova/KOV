@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
+import { KovActionButton } from "@/components/ui/KovActionButton";
+import { useKovAction } from "@/lib/useKovAction";
 import { FIELD_CLASS } from "@/components/ui/fieldStyles";
 import { updateLeadNotes } from "../actions";
 import { ConvertLeadFlow } from "./ConvertLeadFlow";
@@ -32,10 +34,15 @@ export function LeadDetailActions({
   admins: PickerOption[];
 }) {
   const [notes, setNotes] = useState(initialNotes ?? "");
-  const [isSavingNotes, startSavingNotes] = useTransition();
   const [converting, setConverting] = useState(false);
-  const [notesSaved, setNotesSaved] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
+  // L'ancien « Enregistré ✓ » posé à la main disparaît : le cycle du
+  // bouton (cercle qui se ferme) plus le toast disent la même chose, dans
+  // la langue du reste de l'application.
+  const saveNotes = useKovAction({
+    success: "Notes enregistrées.",
+    fallbackError: "L'enregistrement a échoué.",
+  });
 
   return (
     <div className="space-y-8">
@@ -43,37 +50,34 @@ export function LeadDetailActions({
         <h2 className="text-xs uppercase tracking-widest text-kov-steel mb-3">Notes internes</h2>
         <textarea
           value={notes}
-          onChange={(e) => {
-            setNotes(e.target.value);
-            setNotesSaved(false);
-          }}
+          onChange={(e) => setNotes(e.target.value)}
           rows={5}
           placeholder="Notes visibles uniquement par l'équipe KOV…"
           className={FIELD_CLASS}
           style={{ borderColor: "var(--kov-border)" }}
         />
-        <div className="flex items-center gap-3 mt-3">
-          <Button
+        <div className="flex flex-wrap items-center gap-4 mt-3">
+          <KovActionButton
             type="button"
             variant="secondary"
-            disabled={isSavingNotes}
+            state={saveNotes.state}
+            onStateSettled={saveNotes.reset}
+            successLabel="Enregistré"
             onClick={() => {
-              setError(null);
-              startSavingNotes(async () => {
-                try {
-                  const formData = new FormData();
-                  formData.set("notes", notes);
-                  await updateLeadNotes(leadId, formData);
-                  setNotesSaved(true);
-                } catch (err) {
-                  setError(err instanceof Error ? err.message : "L'enregistrement a échoué.");
-                }
+              saveNotes.run(async () => {
+                const formData = new FormData();
+                formData.set("notes", notes);
+                await updateLeadNotes(leadId, formData);
               });
             }}
           >
-            {isSavingNotes ? "Enregistrement…" : "Enregistrer les notes"}
-          </Button>
-          {notesSaved && !isSavingNotes && <span className="text-kov-steel text-xs">Enregistré ✓</span>}
+            Enregistrer les notes
+          </KovActionButton>
+          {saveNotes.error && (
+            <p role="alert" className="text-kov-red text-xs">
+              {saveNotes.error}
+            </p>
+          )}
         </div>
       </section>
 
@@ -109,8 +113,6 @@ export function LeadDetailActions({
           </>
         )}
       </section>
-
-      {error && <p className="text-kov-red text-sm">{error}</p>}
     </div>
   );
 }

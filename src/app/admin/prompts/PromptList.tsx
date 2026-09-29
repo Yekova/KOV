@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Copy, Ellipsis, Loader2, Star, Wand2 } from "lucide-react";
+import { Copy, Ellipsis, Star, Wand2 } from "lucide-react";
 import { formatRelativeTime } from "@/lib/formatRelativeTime";
 import {
   deletePrompt,
@@ -16,6 +16,7 @@ import {
 } from "./actions";
 import { togglePromptCollection, type PromptCollectionRow } from "./library-actions";
 import { STATUS_LABELS, TOOL_LABELS, TYPE_LABELS } from "./schema";
+import { KovSpinner } from "@/components/ui/KovSpinner";
 
 function Chip({ children, tone = "neutral" }: { children: React.ReactNode; tone?: "neutral" | "accent" }) {
   return (
@@ -302,7 +303,7 @@ export function PromptList({
                     style={{ color: prompt.favorite ? "var(--kov-red)" : "var(--kov-steel)" }}
                   >
                     {favorite.isPending && favorite.variables === prompt.id ? (
-                      <Loader2 size={15} className="animate-spin" />
+                      <KovSpinner size={15} />
                     ) : (
                       <Star size={15} fill={prompt.favorite ? "currentColor" : "none"} />
                     )}

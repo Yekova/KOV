@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useTransition, type FormEvent } from "react";
+import { type FormEvent } from "react";
 import { createLead } from "./actions";
-import { Button } from "@/components/ui/Button";
+import { KovActionButton } from "@/components/ui/KovActionButton";
+import { useKovAction } from "@/lib/useKovAction";
 import { Select } from "@/components/ui/Select";
 import { LEAD_SOURCES, LEAD_SOURCE_LABELS, LEAD_TIMELINES, LEAD_TIMELINE_LABELS } from "@/lib/admin/status";
 
@@ -10,27 +11,24 @@ const FIELD_CLASS =
   "w-full bg-transparent border px-3 py-2 text-kov-bone text-sm focus:outline-none focus:border-kov-red transition-colors";
 
 export function NewLeadForm({ onSuccess }: { onSuccess?: () => void }) {
-  const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
+  const action = useKovAction({
+    success: "Lead créé.",
+    fallbackError: "La création du lead a échoué.",
+    onSuccess,
+  });
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError(null);
     const form = event.currentTarget;
     const formData = new FormData(form);
 
-    startTransition(async () => {
-      try {
-        const result = await createLead(formData);
-        if (result.error) {
-          setError(result.error);
-          return;
-        }
-        form.reset();
-        onSuccess?.();
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "La création du lead a échoué.");
-      }
+    action.run(async () => {
+      // createLead RENVOIE son erreur au lieu de la lever : il faut la
+      // relever ici pour que le cycle passe en « erreur » au lieu de
+      // conclure à un succès silencieux.
+      const result = await createLead(formData);
+      if (result.error) throw new Error(result.error);
+      form.reset();
     });
   }
 
@@ -61,10 +59,14 @@ export function NewLeadForm({ onSuccess }: { onSuccess?: () => void }) {
         />
       </div>
       <textarea name="message" placeholder="Message (facultatif)" rows={3} className={FIELD_CLASS} style={{ borderColor: "var(--kov-border)" }} />
-      {error && <p className="text-kov-red text-xs">{error}</p>}
-      <Button type="submit" variant="primary" disabled={isPending}>
-        {isPending ? "Création…" : "Créer le lead"}
-      </Button>
+      {action.error && (
+        <p role="alert" className="text-kov-red text-xs">
+          {action.error}
+        </p>
+      )}
+      <KovActionButton state={action.state} onStateSettled={action.reset} successLabel="Créé">
+        Créer le lead
+      </KovActionButton>
     </form>
   );
 }

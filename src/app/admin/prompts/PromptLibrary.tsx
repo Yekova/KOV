@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, Plus, Search, Sparkles, Upload, X } from "lucide-react";
+import { Plus, Search, Sparkles, Upload, X } from "lucide-react";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { getPromptDetail, getPrompts, importPrompt, type PromptFilters } from "./actions";
 import {
@@ -19,6 +19,7 @@ import { PromptPreview, type PreviewTab } from "./PromptPreview";
 import { PromptSidebar } from "./PromptSidebar";
 import { PromptUseDialog } from "./PromptUseDialog";
 import { PROMPT_STATUSES, PROMPT_TYPES, STATUS_LABELS, TARGET_TOOLS, TOOL_LABELS, TYPE_LABELS } from "./schema";
+import { KovSpinner } from "@/components/ui/KovSpinner";
 
 const SELECT =
   "bg-transparent border px-2.5 py-2 text-kov-concrete text-xs focus:outline-none focus:border-kov-red transition-colors";
@@ -120,7 +121,7 @@ function ImportDialog({ onClose }: { onClose: () => void }) {
             className="inline-flex items-center gap-2 px-4 py-2.5 text-xs uppercase tracking-widest text-kov-white transition-colors disabled:opacity-50"
             style={{ background: "var(--kov-red)", borderRadius: "var(--radius-sm)" }}
           >
-            {run.isPending && <Loader2 size={14} className="animate-spin" />}
+            {run.isPending && <KovSpinner size={14} />}
             Importer
           </button>
         </div>
@@ -160,7 +161,7 @@ function InstallPanel() {
           className="inline-flex items-center gap-2 px-4 py-2.5 text-[11px] uppercase tracking-widest text-kov-white transition-colors disabled:opacity-50"
           style={{ background: "var(--kov-red)", borderRadius: "var(--radius-sm)" }}
         >
-          {install.isPending ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+          {install.isPending ? <KovSpinner size={14} /> : <Sparkles size={14} />}
           Installer la base de départ
         </button>
         <Link

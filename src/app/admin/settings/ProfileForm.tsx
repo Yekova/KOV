@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useTransition, type FormEvent } from "react";
+import { type FormEvent } from "react";
 import { updateMyProfile } from "./actions";
-import { Button } from "@/components/ui/Button";
+import { KovActionButton } from "@/components/ui/KovActionButton";
+import { useKovAction } from "@/lib/useKovAction";
 import { AvatarField } from "@/components/ui/AvatarField";
 
 const FIELD_CLASS =
@@ -19,23 +20,15 @@ export function ProfileForm({
   phone: string | null;
   avatarUrl: string | null;
 }) {
-  const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
+  const action = useKovAction({
+    success: "Profil enregistré.",
+    fallbackError: "L'enregistrement a échoué.",
+  });
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    setError(null);
-    setSaved(false);
-    startTransition(async () => {
-      try {
-        await updateMyProfile(formData);
-        setSaved(true);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "L'enregistrement a échoué.");
-      }
-    });
+    action.run(() => updateMyProfile(formData));
   }
 
   return (
@@ -64,12 +57,22 @@ export function ProfileForm({
           Interne : il n&apos;apparaît pas dans l&apos;espace client.
         </span>
       </label>
-      <div className="sm:col-span-2 flex items-center gap-4">
-        <Button type="submit" variant="secondary" disabled={isPending}>
-          {isPending ? "Enregistrement…" : "Enregistrer"}
-        </Button>
-        {error && <p className="text-kov-red text-sm">{error}</p>}
-        {saved && !error && <p className="text-kov-steel text-sm">Enregistré ✓</p>}
+      <div className="sm:col-span-2 flex flex-wrap items-center gap-4">
+        {/* Le « Enregistré ✓ » posé à la main disparaît : le cercle qui se
+            ferme dans le bouton et le toast le disent déjà. */}
+        <KovActionButton
+          variant="secondary"
+          state={action.state}
+          onStateSettled={action.reset}
+          successLabel="Enregistré"
+        >
+          Enregistrer
+        </KovActionButton>
+        {action.error && (
+          <p role="alert" className="text-kov-red text-sm">
+            {action.error}
+          </p>
+        )}
       </div>
     </form>
   );

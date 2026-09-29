@@ -10,7 +10,6 @@ import {
   Check,
   Copy,
   Download,
-  Loader2,
   MessageCircleQuestion,
   Rows3,
   ThumbsDown,
@@ -18,6 +17,7 @@ import {
   X,
 } from "lucide-react";
 import { renderTemplate } from "@/lib/prompts/template";
+import { KovSpinner } from "@/components/ui/KovSpinner";
 import {
   getPromptProjectOptions,
   logPromptUsage,
@@ -309,7 +309,7 @@ export function PromptUseDialog({ prompt, onClose }: { prompt: PromptDetail; onC
       className="inline-flex items-center gap-2 px-5 py-2.5 text-xs uppercase tracking-widest text-kov-white transition-colors disabled:opacity-50"
       style={{ background: "var(--kov-red)", borderRadius: "var(--radius-sm)" }}
     >
-      {busy && <Loader2 size={14} className="animate-spin" />}
+      {busy && <KovSpinner size={14} />}
       Générer
     </button>
   );

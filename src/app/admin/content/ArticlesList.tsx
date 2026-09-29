@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Star, Pencil, Trash2, ArrowUp, ArrowDown, Loader2, Send, Undo2 } from "lucide-react";
+import { Star, Pencil, Trash2, ArrowUp, ArrowDown, Send, Undo2 } from "lucide-react";
 import { EmptyState } from "@/components/admin/EmptyState";
 import { getArticles, deletePost, reorderPosts, setPostStatus, type PostRow } from "./actions";
+import { KovSpinner } from "@/components/ui/KovSpinner";
 
 function Skeleton() {
   return (
@@ -38,7 +39,7 @@ function DeleteButton({ article }: { article: PostRow }) {
       className="text-kov-steel hover:text-kov-red transition-colors disabled:opacity-50"
       aria-label="Supprimer"
     >
-      {mutation.isPending ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+      {mutation.isPending ? <KovSpinner size={16} /> : <Trash2 size={16} />}
     </button>
   );
 }
@@ -65,7 +66,7 @@ function PublishToggleButton({ article }: { article: PostRow }) {
       title={nextStatus === "published" ? "Publier" : "Repasser en brouillon"}
     >
       {mutation.isPending ? (
-        <Loader2 size={16} className="animate-spin" />
+        <KovSpinner size={16} />
       ) : nextStatus === "published" ? (
         <Send size={16} />
       ) : (

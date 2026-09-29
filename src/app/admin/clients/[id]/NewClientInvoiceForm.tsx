@@ -1,26 +1,34 @@
 "use client";
 
-import { useActionState } from "react";
+import { type FormEvent } from "react";
 import { createInvoice } from "@/app/admin/clients/actions";
-import { Button } from "@/components/ui/Button";
+import { KovActionButton } from "@/components/ui/KovActionButton";
+import { useKovAction } from "@/lib/useKovAction";
 import { InvoiceKindFields } from "@/components/admin/invoices/InvoiceKindFields";
 import { InvoiceLineItemsField } from "@/components/admin/invoices/InvoiceLineItemsField";
 
 const FIELD_CLASS =
   "w-full bg-transparent border px-3 py-2 text-kov-bone text-sm focus:outline-none focus:border-kov-red transition-colors";
 
-const INITIAL_STATE: { error: string | null } = { error: null };
-
-async function action(_prevState: { error: string | null }, formData: FormData) {
-  return createInvoice(formData);
-}
-
 export function NewClientInvoiceForm({ clientId }: { clientId: string }) {
-  const [state, formAction, isPending] = useActionState(action, INITIAL_STATE);
+  const action = useKovAction({
+    success: "Facture créée.",
+    fallbackError: "La création de la facture a échoué.",
+  });
 
   return (
     <form
-      action={formAction}
+      onSubmit={(event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const formData = new FormData(form);
+        action.run(async () => {
+          // createInvoice RENVOIE son erreur au lieu de la lever.
+          const result = await createInvoice(formData);
+          if (result.error) throw new Error(result.error);
+          form.reset();
+        });
+      }}
       className="border p-4 flex flex-wrap items-end gap-4"
       style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-md)" }}
     >
@@ -45,10 +53,14 @@ export function NewClientInvoiceForm({ clientId }: { clientId: string }) {
         <input type="file" name="pdf_file" accept="application/pdf" className={`${FIELD_CLASS} py-1.5`} style={{ borderColor: "var(--kov-border)" }} />
       </label>
       <InvoiceLineItemsField />
-      {state.error && <p className="text-kov-red text-xs w-full">{state.error}</p>}
-      <Button type="submit" variant="primary" disabled={isPending}>
-        {isPending ? "Création…" : "Créer la facture"}
-      </Button>
+      {action.error && (
+        <p role="alert" className="text-kov-red text-xs w-full">
+          {action.error}
+        </p>
+      )}
+      <KovActionButton state={action.state} onStateSettled={action.reset} successLabel="Créée">
+        Créer la facture
+      </KovActionButton>
     </form>
   );
 }

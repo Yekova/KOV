@@ -26,12 +26,12 @@ import {
   ImagePlus,
   FileText,
   FileType,
-  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import mammoth from "mammoth";
 import { uploadEditorImage } from "@/app/admin/content/actions";
 import { ToolbarButton, ToolbarRow, ToolbarDivider } from "./ToolbarButton";
+import { KovSpinner } from "@/components/ui/KovSpinner";
 
 // pdfjs-dist is only ever needed inside handlePdfChange (a client-only
 // event handler), so it's dynamically imported there rather than at module
@@ -264,17 +264,17 @@ export function RichEditorToolbar({ editor, onOpenArticlePicker }: RichEditorToo
         <ToolbarDivider />
 
         <ToolbarButton title="Insérer une image" disabled={imageUploading} onClick={() => imageInputRef.current?.click()}>
-          {imageUploading ? <Loader2 size={16} className="animate-spin" /> : <ImagePlus size={16} />}
+          {imageUploading ? <KovSpinner size={16} /> : <ImagePlus size={16} />}
         </ToolbarButton>
         <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
 
         <ToolbarButton title="Importer un .docx" disabled={docxImporting} onClick={() => docxInputRef.current?.click()}>
-          {docxImporting ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />}
+          {docxImporting ? <KovSpinner size={16} /> : <FileText size={16} />}
         </ToolbarButton>
         <input ref={docxInputRef} type="file" accept=".docx" className="hidden" onChange={handleDocxChange} />
 
         <ToolbarButton title="Importer un PDF" disabled={pdfImporting} onClick={() => pdfInputRef.current?.click()}>
-          {pdfImporting ? <Loader2 size={16} className="animate-spin" /> : <FileType size={16} />}
+          {pdfImporting ? <KovSpinner size={16} /> : <FileType size={16} />}
         </ToolbarButton>
         <input ref={pdfInputRef} type="file" accept=".pdf" className="hidden" onChange={handlePdfChange} />
       </ToolbarRow>

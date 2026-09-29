@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { Loader2, Search, X } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { getArticles, type PostRow } from "@/app/admin/content/actions";
+import { KovSpinner } from "@/components/ui/KovSpinner";
 
 interface ArticlePickerModalProps {
   onClose: () => void;
@@ -91,7 +92,7 @@ export function ArticlePickerModal({ onClose, onSelect }: ArticlePickerModalProp
         <div className="max-h-80 overflow-y-auto flex flex-col gap-1">
           {articles === null && (
             <div className="flex items-center justify-center gap-2 py-8 text-sm" style={{ color: "var(--kov-steel)" }}>
-              <Loader2 size={16} className="animate-spin" />
+              <KovSpinner size={16} />
               Chargement…
             </div>
           )}

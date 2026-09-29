@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowDown, ArrowUp, Check, Loader2, Pencil, Plus, Sparkles, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, Pencil, Plus, Sparkles, Trash2 } from "lucide-react";
+import { KovSpinner } from "@/components/ui/KovSpinner";
 import {
   createPromptCategory,
   createPromptCollection,
@@ -111,7 +112,7 @@ function CategoriesPanel() {
           className="inline-flex items-center gap-1.5 border px-3 py-2 text-[11px] uppercase tracking-widest text-kov-bone transition-colors hover:border-kov-red disabled:opacity-40 shrink-0"
           style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
         >
-          {create.isPending ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />} Ajouter
+          {create.isPending ? <KovSpinner size={13} /> : <Plus size={13} />} Ajouter
         </button>
       </div>
 
@@ -264,7 +265,7 @@ function CollectionsPanel() {
           className="inline-flex items-center gap-1.5 border px-3 py-2 text-[11px] uppercase tracking-widest text-kov-bone transition-colors hover:border-kov-red disabled:opacity-40"
           style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
         >
-          {create.isPending ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />} Créer
+          {create.isPending ? <KovSpinner size={13} /> : <Plus size={13} />} Créer
         </button>
       </div>
 
@@ -375,7 +376,7 @@ function PacksPanel() {
           className="inline-flex items-center gap-2 px-4 py-2.5 text-[11px] uppercase tracking-widest text-kov-white transition-colors disabled:opacity-50 shrink-0"
           style={{ background: "var(--kov-red)", borderRadius: "var(--radius-sm)" }}
         >
-          {mockup.isPending ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />}
+          {mockup.isPending ? <KovSpinner size={13} /> : <Sparkles size={13} />}
           Installer
         </button>
       </div>
@@ -395,7 +396,7 @@ function PacksPanel() {
           className="inline-flex items-center gap-2 px-4 py-2.5 text-[11px] uppercase tracking-widest text-kov-white transition-colors disabled:opacity-50 shrink-0"
           style={{ background: "var(--kov-red)", borderRadius: "var(--radius-sm)" }}
         >
-          {build.isPending ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />}
+          {build.isPending ? <KovSpinner size={13} /> : <Sparkles size={13} />}
           Installer
         </button>
       </div>
@@ -415,7 +416,7 @@ function PacksPanel() {
           className="inline-flex items-center gap-2 border px-4 py-2.5 text-[11px] uppercase tracking-widest text-kov-bone transition-colors hover:border-kov-red disabled:opacity-50 shrink-0"
           style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
         >
-          {base.isPending ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />}
+          {base.isPending ? <KovSpinner size={13} /> : <Sparkles size={13} />}
           Installer
         </button>
       </div>

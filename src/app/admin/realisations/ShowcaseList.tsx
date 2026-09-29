@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowDown, ArrowUp, Download, Eye, Loader2, Pencil, Send, Star, Trash2, Undo2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Download, Eye, Pencil, Send, Star, Trash2, Undo2 } from "lucide-react";
 import { StatusBadge } from "@/components/admin/StatusBadge";
+import { KovSpinner } from "@/components/ui/KovSpinner";
 import {
   deleteShowcaseProject,
   getShowcaseProjects,
@@ -55,7 +56,7 @@ function DeleteButton({ project }: { project: ShowcaseRow }) {
       className="text-kov-steel hover:text-kov-red transition-colors disabled:opacity-50"
       aria-label={`Supprimer ${project.name}`}
     >
-      {mutation.isPending ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+      {mutation.isPending ? <KovSpinner size={16} /> : <Trash2 size={16} />}
     </button>
   );
 }
@@ -82,7 +83,7 @@ function PublishButton({ project }: { project: ShowcaseRow }) {
       title={next === "published" ? "Publier" : "Repasser en brouillon"}
     >
       {mutation.isPending ? (
-        <Loader2 size={16} className="animate-spin" />
+        <KovSpinner size={16} />
       ) : next === "published" ? (
         <Send size={16} />
       ) : (
@@ -131,7 +132,7 @@ function ImportPanel() {
         className="mt-5 inline-flex items-center gap-2 border px-4 py-2.5 text-xs uppercase tracking-widest text-kov-bone transition-colors hover:border-kov-red disabled:opacity-50"
         style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
       >
-        {mutation.isPending ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+        {mutation.isPending ? <KovSpinner size={14} /> : <Download size={14} />}
         Importer les réalisations existantes
       </button>
     </div>

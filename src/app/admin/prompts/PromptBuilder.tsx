@@ -4,11 +4,12 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowDown, ArrowUp, Check, Copy, Loader2, Plus, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, Copy, Plus, Trash2, X } from "lucide-react";
 import { extractVariableKeys } from "@/lib/prompts/template";
 import { createPrompt } from "./actions";
 import { createPromptBlock, deletePromptBlock, getPromptBlocks, type PromptBlockRow } from "./library-actions";
 import { EMPTY_PROMPT } from "./schema";
+import { KovSpinner } from "@/components/ui/KovSpinner";
 
 const FIELD =
   "w-full bg-transparent border px-3 py-2 text-kov-bone text-sm focus:outline-none focus:border-kov-red transition-colors";
@@ -80,7 +81,7 @@ function NewBlockForm({ onDone }: { onDone: () => void }) {
           className="inline-flex items-center gap-1.5 px-3 py-2 text-[11px] uppercase tracking-widest text-kov-white transition-colors disabled:opacity-40"
           style={{ background: "var(--kov-red)", borderRadius: "var(--radius-sm)" }}
         >
-          {create.isPending ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />} Créer
+          {create.isPending ? <KovSpinner size={13} /> : <Check size={13} />} Créer
         </button>
         <button type="button" onClick={onDone} className="text-kov-steel hover:text-kov-bone text-[11px] uppercase tracking-widest transition-colors">
           Annuler
@@ -323,7 +324,7 @@ export function PromptBuilder() {
                 className="inline-flex items-center gap-2 px-4 py-2.5 text-[11px] uppercase tracking-widest text-kov-white transition-colors disabled:opacity-40"
                 style={{ background: "var(--kov-red)", borderRadius: "var(--radius-sm)" }}
               >
-                {save.isPending && <Loader2 size={13} className="animate-spin" />}
+                {save.isPending && <KovSpinner size={13} />}
                 Enregistrer
               </button>
               <button

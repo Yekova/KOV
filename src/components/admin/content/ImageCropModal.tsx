@@ -2,10 +2,11 @@
 
 import { useEffect, useTransition } from "react";
 import { createPortal } from "react-dom";
-import { Loader2, X } from "lucide-react";
+import { X } from "lucide-react";
 import { toast } from "sonner";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { uploadEditorImage } from "@/app/admin/content/actions";
+import { KovSpinner } from "@/components/ui/KovSpinner";
 
 export type CropRatio = "16/9" | "3/2" | "4/3" | "1/1";
 
@@ -259,7 +260,7 @@ export function ImageCropModal({
           >
             {isPending ? (
               <>
-                <Loader2 size={14} className="animate-spin" />
+                <KovSpinner size={14} />
                 Traitement…
               </>
             ) : (

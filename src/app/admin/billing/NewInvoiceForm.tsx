@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useTransition, type FormEvent } from "react";
+import { type FormEvent } from "react";
 import { createInvoice } from "@/app/admin/clients/actions";
-import { Button } from "@/components/ui/Button";
+import { KovActionButton } from "@/components/ui/KovActionButton";
+import { useKovAction } from "@/lib/useKovAction";
 import { Select } from "@/components/ui/Select";
 import { InvoiceKindFields } from "@/components/admin/invoices/InvoiceKindFields";
 import { InvoiceLineItemsField } from "@/components/admin/invoices/InvoiceLineItemsField";
@@ -17,27 +18,23 @@ export function NewInvoiceForm({
   clients: { id: string; label: string }[];
   onSuccess?: () => void;
 }) {
-  const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
+  const action = useKovAction({
+    success: "Facture créée.",
+    fallbackError: "La création de la facture a échoué.",
+    onSuccess,
+  });
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError(null);
     const form = event.currentTarget;
     const formData = new FormData(form);
 
-    startTransition(async () => {
-      try {
-        const result = await createInvoice(formData);
-        if (result.error) {
-          setError(result.error);
-          return;
-        }
-        form.reset();
-        onSuccess?.();
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "La création de la facture a échoué.");
-      }
+    action.run(async () => {
+      // createInvoice RENVOIE son erreur : sans la relever, le cycle
+      // conclurait à un succès et le bouton afficherait un check.
+      const result = await createInvoice(formData);
+      if (result.error) throw new Error(result.error);
+      form.reset();
     });
   }
 
@@ -79,11 +76,15 @@ export function NewInvoiceForm({
 
       <InvoiceLineItemsField />
 
-      {error && <p className="text-kov-red text-xs">{error}</p>}
+      {action.error && (
+        <p role="alert" className="text-kov-red text-xs">
+          {action.error}
+        </p>
+      )}
 
-      <Button type="submit" variant="primary" disabled={isPending}>
-        {isPending ? "Création…" : "Créer la facture"}
-      </Button>
+      <KovActionButton state={action.state} onStateSettled={action.reset} successLabel="Créée">
+        Créer la facture
+      </KovActionButton>
     </form>
   );
 }

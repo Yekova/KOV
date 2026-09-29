@@ -7,11 +7,11 @@ import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
 import { createPrompt, getPromptDetail, getPrompts, updatePrompt } from "./actions";
 import { getPromptCategories, getPromptCollections } from "./library-actions";
 import { PromptEditor } from "./PromptEditor";
 import { PromptVariablesEditor, emptyVariable } from "./PromptVariablesEditor";
+import { KovSpinner } from "@/components/ui/KovSpinner";
 import {
   EMPTY_PROMPT,
   PROMPT_STATUSES,
@@ -121,7 +121,7 @@ export function PromptForm({ promptId }: { promptId?: string }) {
   if (promptId && isLoading) {
     return (
       <div className="flex items-center gap-2 text-kov-steel text-sm">
-        <Loader2 size={16} className="animate-spin" /> Chargement…
+        <KovSpinner size={16} /> Chargement…
       </div>
     );
   }
@@ -347,7 +347,7 @@ export function PromptForm({ promptId }: { promptId?: string }) {
           className="inline-flex items-center gap-2 px-6 py-3 text-xs uppercase tracking-widest text-kov-white transition-colors disabled:opacity-50"
           style={{ background: "var(--kov-red)", borderRadius: "var(--radius-sm)" }}
         >
-          {saving && <Loader2 size={14} className="animate-spin" />}
+          {saving && <KovSpinner size={14} />}
           {promptId ? "Enregistrer" : "Créer le prompt"}
         </button>
         <Link href="/admin/prompts" className="text-kov-steel hover:text-kov-bone text-xs uppercase tracking-widest transition-colors">

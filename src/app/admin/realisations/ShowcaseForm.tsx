@@ -7,7 +7,6 @@ import { useForm, useWatch, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
 import { RichEditor } from "@/components/admin/content/RichEditor";
 import { ImagePicker } from "@/components/admin/content/ImagePicker";
 import { Button } from "@/components/ui/Button";
@@ -18,6 +17,7 @@ import {
 } from "./actions";
 import { EMPTY_SHOWCASE, showcaseInputSchema, type ShowcaseInput } from "./schema";
 import { VideoField } from "./VideoField";
+import { KovSpinner } from "@/components/ui/KovSpinner";
 
 const FIELD =
   "w-full bg-transparent border px-3 py-2 text-kov-bone text-sm focus:outline-none focus:border-kov-red transition-colors";
@@ -121,7 +121,7 @@ export function ShowcaseForm({ projectId }: { projectId?: string }) {
   if (projectId && isLoading) {
     return (
       <div className="flex items-center gap-2 text-kov-steel text-sm">
-        <Loader2 size={16} className="animate-spin" /> Chargement…
+        <KovSpinner size={16} /> Chargement…
       </div>
     );
   }

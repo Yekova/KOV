@@ -1,31 +1,24 @@
 "use client";
 
-import { useState, useTransition, type FormEvent } from "react";
+import { type FormEvent } from "react";
 import { updateBusinessSettings } from "./actions";
-import { Button } from "@/components/ui/Button";
+import { KovActionButton } from "@/components/ui/KovActionButton";
+import { useKovAction } from "@/lib/useKovAction";
 import type { BusinessInfo } from "@/lib/billing/businessInfo";
 
 const FIELD_CLASS =
   "w-full bg-transparent border px-3 py-2 text-kov-bone text-sm focus:outline-none focus:border-kov-red transition-colors";
 
 export function SettingsForm({ businessInfo }: { businessInfo: BusinessInfo }) {
-  const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
+  const action = useKovAction({
+    success: "Paramètres enregistrés.",
+    fallbackError: "L'enregistrement a échoué.",
+  });
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    setError(null);
-    setSaved(false);
-    startTransition(async () => {
-      try {
-        await updateBusinessSettings(formData);
-        setSaved(true);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "L'enregistrement a échoué.");
-      }
-    });
+    action.run(() => updateBusinessSettings(formData));
   }
 
   return (
@@ -93,12 +86,16 @@ export function SettingsForm({ businessInfo }: { businessInfo: BusinessInfo }) {
         </label>
       </div>
 
-      {error && <p className="text-kov-red text-sm">{error}</p>}
-      {saved && !error && <p className="text-kov-steel text-sm">Paramètres enregistrés.</p>}
-
-      <Button type="submit" variant="primary" disabled={isPending}>
-        {isPending ? "Enregistrement…" : "Enregistrer"}
-      </Button>
+      <div className="flex flex-wrap items-center gap-4">
+        <KovActionButton state={action.state} onStateSettled={action.reset} successLabel="Enregistré">
+          Enregistrer
+        </KovActionButton>
+        {action.error && (
+          <p role="alert" className="text-kov-red text-sm">
+            {action.error}
+          </p>
+        )}
+      </div>
     </form>
   );
 }
