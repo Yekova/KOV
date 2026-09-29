@@ -13,6 +13,7 @@ import {
   type InvoiceKind,
 } from "@/lib/portal/status";
 import { uploadClientFile, uploadClientFileBuffer, createSignedDownloadUrl, deleteClientFile } from "@/lib/portal/storage";
+import { attachFilesToMessage, readAttachmentFiles } from "@/lib/messaging/mutations";
 import { logActivity, getActorDisplayName, notifyClientOfAdminReply } from "@/lib/activity";
 import { isPipelineStage, isPriority } from "@/lib/admin/status";
 import { generateInvoicePdfBuffer } from "@/lib/billing/generatePdf";
@@ -724,7 +725,14 @@ export async function replyToRequestThread(threadId: string, formData: FormData)
   const admin = await requireAdmin();
 
   const body = formData.get("body");
-  if (typeof body !== "string" || !body.trim()) throw new Error("Message vide.");
+  const files = readAttachmentFiles(formData);
+  // Un message peut n'être QUE des fichiers : obliger à écrire un mot pour
+  // envoyer une maquette serait une formalité sans objet.
+  if ((typeof body !== "string" || !body.trim()) && files.length === 0) throw new Error("Message vide.");
+  const text = typeof body === "string" ? body.trim() : "";
+
+  const replyToId = formData.get("reply_to_id");
+  const replyTo = typeof replyToId === "string" && replyToId ? replyToId : null;
 
   const { data: thread } = await supabaseAdmin
     .from("request_threads")
@@ -733,14 +741,32 @@ export async function replyToRequestThread(threadId: string, formData: FormData)
     .maybeSingle();
   if (!thread) throw new Error("Demande introuvable.");
 
-  const { error } = await supabaseAdmin.from("request_messages").insert({
-    thread_id: threadId,
-    client_id: thread.client_id,
-    body: body.trim(),
-    created_by: "admin",
-    author_admin_id: admin.id,
-  });
-  if (error) throw new Error("L'envoi a échoué.");
+  const { data: inserted, error } = await supabaseAdmin
+    .from("request_messages")
+    .insert({
+      thread_id: threadId,
+      client_id: thread.client_id,
+      body: text,
+      created_by: "admin",
+      author_admin_id: admin.id,
+      ...(replyTo ? { reply_to_id: replyTo } : {}),
+    })
+    .select("id")
+    .single();
+  if (error || !inserted) throw new Error("L'envoi a échoué.");
+
+  if (files.length) {
+    const { error: attachError } = await attachFilesToMessage({
+      messageId: inserted.id,
+      clientId: thread.client_id as string,
+      projectId: thread.project_id as string | null,
+      files,
+      uploaderId: admin.id,
+    });
+    // Le message est déjà parti : un fichier refusé ne doit pas le faire
+    // disparaître. On le dit, on ne l'annule pas.
+    if (attachError) throw new Error(`Message envoyé, mais un fichier n'est pas passé : ${attachError}`);
+  }
 
   await supabaseAdmin
     .from("request_threads")
@@ -756,7 +782,7 @@ export async function replyToRequestThread(threadId: string, formData: FormData)
     title: `Message de ${actorName}`,
     adminTitle: `${actorName} a répondu à la demande « ${thread.subject} »`,
     actorId: admin.id,
-    description: body.trim().slice(0, 140),
+    description: text ? text.slice(0, 140) : `${files.length} fichier${files.length > 1 ? "s" : ""}`,
   });
   await notifyClientOfAdminReply({ clientId: thread.client_id, subject: thread.subject });
 

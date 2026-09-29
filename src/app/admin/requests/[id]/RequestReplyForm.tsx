@@ -5,6 +5,8 @@ import { GlassCard } from "@/components/ui/GlassCard";
 import { FIELD_CLASS, FIELD_LABEL, FIELD_STYLE } from "@/components/ui/fieldStyles";
 import { KovActionButton } from "@/components/ui/KovActionButton";
 import { EmojiPicker } from "@/components/requests/EmojiPicker";
+import { AttachmentField, ReplyQuoteBanner } from "@/components/requests/ComposerExtras";
+import { useThreadInteraction } from "@/components/requests/ThreadInteraction";
 import { useKovAction } from "@/lib/useKovAction";
 import { replyToRequestThread } from "@/app/admin/clients/actions";
 
@@ -24,6 +26,7 @@ import { replyToRequestThread } from "@/app/admin/clients/actions";
 export function RequestReplyForm({ threadId }: { threadId: string }) {
   const formRef = useRef<HTMLFormElement>(null);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
+  const { clearReplyTo } = useThreadInteraction();
   const action = useKovAction({ success: "Réponse envoyée.", fallbackError: "L'envoi a échoué." });
 
   return (
@@ -38,12 +41,15 @@ export function RequestReplyForm({ threadId }: { threadId: string }) {
             // Vidé seulement après un envoi réussi : un échec doit rendre
             // le texte, pas le faire disparaître.
             formRef.current?.reset();
+            clearReplyTo();
           });
         }}
       >
         <label className={FIELD_LABEL} htmlFor="reply-body">
           Répondre au client
         </label>
+        <ReplyQuoteBanner />
+
         <textarea
           ref={bodyRef}
           id="reply-body"
@@ -59,6 +65,7 @@ export function RequestReplyForm({ threadId }: { threadId: string }) {
             Envoyer
           </KovActionButton>
           <EmojiPicker targetRef={bodyRef} />
+          <AttachmentField />
           {action.error ? (
             <p role="alert" className="text-sm" style={{ color: "var(--kov-red)" }}>
               {action.error}

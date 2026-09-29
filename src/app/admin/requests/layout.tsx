@@ -15,7 +15,7 @@ import { ConversationList, type ConversationItem } from "@/components/requests/C
 // voit le sujet, puisque toutes les siennes ont le même interlocuteur.
 export default async function AdminRequestsLayout({ children }: { children: React.ReactNode }) {
   await requireAdmin();
-  const threads = await getRequestThreads();
+  const [threads, trashed] = await Promise.all([getRequestThreads(), getRequestThreads({ trashed: true })]);
 
   const items: ConversationItem[] = threads.map((thread) => ({
     id: thread.id,
@@ -48,7 +48,11 @@ export default async function AdminRequestsLayout({ children }: { children: Reac
         className="shrink-0 border-b lg:h-full lg:w-[340px] lg:border-b-0 lg:border-r"
         style={{ borderColor: "var(--kov-border)", background: "var(--kov-carbon)" }}
       >
-        <ConversationList items={items} title="Demandes" />
+        <ConversationList
+          items={items}
+          title="Demandes"
+          trash={{ href: "/admin/requests/corbeille", count: trashed.length }}
+        />
       </aside>
 
       <div className="min-w-0 flex-1 lg:h-full lg:overflow-hidden">{children}</div>

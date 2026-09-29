@@ -51,10 +51,14 @@ export function ConversationList({
   items,
   title,
   newAction,
+  trash,
 }: {
   items: ConversationItem[];
   title: string;
   newAction?: { label: string; href: string };
+  /** Le lien vers « Supprimés récemment ». Absent, rien ne s'affiche —
+   *  une corbeille vide n'a pas besoin d'occuper une ligne. */
+  trash?: { href: string; count: number };
 }) {
   // Le fil actif est lu dans l'URL, pas reçu en propriété : ce composant
   // vit dans un layout Next, qui ne se re-rend pas quand le paramètre de
@@ -134,6 +138,22 @@ export function ConversationList({
               );
             })}
         </div>
+
+        {/* La corbeille est un LIEN et non un quatrième onglet : ce n'est
+            pas un filtre sur la même liste mais un autre endroit, dont on
+            ressort. La mêler aux onglets ferait croire qu'une conversation
+            supprimée est toujours là, simplement masquée. */}
+        {trash && trash.count > 0 && (
+          <div className="mt-3">
+            <Link
+              href={trash.href}
+              className="text-kov-concrete hover:text-kov-bone inline-flex items-center gap-1.5 text-[11px] tracking-widest uppercase transition-colors"
+            >
+              Supprimés récemment
+              <span className="tabular-nums">{trash.count}</span>
+            </Link>
+          </div>
+        )}
 
         <input
           type="text"

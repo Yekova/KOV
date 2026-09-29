@@ -15,7 +15,10 @@ import { ConversationList, type ConversationItem } from "@/components/requests/C
 // est l'écran précédent.
 export default async function ClientRequestsLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser();
-  const threads = await getMyRequestThreads(user.id);
+  const [threads, trashed] = await Promise.all([
+    getMyRequestThreads(user.id),
+    getMyRequestThreads(user.id, { trashed: true }),
+  ]);
 
   const items: ConversationItem[] = threads.map((thread) => ({
     id: thread.id,
@@ -46,6 +49,7 @@ export default async function ClientRequestsLayout({ children }: { children: Rea
           items={items}
           title="Messages"
           newAction={{ label: "Nouvelle demande", href: "/client/requests" }}
+          trash={{ href: "/client/requests/corbeille", count: trashed.length }}
         />
       </aside>
 

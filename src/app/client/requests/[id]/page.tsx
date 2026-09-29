@@ -5,8 +5,11 @@ import { requireUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getMyRequestThread, getThreadContext } from "@/lib/portal/requests";
 import { REQUEST_WAITING_COLORS, REQUEST_WAITING_LABELS } from "@/lib/portal/status";
-import { MessageThread, type ThreadMessageView } from "@/components/requests/MessageThread";
+import { MessageThread } from "@/components/requests/MessageThread";
+import { ThreadInteractionProvider } from "@/components/requests/ThreadInteraction";
 import { ThreadRail } from "@/components/requests/ThreadRail";
+import { ThreadTrashButton } from "@/components/requests/ThreadTrashButton";
+import { deleteMyMessage, reactToMessage, restoreMyMessage, trashMyThread } from "../actions";
 import { ReplyForm } from "./ReplyForm";
 
 export async function generateMetadata(props: PageProps<"/client/requests/[id]">): Promise<Metadata> {
@@ -28,20 +31,21 @@ export default async function ClientRequestThreadPage(props: PageProps<"/client/
 
   const context = await getThreadContext(threadId, user.id, thread.summary.projectId);
 
-  const messages: ThreadMessageView[] = thread.messages.map((message) => ({
-    id: message.id,
-    body: message.body,
-    createdAt: message.createdAt,
-    authorName: message.authorName,
-    authorAvatarUrl: message.authorAvatarUrl,
-    mine: message.createdBy === "client",
-  }));
+  // Les actions sont liées au fil ici, côté serveur, et passées au
+  // composant. C'est ce qui permet au fil d'être le MÊME des deux côtés
+  // alors que les chemins à revalider diffèrent.
+  const actions = {
+    react: reactToMessage.bind(null, threadId),
+    remove: deleteMyMessage.bind(null, threadId),
+    restore: restoreMyMessage.bind(null, threadId),
+  };
 
   const waitingOn = thread.summary.waitingOn;
   const closed = thread.summary.status === "closed";
 
   return (
-    <div className="flex h-full min-h-0 flex-col xl:flex-row">
+    <ThreadInteractionProvider>
+      <div className="flex h-full min-h-0 flex-col xl:flex-row">
       {/* Le fil. Il défile seul, et seulement lui : l'en-tête reste visible
           au-dessus, le champ de réponse reste posé en dessous. Une
           conversation dont l'en-tête part au premier défilement oblige à
@@ -70,21 +74,29 @@ export default async function ClientRequestThreadPage(props: PageProps<"/client/
               </p>
             </div>
 
-            <span
-              className="shrink-0 px-2.5 py-1 text-[10px] uppercase tracking-widest"
-              style={{
-                color: REQUEST_WAITING_COLORS[waitingOn],
-                border: `1px solid ${REQUEST_WAITING_COLORS[waitingOn]}`,
-                borderRadius: "var(--radius-pill)",
-              }}
-            >
-              {REQUEST_WAITING_LABELS[waitingOn]}
-            </span>
+            <div className="flex shrink-0 items-center gap-3">
+              <span
+                className="px-2.5 py-1 text-[10px] uppercase tracking-widest"
+                style={{
+                  color: REQUEST_WAITING_COLORS[waitingOn],
+                  border: `1px solid ${REQUEST_WAITING_COLORS[waitingOn]}`,
+                  borderRadius: "var(--radius-pill)",
+                }}
+              >
+                {REQUEST_WAITING_LABELS[waitingOn]}
+              </span>
+              <ThreadTrashButton
+                threadId={thread.summary.id}
+                listHref="/client/requests"
+                otherSide="Le studio"
+                onTrash={trashMyThread}
+              />
+            </div>
           </div>
         </header>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6 md:px-8">
-          <MessageThread messages={messages} />
+          <MessageThread messages={thread.messages} actions={actions} />
         </div>
 
         <div
@@ -109,7 +121,8 @@ export default async function ClientRequestThreadPage(props: PageProps<"/client/
           projectHref={(projectId) => `/client/projects/${projectId}`}
           documentsHref="/client/documents"
         />
-      </aside>
-    </div>
+        </aside>
+      </div>
+    </ThreadInteractionProvider>
   );
 }

@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getPublicAssetUrl } from "@/lib/portal/storage";
 import { deriveCurrentPhase, deriveProgress, type ProjectPhase } from "@/lib/portal/progress";
 import { deriveRequestWaitingOn, type RequestWaitingOn } from "@/lib/portal/status";
+import { getMessageExtras, type MessageAttachmentView, type MessageReactionSummary } from "@/lib/messaging/extras";
 
 // Les demandes, côté client.
 //
@@ -28,6 +29,9 @@ export interface MyThreadSummary {
   lastMessageBy: "client" | "admin" | null;
   lastMessageExcerpt: string | null;
   waitingOn: RequestWaitingOn;
+  /** Quand CE côté l'a mise à la corbeille. Null tant qu'elle est dans la
+   *  liste — la suppression est personnelle, donc la date l'est aussi. */
+  deletedAt: string | null;
 }
 
 export interface MyThreadMessage {
@@ -37,16 +41,58 @@ export interface MyThreadMessage {
   createdAt: string;
   authorName: string | null;
   authorAvatarUrl: string | null;
+  /** Supprimé par son auteur. Le corps n'est alors PAS transmis. */
+  deleted: boolean;
+  /** Le message cité, résolu dans le même fil — aucune requête de plus. */
+  replyTo: { id: string; authorName: string | null; excerpt: string } | null;
+  reactions: MessageReactionSummary[];
+  attachments: MessageAttachmentView[];
+  /** De mon côté du fil. Côté studio, c'est « écrit par le studio » et
+   *  non « écrit par moi » : le message d'un collègue doit rester du côté
+   *  du studio, sinon il se retrouverait aligné avec ceux du client et le
+   *  fil cesserait de se lire comme un échange entre deux parties. */
+  mine: boolean;
+  /** Écrit par MOI, personnellement — d'où deux drapeaux et non un : le
+   *  côté est collectif, le droit de supprimer ne l'est pas. Il vaut aussi
+   *  pour la restauration, donc il reste vrai sur un message supprimé :
+   *  sans quoi son auteur n'aurait plus aucun moyen de le récupérer. */
+  canDelete: boolean;
 }
 
-export async function getMyRequestThreads(clientId: string): Promise<MyThreadSummary[]> {
+/** Qui regarde le fil. Décide de « mes » réactions et de ce que je peux
+ *  supprimer — la seule chose qui distingue les deux côtés. */
+export interface ThreadViewer {
+  id: string;
+  kind: "client" | "admin";
+}
+
+/**
+ * Les conversations du client.
+ *
+ * `trashed` bascule entre la liste et « Supprimés récemment ». La
+ * suppression est PERSONNELLE : elle pose deleted_by_client_at et ne
+ * touche pas à la vue du studio. Une relation commerciale ne doit pas
+ * permettre de faire disparaître un engagement écrit de l'écran d'en
+ * face.
+ *
+ * Le filtre est appliqué en mémoire et non par .is() : la colonne naît
+ * avec la migration 20260929140000, et une clause portant sur une colonne
+ * absente ferait échouer la requête entière — donc toute la messagerie.
+ */
+export async function getMyRequestThreads(
+  clientId: string,
+  { trashed = false }: { trashed?: boolean } = {}
+): Promise<MyThreadSummary[]> {
   const { data: threadRows } = await supabaseAdmin
     .from("request_threads")
-    .select("id, subject, status, updated_at, project_id")
+    .select("*")
     .eq("client_id", clientId)
     .order("updated_at", { ascending: false });
 
-  const threads = threadRows ?? [];
+  const threads = (threadRows ?? []).filter((row) => {
+    const deletedAt = (row as { deleted_by_client_at?: string | null }).deleted_by_client_at ?? null;
+    return trashed ? Boolean(deletedAt) : !deletedAt;
+  });
   if (threads.length === 0) return [];
 
   const projectIds = Array.from(
@@ -55,8 +101,11 @@ export async function getMyRequestThreads(clientId: string): Promise<MyThreadSum
 
   const [{ data: messageRows }, { data: projectRows }] = await Promise.all([
     supabaseAdmin
+      // « * » plutôt que des colonnes nommées : deleted_at naît avec la
+      // migration 20260929140000, et la nommer ferait échouer la requête
+      // tant qu'elle n'est pas appliquée.
       .from("request_messages")
-      .select("thread_id, body, created_by, created_at")
+      .select("*")
       .in(
         "thread_id",
         threads.map((row) => row.id)
@@ -73,6 +122,11 @@ export async function getMyRequestThreads(clientId: string): Promise<MyThreadSum
   const counts = new Map<string, number>();
   const last = new Map<string, { body: string; createdBy: "client" | "admin"; createdAt: string }>();
   for (const row of messageRows ?? []) {
+    // Un message supprimé ne compte pas et ne sert pas d'extrait : la
+    // liste annoncerait sinon « 4 messages » pour un fil qui en montre 3,
+    // et afficherait comme dernier mot un texte que plus personne ne voit.
+    if ((row as { deleted_at?: string | null }).deleted_at) continue;
+
     const threadId = row.thread_id as string;
     counts.set(threadId, (counts.get(threadId) ?? 0) + 1);
     if (!last.has(threadId)) {
@@ -100,6 +154,7 @@ export async function getMyRequestThreads(clientId: string): Promise<MyThreadSum
       lastMessageBy: lastMessage?.createdBy ?? null,
       lastMessageExcerpt: lastMessage ? lastMessage.body.replace(/\s+/g, " ").trim().slice(0, 120) : null,
       waitingOn: deriveRequestWaitingOn(row.status, lastMessage?.createdBy),
+      deletedAt: (row as { deleted_by_client_at?: string | null }).deleted_by_client_at ?? null,
     };
   });
 }
@@ -121,33 +176,62 @@ export async function getMyRequestThread(
   const summary = threads.find((row) => row.id === threadId);
   if (!summary) return null;
 
-  return { summary, messages: await getThreadMessages(threadId, clientId) };
+  return { summary, messages: await getThreadMessages(threadId, clientId, { id: clientId, kind: "client" }) };
 }
 
 // Les messages et leurs auteurs, pour les deux côtés.
 //
-// Les portraits comptent ici : un fil de conversation sans visage se lit
-// comme un journal, pas comme un échange. Le client est identifié par
-// `clientId`, tout le reste vient de author_admin_id.
-export async function getThreadMessages(threadId: string, clientId: string): Promise<MyThreadMessage[]> {
+// Le studio avait sa propre copie de cette fonction (lib/admin/requests).
+// Les deux ont convergé ici : écrire deux fois les réponses citées, les
+// réactions, les pièces jointes et la suppression, c'était s'assurer que
+// les deux écrans finiraient par ne plus montrer la même conversation.
+//
+// Les portraits comptent : un fil sans visage se lit comme un journal, pas
+// comme un échange.
+//
+// ── SELECT("*") EST DÉLIBÉRÉ ─────────────────────────────────────────
+//
+// reply_to_id et deleted_at naissent avec la migration
+// 20260929140000. Les nommer explicitement ferait échouer TOUTE la
+// requête tant qu'elle n'est pas appliquée — c'est exactement le bug qui
+// avait vidé /client/quotes pendant des semaines (une colonne signed_at
+// qui n'existait pas). Avec « * », PostgREST rend les colonnes qui
+// existent, et les deux champs arrivent simplement indéfinis d'ici là.
+export async function getThreadMessages(
+  threadId: string,
+  clientId: string,
+  viewer: ThreadViewer = { id: clientId, kind: "client" }
+): Promise<MyThreadMessage[]> {
   const { data: messageRows } = await supabaseAdmin
     .from("request_messages")
-    .select("id, body, created_by, created_at, author_admin_id")
+    .select("*")
     .eq("thread_id", threadId)
     .order("created_at", { ascending: true });
 
-  const rows = messageRows ?? [];
+  const rows = (messageRows ?? []) as {
+    id: string;
+    body: string;
+    created_by: "client" | "admin";
+    created_at: string;
+    author_admin_id: string | null;
+    reply_to_id?: string | null;
+    deleted_at?: string | null;
+  }[];
+
   const peopleIds = Array.from(
-    new Set([
-      clientId,
-      ...rows.map((row) => row.author_admin_id as string | null).filter((id): id is string => Boolean(id)),
-    ])
+    new Set([clientId, ...rows.map((row) => row.author_admin_id).filter((id): id is string => Boolean(id))])
   );
 
-  const { data: profileRows } = await supabaseAdmin
-    .from("profiles")
-    .select("id, full_name, company, email, avatar_path, display_title")
-    .in("id", peopleIds);
+  const [{ data: profileRows }, extras] = await Promise.all([
+    supabaseAdmin
+      .from("profiles")
+      .select("id, full_name, company, email, avatar_path, display_title")
+      .in("id", peopleIds),
+    getMessageExtras(
+      rows.map((row) => row.id),
+      viewer.id
+    ),
+  ]);
 
   const people = new Map(
     (profileRows ?? []).map((row) => [
@@ -159,18 +243,49 @@ export async function getThreadMessages(threadId: string, clientId: string): Pro
     ])
   );
 
+  function authorOf(row: (typeof rows)[number]) {
+    return row.created_by === "admin"
+      ? row.author_admin_id
+        ? people.get(row.author_admin_id)
+        : null
+      : people.get(clientId);
+  }
+
+  // Le message cité vit dans le même fil : il est déjà chargé. Le résoudre
+  // ici évite une requête par citation, et surtout évite de citer un
+  // message d'un autre fil.
+  const byId = new Map(rows.map((row) => [row.id, row]));
+
   return rows.map((row) => {
-    const author = row.created_by === "admin" ? (row.author_admin_id ? people.get(row.author_admin_id) : null) : people.get(clientId);
+    const author = authorOf(row);
+    const deleted = Boolean(row.deleted_at);
+
+    const quoted = row.reply_to_id ? byId.get(row.reply_to_id) : undefined;
+    const quotedAuthor = quoted ? authorOf(quoted) : null;
+
     return {
       id: row.id,
-      body: row.body,
-      createdBy: row.created_by as "client" | "admin",
+      // Le corps d'un message supprimé ne quitte JAMAIS le serveur : il
+      // reste en base pour pouvoir être restauré, il ne part pas dans la
+      // page où n'importe quel outil de développement le relirait.
+      body: deleted ? "" : row.body,
+      createdBy: row.created_by,
       createdAt: row.created_at,
-      // « Équipe KOV » plutôt que rien : un message du studio écrit par une
-      // action automatique n'a pas d'auteur nommé, et « — » ferait croire
-      // à une donnée manquante plutôt qu'à un envoi collectif.
       authorName: author?.name ?? (row.created_by === "admin" ? "Équipe KOV" : null),
       authorAvatarUrl: author?.avatarUrl ?? null,
+      deleted,
+      replyTo:
+        quoted && !quoted.deleted_at
+          ? {
+              id: quoted.id,
+              authorName: quotedAuthor?.name ?? (quoted.created_by === "admin" ? "Équipe KOV" : null),
+              excerpt: quoted.body.replace(/\s+/g, " ").trim().slice(0, 140),
+            }
+          : null,
+      reactions: extras.get(row.id)?.reactions ?? [],
+      attachments: extras.get(row.id)?.attachments ?? [],
+      mine: viewer.kind === "admin" ? row.created_by === "admin" : row.created_by === "client",
+      canDelete: viewer.kind === "admin" ? row.author_admin_id === viewer.id : row.created_by === "client",
     };
   });
 }

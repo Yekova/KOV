@@ -3,12 +3,15 @@
 import { useRef } from "react";
 import { KovActionButton } from "@/components/ui/KovActionButton";
 import { EmojiPicker } from "@/components/requests/EmojiPicker";
+import { AttachmentField, ReplyQuoteBanner } from "@/components/requests/ComposerExtras";
+import { useThreadInteraction } from "@/components/requests/ThreadInteraction";
 import { useKovAction } from "@/lib/useKovAction";
 import { replyToOwnThread } from "../actions";
 
 export function ReplyForm({ threadId }: { threadId: string }) {
   const formRef = useRef<HTMLFormElement>(null);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
+  const { clearReplyTo } = useThreadInteraction();
   const action = useKovAction({ success: "Message envoyé.", fallbackError: "L'envoi a échoué." });
 
   return (
@@ -20,10 +23,15 @@ export function ReplyForm({ threadId }: { threadId: string }) {
         action.run(async () => {
           await replyToOwnThread(threadId, formData);
           formRef.current?.reset();
+          // La citation ne survit pas à l'envoi : elle visait CE message,
+          // pas la conversation.
+          clearReplyTo();
         });
       }}
       className="space-y-3"
     >
+      <ReplyQuoteBanner />
+
       <textarea
         ref={bodyRef}
         name="body"
@@ -38,6 +46,7 @@ export function ReplyForm({ threadId }: { threadId: string }) {
           Envoyer
         </KovActionButton>
         <EmojiPicker targetRef={bodyRef} />
+        <AttachmentField />
         {action.error && (
           <p role="alert" className="text-sm" style={{ color: "var(--kov-red)" }}>
             {action.error}

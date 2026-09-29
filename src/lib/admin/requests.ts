@@ -1,5 +1,6 @@
 import "server-only";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { getThreadMessages, type MyThreadMessage } from "@/lib/portal/requests";
 import { getPublicAssetUrl } from "@/lib/portal/storage";
 
 // Les demandes clients, vues côté studio.
@@ -48,17 +49,36 @@ export interface RequestThreadSummary {
   waitingOn: WaitingOn;
   /** Depuis combien de jours la balle est dans notre camp. Null sinon. */
   waitingDays: number | null;
+  /** Quand LE STUDIO l'a mise à la corbeille. Null tant qu'elle est dans
+   *  la liste — la suppression est personnelle, donc la date l'est aussi. */
+  deletedAt: string | null;
 }
 
 const DAY_MS = 86_400_000;
 
-export async function getRequestThreads(): Promise<RequestThreadSummary[]> {
+/**
+ * Les conversations du studio.
+ *
+ * `trashed` bascule entre la liste et « Supprimés récemment ». La
+ * suppression est PERSONNELLE : elle pose deleted_by_admin_at, et la
+ * conversation reste entière dans l'espace du client.
+ *
+ * Le filtre est appliqué en mémoire et non par .is() : la colonne naît
+ * avec la migration 20260929140000, et une clause sur une colonne absente
+ * ferait échouer la requête — donc toute la messagerie.
+ */
+export async function getRequestThreads(
+  { trashed = false }: { trashed?: boolean } = {}
+): Promise<RequestThreadSummary[]> {
   const { data: threadRows } = await supabaseAdmin
     .from("request_threads")
-    .select("id, client_id, project_id, subject, status, created_at, updated_at")
+    .select("*")
     .order("updated_at", { ascending: false });
 
-  const threads = threadRows ?? [];
+  const threads = (threadRows ?? []).filter((row) => {
+    const deletedAt = (row as { deleted_by_admin_at?: string | null }).deleted_by_admin_at ?? null;
+    return trashed ? Boolean(deletedAt) : !deletedAt;
+  });
   if (threads.length === 0) return [];
 
   const threadIds = threads.map((row) => row.id as string);
@@ -69,8 +89,9 @@ export async function getRequestThreads(): Promise<RequestThreadSummary[]> {
 
   const [{ data: messageRows }, { data: clientRows }, { data: projectRows }] = await Promise.all([
     supabaseAdmin
+      // « * » : deleted_at naît avec la migration 20260929140000.
       .from("request_messages")
-      .select("thread_id, body, created_by, created_at")
+      .select("*")
       .in("thread_id", threadIds)
       .order("created_at", { ascending: false }),
     supabaseAdmin.from("profiles").select("id, full_name, company, email, avatar_path, is_online").in("id", clientIds),
@@ -84,6 +105,9 @@ export async function getRequestThreads(): Promise<RequestThreadSummary[]> {
   const counts = new Map<string, number>();
   const last = new Map<string, { body: string; createdBy: "client" | "admin"; createdAt: string }>();
   for (const row of messageRows ?? []) {
+    // Un message supprimé ne compte pas et ne sert pas d'extrait.
+    if ((row as { deleted_at?: string | null }).deleted_at) continue;
+
     const threadId = row.thread_id as string;
     counts.set(threadId, (counts.get(threadId) ?? 0) + 1);
     if (!last.has(threadId)) {
@@ -149,6 +173,7 @@ export async function getRequestThreads(): Promise<RequestThreadSummary[]> {
         waitingOn === "us" && lastMessage
           ? Math.floor((now - new Date(lastMessage.createdAt).getTime()) / DAY_MS)
           : null,
+      deletedAt: (row as { deleted_by_admin_at?: string | null }).deleted_by_admin_at ?? null,
     };
   });
 }
@@ -159,65 +184,28 @@ export async function countRequestsWaitingOnUs(): Promise<number> {
   return threads.filter((thread) => thread.waitingOn === "us").length;
 }
 
-export interface RequestMessage {
-  id: string;
-  body: string;
-  createdBy: "client" | "admin";
-  createdAt: string;
-  authorName: string | null;
-  /** Le portrait de l'auteur. Un fil sans visage se lit comme un journal,
-   *  pas comme un échange — et quand trois personnes du studio écrivent,
-   *  le nom seul oblige à relire chaque ligne pour savoir qui parle. */
-  authorAvatarUrl: string | null;
-}
+// Le message du studio est le MÊME objet que celui du client.
+//
+// Les deux côtés avaient chacun leur chargeur et leur type. Avec les
+// réponses citées, les réactions, les pièces jointes et la suppression,
+// deux implémentations garantissaient que les deux écrans finiraient par
+// ne plus montrer la même conversation. Le type est donc réexporté et le
+// chargement passe par la fonction partagée.
+export type RequestMessage = MyThreadMessage;
 
 export interface RequestThreadDetail extends RequestThreadSummary {
   messages: RequestMessage[];
 }
 
-export async function getRequestThread(threadId: string): Promise<RequestThreadDetail | null> {
+/** Le détail d'un fil. `adminId` est celui qui regarde : il décide de
+ *  « mes » réactions et de ce que ce compte peut supprimer. */
+export async function getRequestThread(threadId: string, adminId: string): Promise<RequestThreadDetail | null> {
   const threads = await getRequestThreads();
   const summary = threads.find((thread) => thread.id === threadId);
   if (!summary) return null;
 
-  const { data: messageRows } = await supabaseAdmin
-    .from("request_messages")
-    .select("id, body, created_by, created_at, author_admin_id")
-    .eq("thread_id", threadId)
-    .order("created_at", { ascending: true });
-
-  const adminIds = Array.from(
-    new Set(
-      (messageRows ?? [])
-        .map((row) => row.author_admin_id as string | null)
-        .filter((id): id is string => Boolean(id))
-    )
-  );
-  const { data: adminRows } = adminIds.length
-    ? await supabaseAdmin.from("profiles").select("id, full_name, avatar_path").in("id", adminIds)
-    : { data: [] as { id: string; full_name: string | null; avatar_path: string | null }[] };
-  const admins = new Map(
-    (adminRows ?? []).map((row) => [
-      row.id as string,
-      { name: (row.full_name as string | null) ?? null, avatarUrl: getPublicAssetUrl(row.avatar_path as string | null) },
-    ])
-  );
-
   return {
     ...summary,
-    messages: (messageRows ?? []).map((row) => ({
-      id: row.id as string,
-      body: row.body as string,
-      createdBy: row.created_by as "client" | "admin",
-      createdAt: row.created_at as string,
-      authorName:
-        row.created_by === "admin"
-          ? (admins.get(row.author_admin_id as string)?.name ?? "Équipe KOV")
-          : summary.clientName,
-      authorAvatarUrl:
-        row.created_by === "admin"
-          ? (admins.get(row.author_admin_id as string)?.avatarUrl ?? null)
-          : summary.clientAvatarUrl,
-    })),
+    messages: await getThreadMessages(threadId, summary.clientId, { id: adminId, kind: "admin" }),
   };
 }

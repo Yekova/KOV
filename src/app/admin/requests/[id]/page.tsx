@@ -5,8 +5,11 @@ import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getRequestThread } from "@/lib/admin/requests";
 import { getThreadContext } from "@/lib/portal/requests";
-import { MessageThread, type ThreadMessageView } from "@/components/requests/MessageThread";
+import { MessageThread } from "@/components/requests/MessageThread";
+import { ThreadInteractionProvider } from "@/components/requests/ThreadInteraction";
 import { ThreadRail } from "@/components/requests/ThreadRail";
+import { ThreadTrashButton } from "@/components/requests/ThreadTrashButton";
+import { deleteMessageAsAdmin, reactToMessageAsAdmin, restoreMessageAsAdmin, trashThreadAsAdmin } from "../actions";
 import { RequestReplyForm } from "./RequestReplyForm";
 import { ThreadStatusActions } from "./ThreadStatusActions";
 
@@ -29,27 +32,28 @@ const WAITING_LABELS: Record<string, string> = {
 };
 
 export default async function AdminRequestThreadPage(props: PageProps<"/admin/requests/[id]">) {
-  await requireAdmin();
+  // L'admin connecté est nécessaire au fil : c'est lui qui décide de
+  // « mes » réactions et de ce que ce compte a le droit de supprimer.
+  const admin = await requireAdmin();
   const { id } = await props.params;
 
-  const thread = await getRequestThread(id);
+  const thread = await getRequestThread(id, admin.id);
   if (!thread) notFound();
 
   const context = await getThreadContext(id, thread.clientId, thread.projectId);
 
-  const messages: ThreadMessageView[] = thread.messages.map((message) => ({
-    id: message.id,
-    body: message.body,
-    createdAt: message.createdAt,
-    authorName: message.authorName,
-    authorAvatarUrl: message.authorAvatarUrl,
-    // « Vous », côté studio, c'est l'admin. Le même composant de fil sert
-    // aux deux côtés : c'est cette ligne, et elle seule, qui change de bord.
-    mine: message.createdBy === "admin",
-  }));
+  // Les actions sont liées au fil ici, côté serveur, et passées au
+  // composant. C'est ce qui permet au fil d'être le MÊME des deux côtés
+  // alors que les chemins à revalider diffèrent.
+  const actions = {
+    react: reactToMessageAsAdmin.bind(null, id),
+    remove: deleteMessageAsAdmin.bind(null, id),
+    restore: restoreMessageAsAdmin.bind(null, id),
+  };
 
   return (
-    <div className="flex h-full min-h-0 flex-col xl:flex-row">
+    <ThreadInteractionProvider>
+      <div className="flex h-full min-h-0 flex-col xl:flex-row">
       <div className="kov-thread-canvas flex min-h-0 flex-1 flex-col">
         <header
           className="shrink-0 border-b px-6 py-4 md:px-8"
@@ -93,12 +97,18 @@ export default async function AdminRequestThreadPage(props: PageProps<"/admin/re
                 )}
               </span>
               <ThreadStatusActions threadId={thread.id} status={thread.status} />
+              <ThreadTrashButton
+                threadId={thread.id}
+                listHref="/admin/requests"
+                otherSide="Votre client"
+                onTrash={trashThreadAsAdmin}
+              />
             </div>
           </div>
         </header>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6 md:px-8">
-          <MessageThread messages={messages} />
+          <MessageThread messages={thread.messages} actions={actions} />
         </div>
 
         <div
@@ -125,7 +135,8 @@ export default async function AdminRequestThreadPage(props: PageProps<"/admin/re
           projectHref={(projectId) => `/admin/projects/${projectId}`}
           documentsHref={`/admin/clients/${thread.clientId}`}
         />
-      </aside>
-    </div>
+        </aside>
+      </div>
+    </ThreadInteractionProvider>
   );
 }
