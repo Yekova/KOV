@@ -253,130 +253,118 @@ export default async function AdminDashboardPage() {
     .sort(([, a], [, b]) => b - a)
     .map(([category, cents], i) => ({ key: category, label: category, value: cents, color: CATEGORY_COLORS[i % CATEGORY_COLORS.length] }));
 
+  // Plus de photo de fond ici.
+  //
+  // Le tableau de bord posait frame-015.jpg en pleine surface, sous un
+  // dégradé noir codé en dur — un décor conçu pour l'ancienne interface
+  // sombre. Depuis le passage en clair il recouvrait la page d'un voile
+  // presque opaque : les libellés, les valeurs et la table de projets se
+  // retrouvaient en encre sombre sur une photo sombre, donc illisibles.
+  //
+  // L'ambiance est maintenant celle de la coquille (.kov-admin__backdrop,
+  // le dégradé corail clair), posée une fois pour tout l'admin plutôt
+  // qu'une fois par page. L'enveloppe qui isolait le contexte
+  // d'empilement part avec la photo : elle n'existait que pour contenir
+  // son z-index négatif.
   return (
-    <div className="relative isolate">
-      {/* isolate: without it, the negative z-index below competes with the
-          WHOLE app's stacking context, not just this page — the admin
-          layout's own solid black background is a plain non-positioned box
-          too, and per CSS painting order that beats a negative-z descendant
-          no matter how deeply nested, so the photo silently painted behind
-          it and never showed. isolate creates a local stacking context so
-          -z-10 only has to lose to *this page's* content, as intended. */}
-      {/* Absolute, not fixed — a fixed, viewport-spanning element ignores
-          this wrapper's box entirely and paints over the sidebar/topbar too
-          (isolate raises this whole wrapper's paint layer above their plain,
-          non-positioned <aside>/<header>, so a fixed child bleeds into their
-          screen area). Absolute confines it to this wrapper's own box, which
-          is exactly the dashboard content column — it now simply scrolls
-          with the page instead of staying pinned to the viewport. */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/kov/character/contact-frames/frame-015.jpg"
-        alt=""
-        aria-hidden="true"
-        className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none -z-10"
-      />
-      <div className="absolute inset-0 -z-10" style={{ background: "linear-gradient(180deg, rgba(10,10,10,0.55) 0%, var(--kov-black) 85%)" }} />
+    <main className="relative px-6 py-10 max-w-[1800px] mx-auto w-full space-y-6">
+      <DashboardHeader fullName={currentAdminName} />
 
-      <main className="relative px-6 py-10 max-w-[1800px] mx-auto w-full space-y-6">
-        <DashboardHeader fullName={currentAdminName} />
+      {/* ── La ligne d'argent ──────────────────────────────────────────
+          Signé et encaissé se lisent ensemble : c'est leur écart qui est
+          l'information. Le dashboard n'affichait que l'encaissé du mois,
+          donc un studio qui avait vendu sans être payé ne voyait qu'un
+          zéro sans cause. */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+        <StatCard
+          label="CA signé"
+          value={formatEuros(money.signedCents)}
+          caption={`${money.signedCount} devis accepté${money.signedCount > 1 ? "s" : ""}`}
+        />
+        <StatCard
+          label="CA encaissé"
+          value={formatEuros(money.collectedCents)}
+          caption={
+            money.collectedCount > 0
+              ? `${money.collectedCount} facture${money.collectedCount > 1 ? "s" : ""} payée${money.collectedCount > 1 ? "s" : ""}`
+              : "Aucune facture réglée"
+          }
+        />
+        <StatCard
+          label="Reste à encaisser"
+          value={formatEuros(pendingInvoiceCents)}
+          caption={`${(pendingInvoiceRows ?? []).length} facture${(pendingInvoiceRows ?? []).length > 1 ? "s" : ""} en attente`}
+        />
+        <KpiCard
+          label="Projets en cours"
+          value={String(activeProjectsKpi.value)}
+          evolutionPercent={activeProjectsKpi.evolutionPercent}
+          isNew={activeProjectsKpi.isNew}
+          evolutionCaption="nouveaux ce mois"
+          sparkline={activeProjectsKpi.sparkline}
+        />
+        <StatCard label="Leads actifs" value={String(activeLeads.length)} caption={`+${newLeadsThisMonth} ce mois`} />
+        {/* Le taux ne s'affiche jamais seul : « 100 % » sur deux dossiers
+            clos dit surtout qu'on n'a encore rien perdu. Le dénominateur
+            est ce qui permet de savoir si le chiffre veut dire quelque
+            chose, donc il reste visible. */}
+        <StatCard
+          label="Taux de conversion"
+          value={conversion.percent === null ? "—" : `${conversion.percent}%`}
+          caption={
+            conversion.resolved === 0
+              ? "Aucun lead encore clos"
+              : `${conversion.won} gagné${conversion.won > 1 ? "s" : ""} sur ${conversion.resolved} clos`
+          }
+        />
+      </div>
 
-        {/* ── La ligne d'argent ──────────────────────────────────────────
-            Signé et encaissé se lisent ensemble : c'est leur écart qui est
-            l'information. Le dashboard n'affichait que l'encaissé du mois,
-            donc un studio qui avait vendu sans être payé ne voyait qu'un
-            zéro sans cause. */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      {/* ── Le haut du tunnel ──────────────────────────────────────────
+          Le pipeline commercial passe devant le pipeline projet : ce qui
+          n'est pas encore vendu se regarde avant ce qui l'est déjà. */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="xl:col-span-2">
+          <CommercialPipeline leads={pipelineLeads} statuses={leadStatuses} />
+        </div>
+        <AgendaCard events={agenda} windowDays={AGENDA_WINDOW_DAYS} />
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="xl:col-span-2 space-y-6">
+          <ProjectTable projects={recentProjectsForTable} title="Projets en cours" viewAllHref="/admin/projects" />
+          <TaskFeed tasks={taskFeedItems} />
+        </div>
+        <div className="space-y-6">
+          <LeadFeed leads={leadFeedItems} statuses={leadStatuses} />
+          <TeamWorkload members={teamMembers} />
+          {/* Les heures du jour quittent la ligne d'indicateurs : c'est
+              une mesure de charge, pas un indicateur d'activité
+              commerciale. Elle se lit à côté de la charge d'équipe. */}
           <StatCard
-            label="CA signé"
-            value={formatEuros(money.signedCents)}
-            caption={`${money.signedCount} devis accepté${money.signedCount > 1 ? "s" : ""}`}
-          />
-          <StatCard
-            label="CA encaissé"
-            value={formatEuros(money.collectedCents)}
-            caption={
-              money.collectedCount > 0
-                ? `${money.collectedCount} facture${money.collectedCount > 1 ? "s" : ""} payée${money.collectedCount > 1 ? "s" : ""}`
-                : "Aucune facture réglée"
-            }
-          />
-          <StatCard
-            label="Reste à encaisser"
-            value={formatEuros(pendingInvoiceCents)}
-            caption={`${(pendingInvoiceRows ?? []).length} facture${(pendingInvoiceRows ?? []).length > 1 ? "s" : ""} en attente`}
-          />
-          <KpiCard
-            label="Projets en cours"
-            value={String(activeProjectsKpi.value)}
-            evolutionPercent={activeProjectsKpi.evolutionPercent}
-            isNew={activeProjectsKpi.isNew}
-            evolutionCaption="nouveaux ce mois"
-            sparkline={activeProjectsKpi.sparkline}
-          />
-          <StatCard label="Leads actifs" value={String(activeLeads.length)} caption={`+${newLeadsThisMonth} ce mois`} />
-          {/* Le taux ne s'affiche jamais seul : « 100 % » sur deux dossiers
-              clos dit surtout qu'on n'a encore rien perdu. Le dénominateur
-              est ce qui permet de savoir si le chiffre veut dire quelque
-              chose, donc il reste visible. */}
-          <StatCard
-            label="Taux de conversion"
-            value={conversion.percent === null ? "—" : `${conversion.percent}%`}
-            caption={
-              conversion.resolved === 0
-                ? "Aucun lead encore clos"
-                : `${conversion.won} gagné${conversion.won > 1 ? "s" : ""} sur ${conversion.resolved} clos`
-            }
+            label="Heures aujourd'hui"
+            value={`${Math.floor(todayHours)}h${String(todayMinutes % 60).padStart(2, "0")}`}
+            caption={`${inProgressTaskCount ?? 0} tâche${(inProgressTaskCount ?? 0) > 1 ? "s" : ""} en cours sur ${totalTaskCount ?? 0}`}
+            progress={tasksInProgressPercent}
+            progressColor="var(--kov-status-orange)"
           />
         </div>
+      </div>
 
-        {/* ── Le haut du tunnel ──────────────────────────────────────────
-            Le pipeline commercial passe devant le pipeline projet : ce qui
-            n'est pas encore vendu se regarde avant ce qui l'est déjà. */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          <div className="xl:col-span-2">
-            <CommercialPipeline leads={pipelineLeads} statuses={leadStatuses} />
-          </div>
-          <AgendaCard events={agenda} windowDays={AGENDA_WINDOW_DAYS} />
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="xl:col-span-2">
+          <RevenueChart points={revenuePoints} />
         </div>
+        <Donut title="Répartition des revenus" segments={categorySegments} centerLabel="Payé (12 mois)" formatValue={formatEuros} />
+      </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          <div className="xl:col-span-2 space-y-6">
-            <ProjectTable projects={recentProjectsForTable} title="Projets en cours" viewAllHref="/admin/projects" />
-            <TaskFeed tasks={taskFeedItems} />
-          </div>
-          <div className="space-y-6">
-            <LeadFeed leads={leadFeedItems} statuses={leadStatuses} />
-            <TeamWorkload members={teamMembers} />
-            {/* Les heures du jour quittent la ligne d'indicateurs : c'est
-                une mesure de charge, pas un indicateur d'activité
-                commerciale. Elle se lit à côté de la charge d'équipe. */}
-            <StatCard
-              label="Heures aujourd'hui"
-              value={`${Math.floor(todayHours)}h${String(todayMinutes % 60).padStart(2, "0")}`}
-              caption={`${inProgressTaskCount ?? 0} tâche${(inProgressTaskCount ?? 0) > 1 ? "s" : ""} en cours sur ${totalTaskCount ?? 0}`}
-              progress={tasksInProgressPercent}
-              progressColor="var(--kov-status-orange)"
-            />
-          </div>
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="xl:col-span-2">
+          <ActivityFeed items={activity ?? []} />
         </div>
-
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          <div className="xl:col-span-2">
-            <RevenueChart points={revenuePoints} />
-          </div>
-          <Donut title="Répartition des revenus" segments={categorySegments} centerLabel="Payé (12 mois)" formatValue={formatEuros} />
-        </div>
-
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          <div className="xl:col-span-2">
-            <ActivityFeed items={activity ?? []} />
-          </div>
-          {/* Le pipeline projet reste, mais en second plan : il dit où en
-              est ce qui est vendu, pas ce qu'il reste à vendre. */}
-          <ProjectPipeline initialProjects={pipelineProjects} />
-        </div>
-      </main>
-    </div>
+        {/* Le pipeline projet reste, mais en second plan : il dit où en
+            est ce qui est vendu, pas ce qu'il reste à vendre. */}
+        <ProjectPipeline initialProjects={pipelineProjects} />
+      </div>
+    </main>
   );
 }
