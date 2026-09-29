@@ -1,5 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { AdminTopbar } from "./AdminTopbar";
+import { AdminTopbarActions } from "./AdminTopbar";
 import type { AdminSearchItem } from "./GlobalAdminSearch";
 import type { NotificationItem } from "./NotificationBell";
 
@@ -147,7 +147,7 @@ export async function AdminTopbarData({ userId }: { userId: string }) {
     .slice(0, 10);
 
   return (
-    <AdminTopbar
+    <AdminTopbarActions
       searchItems={searchItems}
       clients={clientOptions}
       projects={projectOptions}

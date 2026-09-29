@@ -1,0 +1,219 @@
+/* L'admin en clair.
+ *
+ * ── POURQUOI CE FICHIER TIENT EN UN BLOC DE VARIABLES ────────────────
+ *
+ * Basculer l'admin du sombre au clair aurait pu vouloir dire réécrire
+ * trente-neuf pages. L'audit a montré autre chose : 1439 classes Tailwind
+ * `kov-*` et 637 `var(--kov-*)` en style inline, UN seul blanc translucide
+ * et AUCUN hexadécimal sombre écrit en dur. Tout passe par les tokens.
+ *
+ * Et Tailwind v4 est déclaré en `@theme inline` (voir globals.css), donc
+ * `text-kov-bone` compile vers `color: var(--kov-bone)` — vérifié dans le
+ * CSS réellement produit. Redéfinir les variables sous un sélecteur de
+ * portée bascule donc les 2076 usages d'un coup, sans en toucher un seul.
+ *
+ * C'est la même mécanique qui avait corrigé 88 usages de --kov-steel dans
+ * le portail. Elle vaut ici à une tout autre échelle.
+ *
+ * ── LA PORTÉE EST OBLIGATOIRE ────────────────────────────────────────
+ *
+ * `.kov-admin` et non `:root` : le site public et l'espace client restent
+ * sombres, et partagent les mêmes composants (GlassCard, Button, Select).
+ * Un override global les emporterait tous les deux.
+ *
+ * Conséquence à ne pas oublier : ce qui est rendu par createPortal sort de
+ * l'arbre et donc de la portée — dix composants de l'admin sont dans ce
+ * cas (menus, palette de recherche, modales, panneau de tâche). Plutôt que
+ * d'envelopper chacun d'eux, AdminThemeScope pose la classe sur <body>
+ * pendant qu'on est dans l'admin et la retire en partant : une ligne
+ * couvre les dix, et couvrira le onzième que personne ne pensera à
+ * envelopper.
+ *
+ * ── LES VALEURS SONT MESURÉES, PAS CHOISIES ──────────────────────────
+ *
+ * Trois d'entre elles ont été corrigées par le calcul avant d'être écrites :
+ *
+ * - le gris muet proposé (#767A82) ne donnait que 4,02:1 sur le fond, sous
+ *   le minimum de 4,5:1 — or --kov-steel porte les libellés et le texte
+ *   secondaire de tout l'admin. Abaissé à #6e7179 : 4,55:1.
+ * - --kov-red à #e31e24 donne 4,38:1 sur le fond clair : insuffisant dès
+ *   qu'il sert de TEXTE. Abaissé à #de1d23 — 4,55:1 en texte, et 4,88:1
+ *   sous du blanc quand il sert de fond. Deux pour cent plus sombre, donc
+ *   invisible à l'œil, et aucun appel à changer.
+ * - le rouge du brief (#EE202C) a été écarté : 4,02:1 en texte et 4,30:1
+ *   sous du blanc. Il échoue dans les deux sens.
+ */
+
+.kov-admin {
+  /* ── Fonds ──────────────────────────────────────────────────────── */
+  /* --kov-black porte le fond de page, --kov-carbon les surfaces
+     (barres, cartes), --kov-graphite ce qui est légèrement en retrait
+     (silhouettes de chargement, blocs de code, menus). */
+  --kov-black: #f7f7f6;
+  --kov-carbon: #ffffff;
+  --kov-graphite: #f1f1ef;
+
+  /* ── Encres ─────────────────────────────────────────────────────── */
+  --kov-bone: #0b0c10;
+  --kov-concrete: #4a4e55;
+  --kov-steel: #6e7179;
+  --kov-muted: #9aa0a6;
+
+  /* --kov-white reste blanc : il ne désigne pas « la couleur du texte »
+     mais le blanc, et il sert de texte SUR le rouge. L'inverser rendrait
+     illisible chaque bouton primaire. */
+  --kov-white: #ffffff;
+
+  --kov-red: #de1d23;
+  --kov-red-signal: #b8151b;
+
+  --kov-border: rgba(0, 0, 0, 0.08);
+
+  /* La barre horizontale fait 68px et non 76 : la messagerie s'en sert
+     pour occuper exactement le reste de l'écran, et une valeur périmée y
+     produirait soit un débordement, soit une bande vide en bas. */
+  --kov-topbar-h: 68px;
+  --kov-grid-line: rgba(0, 0, 0, 0.06);
+
+  /* ── Le verre, retourné ─────────────────────────────────────────── */
+  /* Sur fond sombre, le verre est un voile BLANC qui éclaircit. Sur fond
+     clair il doit faire l'inverse : opacifier vers le blanc et poser une
+     ombre portée, sinon une carte « en verre » sur du blanc ne se voit
+     pas du tout. L'ombre remplace le liseré lumineux, qui n'a plus de
+     sens quand la surface est plus claire que ce qu'elle recouvre. */
+  --glass-tint-top: rgba(255, 255, 255, 0.92);
+  --glass-tint-bottom: rgba(255, 255, 255, 0.74);
+  --glass-border: rgba(0, 0, 0, 0.07);
+  --glass-highlight: rgba(255, 255, 255, 0.9);
+  --glass-shadow: rgba(16, 18, 24, 0.07);
+  --glass-blur: 16px;
+  --glass-shadow-full:
+    inset 0 1px 0 var(--glass-highlight), 0 1px 2px rgba(16, 18, 24, 0.04), 0 10px 30px var(--glass-shadow);
+
+  color: var(--kov-bone);
+}
+
+/* ── Le fond abstrait ─────────────────────────────────────────────── */
+
+/* Posé en pseudo-élément et non sur le body : il ne doit occuper que le
+ * haut de la page. Sous une table de projets, un dégradé corail entre en
+ * concurrence avec les lignes et les chiffres, qui sont la seule chose
+ * qu'on vient y lire.
+ *
+ * `fixed` plutôt qu'`absolute` : la coquille a son propre défilement, et
+ * un fond en position absolue défilerait avec le contenu — l'ambiance
+ * doit rester là où elle est.
+ *
+ * Il s'éteint pour qui demande moins de mouvement ? Non : il ne bouge
+ * pas. Mais il s'efface à l'impression, où il ne ferait que consommer de
+ * l'encre. */
+.kov-admin__backdrop {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 620px;
+  z-index: 0;
+  pointer-events: none;
+  background-image: url("/kov/admin/backdrop.webp");
+  background-size: cover;
+  background-position: top center;
+  background-repeat: no-repeat;
+  /* Il s'estompe vers le bas au lieu de s'arrêter net sur une ligne. */
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%);
+  opacity: 0.85;
+}
+
+/* Le contenu passe au-dessus. Sans cette ligne, le fond recouvrirait la
+   page entière puisqu'il est posé après elle dans l'ordre de peinture. */
+.kov-admin__content {
+  position: relative;
+  z-index: 1;
+}
+
+@media print {
+  .kov-admin__backdrop {
+    display: none;
+  }
+}
+
+/* ── La barre de navigation ───────────────────────────────────────── */
+
+.kov-topnav {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-nav);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.kov-topnav__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  white-space: nowrap;
+  color: var(--kov-concrete);
+  transition:
+    background-color var(--motion-fast) var(--ease-kov),
+    color var(--motion-fast) var(--ease-kov);
+}
+
+.kov-topnav__link:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--kov-bone);
+}
+
+/* L'état actif est un aplat rouge très pâle et non un rectangle plein :
+   sept onglets pleins feraient une barre de couleur, et on ne saurait
+   plus lequel est actif. */
+.kov-topnav__link[aria-current="page"] {
+  background: color-mix(in srgb, var(--kov-red) 8%, transparent);
+  color: var(--kov-red);
+}
+
+/* ── Les cartes ───────────────────────────────────────────────────── */
+
+.kov-card {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 18px;
+  box-shadow: 0 1px 2px rgba(16, 18, 24, 0.03), 0 10px 30px rgba(16, 18, 24, 0.04);
+}
+
+.kov-card--solid {
+  background: #ffffff;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* Le survol soulève de deux pixels et renforce l'ombre. Réservé aux
+   cartes qui MÈNENT quelque part : soulever une carte qu'on ne peut pas
+   cliquer promet une action qui n'existe pas. */
+.kov-card--link {
+  transition:
+    transform var(--motion-base) var(--ease-kov),
+    box-shadow var(--motion-base) var(--ease-kov);
+}
+
+.kov-card--link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(16, 18, 24, 0.04), 0 16px 40px rgba(16, 18, 24, 0.08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kov-card--link,
+  .kov-topnav__link {
+    transition: none;
+  }
+
+  .kov-card--link:hover {
+    transform: none;
+  }
+}

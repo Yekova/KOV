@@ -252,3 +252,32 @@ export const adminNavigation: AdminNavSection[] = [
 // Currently empty — kept around as a place to register the next
 // genuinely-unbuilt section rather than deleted outright.
 export const UNBUILT_ADMIN_SECTIONS = new Set<string>([]);
+
+// ── La barre horizontale ne peut pas porter dix-sept entrées ─────────
+//
+// Sept tiennent en largeur ; les dix autres vivent dans « Plus ». Les deux
+// listes sont DÉRIVÉES de adminNavigation et non recopiées : une entrée
+// ajoutée plus haut atterrit automatiquement dans l'une des deux, alors
+// qu'une copie l'aurait laissée invisible jusqu'à ce que quelqu'un la
+// remarque.
+//
+// L'ordre des sept est celui du travail quotidien, pas celui du fichier :
+// on regarde le tableau de bord, puis ce qui entre (leads), puis ce qu'on
+// livre (clients, projets, tâches), puis ce qu'on facture.
+const PRIMARY_IDS = ["dashboard", "leads", "clients", "projects", "tasks", "billing", "analytics"] as const;
+
+const ALL_ITEMS: AdminNavItem[] = adminNavigation.flatMap((section) => section.items);
+
+export const adminPrimaryNav: AdminNavItem[] = PRIMARY_IDS.map((id) =>
+  ALL_ITEMS.find((item) => item.id === id)
+).filter((item): item is AdminNavItem => Boolean(item));
+
+/** Tout ce que la barre ne montre pas, regroupé par section d'origine —
+ *  les libellés « Commercial », « Projets », « Entreprise » servent de
+ *  titres dans le menu, donc rien ne perd son contexte en y descendant. */
+export const adminSecondaryNav: AdminNavSection[] = adminNavigation
+  .map((section) => ({
+    ...section,
+    items: section.items.filter((item) => !(PRIMARY_IDS as readonly string[]).includes(item.id)),
+  }))
+  .filter((section) => section.items.length > 0);

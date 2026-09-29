@@ -1,21 +1,16 @@
-// Matches AdminTopbar's header height/background exactly (same wrapper
-// classes) so swapping in the real topbar once AdminTopbarData resolves
-// causes zero layout shift — only the content inside fades in.
+// La silhouette de la zone de droite, aux mêmes dimensions que le vrai
+// contenu : l'arrivée d'AdminTopbarData ne doit provoquer aucun saut, la
+// barre étant l'élément le plus haut de la page.
 export function AdminTopbarSkeleton() {
   return (
-    <header className="flex items-center gap-4 px-6 py-4" style={{ background: "var(--kov-carbon)" }}>
+    <>
       <div
-        className="flex-1 max-w-md h-[42px] border animate-pulse"
-        style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-lg)", background: "var(--kov-graphite)" }}
+        className="kov-skeleton hidden h-[38px] w-[240px] md:block"
+        style={{ background: "var(--kov-graphite)", borderRadius: "12px" }}
       />
-      <div
-        className="w-[168px] h-[42px] animate-pulse"
-        style={{ borderRadius: "var(--radius-sm)", background: "var(--kov-graphite)" }}
-      />
-      <div className="flex items-center gap-2 ml-auto">
-        <div className="w-9 h-9 rounded-full animate-pulse" style={{ background: "var(--kov-graphite)" }} />
-        <div className="w-9 h-9 rounded-full animate-pulse" style={{ background: "var(--kov-graphite)" }} />
-      </div>
-    </header>
+      <div className="kov-skeleton h-[38px] w-[150px]" style={{ background: "var(--kov-graphite)", borderRadius: "10px" }} />
+      <div className="kov-skeleton h-9 w-9 rounded-full" style={{ background: "var(--kov-graphite)" }} />
+      <div className="kov-skeleton h-9 w-9 rounded-full" style={{ background: "var(--kov-graphite)" }} />
+    </>
   );
 }
