@@ -47,17 +47,17 @@ const EMPTY: MessageExtras = { reactions: [], attachments: [] };
  * portail, l'admin connecté pour le studio. C'est lui qui décide de
  * `mine`.
  *
- * ── TOLÉRANCE À LA MIGRATION NON APPLIQUÉE ───────────────────────────
+ * ── POURQUOI L'ERREUR EST AVALÉE ─────────────────────────────────────
  *
- * Les deux tables naissent avec la migration
- * 20260929140000_messaging_reactions_attachments_replies_trash.sql. Tant
- * qu'elle n'est pas passée, ces lectures échouent — et un fil de
- * conversation qui tombe en erreur parce qu'une décoration manque serait
- * une régression bien pire que l'absence de la fonctionnalité. On rend
- * donc un enrichissement vide, et le fil s'affiche comme avant.
+ * Les deux tables sont nées avec la migration 20260929140000, appliquée le
+ * 29 septembre 2026 (4 colonnes, 2 tables, 2 policies, 4 index — vérifiés
+ * après coup, 14 messages et 3 fils intacts). La tolérance ne sert donc
+ * plus à attendre la migration.
  *
- * À retirer une fois la migration appliquée, comme la tolérance qui avait
- * servi à getQuoteSignatureState.
+ * Elle reste, pour une autre raison : faire tomber un fil de conversation
+ * entier parce qu'une lecture de RÉACTIONS a échoué serait une régression
+ * bien pire que l'absence des réactions. Le message est ce qui compte ;
+ * ce qui s'y accroche est secondaire, et doit échouer comme tel.
  */
 export async function getMessageExtras(
   messageIds: string[],

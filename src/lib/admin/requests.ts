@@ -63,9 +63,8 @@ const DAY_MS = 86_400_000;
  * suppression est PERSONNELLE : elle pose deleted_by_admin_at, et la
  * conversation reste entière dans l'espace du client.
  *
- * Le filtre est appliqué en mémoire et non par .is() : la colonne naît
- * avec la migration 20260929140000, et une clause sur une colonne absente
- * ferait échouer la requête — donc toute la messagerie.
+ * Le filtre est appliqué en mémoire et non par .is() : une clause .is() sur une colonne
+ * absente ferait échouer la requête — donc toute la messagerie.
  */
 export async function getRequestThreads(
   { trashed = false }: { trashed?: boolean } = {}
@@ -89,7 +88,7 @@ export async function getRequestThreads(
 
   const [{ data: messageRows }, { data: clientRows }, { data: projectRows }] = await Promise.all([
     supabaseAdmin
-      // « * » : deleted_at naît avec la migration 20260929140000.
+      // « * » plutôt que des colonnes nommées : voir getThreadMessages.
       .from("request_messages")
       .select("*")
       .in("thread_id", threadIds)

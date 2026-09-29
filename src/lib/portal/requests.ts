@@ -75,9 +75,8 @@ export interface ThreadViewer {
  * permettre de faire disparaître un engagement écrit de l'écran d'en
  * face.
  *
- * Le filtre est appliqué en mémoire et non par .is() : la colonne naît
- * avec la migration 20260929140000, et une clause portant sur une colonne
- * absente ferait échouer la requête entière — donc toute la messagerie.
+ * Le filtre est appliqué en mémoire et non par .is() : une clause .is() sur une
+ * colonne absente ferait échouer la requête entière — donc toute la messagerie.
  */
 export async function getMyRequestThreads(
   clientId: string,
@@ -101,9 +100,7 @@ export async function getMyRequestThreads(
 
   const [{ data: messageRows }, { data: projectRows }] = await Promise.all([
     supabaseAdmin
-      // « * » plutôt que des colonnes nommées : deleted_at naît avec la
-      // migration 20260929140000, et la nommer ferait échouer la requête
-      // tant qu'elle n'est pas appliquée.
+      // « * » plutôt que des colonnes nommées : voir getThreadMessages.
       .from("request_messages")
       .select("*")
       .in(
@@ -191,12 +188,12 @@ export async function getMyRequestThread(
 //
 // ── SELECT("*") EST DÉLIBÉRÉ ─────────────────────────────────────────
 //
-// reply_to_id et deleted_at naissent avec la migration
-// 20260929140000. Les nommer explicitement ferait échouer TOUTE la
-// requête tant qu'elle n'est pas appliquée — c'est exactement le bug qui
-// avait vidé /client/quotes pendant des semaines (une colonne signed_at
-// qui n'existait pas). Avec « * », PostgREST rend les colonnes qui
-// existent, et les deux champs arrivent simplement indéfinis d'ici là.
+// reply_to_id et deleted_at sont nées avec la migration 20260929140000,
+// désormais appliquée. « * » reste : nommer les colonnes une par une fait
+// échouer TOUTE la requête à la première qui manque — c'est exactement le
+// bug qui avait vidé /client/quotes pendant des semaines (une colonne
+// signed_at qui n'existait pas). Ici, une colonne absente rend un champ
+// indéfini, et le fil s'affiche quand même.
 export async function getThreadMessages(
   threadId: string,
   clientId: string,
