@@ -1,6 +1,6 @@
 import "server-only";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { getEmailProviderForSender } from "./resolveProvider";
+import { sendKovEmail } from "./sendKovEmail";
 import { logLeadInteraction } from "@/lib/leads/interactions";
 import { recomputeLeadScore } from "@/lib/leads/recomputeScore";
 
@@ -25,40 +25,23 @@ export async function sendLeadEmail(params: {
   if (!params.subject.trim()) return { error: "L'objet est requis." };
   if (!params.bodyHtml.trim() || params.bodyHtml === "<p></p>") return { error: "Le contenu de l'email ne peut pas être vide." };
 
-  const { data: row, error: insertError } = await supabaseAdmin
-    .from("email_logs")
-    .insert({
-      lead_id: params.leadId,
-      template_id: params.templateId,
-      sender_id: params.senderId,
-      recipient: lead.email,
-      subject: params.subject,
-      body: params.bodyHtml,
-      body_text: params.bodyText,
-      status: "queued",
-    })
-    .select("id")
-    .single();
-  if (insertError || !row) return { error: "L'enregistrement de l'email a échoué." };
+  // L'insertion, l'envoi, l'identifiant du fournisseur et l'erreur en base
+  // sont désormais tenus par sendKovEmail : ce motif était recopié ici, et
+  // c'est lui qui rend un email traçable. Ce qui reste ci-dessous est ce
+  // que seul un email de LEAD doit faire.
+  const result = await sendKovEmail({
+    type: "LEAD_MESSAGE",
+    to: lead.email,
+    toName: lead.name,
+    subject: params.subject,
+    html: params.bodyHtml,
+    text: params.bodyText,
+    senderId: params.senderId,
+    templateId: params.templateId,
+    links: { leadId: params.leadId },
+  });
 
-  try {
-    const provider = await getEmailProviderForSender(params.senderId);
-    const result = await provider.send({
-      to: lead.email,
-      toName: lead.name,
-      subject: params.subject,
-      html: params.bodyHtml,
-      text: params.bodyText,
-    });
-
-    await supabaseAdmin
-      .from("email_logs")
-      .update({ status: "sent", sent_at: new Date().toISOString(), provider_message_id: result.providerMessageId })
-      .eq("id", row.id);
-  } catch (err) {
-    await supabaseAdmin.from("email_logs").update({ status: "failed", failed_at: new Date().toISOString() }).eq("id", row.id);
-    return { error: err instanceof Error ? err.message : "L'envoi de l'email a échoué." };
-  }
+  if (!result.success) return { error: result.error ?? "L'envoi de l'email a échoué." };
 
   await supabaseAdmin.from("leads").update({ last_contacted_at: new Date().toISOString() }).eq("id", params.leadId);
   await logLeadInteraction({
@@ -66,9 +49,9 @@ export async function sendLeadEmail(params: {
     type: "email",
     actorId: params.senderId,
     content: params.subject,
-    metadata: { email_log_id: row.id },
+    metadata: { email_log_id: result.emailLogId },
   });
   await recomputeLeadScore(params.leadId);
 
-  return { error: null, emailLogId: row.id };
+  return { error: null, emailLogId: result.emailLogId };
 }

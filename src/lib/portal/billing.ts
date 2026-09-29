@@ -85,33 +85,6 @@ function daysUntil(due: string | null): number | null {
   return Math.round((target - today) / 86_400_000);
 }
 
-// La signature électronique, lue à part et sans faire tomber la page.
-//
-// quotes.signing_url et quotes.signed_at viennent de la migration
-// 20260913090100, qui N'EST PAS APPLIQUÉE sur la base de production
-// (vérifié : les sept colonnes de invoice_id, yousign_* et signed_* y
-// manquent). Les sélectionner dans la requête principale faisait échouer
-// TOUTE la requête — c'est exactement ce qui se passait sur l'ancienne
-// page /client/quotes, qui affichait « Aucun devis pour l'instant » à un
-// client qui en avait.
-//
-// Une requête séparée dégrade donc au bon endroit : sans les colonnes, on
-// perd le lien de signature, pas la liste des devis. Et le jour où la
-// migration est appliquée, la signature réapparaît sans toucher à une
-// ligne de code.
-async function getQuoteSignatureState(
-  clientId: string
-): Promise<Map<string, { signingUrl: string | null; signedAt: string | null }>> {
-  const map = new Map<string, { signingUrl: string | null; signedAt: string | null }>();
-  const { data, error } = await supabaseAdmin
-    .from("quotes")
-    .select("id, signing_url, signed_at")
-    .eq("client_id", clientId);
-  if (error || !data) return map;
-  for (const row of data) map.set(row.id, { signingUrl: row.signing_url, signedAt: row.signed_at });
-  return map;
-}
-
 export interface BillingData {
   documents: BillingDocument[];
   /** Somme des factures envoyées et non réglées. */
@@ -128,7 +101,7 @@ export async function getClientBilling(clientId: string): Promise<BillingData> {
     supabaseAdmin
       .from("quotes")
       .select(
-        "id, reference, project_id, total_cents, subtotal_cents, discount_cents, status, valid_until, created_at, pdf_storage_path, line_items"
+        "id, reference, project_id, total_cents, subtotal_cents, discount_cents, status, valid_until, created_at, pdf_storage_path, line_items, signing_url, signed_at"
       )
       .eq("client_id", clientId)
       // Un brouillon n'a pas été envoyé : le client ne doit pas le voir,
@@ -146,12 +119,11 @@ export async function getClientBilling(clientId: string): Promise<BillingData> {
     supabaseAdmin.from("projects").select("id, name").eq("client_id", clientId),
   ]);
 
-  const signature = await getQuoteSignatureState(clientId);
   const projectNameById = new Map((projects ?? []).map((project) => [project.id, project.name]));
   const lineCount = (value: unknown) => (Array.isArray(value) ? value.length : 0);
 
   const quoteDocuments: BillingDocument[] = (quotes ?? []).map((quote) => {
-    const state = quoteStatus(quote.status, signature.get(quote.id)?.signedAt ?? null, quote.valid_until);
+    const state = quoteStatus(quote.status, quote.signed_at, quote.valid_until);
     return {
       id: quote.id,
       kind: "quote",
@@ -169,8 +141,8 @@ export async function getClientBilling(clientId: string): Promise<BillingData> {
       actionable: state.actionable,
       archived: ["declined", "expired", "cancelled"].includes(quote.status) || isQuoteExpired(quote.status, quote.valid_until),
       hasPdf: Boolean(quote.pdf_storage_path),
-      signingUrl: signature.get(quote.id)?.signingUrl ?? null,
-      signedAt: signature.get(quote.id)?.signedAt ?? null,
+      signingUrl: quote.signing_url,
+      signedAt: quote.signed_at,
       paidAt: null,
       subtotalCents: quote.subtotal_cents,
       discountCents: quote.discount_cents,

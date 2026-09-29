@@ -1,6 +1,6 @@
 import "server-only";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { getSharedEmailProvider } from "@/lib/email/resolveProvider";
+import { sendKovEmail } from "@/lib/email/sendKovEmail";
 
 export interface InviteResult {
   userId: string;
@@ -39,9 +39,10 @@ export interface InviteResult {
 //    conversion entière parce qu'un serveur SMTP répond mal est une
 //    punition sans rapport avec la faute.
 //
-// 3. L'envoi passe par getSharedEmailProvider() et non plus par Brevo en
-//    direct. C'est le même expéditeur que le reste de l'application, donc
-//    Resend dès que sa clé est valide.
+// 3. L'envoi passe par sendKovEmail, donc par l'expéditeur partagé ET par
+//    email_logs. L'invitation ne laissait aucune trace : c'était pourtant
+//    le premier email qu'un client reçoit, et celui dont on a le plus
+//    besoin de savoir s'il est arrivé.
 export async function inviteUser({
   email,
   fullName,
@@ -86,19 +87,20 @@ export async function inviteUser({
     if (roleError) throw new Error("Le compte a été créé mais l'attribution du rôle admin a échoué.");
   }
 
-  let emailSent = false;
-  let emailError: string | null = null;
-  try {
-    await getSharedEmailProvider().send({
-      to: email,
-      toName: fullName ?? undefined,
-      subject: emailSubject,
-      html: await emailHtml(actionLink),
-    });
-    emailSent = true;
-  } catch (caught) {
-    emailError = caught instanceof Error ? caught.message : "L'envoi de l'email a échoué.";
-  }
+  const sent = await sendKovEmail({
+    type: "WELCOME_CLIENT",
+    to: email,
+    toName: fullName,
+    subject: emailSubject,
+    html: await emailHtml(actionLink),
+    // Rattaché au compte créé : l'invitation apparaît ainsi dans la frise
+    // du client, là où on la cherchera.
+    links: { clientId: role === "client" ? userId : null },
+    // Le lien d'activation n'est PAS mis en métadonnées : c'est un jeton
+    // d'accès à usage unique, il n'a rien à faire dans une colonne qu'on
+    // relit pour du débogage.
+    metadata: { role, reinvited },
+  });
 
-  return { userId, actionLink, emailSent, emailError, reinvited };
+  return { userId, actionLink, emailSent: sent.success, emailError: sent.error ?? null, reinvited };
 }
