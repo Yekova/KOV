@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useOptimistic, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Portrait } from "@/components/ui/Portrait";
-import { KOV_REACTIONS } from "@/lib/messaging/reactions";
+import { KOV_REACTIONS, type KovReaction } from "@/lib/messaging/reactions";
 import { useThreadInteraction } from "@/components/requests/ThreadInteraction";
 import type { MyThreadMessage } from "@/lib/portal/requests";
 
@@ -56,6 +56,47 @@ function timeLabel(iso: string): string {
   return new Date(iso).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
 }
 
+type Reaction = ThreadMessageView["reactions"][number];
+
+// La réaction posée AVANT que le serveur réponde.
+//
+// Une réaction est un geste d'un dixième de seconde ; attendre l'aller-
+// retour, la revalidation de la route et le nouveau rendu — souvent une
+// demi-seconde — donne l'impression que le clic n'a pas pris. On applique
+// donc le changement tout de suite, et React le remplace par la vérité du
+// serveur quand elle arrive. Si l'écriture échoue, l'état revient seul et
+// un toast dit pourquoi : rien n'est perdu, rien n'est inventé durablement.
+//
+// La liste est reclassée dans l'ordre de KOV_REACTIONS à chaque fois : une
+// rangée dont les emoji changent de place au clic est impossible à viser
+// deux fois de suite.
+function applyReactionLocally(current: Reaction[], emoji: KovReaction): Reaction[] {
+  const existing = current.find((reaction) => reaction.emoji === emoji);
+
+  let next: Reaction[];
+  if (existing?.mine) {
+    next =
+      existing.count <= 1
+        ? current.filter((reaction) => reaction.emoji !== emoji)
+        : current.map((reaction) =>
+            reaction.emoji === emoji ? { ...reaction, count: reaction.count - 1, mine: false } : reaction
+          );
+  } else if (existing) {
+    next = current.map((reaction) =>
+      reaction.emoji === emoji ? { ...reaction, count: reaction.count + 1, mine: true } : reaction
+    );
+  } else {
+    // `names` reste vide le temps de l'aller-retour : on ne connaît pas
+    // son propre nom d'affichage ici, et l'inventer serait écrire une
+    // donnée fausse dans une infobulle.
+    next = [...current, { emoji, count: 1, mine: true, names: [] }];
+  }
+
+  return KOV_REACTIONS.map((value) => next.find((reaction) => reaction.emoji === value)).filter(
+    (reaction): reaction is Reaction => Boolean(reaction)
+  );
+}
+
 function sizeLabel(bytes: number | null): string | null {
   if (!bytes) return null;
   if (bytes < 1024) return `${bytes} o`;
@@ -101,10 +142,23 @@ function MessageRow({ message, actions }: { message: ThreadMessageView; actions?
   const [pending, startTransition] = useTransition();
   const [pickerOpen, setPickerOpen] = useState(false);
   const { setReplyTo } = useThreadInteraction();
+  const [reactions, addReaction] = useOptimistic(message.reactions, applyReactionLocally);
 
   function run(task: () => Promise<{ error?: string }>) {
     startTransition(async () => {
       const result = await task();
+      if (result.error) toast.error(result.error);
+    });
+  }
+
+  // La réaction s'affiche AVANT l'envoi. Pas de `disabled` ici : un bouton
+  // grisé le temps d'un aller-retour est exactement l'attente qu'on vient
+  // de supprimer.
+  function react(emoji: KovReaction) {
+    if (!actions) return;
+    startTransition(async () => {
+      addReaction(emoji);
+      const result = await actions.react(message.id, emoji);
       if (result.error) toast.error(result.error);
     });
   }
@@ -154,10 +208,12 @@ function MessageRow({ message, actions }: { message: ThreadMessageView; actions?
           {timeLabel(message.createdAt)}
         </p>
 
-        {/* La teinte dit qui parle, en plus du nom et du côté. Les deux
-            fonds ne se distinguaient que d'un cran de gris, ce qui ne se
-            voit pas : l'écart est désormais franc, et l'angle près de
-            l'auteur est droit. Voir kov-surfaces.css. */}
+        {/* La teinte dit qui parle : rouge pour nous, gris pour l'autre.
+            Les couleurs sont dans kov-surfaces.css et non ici — c'est ce
+            qui permet de traiter le texte, la citation et les pièces
+            jointes différemment sur fond rouge sans dupliquer ce balisage
+            (le bone n'atteint que 3,8:1 sur le rouge de marque ; le blanc
+            monte à 4,7:1). */}
         <div
           className={`kov-bubble mt-1.5 inline-block px-4 py-3 text-left ${
             message.mine ? "kov-bubble--mine" : "kov-bubble--theirs"
@@ -167,19 +223,16 @@ function MessageRow({ message, actions }: { message: ThreadMessageView; actions?
             // La citation porte un filet rouge et non un cadre : c'est un
             // rappel, pas un second message, et un cadre complet en ferait
             // deux bulles imbriquées.
-            <p
-              className="mb-2 pl-2.5 text-[11px] leading-relaxed"
-              style={{ borderLeft: "2px solid var(--kov-red)" }}
-            >
-              <span className="text-kov-bone">{message.replyTo.authorName ?? "Message"}</span>
-              <span className="text-kov-concrete"> · {message.replyTo.excerpt}</span>
+            <p className="kov-bubble__quote mb-2 pl-2.5 text-[11px] leading-relaxed">
+              <span className="kov-bubble__quote-author">{message.replyTo.authorName ?? "Message"}</span>
+              <span> · {message.replyTo.excerpt}</span>
             </p>
           )}
 
           {/* Texte brut, retours à la ligne préservés. Le corps vient
               d'un humain : aucun HTML n'est interprété, jamais. */}
           {message.body && (
-            <p className="text-kov-bone text-sm leading-relaxed break-words whitespace-pre-wrap">{message.body}</p>
+            <p className="kov-bubble__text text-sm leading-relaxed break-words whitespace-pre-wrap">{message.body}</p>
           )}
 
           {message.attachments.length > 0 && (
@@ -191,8 +244,8 @@ function MessageRow({ message, actions }: { message: ThreadMessageView; actions?
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-disabled={!file.url}
-                    className="text-kov-bone hover:border-kov-red flex items-center gap-2.5 border px-3 py-2 text-xs transition-colors"
-                    style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
+                    className="kov-bubble__file flex items-center gap-2.5 border px-3 py-2 text-xs transition-colors"
+                    style={{ borderRadius: "var(--radius-sm)" }}
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="shrink-0">
                       <path
@@ -205,7 +258,7 @@ function MessageRow({ message, actions }: { message: ThreadMessageView; actions?
                     </svg>
                     <span className="min-w-0 flex-1 truncate">{file.filename}</span>
                     {sizeLabel(file.sizeBytes) && (
-                      <span className="text-kov-concrete shrink-0 tabular-nums">{sizeLabel(file.sizeBytes)}</span>
+                      <span className="kov-bubble__file-size shrink-0 tabular-nums">{sizeLabel(file.sizeBytes)}</span>
                     )}
                   </a>
                 </li>
@@ -217,14 +270,14 @@ function MessageRow({ message, actions }: { message: ThreadMessageView; actions?
         {/* Les réactions posées. Toujours sous la bulle, alignées du côté
             de l'auteur, pour qu'elles ne se confondent pas avec celles du
             message d'en face. */}
-        {message.reactions.length > 0 && (
+        {reactions.length > 0 && (
           <div className={`mt-1.5 flex flex-wrap gap-1 ${message.mine ? "justify-end" : ""}`}>
-            {message.reactions.map((reaction) => (
+            {reactions.map((reaction) => (
               <button
                 key={reaction.emoji}
                 type="button"
-                disabled={pending || !actions}
-                onClick={() => actions && run(() => actions.react(message.id, reaction.emoji))}
+                disabled={!actions}
+                onClick={() => react(reaction.emoji)}
                 title={reaction.names.join(", ")}
                 aria-pressed={reaction.mine}
                 className="flex items-center gap-1 px-2 py-0.5 text-[12px] transition-colors"
@@ -284,11 +337,10 @@ function MessageRow({ message, actions }: { message: ThreadMessageView; actions?
                     <button
                       key={emoji}
                       type="button"
-                      disabled={pending}
                       aria-label={`Réagir avec ${emoji}`}
                       onClick={() => {
                         setPickerOpen(false);
-                        run(() => actions.react(message.id, emoji));
+                        react(emoji);
                       }}
                       className="flex h-7 w-7 items-center justify-center text-[15px] leading-none transition-colors hover:bg-white/10"
                       style={{ borderRadius: "999px" }}

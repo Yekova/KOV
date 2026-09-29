@@ -169,32 +169,119 @@
 
 /* ── Les bulles : qui parle se voit à la teinte ──────────────────────── */
 
-/* Le fil distinguait déjà l'auteur par le nom, le portrait et le côté —
- * mais les deux bulles ne différaient que d'un cran de gris (graphite
- * contre carbone), invisible en pratique.
+/* Deux aplats francs, sans transparence ni flou : ROUGE pour nous, GRIS
+ * pour l'autre. La version précédente posait deux voiles translucides qui
+ * ne se distinguaient ni l'un de l'autre ni du fond.
  *
- * L'écart est maintenant franc : les miennes sont une surface claire,
- * celles d'en face restent sombres. C'est le sens naturel — ce que
- * j'écris est « en avant », ce que je lis est posé sur le fond.
+ * Le gris est dérivé de --kov-steel et non écrit en dur : la palette reste
+ * la source, et un ajustement de l'acier suit ici sans qu'on y pense.
  *
- * Et l'angle près de l'auteur est droit : la bulle pointe vers celui qui
- * l'a écrite. C'est un indice de plus, gratuit, qui survit au daltonisme
- * comme au mode à contraste élevé. */
+ * 50 % est un arbitrage mesuré, pas un réglage à l'œil. Plus sombre, la
+ * bulle se confond avec le fond ; plus clair, elle se rapproche du rouge et
+ * le code couleur s'affaiblit (gris/rouge tombe à 1,5:1 dès 70 %). À 50 %
+ * on obtient #444544 : 1,93:1 contre le fond, 2,05:1 contre le rouge, et
+ * le texte bone dessus tient 7,8:1. Un filet clair dessine le bord, parce
+ * qu'un aplat ne peut pas faire les deux à la fois sur un fond presque
+ * noir.
+ *
+ * ── LE TEXTE PASSE AU BLANC SUR LE ROUGE ─────────────────────────────
+ *
+ * --kov-bone (#e7e7e5) sur --kov-red (#e31e24) ne donne que 3,8:1, sous le
+ * minimum de 4,5:1 pour du texte courant. --kov-white monte à 4,7:1. Ce
+ * n'est pas un détail de goût : c'est la moitié des messages du fil.
+ *
+ * L'angle près de l'auteur est droit — un indice de plus, qui survit au
+ * daltonisme comme au mode à contraste élevé. */
 
 .kov-bubble {
-  border: 1px solid var(--kov-border);
+  border: 1px solid transparent;
   border-radius: var(--radius-md);
 }
 
+.kov-bubble--theirs {
+  /* La valeur calculée d'abord : un navigateur qui ignore color-mix
+     laisserait sinon la bulle transparente, donc illisible. */
+  background: #444544;
+  background: color-mix(in srgb, var(--kov-steel) 50%, var(--kov-carbon));
+  border-color: rgba(255, 255, 255, 0.1);
+  border-top-left-radius: 4px;
+}
+
 .kov-bubble--mine {
-  background: rgba(231, 231, 229, 0.1);
-  border-color: rgba(231, 231, 229, 0.18);
+  background: var(--kov-red);
   border-top-right-radius: 4px;
 }
 
-.kov-bubble--theirs {
-  background: var(--kov-carbon);
-  border-top-left-radius: 4px;
+/* ── Le contenu, selon le fond qui le porte ──────────────────────────── */
+
+.kov-bubble--theirs .kov-bubble__text {
+  color: var(--kov-bone);
+}
+
+.kov-bubble--mine .kov-bubble__text {
+  color: var(--kov-white);
+}
+
+/* La citation. Son filet est rouge sur le gris — invisible sur le rouge,
+   où il passe au blanc. */
+.kov-bubble__quote {
+  border-left: 2px solid;
+}
+
+.kov-bubble--theirs .kov-bubble__quote {
+  border-left-color: var(--kov-red);
+  color: var(--kov-concrete);
+}
+
+/* Blanc PLEIN, et non 82 % : à 82 % le rapport tombait à 3,5:1, sous le
+   minimum de 4,5:1 — sur du texte de 11 px, qui n'a droit à aucune
+   tolérance. La hiérarchie se fait par la taille et par le filet. */
+.kov-bubble--mine .kov-bubble__quote {
+  border-left-color: rgba(255, 255, 255, 0.75);
+  color: var(--kov-white);
+}
+
+.kov-bubble--theirs .kov-bubble__quote-author {
+  color: var(--kov-bone);
+}
+
+.kov-bubble--mine .kov-bubble__quote-author {
+  color: var(--kov-white);
+}
+
+/* Les pièces jointes. Sur le rouge, un survol qui vire au rouge ne se
+   verrait pas : il éclaircit le fond à la place. */
+.kov-bubble__file {
+  border-color: var(--kov-border);
+}
+
+.kov-bubble--theirs .kov-bubble__file {
+  color: var(--kov-bone);
+}
+
+.kov-bubble--theirs .kov-bubble__file:hover {
+  border-color: var(--kov-red);
+  color: var(--kov-red);
+}
+
+.kov-bubble--mine .kov-bubble__file {
+  color: var(--kov-white);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.kov-bubble--mine .kov-bubble__file:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.kov-bubble--theirs .kov-bubble__file-size {
+  color: var(--kov-concrete);
+}
+
+/* Blanc plein ici aussi : une taille de fichier à 75 % d'opacité sur le
+   rouge repasse sous le seuil. */
+.kov-bubble--mine .kov-bubble__file-size {
+  color: var(--kov-white);
 }
 
 @media (prefers-reduced-motion: reduce) {
