@@ -111,7 +111,7 @@ export function TaskListTable({ tasks, showProject = true }: { tasks: TaskRow[];
                     return (
                       <tr
                         key={task.id}
-                        className="border-b cursor-pointer hover:bg-white/[0.02] transition-colors"
+                        className="border-b cursor-pointer kov-hover transition-colors"
                         style={{ borderColor: "var(--kov-border)" }}
                         onClick={() => openTask(task.id)}
                       >

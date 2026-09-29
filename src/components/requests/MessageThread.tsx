@@ -342,7 +342,7 @@ function MessageRow({ message, actions }: { message: ThreadMessageView; actions?
                         setPickerOpen(false);
                         react(emoji);
                       }}
-                      className="flex h-7 w-7 items-center justify-center text-[15px] leading-none transition-colors hover:bg-white/10"
+                      className="flex h-7 w-7 items-center justify-center text-[15px] leading-none transition-colors kov-hover-strong"
                       style={{ borderRadius: "999px" }}
                     >
                       {emoji}
@@ -418,7 +418,7 @@ function ActionButton({
       aria-label={label}
       title={label}
       aria-expanded={expanded}
-      className="text-kov-concrete hover:text-kov-bone flex h-7 w-7 items-center justify-center transition-colors hover:bg-white/10"
+      className="text-kov-concrete hover:text-kov-bone flex h-7 w-7 items-center justify-center transition-colors kov-hover-strong"
       style={{ borderRadius: "var(--radius-sm)" }}
     >
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">

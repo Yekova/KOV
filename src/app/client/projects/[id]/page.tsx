@@ -315,7 +315,7 @@ export default async function ClientProjectDetailPage(props: PageProps<"/client/
               <li key={quote.id}>
                 <Link
                   href="/client/invoices"
-                  className="flex items-center justify-between gap-4 py-3 -mx-2 px-2 hover:bg-white/[0.02] transition-colors"
+                  className="flex items-center justify-between gap-4 py-3 -mx-2 px-2 kov-hover transition-colors"
                 >
                   <span className="min-w-0">
                     <span className="block text-kov-bone text-sm">Devis {quote.reference}</span>
@@ -331,7 +331,7 @@ export default async function ClientProjectDetailPage(props: PageProps<"/client/
               <li key={invoice.id}>
                 <Link
                   href="/client/invoices"
-                  className="flex items-center justify-between gap-4 py-3 -mx-2 px-2 hover:bg-white/[0.02] transition-colors"
+                  className="flex items-center justify-between gap-4 py-3 -mx-2 px-2 kov-hover transition-colors"
                 >
                   <span className="min-w-0">
                     <span className="block text-kov-bone text-sm">Facture {invoice.reference}</span>
@@ -349,7 +349,7 @@ export default async function ClientProjectDetailPage(props: PageProps<"/client/
                 <li key={thread.id}>
                   <Link
                     href={`/client/requests/${thread.id}`}
-                    className="flex items-center justify-between gap-4 py-3 -mx-2 px-2 hover:bg-white/[0.02] transition-colors"
+                    className="flex items-center justify-between gap-4 py-3 -mx-2 px-2 kov-hover transition-colors"
                   >
                     <span className="min-w-0">
                       <span className="block text-kov-bone text-sm truncate">{thread.subject}</span>

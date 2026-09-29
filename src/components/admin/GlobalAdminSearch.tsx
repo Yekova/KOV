@@ -172,7 +172,7 @@ export function GlobalAdminSearch({ items }: { items: AdminSearchItem[] }) {
                           <Link
                             href={item.href}
                             onClick={() => setOpen(false)}
-                            className="flex items-center justify-between gap-4 p-3 hover:bg-white/[0.04] transition-colors"
+                            className="flex items-center justify-between gap-4 p-3 kov-hover transition-colors"
                             style={{ borderRadius: "var(--radius-sm)" }}
                           >
                             <span>

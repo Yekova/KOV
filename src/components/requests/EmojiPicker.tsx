@@ -112,7 +112,7 @@ export function EmojiPicker({
                     type="button"
                     onClick={() => insert(emoji)}
                     aria-label={emoji}
-                    className="flex h-6 w-6 items-center justify-center text-[15px] leading-none transition-colors hover:bg-white/10"
+                    className="flex h-6 w-6 items-center justify-center text-[15px] leading-none transition-colors kov-hover-strong"
                     style={{ borderRadius: "var(--radius-sm)" }}
                   >
                     {emoji}

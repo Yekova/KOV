@@ -85,7 +85,7 @@ export function NotificationBell({ unreadCount, items }: { unreadCount: number; 
                     key={item.id}
                     href={item.href}
                     onClick={() => setOpen(false)}
-                    className="block px-4 py-2.5 hover:bg-white/[0.04] transition-colors"
+                    className="block px-4 py-2.5 kov-hover transition-colors"
                   >
                     <p className="text-kov-bone text-sm">{item.title}</p>
                     <p className="text-kov-steel text-xs mt-0.5">{timeAgo(item.createdAt)}</p>

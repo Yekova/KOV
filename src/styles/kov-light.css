@@ -117,6 +117,23 @@
      sens quand la surface est plus claire que ce qu'elle recouvre. */
   --glass-tint-top: rgba(255, 255, 255, 0.92);
   --glass-tint-bottom: rgba(255, 255, 255, 0.74);
+
+  /* --glass-bg DOIT être redéfini ici, et son absence était un vrai bug.
+   *
+   * Il vaut `linear-gradient(160deg, var(--glass-tint-top), var(--glass-
+   * tint-bottom))` dans :root. Or une propriété personnalisée qui contient
+   * un var() est résolue AU MOMENT OÙ ELLE EST DÉCLARÉE, donc sur :root,
+   * avec les teintes du thème sombre — et ce résultat est ce qui hérite
+   * ensuite. Redéfinir les teintes plus bas ne le rattrape pas.
+   *
+   * Conséquence observée : chaque GlassCard de l'admin et du portail
+   * gardait un voile blanc de 9 % à 2 %, c'est-à-dire presque rien. Sur la
+   * modale de recherche, posée au-dessus d'un voile sombre, cela donnait
+   * du texte sombre sur du sombre — la « popup bizarre ».
+   *
+   * La règle à retenir : un token composé se redéfinit en entier dans
+   * chaque thème, jamais seulement ses ingrédients. */
+  --glass-bg: linear-gradient(160deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.74));
   --glass-border: rgba(0, 0, 0, 0.07);
   --glass-highlight: rgba(255, 255, 255, 0.9);
   --glass-shadow: rgba(16, 18, 24, 0.07);

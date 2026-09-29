@@ -111,8 +111,11 @@ export function PortalSearch({ items }: { items: PortalSearchItem[] }) {
           onBlur={() => window.setTimeout(() => setOpen(false), 120)}
           onKeyDown={onKeyDown}
           placeholder="Rechercher un projet, un document, une facture…"
-          className="h-11 w-full rounded-full border bg-white/[0.03] pl-11 pr-16 text-sm text-kov-bone outline-none transition-colors placeholder:text-kov-concrete/70 focus:border-kov-red"
-          style={{ borderColor: "var(--kov-border)" }}
+          className="h-11 w-full rounded-full border pl-11 pr-16 text-sm text-kov-bone outline-none transition-colors placeholder:text-kov-concrete/70 focus:border-kov-red"
+          // Un fond, pas un survol : il est donc posé en style plutôt
+          // qu'en classe. Il valait bg-white/[0.03], invisible sur fond
+          // clair — le champ perdait tout son remplissage.
+          style={{ background: "var(--kov-lift-1)", borderColor: "var(--kov-border)" }}
         />
 
         <kbd

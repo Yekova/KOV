@@ -122,6 +122,38 @@
   background: var(--kov-red);
 }
 
+/* ── Le survol d'une ligne ───────────────────────────────────────────── */
+
+/* Quatorze endroits écrivaient `hover:bg-white/[0.04]` ou approchant : un
+ * voile blanc en dur, qui ne se voit pas sur un fond clair — un blanc à
+ * 4 % sur du blanc ne fait rien. Les lignes de résultat, de notification
+ * et de tâche n'avaient donc plus aucun retour au survol.
+ *
+ * La classe passe par les lifts, qui suivent le thème. */
+
+.kov-hover {
+  transition: background-color var(--motion-fast) var(--ease-kov);
+}
+
+.kov-hover:hover {
+  background: var(--kov-lift-2);
+}
+
+.kov-hover-strong {
+  transition: background-color var(--motion-fast) var(--ease-kov);
+}
+
+.kov-hover-strong:hover {
+  background: var(--kov-lift-4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kov-hover,
+  .kov-hover-strong {
+    transition: none;
+  }
+}
+
 /* ── Le motif de marque, derrière la conversation ────────────────────── */
 
 /* La tuile est posée sur le PARENT du fil, pas sur la zone qui défile.

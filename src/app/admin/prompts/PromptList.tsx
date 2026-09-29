@@ -107,7 +107,7 @@ function RowMenu({
   });
 
   const ITEM =
-    "w-full text-left px-3 py-2 text-xs text-kov-concrete hover:bg-white/[0.05] hover:text-kov-bone transition-colors";
+    "w-full text-left px-3 py-2 text-xs text-kov-concrete kov-hover hover:text-kov-bone transition-colors";
 
   return (
     <div ref={ref} className="relative">

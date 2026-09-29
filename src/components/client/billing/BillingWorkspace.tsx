@@ -192,7 +192,7 @@ export function BillingWorkspace({ documents }: { documents: BillingDocument[] }
                     <tr
                       key={`${document.kind}-${document.id}`}
                       onClick={() => setSelectedId(document.id)}
-                      className="cursor-pointer border-b align-middle transition-colors hover:bg-white/[0.02]"
+                      className="cursor-pointer border-b align-middle transition-colors kov-hover"
                       style={{
                         borderColor: "var(--kov-border)",
                         background: isSelected ? "var(--kov-sheen)" : undefined,

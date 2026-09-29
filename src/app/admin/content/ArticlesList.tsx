@@ -126,7 +126,7 @@ export function ArticlesList() {
         </thead>
         <tbody>
           {rows.map((article, index) => (
-            <tr key={article.id} className="border-b group hover:bg-white/[0.02] transition-colors" style={{ borderColor: "var(--kov-border)" }}>
+            <tr key={article.id} className="border-b group kov-hover transition-colors" style={{ borderColor: "var(--kov-border)" }}>
               <td className="py-3 pr-4">
                 {article.image ? (
                   // eslint-disable-next-line @next/next/no-img-element
