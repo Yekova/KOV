@@ -54,7 +54,7 @@ export default async function AdminRequestThreadPage(props: PageProps<"/admin/re
   return (
     <ThreadInteractionProvider>
       <div className="flex h-full min-h-0 flex-col xl:flex-row">
-      <div className="kov-thread-canvas flex min-h-0 flex-1 flex-col">
+      <div className="flex min-h-0 flex-1 flex-col">
         <header
           className="shrink-0 border-b px-6 py-4 md:px-8"
           style={{ borderColor: "var(--kov-border)", background: "var(--kov-carbon)" }}

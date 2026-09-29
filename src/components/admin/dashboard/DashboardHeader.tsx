@@ -1,4 +1,4 @@
-import { LiveClock } from "./LiveClock";
+import { LiveClock } from "@/components/ui/LiveClock";
 
 const TODAY_FORMAT: Intl.DateTimeFormatOptions = { weekday: "long", day: "numeric", month: "long" };
 

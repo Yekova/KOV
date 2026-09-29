@@ -13,7 +13,6 @@ export type ShowcaseProject = {
   progressSource: "phases" | "saisi";
   currentPhase: string | null;
   nextDeadline: string | null;
-  thumbnailUrl: string | null;
 };
 
 // Les projets, en vignettes plutôt qu'en lignes.
@@ -60,42 +59,16 @@ export function ProjectShowcase({ projects }: { projects: ShowcaseProject[] }) {
             return (
               <div key={project.id} className="kov-surface kov-lift overflow-hidden">
                 <Link href={`/client/projects/${project.id}`} className="group block">
-                  <span
-                    className="relative block h-32 w-full overflow-hidden"
-                    style={{ background: "var(--kov-graphite)" }}
-                  >
-                    {project.thumbnailUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={project.thumbnailUrl}
-                        alt=""
-                        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
-                      />
-                    ) : (
-                      // Pas d'image de remplacement piochée ailleurs : une
-                      // initiale dit « pas de visuel », une photo générique
-                      // ferait croire à un visuel du projet.
-                      <span
-                        aria-hidden="true"
-                        className="flex h-full w-full items-center justify-center font-display text-3xl text-kov-muted"
-                      >
-                        {project.name.charAt(0).toUpperCase()}
-                      </span>
-                    )}
-                    <span
-                      className="absolute right-3 top-3 px-2.5 py-1 text-[10px] uppercase tracking-widest"
-                      style={{
-                        color,
-                        background: "rgba(8,8,10,0.78)",
-                        borderRadius: "var(--radius-pill)",
-                        border: "1px solid var(--kov-border)",
-                      }}
-                    >
-                      {PROJECT_STATUS_LABELS[project.status as ProjectStatus] ?? project.status}
-                    </span>
-                  </span>
+                  {/* Le bandeau visuel a disparu : 128 pixels d'image par
+                      carte, dont le repli était une initiale géante, pour
+                      une liste qu'on parcourt par les noms. Le statut, qui
+                      y était posé en pastille sur fond sombre en dur,
+                      redescend dans le texte. */}
 
                   <span className="block p-5">
+                    <span className="mb-2 block text-[10px] tracking-widest uppercase" style={{ color }}>
+                      {PROJECT_STATUS_LABELS[project.status as ProjectStatus] ?? project.status}
+                    </span>
                     <span className="block truncate text-[15px] text-kov-bone transition-colors group-hover:text-kov-red">
                       {project.name}
                     </span>

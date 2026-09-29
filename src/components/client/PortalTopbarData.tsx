@@ -1,6 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getPublicAssetUrl } from "@/lib/portal/storage";
-import { PortalTopbar } from "./PortalTopbar";
+import { PortalTopbarActions } from "./PortalTopbar";
 import type { ClientNotificationItem } from "./NotificationBell";
 import type { PortalSearchItem } from "./PortalSearch";
 
@@ -78,7 +78,7 @@ export async function PortalTopbarData({ userId }: { userId: string }) {
   }));
 
   return (
-    <PortalTopbar
+    <PortalTopbarActions
       fullName={profile?.full_name ?? null}
       avatarUrl={getPublicAssetUrl(profile?.avatar_path)}
       unreadCount={unreadCount ?? 0}

@@ -4,6 +4,9 @@ import { useSyncExternalStore } from "react";
 
 // L'heure, en grand et presque effacée.
 //
+// Dans components/ui et non dans le dossier d'un seul espace : les deux
+// tableaux de bord s'en servent.
+//
 // ── POURQUOI useSyncExternalStore ────────────────────────────────────
 //
 // L'heure est un état EXTERNE : elle avance sans que React le sache. La

@@ -99,7 +99,6 @@ export default async function ClientDashboardPage() {
         progressPercent: featuredRow.progress.percent,
         currentPhase: featuredRow.current.label,
         nextDeadline: featuredRow.project.next_deadline_date,
-        thumbnailUrl: getPublicAssetUrl(featuredRow.project.thumbnail_path),
         phases: [...featuredRow.phases]
           .sort((a, b) => a.position - b.position)
           .map((phase) => ({ id: phase.id, name: phase.name, status: phase.status, dueDate: phase.due_date ?? null })),
@@ -117,12 +116,10 @@ export default async function ClientDashboardPage() {
     progressSource: progress.source,
     currentPhase: current.label,
     nextDeadline: project.next_deadline_date,
-    thumbnailUrl: getPublicAssetUrl(project.thumbnail_path),
   }));
 
   // Le visuel du hero vient du projet principal quand il en a un. Sinon le
   // visuel KOV — jamais l'image d'un autre projet.
-  const heroImage = featured?.thumbnailUrl ?? "/kov/character/contact-frames/frame-040.jpg";
 
   // Une phrase d'état, ou rien. Elle ne se remplit que de ce qui est vrai.
   const statusLine = featured
@@ -234,15 +231,13 @@ export default async function ClientDashboardPage() {
           Trois surfaces primaires seulement — hero, projet principal,
           relation — et le reste en retrait. C'est ce qui remplace la
           grille de cartes équivalentes. */}
+      {/* L'en-tête sort de la grille et la surplombe, comme au tableau de
+          bord du studio : il s'adresse à quelqu'un, il n'est pas une carte
+          parmi d'autres. */}
+      <DashboardHero fullName={profile?.full_name ?? null} statusLine={statusLine} />
+
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="space-y-6">
-          <DashboardHero
-            fullName={profile?.full_name ?? null}
-            imageUrl={heroImage}
-            imageIsProject={Boolean(featured?.thumbnailUrl)}
-            statusLine={statusLine}
-          />
-
           <ActionRequiredCard items={actionItems} />
 
           {featured && <ProjectStoryCard project={featured} />}
@@ -257,7 +252,7 @@ export default async function ClientDashboardPage() {
           </div>
         </div>
 
-        <div className="xl:sticky xl:top-6 xl:self-start">
+        <div className="xl:sticky xl:top-[92px] xl:self-start">
           <RelationPanel
             manager={
               manager

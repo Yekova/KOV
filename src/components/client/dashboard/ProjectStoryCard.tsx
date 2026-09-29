@@ -10,7 +10,6 @@ export interface FeaturedProject {
   progressPercent: number;
   currentPhase: string | null;
   nextDeadline: string | null;
-  thumbnailUrl: string | null;
   phases: TimelinePhase[];
 }
 
@@ -50,44 +49,18 @@ export function ProjectStoryCard({ project }: { project: FeaturedProject }) {
 
   return (
     <section className="kov-panel overflow-hidden">
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1fr)]">
-        <div className="relative min-h-[220px] lg:min-h-[420px]">
-          {project.thumbnailUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={project.thumbnailUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
-          ) : (
-            // Pas d'image de remplacement : une lettre dit « pas de visuel »,
-            // une photo générique ferait croire à un rendu du projet.
-            <span
-              aria-hidden="true"
-              className="absolute inset-0 flex items-center justify-center font-display text-6xl"
-              style={{ background: "var(--kov-surface-3)", color: "var(--kov-muted)" }}
-            >
-              {project.name.charAt(0).toUpperCase()}
-            </span>
-          )}
+      {/* Une seule colonne : le visuel a disparu.
+          Il occupait la moitié gauche et s'appuyait sur trois dégradés vers
+          rgba(14,16,18,…), c'est-à-dire vers le noir — sur fond clair ils
+          redessinaient un rectangle sombre au lieu de fondre quoi que ce
+          soit. Ce que le bloc dit — étape, échéance, frise, pourcentage —
+          n'avait pas besoin d'une image pour se lire. */}
+      <div>
+        <span className="text-kov-steel block px-7 pt-7 font-mono text-[10px] tracking-[0.3em] uppercase sm:px-9 sm:pt-9">
+          Projet principal
+        </span>
 
-          {/* Le fondu vers la colonne de texte : pas de bord entre les deux. */}
-          <span
-            aria-hidden="true"
-            className="absolute inset-0"
-            style={{
-              background:
-                "linear-gradient(180deg, rgba(14,16,18,0.2) 0%, transparent 40%, rgba(14,16,18,0.9) 100%)",
-            }}
-          />
-          <span
-            aria-hidden="true"
-            className="absolute inset-0 hidden lg:block"
-            style={{ background: "linear-gradient(90deg, transparent 55%, var(--kov-surface-2) 100%)" }}
-          />
-
-          <span className="absolute left-6 top-6 font-mono text-[10px] uppercase tracking-[0.3em] text-kov-bone/80">
-            Projet principal
-          </span>
-        </div>
-
-        <div className="p-7 sm:p-9">
+        <div className="px-7 pt-5 pb-7 sm:px-9 sm:pb-9">
           <div className="flex flex-wrap items-center gap-3">
             <span className="text-[10px] uppercase tracking-widest" style={{ color }}>
               {PROJECT_STATUS_LABELS[project.status as ProjectStatus] ?? project.status}
@@ -129,7 +102,7 @@ export function ProjectStoryCard({ project }: { project: FeaturedProject }) {
           <Link
             href={`/client/projects/${project.id}`}
             className="mt-8 inline-flex h-11 items-center gap-2 border px-5 text-xs uppercase tracking-widest text-kov-bone transition-colors hover:border-kov-red hover:text-kov-red"
-            style={{ borderRadius: "var(--radius-pill)", borderColor: "var(--kov-lift-4)" }}
+            style={{ borderRadius: "var(--radius-pill)", borderColor: "var(--kov-border)" }}
           >
             Ouvrir le projet
             <span aria-hidden="true">→</span>

@@ -1,10 +1,8 @@
 import { Suspense } from "react";
 import { requireUser } from "@/lib/auth";
-import { PortalSidebar } from "@/components/client/PortalSidebar";
-import { ClientSidebarBadges } from "@/components/client/ClientSidebarBadges";
-import { PortalTopbarData } from "@/components/client/PortalTopbarData";
+import { PortalNavBar } from "@/components/client/PortalNavBar";
+import { PortalTopNavigation } from "@/components/client/PortalTopNavigation";
 import { PortalTopbarSkeleton } from "@/components/client/PortalTopbarSkeleton";
-import { MobileNavProvider } from "@/components/ui/MobileNavContext";
 import { PortalProviders } from "@/components/client/PortalProviders";
 import { KovPageTransition } from "@/components/ui/KovPageTransition";
 import { PresenceHeartbeat } from "@/components/client/PresenceHeartbeat";
@@ -34,27 +32,27 @@ export default async function ClientLayout({ children }: LayoutProps<"/client">)
       {/* Ne rend rien : sonde « y a-t-il du nouveau ? » et alerte hors de
           l'onglet quand l'autorisation a été donnée. */}
       <BrowserAlerts />
-      <MobileNavProvider>
-        <div className="kov-portal min-h-screen" style={{ background: "var(--kov-black)" }}>
-          {/* Le même fond abstrait que l'admin, et la même règle : il
-              n'occupe que le haut. Sous une liste de documents ou une
-              table de factures, un dégradé corail entre en concurrence
-              avec ce qu'on vient y lire. */}
-          <div className="kov-portal__backdrop" aria-hidden="true" />
+      <div className="kov-portal min-h-screen" style={{ background: "var(--kov-black)" }}>
+        {/* Le même fond abstrait que l'admin, et la même règle : il
+            n'occupe que le haut. Sous une liste de documents ou une table
+            de factures, un dégradé corail entre en concurrence avec ce
+            qu'on vient y lire. */}
+        <div className="kov-portal__backdrop" aria-hidden="true" />
 
-          <div className="kov-portal__content flex min-h-screen">
-            <Suspense fallback={<PortalSidebar openRequestsCount={0} />}>
-              <ClientSidebarBadges userId={user.id} />
-            </Suspense>
-            <div className="flex-1 flex flex-col min-w-0">
-              <Suspense fallback={<PortalTopbarSkeleton />}>
-                <PortalTopbarData userId={user.id} />
-              </Suspense>
-              <KovPageTransition className="flex-1">{children}</KovPageTransition>
-            </div>
-          </div>
+        <div className="kov-portal__content flex min-h-screen flex-col">
+          <Suspense
+            fallback={
+              <PortalTopNavigation openRequestsCount={0}>
+                <PortalTopbarSkeleton />
+              </PortalTopNavigation>
+            }
+          >
+            <PortalNavBar userId={user.id} />
+          </Suspense>
+
+          <KovPageTransition className="flex-1">{children}</KovPageTransition>
         </div>
-      </MobileNavProvider>
+      </div>
     </PortalProviders>
   );
 }

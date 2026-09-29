@@ -154,62 +154,6 @@
   }
 }
 
-/* ── Le motif de marque, derrière la conversation ────────────────────── */
-
-/* La tuile est posée sur le PARENT du fil, pas sur la zone qui défile.
- *
- * Deux raisons. D'abord l'en-tête et le champ de réponse portent leur
- * propre fond (--kov-carbon) : le motif n'apparaît donc que dans
- * l'intervalle, c'est-à-dire derrière les messages et nulle part ailleurs.
- * Ensuite un pseudo-élément posé dans un conteneur à défilement se
- * positionne sur sa boîte visible mais défile avec le contenu — le motif
- * quitterait l'écran au premier défilement et le bas du fil serait nu.
- *
- * z-index -1 avec isolation : le motif passe derrière le contenu du fil
- * sans pouvoir descendre derrière le fond de la page.
- *
- * La tuile (public/kov/brand/kov-pattern-tile.webp) porte le VRAI
- * monogramme : il est découpé dans la planche fournie (un exemplaire isolé,
- * 155x76) et non repris d'un autre fichier de marque, qui est un autre
- * dessin. Son fond crème est converti en transparence plutôt que retiré au
- * seuil — l'anticrénelage est conservé, donc pas de bords en escalier.
- *
- * Période reprise de la planche : 263 x 119, seconde rangée décalée de 124.
- * La tuile fait deux périodes de haut et porte le signe de la seconde
- * rangée de part et d'autre du bord : elle se raccorde sans couture, ce que
- * l'aplat fourni ne faisait pas. */
-
-.kov-thread-canvas {
-  position: relative;
-  isolation: isolate;
-}
-
-/* La tuile sert de MASQUE et non d'image de fond.
- *
- * Elle porte une couleur os, cuite dans le fichier : posée telle quelle
- * sur le fond clair du portail elle disparaîtrait complètement. En masque,
- * c'est background-color qui donne la teinte — donc --kov-bone, qui suit
- * le thème : marques claires sur fond sombre, marques sombres sur fond
- * clair, un seul fichier pour les deux. */
-.kov-thread-canvas::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-color: var(--kov-bone);
-  -webkit-mask-image: url("/kov/brand/kov-pattern-tile.webp");
-  mask-image: url("/kov/brand/kov-pattern-tile.webp");
-  -webkit-mask-repeat: repeat;
-  mask-repeat: repeat;
-  -webkit-mask-size: 263px 238px;
-  mask-size: 263px 238px;
-  /* Faible : le motif doit se deviner, pas se lire. Au-delà, il entre en
-     concurrence avec le texte des messages, qui est la seule chose que
-     cet écran a à faire lire. */
-  opacity: 0.045;
-}
-
 /* ── Les bulles : qui parle se voit à la teinte ──────────────────────── */
 
 /* Deux aplats francs, sans transparence ni flou : ROUGE pour nous, GRIS
