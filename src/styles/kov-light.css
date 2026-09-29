@@ -1,4 +1,4 @@
-/* L'admin en clair.
+/* L'admin et l'espace client en clair.
  *
  * ── POURQUOI CE FICHIER TIENT EN UN BLOC DE VARIABLES ────────────────
  *
@@ -44,7 +44,12 @@
  *   sous du blanc. Il échoue dans les deux sens.
  */
 
-.kov-admin {
+/* Les deux coquilles partagent EXACTEMENT la même palette : c'est ce que
+ * veut dire « la même direction artistique ». Ce qui suit plus bas et ne
+ * concerne que l'admin (la barre horizontale, son fond) reste sous
+ * .kov-admin seul. */
+.kov-admin,
+.kov-portal {
   /* ── Fonds ──────────────────────────────────────────────────────── */
   /* --kov-black porte le fond de page, --kov-carbon les surfaces
      (barres, cartes), --kov-graphite ce qui est légèrement en retrait
@@ -69,6 +74,15 @@
 
   --kov-border: rgba(0, 0, 0, 0.08);
 
+  /* Les couches de profondeur du portail. Sur fond sombre elles montaient
+     du noir vers le gris ; sur fond clair elles doivent descendre du blanc
+     vers le gris, sinon les cartes du portail resteraient des aplats
+     presque noirs au milieu d'une page claire. */
+  --kov-void: #f7f7f6;
+  --kov-surface-1: #ffffff;
+  --kov-surface-2: #fafaf9;
+  --kov-surface-3: #f1f1ef;
+
   /* La barre horizontale fait 68px et non 76 : la messagerie s'en sert
      pour occuper exactement le reste de l'écran, et une valeur périmée y
      produirait soit un débordement, soit une bande vide en bas. */
@@ -79,6 +93,16 @@
      Mesurées, pas choisies : sur #f7f7f6 les valeurs du thème sombre
      donnaient 2,97:1 (vert), 2,06:1 (orange), 3,17:1 (bleu) — un texte de
      statut illisible, et c'est ce que porte chaque badge de l'admin. */
+  /* Les mêmes lifts, en noir : sur fond clair, « au-dessus » se dit en
+     assombrissant, pas en éclaircissant. Les opacités sont légèrement
+     plus basses parce qu'un noir à 5 % sur du blanc se voit davantage
+     qu'un blanc à 5 % sur du noir. */
+  --kov-lift-1: rgba(0, 0, 0, 0.028);
+  --kov-lift-2: rgba(0, 0, 0, 0.045);
+  --kov-lift-3: rgba(0, 0, 0, 0.06);
+  --kov-lift-4: rgba(0, 0, 0, 0.09);
+  --kov-sheen: rgba(0, 0, 0, 0.02);
+
   --kov-status-green: #2d7e5a;
   --kov-status-orange: #986616;
   --kov-status-blue: #476eba;
@@ -117,7 +141,8 @@
  * Il s'éteint pour qui demande moins de mouvement ? Non : il ne bouge
  * pas. Mais il s'efface à l'impression, où il ne ferait que consommer de
  * l'encre. */
-.kov-admin__backdrop {
+.kov-admin__backdrop,
+.kov-portal__backdrop {
   position: fixed;
   inset: 0 0 auto 0;
   height: 620px;
@@ -135,13 +160,15 @@
 
 /* Le contenu passe au-dessus. Sans cette ligne, le fond recouvrirait la
    page entière puisqu'il est posé après elle dans l'ordre de peinture. */
-.kov-admin__content {
+.kov-admin__content,
+.kov-portal__content {
   position: relative;
   z-index: 1;
 }
 
 @media print {
-  .kov-admin__backdrop {
+  .kov-admin__backdrop,
+.kov-portal__backdrop {
     display: none;
   }
 }
@@ -184,6 +211,116 @@
 .kov-topnav__link[aria-current="page"] {
   background: color-mix(in srgb, var(--kov-red) 8%, transparent);
   color: var(--kov-red);
+}
+
+/* ── La recherche et l'action, dans la barre ──────────────────────── */
+
+/* Les deux étaient cassés pour la même raison : ils venaient d'ailleurs.
+ * Le déclencheur de recherche portait `flex-1 max-w-md`, hérité d'une
+ * barre qui lui donnait toute la largeur ; le bouton d'action était le
+ * <Button> générique du site, en px-6 py-4, soit 56px de haut. Dans une
+ * barre de 38px et un cluster contraint, le premier se comprimait jusqu'à
+ * casser son libellé sur trois lignes et le second l'étirait.
+ *
+ * Ils ont maintenant leurs propres dimensions, calées sur la barre. */
+
+.kov-topnav__search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  width: 190px;
+  padding: 0 10px 0 12px;
+  font-size: 13px;
+  color: var(--kov-steel);
+  background: rgba(0, 0, 0, 0.035);
+  border: 1px solid transparent;
+  border-radius: 12px;
+  transition:
+    background-color var(--motion-fast) var(--ease-kov),
+    border-color var(--motion-fast) var(--ease-kov);
+}
+
+@media (min-width: 1280px) {
+  .kov-topnav__search {
+    width: 260px;
+  }
+}
+
+.kov-topnav__search:hover {
+  background: rgba(0, 0, 0, 0.055);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.kov-topnav__kbd {
+  flex-shrink: 0;
+  padding: 2px 5px;
+  font-family: inherit;
+  font-size: 10px;
+  line-height: 1;
+  color: var(--kov-steel);
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 5px;
+}
+
+.kov-topnav__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 38px;
+  padding: 0 14px;
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--kov-white);
+  background: var(--kov-red);
+  border-radius: 10px;
+  transition:
+    background-color var(--motion-fast) var(--ease-kov),
+    transform var(--motion-press) var(--ease-kov);
+}
+
+.kov-topnav__cta:hover {
+  background: var(--kov-red-signal);
+  transform: translateY(-1px);
+}
+
+.kov-topnav__cta:active {
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kov-topnav__search,
+  .kov-topnav__cta {
+    transition: none;
+  }
+
+  .kov-topnav__cta:hover {
+    transform: none;
+  }
+}
+
+/* ── La messagerie sans barre de défilement ───────────────────────── */
+
+/* Le site pose une barre de défilement rouge sur tout (voir globals.css).
+ * Dans la messagerie, elle borde chaque colonne et chaque fil : trois
+ * traits rouges verticaux à l'écran, pour une interface dont le rouge est
+ * la couleur de signal.
+ *
+ * Elle est masquée, pas supprimée : le défilement fonctionne toujours, à
+ * la molette, au clavier et au toucher. C'est un compromis assumé —
+ * masquer une barre retire un repère de position — et il ne vaut QUE pour
+ * la messagerie, où les deux colonnes se devinent par leur contenu. */
+
+.kov-messaging *::-webkit-scrollbar,
+.kov-messaging::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.kov-messaging,
+.kov-messaging * {
+  scrollbar-width: none;
 }
 
 /* ── Les cartes ───────────────────────────────────────────────────── */

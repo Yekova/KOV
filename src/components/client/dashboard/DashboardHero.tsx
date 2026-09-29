@@ -81,7 +81,7 @@ export function DashboardHero({
           <Link
             href="/client/projects"
             className="inline-flex h-11 items-center gap-2 border px-5 text-xs uppercase tracking-widest text-kov-bone transition-colors hover:border-kov-bone/40"
-            style={{ borderRadius: "var(--radius-pill)", borderColor: "rgba(255,255,255,0.12)" }}
+            style={{ borderRadius: "var(--radius-pill)", borderColor: "var(--kov-lift-4)" }}
           >
             Mes projets
           </Link>

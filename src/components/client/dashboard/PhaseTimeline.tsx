@@ -59,7 +59,7 @@ export function PhaseTimeline({ phases }: { phases: TimelinePhase[] }) {
                   opacity: state === "future" ? 0.7 : 1,
                 }}
               />
-              {!isLast && <span aria-hidden="true" className="my-1 w-px flex-1" style={{ background: "rgba(255,255,255,0.08)" }} />}
+              {!isLast && <span aria-hidden="true" className="my-1 w-px flex-1" style={{ background: "var(--kov-lift-3)" }} />}
             </div>
 
             <div className={`min-w-0 ${isLast ? "" : "pb-4"}`}>

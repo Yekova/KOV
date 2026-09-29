@@ -195,7 +195,7 @@ export function BillingWorkspace({ documents }: { documents: BillingDocument[] }
                       className="cursor-pointer border-b align-middle transition-colors hover:bg-white/[0.02]"
                       style={{
                         borderColor: "var(--kov-border)",
-                        background: isSelected ? "rgba(255,255,255,0.03)" : undefined,
+                        background: isSelected ? "var(--kov-sheen)" : undefined,
                         // La sélection est aussi portée par un filet rouge à
                         // gauche : une ligne distinguée par une seule nuance
                         // de fond ne se voit pas sur un écran mal calibré.

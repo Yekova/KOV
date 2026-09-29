@@ -77,23 +77,25 @@ export function GlobalAdminSearch({ items }: { items: AdminSearchItem[] }) {
 
   return (
     <>
+      {/* Largeur FIXE et non `flex-1`.
+          Le déclencheur vivait dans le cluster de droite de la barre, qui
+          est contraint : `flex-1` le faisait réclamer une place qui
+          n'existait pas, il se comprimait, et son libellé — trop long —
+          partait sur trois lignes dans un bouton de 38px de haut.
+          Il a maintenant sa largeur, son libellé tient en une ligne et se
+          coupe proprement s'il le faut. */}
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex-1 max-w-md flex items-center gap-3 px-4 py-2.5 text-left text-kov-steel text-sm border transition-colors hover:border-kov-red"
-        style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-lg)" }}
+        aria-label="Rechercher"
+        className="kov-topnav__search"
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0">
           <circle cx="11" cy="11" r="7" />
           <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
-        <span className="flex-1">Rechercher un client, projet, lead, prompt…</span>
-        <span
-          className="text-[10px] uppercase tracking-widest border px-1.5 py-0.5"
-          style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
-        >
-          ⌘K
-        </span>
+        <span className="min-w-0 flex-1 truncate text-left">Rechercher…</span>
+        <kbd className="kov-topnav__kbd">⌘K</kbd>
       </button>
 
       {open &&

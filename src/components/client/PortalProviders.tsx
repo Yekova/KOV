@@ -31,8 +31,13 @@ export function PortalProviders({ children }: { children: React.ReactNode }) {
         toastOptions={{
           className: "kov-toast",
           style: {
+            // Le toast garde un fond sombre même en interface claire : un
+            // message éphémère doit trancher avec la page, et il est rendu
+            // hors de la coquille (sonner porte dans <body>), donc son
+            // filet est écrit en clair — un token le ferait basculer en
+            // noir sur noir.
             background: "rgba(18,18,18,0.92)",
-            border: "1px solid rgba(255,255,255,0.08)",
+            border: "1px solid rgba(255,255,255,0.1)",
             backdropFilter: "blur(12px)",
             WebkitBackdropFilter: "blur(12px)",
             color: "var(--kov-bone)",

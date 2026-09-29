@@ -10,6 +10,7 @@ import { KovPageTransition } from "@/components/ui/KovPageTransition";
 import { PresenceHeartbeat } from "@/components/client/PresenceHeartbeat";
 import { BrowserAlerts } from "@/components/client/BrowserAlerts";
 import "@/styles/kov-surfaces.css";
+import "@/styles/kov-light.css";
 import "./portal.css";
 
 // requireUser() reads cookies(), which makes this whole layout dynamic —
@@ -34,15 +35,23 @@ export default async function ClientLayout({ children }: LayoutProps<"/client">)
           l'onglet quand l'autorisation a été donnée. */}
       <BrowserAlerts />
       <MobileNavProvider>
-        <div className="kov-portal min-h-screen flex" style={{ background: "var(--kov-black)" }}>
-          <Suspense fallback={<PortalSidebar openRequestsCount={0} />}>
-            <ClientSidebarBadges userId={user.id} />
-          </Suspense>
-          <div className="flex-1 flex flex-col min-w-0">
-            <Suspense fallback={<PortalTopbarSkeleton />}>
-              <PortalTopbarData userId={user.id} />
+        <div className="kov-portal min-h-screen" style={{ background: "var(--kov-black)" }}>
+          {/* Le même fond abstrait que l'admin, et la même règle : il
+              n'occupe que le haut. Sous une liste de documents ou une
+              table de factures, un dégradé corail entre en concurrence
+              avec ce qu'on vient y lire. */}
+          <div className="kov-portal__backdrop" aria-hidden="true" />
+
+          <div className="kov-portal__content flex min-h-screen">
+            <Suspense fallback={<PortalSidebar openRequestsCount={0} />}>
+              <ClientSidebarBadges userId={user.id} />
             </Suspense>
-            <KovPageTransition className="flex-1">{children}</KovPageTransition>
+            <div className="flex-1 flex flex-col min-w-0">
+              <Suspense fallback={<PortalTopbarSkeleton />}>
+                <PortalTopbarData userId={user.id} />
+              </Suspense>
+              <KovPageTransition className="flex-1">{children}</KovPageTransition>
+            </div>
           </div>
         </div>
       </MobileNavProvider>

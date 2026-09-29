@@ -8,7 +8,7 @@ import { AdminProviders } from "@/components/admin/AdminProviders";
 import { AdminThemeScope } from "@/components/admin/AdminThemeScope";
 import { KovPageTransition } from "@/components/ui/KovPageTransition";
 import "@/styles/kov-surfaces.css";
-import "@/styles/admin-light.css";
+import "@/styles/kov-light.css";
 
 // La coquille de l'admin, en clair et à l'horizontale.
 //
@@ -22,7 +22,7 @@ import "@/styles/admin-light.css";
 // La bascule en clair, elle, ne touche AUCUNE page. `.kov-admin`
 // redéfinit les tokens de couleur, et comme Tailwind est déclaré en
 // `@theme inline`, les 1439 classes `kov-*` et les 637 `var(--kov-*)` des
-// pages suivent sans être modifiées (voir styles/admin-light.css). La
+// pages suivent sans être modifiées (voir styles/kov-light.css). La
 // portée est obligatoire : le site public et l'espace client partagent ces
 // composants et restent sombres.
 //

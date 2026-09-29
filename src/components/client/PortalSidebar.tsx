@@ -86,7 +86,7 @@ function NavLinks({ pathname, openRequestsCount, onNavigate }: { pathname: strin
             style={{
               borderRadius: "var(--radius-sm)",
               color: isActive ? "var(--kov-bone)" : "var(--kov-steel)",
-              background: isActive ? "rgba(255,255,255,0.05)" : "transparent",
+              background: isActive ? "var(--kov-lift-2)" : "transparent",
             }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0">

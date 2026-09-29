@@ -83,9 +83,17 @@ export function QuickActionMenu({ clients, projects, admins }: QuickActionMenuPr
 
   return (
     <div className="relative" ref={ref}>
-      <Button type="button" variant="primary" onClick={toggleMenu}>
-        + Nouvelle action
-      </Button>
+      {/* Un bouton dédié et non le <Button> générique : celui-ci porte
+          px-6 py-4, donc 56px de haut, dans une barre qui en fait 38 — il
+          l'étirait et son libellé passait sur deux lignes. Le libellé est
+          aussi raccourci : « Nouvelle action » dit la même chose que
+          « + Nouvelle action » sur deux lignes. */}
+      <button type="button" onClick={toggleMenu} aria-haspopup="menu" aria-expanded={menuOpen} className="kov-topnav__cta">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
+          <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+        </svg>
+        <span className="hidden sm:inline">Nouvelle action</span>
+      </button>
 
       {menuOpen &&
         createPortal(

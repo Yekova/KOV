@@ -282,7 +282,7 @@ function MessageRow({ message, actions }: { message: ThreadMessageView; actions?
                 aria-pressed={reaction.mine}
                 className="flex items-center gap-1 px-2 py-0.5 text-[12px] transition-colors"
                 style={{
-                  background: reaction.mine ? "rgba(227,30,36,0.14)" : "rgba(255,255,255,0.05)",
+                  background: reaction.mine ? "rgba(227,30,36,0.14)" : "var(--kov-lift-2)",
                   border: `1px solid ${reaction.mine ? "rgba(227,30,36,0.45)" : "var(--kov-border)"}`,
                   borderRadius: "var(--radius-pill)",
                 }}

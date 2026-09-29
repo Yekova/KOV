@@ -152,15 +152,26 @@
   isolation: isolate;
 }
 
+/* La tuile sert de MASQUE et non d'image de fond.
+ *
+ * Elle porte une couleur os, cuite dans le fichier : posée telle quelle
+ * sur le fond clair du portail elle disparaîtrait complètement. En masque,
+ * c'est background-color qui donne la teinte — donc --kov-bone, qui suit
+ * le thème : marques claires sur fond sombre, marques sombres sur fond
+ * clair, un seul fichier pour les deux. */
 .kov-thread-canvas::before {
   content: "";
   position: absolute;
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background-image: url("/kov/brand/kov-pattern-tile.webp");
-  background-repeat: repeat;
-  background-size: 263px 238px;
+  background-color: var(--kov-bone);
+  -webkit-mask-image: url("/kov/brand/kov-pattern-tile.webp");
+  mask-image: url("/kov/brand/kov-pattern-tile.webp");
+  -webkit-mask-repeat: repeat;
+  mask-repeat: repeat;
+  -webkit-mask-size: 263px 238px;
+  mask-size: 263px 238px;
   /* Faible : le motif doit se deviner, pas se lire. Au-delà, il entre en
      concurrence avec le texte des messages, qui est la seule chose que
      cet écran a à faire lire. */
@@ -199,9 +210,9 @@
 }
 
 .kov-bubble--theirs {
-  /* La valeur calculée d'abord : un navigateur qui ignore color-mix
-     laisserait sinon la bulle transparente, donc illisible. */
-  background: #444544;
+  /* Le repli en dur a disparu : il valait #444544, un gris pensé pour le
+     fond noir, qui serait devenu une bulle presque noire sur fond clair —
+     donc un repli pire que le défaut qu'il couvrait. */
   background: color-mix(in srgb, var(--kov-steel) 50%, var(--kov-carbon));
   border-color: rgba(255, 255, 255, 0.1);
   border-top-left-radius: 4px;

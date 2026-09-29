@@ -119,7 +119,7 @@ export function RelationPanel({
                       style={{ background: index === 0 ? "var(--kov-red)" : "var(--kov-muted)" }}
                     />
                     {index < all.length - 1 && (
-                      <span aria-hidden="true" className="my-1 w-px flex-1" style={{ background: "rgba(255,255,255,0.08)" }} />
+                      <span aria-hidden="true" className="my-1 w-px flex-1" style={{ background: "var(--kov-lift-3)" }} />
                     )}
                   </div>
                   <div className={`min-w-0 ${index < all.length - 1 ? "pb-4" : ""}`}>

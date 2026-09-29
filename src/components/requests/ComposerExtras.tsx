@@ -20,7 +20,7 @@ export function ReplyQuoteBanner() {
     <div
       className="kov-enter mb-2 flex items-start gap-3 px-3 py-2"
       style={{
-        background: "rgba(255,255,255,0.04)",
+        background: "var(--kov-lift-1)",
         borderLeft: "2px solid var(--kov-red)",
         borderRadius: "var(--radius-sm)",
       }}
@@ -105,7 +105,7 @@ export function AttachmentField({ max = 5 }: { max?: number }) {
               key={`${file.name}-${index}`}
               className="text-kov-bone flex items-center gap-2 px-2.5 py-1 text-[11px]"
               style={{
-                background: "rgba(255,255,255,0.05)",
+                background: "var(--kov-lift-2)",
                 border: "1px solid var(--kov-border)",
                 borderRadius: "var(--radius-pill)",
               }}

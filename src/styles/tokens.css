@@ -24,9 +24,22 @@
      convenait tant que les deux côtés étaient sombres. Depuis que
      l'admin est clair, le vert à #3FB27F n'y donne plus que 2,97:1 en
      texte, très en dessous du minimum de 4,5:1.
-     Les valeurs ci-dessous sont celles du fond sombre ; admin-light.css
+     Les valeurs ci-dessous sont celles du fond sombre ; kov-light.css
      les redéfinit pour le fond clair. Un seul jeu de constantes côté
      TypeScript, deux jeux de valeurs. */
+  /* ── Les « lifts » ────────────────────────────────────────────────
+     Des voiles blancs de très faible opacité, qui servaient partout dans
+     le portail à détacher une surface de son fond ou à poser un filet.
+     Ils étaient écrits en dur, donc invisibles dès que le fond devient
+     clair — un blanc à 5 % sur du blanc ne fait rien.
+     Nommés, ils suivent le thème : blanc sur fond sombre, noir sur fond
+     clair, et l'effet reste « légèrement au-dessus » dans les deux cas. */
+  --kov-lift-1: rgba(255, 255, 255, 0.04);
+  --kov-lift-2: rgba(255, 255, 255, 0.05);
+  --kov-lift-3: rgba(255, 255, 255, 0.08);
+  --kov-lift-4: rgba(255, 255, 255, 0.12);
+  --kov-sheen: rgba(255, 255, 255, 0.03);
+
   --kov-status-green: #3fb27f;
   --kov-status-orange: #f5a524;
   --kov-status-blue: #5b8def;

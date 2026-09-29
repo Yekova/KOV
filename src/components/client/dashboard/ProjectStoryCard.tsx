@@ -129,7 +129,7 @@ export function ProjectStoryCard({ project }: { project: FeaturedProject }) {
           <Link
             href={`/client/projects/${project.id}`}
             className="mt-8 inline-flex h-11 items-center gap-2 border px-5 text-xs uppercase tracking-widest text-kov-bone transition-colors hover:border-kov-red hover:text-kov-red"
-            style={{ borderRadius: "var(--radius-pill)", borderColor: "rgba(255,255,255,0.12)" }}
+            style={{ borderRadius: "var(--radius-pill)", borderColor: "var(--kov-lift-4)" }}
           >
             Ouvrir le projet
             <span aria-hidden="true">→</span>

@@ -157,7 +157,7 @@ export function PortalSearch({ items }: { items: PortalSearchItem[] }) {
                 onClick={() => go(item)}
                 onMouseEnter={() => setActive(index)}
                 className="block w-full px-4 py-2.5 text-left transition-colors"
-                style={{ background: index === activeIndex ? "rgba(255,255,255,0.05)" : "transparent" }}
+                style={{ background: index === activeIndex ? "var(--kov-lift-2)" : "transparent" }}
               >
                 <span className="block truncate text-sm text-kov-bone">{item.label}</span>
                 <span className="block text-xs text-kov-concrete">{item.sublabel}</span>
