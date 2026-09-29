@@ -9,7 +9,19 @@ import "./kovMotion.css";
 //
 // En SVG plutôt qu'en bordures CSS parce qu'il faut trois arcs distincts
 // avec un espace entre eux, ce qu'une bordure ne sait pas faire.
-export function KovSpinner({ size = 18, className = "" }: { size?: number; className?: string }) {
+//
+// L'accent est réglable, et il le fallait : le rouge est invisible sur un
+// bouton primaire, qui est rouge. Le segment identifiable disparaissait
+// donc exactement là où le loader sert le plus — pendant l'envoi.
+export function KovSpinner({
+  size = 18,
+  className = "",
+  accent = "var(--kov-red)",
+}: {
+  size?: number;
+  className?: string;
+  accent?: string;
+}) {
   const stroke = Math.max(1.5, size * 0.1);
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -32,7 +44,7 @@ export function KovSpinner({ size = 18, className = "" }: { size?: number; class
             cy={size / 2}
             r={radius}
             fill="none"
-            stroke={index === 0 ? "var(--kov-red)" : "currentColor"}
+            stroke={index === 0 ? accent : "currentColor"}
             strokeOpacity={index === 0 ? 1 : 0.28}
             strokeWidth={stroke}
             strokeLinecap="round"

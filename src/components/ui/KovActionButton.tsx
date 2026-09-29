@@ -111,7 +111,10 @@ export function KovActionButton({
 
       {busy && (
         <>
-          <KovSpinner size={15} />
+          {/* Sur le bouton primaire — fond rouge — un segment rouge ne se
+              voit pas. L'accent passe au blanc pour que l'anneau garde son
+              segment identifiable. */}
+          <KovSpinner size={15} accent={variant === "primary" ? "var(--kov-white)" : "var(--kov-red)"} />
           {/* La première signature : un point qui bat pendant l'attente. */}
           <span aria-hidden="true" className="kov-action__dot" />
         </>

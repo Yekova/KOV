@@ -226,7 +226,12 @@ export function ClientsWorkspace({ clients }: { clients: ClientSummary[] }) {
 
       {visible.length === 0 ? (
         <EmptyState
-          message={query ? "Aucun client ne correspond à cette recherche." : "Aucun client dans cet onglet."}
+          message={query ? "Aucun client ne correspond à cette recherche" : "Aucun client dans cet onglet"}
+          description={
+            query
+              ? "La recherche porte sur le nom, la société et l'adresse email."
+              : "Un client naît de la conversion d'un lead : ouvrez sa fiche et choisissez « Convertir en client ». Le compte est créé et l'invitation part dans la foulée."
+          }
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

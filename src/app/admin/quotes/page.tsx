@@ -162,7 +162,14 @@ export default async function AdminQuotesPage(props: PageProps<"/admin/quotes">)
         </div>
 
         {rows.length === 0 ? (
-          <EmptyState message={q ? "Aucun devis ne correspond à cette recherche." : "Aucun devis dans cette catégorie."} />
+          <EmptyState
+            message={q ? "Aucun devis ne correspond à cette recherche" : "Aucun devis dans cette catégorie"}
+            description={
+              q
+                ? "La recherche porte sur la référence et le destinataire."
+                : "Les onglets séparent les devis selon où ils en sont. Un devis créé ici génère son PDF et peut partir en signature."
+            }
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">

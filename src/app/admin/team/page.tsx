@@ -50,7 +50,10 @@ export default async function AdminTeamPage(props: PageProps<"/admin/team">) {
           </Link>
         </div>
         {rows.length === 0 ? (
-          <EmptyState message="Aucun membre d'équipe pour l'instant." />
+          <EmptyState
+            message="Aucun membre d'équipe pour l'instant"
+            description="Le formulaire ci-dessous envoie une invitation : le compte est créé avec l'accès admin, et la personne choisit son mot de passe depuis le lien reçu."
+          />
         ) : (
           <div className="space-y-2">
             {rows.map((admin) => (

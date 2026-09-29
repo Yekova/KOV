@@ -275,7 +275,14 @@ export function LeadsListView({
       )}
 
       {filtered.length === 0 ? (
-        <EmptyState message={hasFilters ? "Aucun lead ne correspond à ces filtres." : "Aucun lead pour l'instant."} />
+        <EmptyState
+          message={hasFilters ? "Aucun lead ne correspond à ces filtres" : "Aucun lead pour l'instant"}
+          description={
+            hasFilters
+              ? "Élargissez les filtres pour retrouver les leads masqués."
+              : "Les demandes envoyées depuis le formulaire de contact du site et les inscriptions à la newsletter arrivent ici automatiquement. « Nouveau lead » en ajoute un à la main."
+          }
+        />
       ) : view === "kanban" ? (
         <LeadBoard leads={filtered} setLeads={setLeads} statuses={statuses} />
       ) : (

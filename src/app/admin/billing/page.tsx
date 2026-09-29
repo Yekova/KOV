@@ -144,7 +144,14 @@ export default async function AdminBillingPage(props: PageProps<"/admin/billing"
         </div>
 
         {rows.length === 0 ? (
-          <EmptyState message={q ? "Aucune facture ne correspond à cette recherche." : "Aucune facture dans cette catégorie."} />
+          <EmptyState
+            message={q ? "Aucune facture ne correspond à cette recherche" : "Aucune facture dans cette catégorie"}
+            description={
+              q
+                ? "La recherche porte sur la référence et le client."
+                : "Une facture se crée ici, ou depuis un devis accepté — « Créer la facture » en reprend alors les lignes."
+            }
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">

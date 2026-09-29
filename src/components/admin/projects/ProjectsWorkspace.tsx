@@ -196,8 +196,13 @@ export function ProjectsWorkspace({
         <EmptyState
           message={
             query || statusFilter !== "all"
-              ? "Aucun projet ne correspond à ces critères."
-              : "Aucun projet pour l'instant."
+              ? "Aucun projet ne correspond à ces critères"
+              : "Aucun projet pour l'instant"
+          }
+          description={
+            query || statusFilter !== "all"
+              ? "Élargissez la recherche ou repassez le filtre sur tous les statuts."
+              : "Un projet se crée depuis la fiche d'un client, ou pendant la conversion d'un lead. C'est lui qui porte les phases que le client suit dans son espace."
           }
         />
       ) : (
