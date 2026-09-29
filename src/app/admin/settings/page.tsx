@@ -6,6 +6,7 @@ import { getBusinessInfo } from "@/lib/billing/businessInfo";
 import { SettingsForm } from "./SettingsForm";
 import { getPublicAssetUrl } from "@/lib/portal/storage";
 import { ProfileForm } from "./ProfileForm";
+import { PasswordForm } from "@/components/auth/PasswordForm";
 import { OnlineToggle } from "@/components/admin/OnlineToggle";
 import { EmailAccountConnection } from "@/components/admin/settings/EmailAccountConnection";
 
@@ -17,7 +18,7 @@ export default async function AdminSettingsPage() {
     getBusinessInfo(),
     supabaseAdmin
       .from("profiles")
-      .select("full_name, display_title, phone, avatar_path, is_online, ms_connected_email")
+      .select("full_name, display_title, phone, email, avatar_path, is_online, ms_connected_email")
       .eq("id", user.id)
       .maybeSingle(),
   ]);
@@ -34,6 +35,19 @@ export default async function AdminSettingsPage() {
           phone={profile?.phone ?? null}
           avatarUrl={getPublicAssetUrl(profile?.avatar_path)}
         />
+      </section>
+
+      {/* Le compte : l'adresse et le mot de passe.
+          Le studio n'avait aucun moyen de changer son mot de passe depuis
+          l'interface — le formulaire existait, mais seulement dans le
+          portail client. Il est maintenant partagé (components/auth). */}
+      <section className="border-t pt-8" style={{ borderColor: "var(--kov-border)" }}>
+        <h2 className="text-xs uppercase tracking-widest text-kov-steel mb-2">Compte</h2>
+        <p className="text-kov-steel text-sm mb-6">
+          Adresse de connexion : <span className="text-kov-bone">{profile?.email ?? "—"}</span>. La modifier demande
+          une vérification par email, qui n&apos;est pas encore branchée — écrivez-moi si elle doit changer.
+        </p>
+        <PasswordForm />
       </section>
 
       <section className="border-t pt-8" style={{ borderColor: "var(--kov-border)" }}>

@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { logout } from "@/app/login/actions";
+import { LogoutButton } from "@/components/auth/LogoutButton";
 
 export function UserMenu({ fullName, avatarUrl }: { fullName: string | null; avatarUrl: string | null }) {
   const [open, setOpen] = useState(false);
@@ -85,14 +85,7 @@ export function UserMenu({ fullName, avatarUrl }: { fullName: string | null; ava
                 Mon profil
               </Link>
               <div className="border-t my-1" style={{ borderColor: "var(--glass-border)" }} />
-              <form action={logout}>
-                <button
-                  type="submit"
-                  className="w-full text-left px-4 py-2 text-xs uppercase tracking-widest text-kov-bone hover:text-kov-red transition-colors"
-                >
-                  Se déconnecter
-                </button>
-              </form>
+              <LogoutButton />
             </div>
           </div>,
           document.body

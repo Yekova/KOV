@@ -8,10 +8,17 @@ import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 const FIELD_CLASS =
   "kov-field w-full bg-transparent border py-2.5 px-3 text-kov-bone placeholder:text-kov-concrete/70 text-sm focus:outline-none";
 
-// Ce formulaire ne passe pas par useKovAction : il n'appelle pas d'action
-// serveur mais le client Supabase du navigateur, et il valide avant
-// d'envoyer. Le cycle d'états reste le même — c'est le contrat qui doit
-// être commun, pas l'implémentation.
+// Changer son mot de passe.
+//
+// Dans components/auth et non dans le dossier du portail : il n'a jamais
+// rien eu de client. Il passe par le client Supabase du NAVIGATEUR, qui
+// connaît la session courante — donc il vaut pour n'importe quel compte,
+// et le studio n'en avait tout simplement pas. Un admin ne pouvait pas
+// changer son mot de passe depuis l'interface.
+//
+// Il ne passe pas par useKovAction : il n'appelle pas d'action serveur et
+// il valide avant d'envoyer. Le cycle d'états reste le même — c'est le
+// contrat qui doit être commun, pas l'implémentation.
 export function PasswordForm() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");

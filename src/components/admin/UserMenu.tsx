@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useTransition } from "react";
 import { createPortal } from "react-dom";
-import { logout } from "@/app/login/actions";
+import { LogoutButton } from "@/components/auth/LogoutButton";
 import { setOwnOnlineStatus } from "@/app/admin/actions";
 
 export function UserMenu({
@@ -101,14 +101,7 @@ export function UserMenu({
                 {isOnline ? "En ligne" : "Hors ligne"}
               </button>
               <div className="border-t my-1" style={{ borderColor: "var(--glass-border)" }} />
-              <form action={logout}>
-                <button
-                  type="submit"
-                  className="w-full text-left px-4 py-2 text-xs uppercase tracking-widest text-kov-bone hover:text-kov-red transition-colors"
-                >
-                  Se déconnecter
-                </button>
-              </form>
+              <LogoutButton />
             </div>
           </>,
           document.body

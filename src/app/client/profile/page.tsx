@@ -4,7 +4,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getPublicAssetUrl } from "@/lib/portal/storage";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { ProfileForm } from "./ProfileForm";
-import { PasswordForm } from "./PasswordForm";
+import { PasswordForm } from "@/components/auth/PasswordForm";
 
 export const metadata: Metadata = { title: "Mon profil — KOV" };
 

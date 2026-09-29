@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
@@ -65,6 +66,22 @@ export async function logout() {
     }
   }
 
-  await supabase.auth.signOut();
+  // scope "global" et non le défaut implicite : il révoque TOUS les jetons
+  // de rafraîchissement de ce compte, pas seulement celui de cet appareil.
+  // Sans lui, une session ouverte sur un autre navigateur — ou l'onglet
+  // resté ouvert sur un poste partagé — continue de se renouveler toute
+  // seule. « Se déconnecter » doit vouloir dire partout.
+  await supabase.auth.signOut({ scope: "global" });
+
+  // Le cache de route de Next survit à la déconnexion.
+  //
+  // C'est ce qui donnait l'impression de ne pas être vraiment déconnecté :
+  // le serveur ne renvoyait plus rien, mais le navigateur gardait en
+  // mémoire le rendu des pages déjà visitées et les réaffichait au bouton
+  // « précédent ». On revoyait donc son tableau de bord, figé, sans y
+  // avoir droit. Purger la racine en mode "layout" vide cette mémoire pour
+  // toute l'application.
+  revalidatePath("/", "layout");
+
   redirect("/login");
 }
