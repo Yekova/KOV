@@ -19,6 +19,7 @@ import { InvoiceRowActions } from "@/components/admin/invoices/InvoiceRowActions
 import { InvoiceStatusSelect } from "@/components/admin/invoices/InvoiceStatusSelect";
 import { DeleteDocumentButton } from "./DeleteDocumentButton";
 import { ArchiveClientButton } from "./ArchiveClientButton";
+import { InvitationPanel } from "./InvitationPanel";
 import { deriveCurrentPhase, deriveProgress, type ProjectPhase } from "@/lib/portal/progress";
 
 export const metadata: Metadata = {
@@ -111,6 +112,11 @@ export default async function AdminClientDetailPage(props: PageProps<"/admin/cli
           <ArchiveClientButton clientId={client.id} isArchived={Boolean(client.archived_at)} />
         </div>
       </div>
+
+      <section>
+        <h2 className="text-xs uppercase tracking-widest text-kov-steel mb-4">Accès à l&apos;espace client</h2>
+        <InvitationPanel clientId={client.id} email={client.email ?? null} />
+      </section>
 
       <section>
         <h2 className="text-xs uppercase tracking-widest text-kov-steel mb-4">Chef de projet</h2>

@@ -21,6 +21,8 @@ import { invoiceEmailHtml, invoiceEmailSubject } from "@/lib/email/invoiceEmail"
 import { toDbLineItems, fromDbLineItems, parseLineItemsFromForm } from "@/lib/billing/quoteLineItems";
 import { revalidateClient } from "@/lib/revalidateClient";
 import { provisionClient } from "@/lib/clients/provision";
+import { inviteUser } from "@/lib/auth/inviteUser";
+import { clientInviteEmailHtml, clientInviteEmailSubject } from "@/lib/email/inviteEmail";
 import { getBusinessInfo } from "@/lib/billing/businessInfo";
 
 /** Crée un client sans passer par un lead.
@@ -759,4 +761,60 @@ export async function replyToRequestThread(threadId: string, formData: FormData)
   await notifyClientOfAdminReply({ clientId: thread.client_id, subject: thread.subject });
 
   revalidateClient(thread.client_id);
+}
+
+/** Renvoie l'invitation d'un client, et rend le lien dans tous les cas.
+ *
+ *  ── POURQUOI CETTE ACTION EXISTE ────────────────────────────────────
+ *
+ *  Un email peut être accepté par le serveur du destinataire puis jeté
+ *  sans jamais apparaître nulle part — c'est le comportement de Microsoft
+ *  face à un domaine expéditeur sans réputation, constaté sur ce projet :
+ *  trois invitations marquées « delivered » par Resend, introuvables dans
+ *  la boîte, les indésirables ET la quarantaine du destinataire.
+ *
+ *  Dans ce cas l'envoi ne signale AUCUNE erreur. Le repli de l'écran de
+ *  conversion — qui affiche le lien quand l'envoi échoue — ne se déclenche
+ *  donc jamais, et le client se retrouve avec un compte dont il n'apprend
+ *  jamais l'existence, sans que personne ne puisse le savoir.
+ *
+ *  D'où le choix ici : le lien est rendu MÊME QUAND L'EMAIL EST PARTI.
+ *  Aucune configuration DNS n'élimine complètement le filtrage silencieux ;
+ *  un chemin manuel qui ne dépend d'aucun serveur de messagerie, si.
+ *
+ *  inviteUser gère déjà le compte existant (il régénère un lien plutôt que
+ *  de refuser), donc renvoyer une invitation est sans danger et peut se
+ *  répéter.
+ */
+export async function resendClientInvitation(
+  clientId: string
+): Promise<{ error: string | null; link?: string; emailSent?: boolean; emailError?: string | null }> {
+  await requireAdmin();
+
+  const { data: client } = await supabaseAdmin
+    .from("profiles")
+    .select("email, full_name, role")
+    .eq("id", clientId)
+    .maybeSingle();
+
+  if (!client?.email) return { error: "Ce client n'a pas d'adresse email." };
+
+  try {
+    const invite = await inviteUser({
+      email: client.email,
+      fullName: client.full_name,
+      role: client.role === "admin" ? "admin" : "client",
+      emailSubject: clientInviteEmailSubject(),
+      emailHtml: (actionLink) => clientInviteEmailHtml({ fullName: client.full_name ?? "", actionLink }),
+    });
+
+    return {
+      error: null,
+      link: invite.actionLink,
+      emailSent: invite.emailSent,
+      emailError: invite.emailError,
+    };
+  } catch (caught) {
+    return { error: caught instanceof Error ? caught.message : "Le renvoi de l'invitation a échoué." };
+  }
 }
