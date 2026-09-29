@@ -56,3 +56,34 @@ export async function setMyPresence(online: boolean) {
   const user = await requireUser();
   await supabaseAdmin.from("profiles").update({ is_online: online }).eq("id", user.id);
 }
+
+/**
+ * Y a-t-il du nouveau ? Une seule lecture, faite pour être répétée.
+ *
+ * C'est ce que sonde l'alerte navigateur. Elle tourne toutes les minutes
+ * tant que le portail est ouvert, donc elle doit rester minuscule : un
+ * compte en tête seule (`head: true`, aucune ligne transférée) et le
+ * dernier titre. Rien d'autre — surtout pas la liste complète, qui est
+ * déjà rendue par la barre du haut.
+ */
+export async function getMyNotificationPulse(): Promise<{ count: number; latest: string | null }> {
+  const user = await requireUser();
+
+  const [{ count }, { data: latest }] = await Promise.all([
+    supabaseAdmin
+      .from("activity_log")
+      .select("id", { count: "exact", head: true })
+      .eq("client_id", user.id)
+      .is("read_at", null),
+    supabaseAdmin
+      .from("activity_log")
+      .select("title")
+      .eq("client_id", user.id)
+      .is("read_at", null)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  return { count: count ?? 0, latest: (latest?.title as string | undefined) ?? null };
+}

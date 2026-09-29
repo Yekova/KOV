@@ -21,7 +21,11 @@ export function ReplyForm({ threadId }: { threadId: string }) {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
         action.run(async () => {
-          await replyToOwnThread(threadId, formData);
+          // L'action RENVOIE son erreur (voir le #441 : une exception qui
+          // traverse une action serveur perd son message). Il faut la
+          // relever ici pour que le cycle passe en « erreur ».
+          const result = await replyToOwnThread(threadId, formData);
+          if (result.error) throw new Error(result.error);
           formRef.current?.reset();
           // La citation ne survit pas à l'envoi : elle visait CE message,
           // pas la conversation.

@@ -8,6 +8,7 @@ import { MobileNavProvider } from "@/components/ui/MobileNavContext";
 import { PortalProviders } from "@/components/client/PortalProviders";
 import { KovPageTransition } from "@/components/ui/KovPageTransition";
 import { PresenceHeartbeat } from "@/components/client/PresenceHeartbeat";
+import { BrowserAlerts } from "@/components/client/BrowserAlerts";
 import "@/styles/kov-surfaces.css";
 import "./portal.css";
 
@@ -29,6 +30,9 @@ export default async function ClientLayout({ children }: LayoutProps<"/client">)
           client est ouvert. Voir le composant pour ce que ça ne peut pas
           faire. */}
       <PresenceHeartbeat />
+      {/* Ne rend rien : sonde « y a-t-il du nouveau ? » et alerte hors de
+          l'onglet quand l'autorisation a été donnée. */}
+      <BrowserAlerts />
       <MobileNavProvider>
         <div className="kov-portal min-h-screen flex" style={{ background: "var(--kov-black)" }}>
           <Suspense fallback={<PortalSidebar openRequestsCount={0} />}>

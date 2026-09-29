@@ -136,11 +136,16 @@
  * z-index -1 avec isolation : le motif passe derrière le contenu du fil
  * sans pouvoir descendre derrière le fond de la page.
  *
- * La tuile (public/kov/brand/kov-pattern-tile.webp) est reconstruite à
- * partir de kov-wordmark-bone.png : une période horizontale de large, deux
- * périodes verticales de haut, le mot de la seconde ligne dessiné de part
- * et d'autre du bord. Elle se raccorde donc sans couture, ce que l'aplat
- * fourni ne faisait pas. */
+ * La tuile (public/kov/brand/kov-pattern-tile.webp) porte le VRAI
+ * monogramme : il est découpé dans la planche fournie (un exemplaire isolé,
+ * 155x76) et non repris d'un autre fichier de marque, qui est un autre
+ * dessin. Son fond crème est converti en transparence plutôt que retiré au
+ * seuil — l'anticrénelage est conservé, donc pas de bords en escalier.
+ *
+ * Période reprise de la planche : 263 x 119, seconde rangée décalée de 124.
+ * La tuile fait deux périodes de haut et porte le signe de la seconde
+ * rangée de part et d'autre du bord : elle se raccorde sans couture, ce que
+ * l'aplat fourni ne faisait pas. */
 
 .kov-thread-canvas {
   position: relative;
@@ -155,7 +160,7 @@
   pointer-events: none;
   background-image: url("/kov/brand/kov-pattern-tile.webp");
   background-repeat: repeat;
-  background-size: 250px 224px;
+  background-size: 263px 238px;
   /* Faible : le motif doit se deviner, pas se lire. Au-delà, il entre en
      concurrence avec le texte des messages, qui est la seule chose que
      cet écran a à faire lire. */

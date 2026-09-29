@@ -37,7 +37,11 @@ export function RequestReplyForm({ threadId }: { threadId: string }) {
           event.preventDefault();
           const formData = new FormData(event.currentTarget);
           action.run(async () => {
-            await replyToRequestThread(threadId, formData);
+            // L'action RENVOIE son erreur (voir le #441 : une exception qui
+            // traverse une action serveur perd son message). Il faut la
+            // relever ici pour que le cycle passe en « erreur ».
+            const result = await replyToRequestThread(threadId, formData);
+            if (result.error) throw new Error(result.error);
             // Vidé seulement après un envoi réussi : un échec doit rendre
             // le texte, pas le faire disparaître.
             formRef.current?.reset();

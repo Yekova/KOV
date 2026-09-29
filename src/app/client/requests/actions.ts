@@ -14,15 +14,27 @@ import {
   type MessagingActor,
 } from "@/lib/messaging/mutations";
 
-export async function createRequestThread(formData: FormData) {
+// ── POURQUOI CES ACTIONS RENVOIENT LEURS ERREURS ─────────────────────
+//
+// Une exception qui traverse une action serveur PERD son message : React
+// le remplace par l'erreur minifiée #441, « the specific message is
+// omitted in production builds ». C'est ce qui s'est produit quand
+// l'envoi d'une pièce jointe a échoué — l'écran disait #441 au lieu de
+// dire ce qui n'allait pas, et le diagnostic est devenu impossible depuis
+// l'interface.
+//
+// La leçon avait déjà été tirée sur la conversion d'un lead ; elle
+// n'avait pas été appliquée ici. Les erreurs sont désormais des données.
+
+export async function createRequestThread(formData: FormData): Promise<{ error?: string }> {
   const user = await requireUser();
 
   const subject = formData.get("subject");
   const body = formData.get("body");
   const projectId = formData.get("project_id");
 
-  if (typeof subject !== "string" || !subject.trim()) throw new Error("Sujet requis.");
-  if (typeof body !== "string" || !body.trim()) throw new Error("Message requis.");
+  if (typeof subject !== "string" || !subject.trim()) return { error: "Sujet requis." };
+  if (typeof body !== "string" || !body.trim()) return { error: "Message requis." };
 
   const projectIdValue = typeof projectId === "string" && projectId ? projectId : null;
 
@@ -36,7 +48,7 @@ export async function createRequestThread(formData: FormData) {
     .select("id")
     .single();
 
-  if (threadError || !thread) throw new Error("La création de la demande a échoué.");
+  if (threadError || !thread) return { error: "La création de la demande a échoué." };
 
   const { error: messageError } = await supabaseAdmin.from("request_messages").insert({
     thread_id: thread.id,
@@ -45,7 +57,7 @@ export async function createRequestThread(formData: FormData) {
     created_by: "client",
   });
 
-  if (messageError) throw new Error("L'envoi du message a échoué.");
+  if (messageError) return { error: "L'envoi du message a échoué." };
 
   const actorName = await getActorDisplayName(user.id);
 
@@ -62,16 +74,17 @@ export async function createRequestThread(formData: FormData) {
 
   revalidatePath("/client");
   revalidatePath("/client/requests");
+  return {};
 }
 
-export async function replyToOwnThread(threadId: string, formData: FormData) {
+export async function replyToOwnThread(threadId: string, formData: FormData): Promise<{ error?: string }> {
   const user = await requireUser();
 
   const body = formData.get("body");
   const files = readAttachmentFiles(formData);
   // Un message peut n'être QUE des fichiers : obliger à écrire un mot pour
   // envoyer un plan serait une formalité sans objet.
-  if ((typeof body !== "string" || !body.trim()) && files.length === 0) throw new Error("Message vide.");
+  if ((typeof body !== "string" || !body.trim()) && files.length === 0) return { error: "Message vide." };
   const text = typeof body === "string" ? body.trim() : "";
 
   const replyToId = formData.get("reply_to_id");
@@ -82,7 +95,7 @@ export async function replyToOwnThread(threadId: string, formData: FormData) {
     .select("client_id, project_id, subject, status")
     .eq("id", threadId)
     .maybeSingle();
-  if (!thread || thread.client_id !== user.id) throw new Error("Accès refusé.");
+  if (!thread || thread.client_id !== user.id) return { error: "Accès refusé." };
 
   const { data: inserted, error } = await supabaseAdmin
     .from("request_messages")
@@ -95,7 +108,7 @@ export async function replyToOwnThread(threadId: string, formData: FormData) {
     })
     .select("id")
     .single();
-  if (error || !inserted) throw new Error("L'envoi a échoué.");
+  if (error || !inserted) return { error: "L'envoi a échoué." };
 
   if (files.length) {
     const { error: attachError } = await attachFilesToMessage({
@@ -107,7 +120,7 @@ export async function replyToOwnThread(threadId: string, formData: FormData) {
     });
     // Le message est déjà parti : un fichier refusé ne doit pas le faire
     // disparaître. On le dit, on ne l'annule pas.
-    if (attachError) throw new Error(`Message envoyé, mais un fichier n'est pas passé : ${attachError}`);
+    if (attachError) return { error: `Message envoyé, mais un fichier n'est pas passé : ${attachError}` };
   }
 
   // Any client reply — including to a closed thread — puts it back in front
@@ -130,6 +143,7 @@ export async function replyToOwnThread(threadId: string, formData: FormData) {
 
   revalidatePath("/client/requests");
   revalidatePath(`/client/requests/${threadId}`);
+  return {};
 }
 
 // ── Réagir, supprimer, ranger ────────────────────────────────────────

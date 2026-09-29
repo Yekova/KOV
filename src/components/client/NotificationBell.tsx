@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { markMyNotificationsRead } from "@/app/client/actions";
+import { EnableBrowserAlerts } from "@/components/client/EnableBrowserAlerts";
 
 export type ClientNotificationItem = {
   id: string;
@@ -105,6 +106,11 @@ export function NotificationBell({ unreadCount, items }: { unreadCount: number; 
                   </Link>
                 ))
               )}
+
+              {/* L'autorisation se demande ICI, depuis un clic. Une demande
+                  faite au chargement est refusée par les navigateurs, et le
+                  refus vaut ensuite pour tout le domaine. */}
+              <EnableBrowserAlerts />
             </div>
           </div>,
           document.body

@@ -721,14 +721,20 @@ export async function downloadInvoicePdf(formData: FormData) {
   redirect(url);
 }
 
-export async function replyToRequestThread(threadId: string, formData: FormData) {
+// Les erreurs sont RENVOYÉES et non levées : une exception qui traverse
+// une action serveur perd son message, remplacé par l'erreur minifiée
+// React #441. C'est ce qui rendait illisible l'échec d'une pièce jointe.
+export async function replyToRequestThread(
+  threadId: string,
+  formData: FormData
+): Promise<{ error?: string }> {
   const admin = await requireAdmin();
 
   const body = formData.get("body");
   const files = readAttachmentFiles(formData);
   // Un message peut n'être QUE des fichiers : obliger à écrire un mot pour
   // envoyer une maquette serait une formalité sans objet.
-  if ((typeof body !== "string" || !body.trim()) && files.length === 0) throw new Error("Message vide.");
+  if ((typeof body !== "string" || !body.trim()) && files.length === 0) return { error: "Message vide." };
   const text = typeof body === "string" ? body.trim() : "";
 
   const replyToId = formData.get("reply_to_id");
@@ -739,7 +745,7 @@ export async function replyToRequestThread(threadId: string, formData: FormData)
     .select("client_id, project_id, subject")
     .eq("id", threadId)
     .maybeSingle();
-  if (!thread) throw new Error("Demande introuvable.");
+  if (!thread) return { error: "Demande introuvable." };
 
   const { data: inserted, error } = await supabaseAdmin
     .from("request_messages")
@@ -753,7 +759,7 @@ export async function replyToRequestThread(threadId: string, formData: FormData)
     })
     .select("id")
     .single();
-  if (error || !inserted) throw new Error("L'envoi a échoué.");
+  if (error || !inserted) return { error: "L'envoi a échoué." };
 
   if (files.length) {
     const { error: attachError } = await attachFilesToMessage({
@@ -765,7 +771,7 @@ export async function replyToRequestThread(threadId: string, formData: FormData)
     });
     // Le message est déjà parti : un fichier refusé ne doit pas le faire
     // disparaître. On le dit, on ne l'annule pas.
-    if (attachError) throw new Error(`Message envoyé, mais un fichier n'est pas passé : ${attachError}`);
+    if (attachError) return { error: `Message envoyé, mais un fichier n'est pas passé : ${attachError}` };
   }
 
   await supabaseAdmin
@@ -787,6 +793,7 @@ export async function replyToRequestThread(threadId: string, formData: FormData)
   await notifyClientOfAdminReply({ clientId: thread.client_id, subject: thread.subject });
 
   revalidateClient(thread.client_id);
+  return {};
 }
 
 /** Renvoie l'invitation d'un client, et rend le lien dans tous les cas.

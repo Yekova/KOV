@@ -11,7 +11,6 @@ import {
   createProject,
   updateProject,
   uploadDocument,
-  replyToRequestThread,
 } from "../actions";
 import { Select } from "@/components/ui/Select";
 import { NewClientInvoiceForm } from "./NewClientInvoiceForm";
@@ -20,6 +19,7 @@ import { InvoiceStatusSelect } from "@/components/admin/invoices/InvoiceStatusSe
 import { DeleteDocumentButton } from "./DeleteDocumentButton";
 import { ArchiveClientButton } from "./ArchiveClientButton";
 import { InvitationPanel } from "./InvitationPanel";
+import { InlineThreadReply } from "./InlineThreadReply";
 import { deriveCurrentPhase, deriveProgress, type ProjectPhase } from "@/lib/portal/progress";
 
 export const metadata: Metadata = {
@@ -492,7 +492,6 @@ export default async function AdminClientDetailPage(props: PageProps<"/admin/cli
         <div className="space-y-4">
           {threadRows.length === 0 && <p className="text-kov-steel text-sm">Aucune demande.</p>}
           {threadRows.map((thread) => {
-            const replyWithId = replyToRequestThread.bind(null, thread.id);
             const latest = latestMessageByThread.get(thread.id);
             return (
               <div key={thread.id} className="border p-4" style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-md)" }}>
@@ -506,19 +505,7 @@ export default async function AdminClientDetailPage(props: PageProps<"/admin/cli
                     {latest.body}
                   </p>
                 )}
-                <form action={replyWithId} className="flex items-end gap-4">
-                  <textarea
-                    name="body"
-                    rows={2}
-                    required
-                    placeholder="Répondre…"
-                    className={`${FIELD_CLASS} flex-1`}
-                    style={{ borderColor: "var(--kov-border)" }}
-                  />
-                  <Button type="submit" variant="secondary">
-                    Répondre
-                  </Button>
-                </form>
+                <InlineThreadReply threadId={thread.id} />
               </div>
             );
           })}
