@@ -46,7 +46,7 @@ export default async function ClientRequestThreadPage(props: PageProps<"/client/
           au-dessus, le champ de réponse reste posé en dessous. Une
           conversation dont l'en-tête part au premier défilement oblige à
           remonter pour savoir de quoi on parle. */}
-      <div className="flex min-h-0 flex-1 flex-col">
+      <div className="kov-thread-canvas flex min-h-0 flex-1 flex-col">
         <header
           className="shrink-0 border-b px-6 py-4 md:px-8"
           style={{ borderColor: "var(--kov-border)", background: "var(--kov-carbon)" }}

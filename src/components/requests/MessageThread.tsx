@@ -80,16 +80,14 @@ export function MessageThread({ messages }: { messages: ThreadMessageView[] }) {
                   {timeLabel(message.createdAt)}
                 </p>
 
+                {/* La teinte dit qui parle, en plus du nom et du côté.
+                    Les deux fonds ne se distinguaient que d'un cran de gris,
+                    ce qui ne se voit pas : l'écart est désormais franc, et
+                    l'angle près de l'auteur est droit. Voir kov-surfaces.css. */}
                 <div
-                  className="mt-1.5 inline-block px-4 py-3 text-left"
-                  style={{
-                    // La teinte dit qui parle, en plus du nom et du côté :
-                    // trois indices pour une même information, parce que
-                    // c'est l'information qui structure toute la lecture.
-                    background: message.mine ? "var(--kov-graphite)" : "var(--kov-carbon)",
-                    border: "1px solid var(--kov-border)",
-                    borderRadius: "var(--radius-md)",
-                  }}
+                  className={`kov-bubble mt-1.5 inline-block px-4 py-3 text-left ${
+                    message.mine ? "kov-bubble--mine" : "kov-bubble--theirs"
+                  }`}
                 >
                   {/* Texte brut, retours à la ligne préservés. Le corps vient
                       d'un humain : aucun HTML n'est interprété, jamais. */}

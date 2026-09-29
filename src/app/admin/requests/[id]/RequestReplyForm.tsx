@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { FIELD_CLASS, FIELD_LABEL, FIELD_STYLE } from "@/components/ui/fieldStyles";
 import { KovActionButton } from "@/components/ui/KovActionButton";
+import { EmojiPicker } from "@/components/requests/EmojiPicker";
 import { useKovAction } from "@/lib/useKovAction";
 import { replyToRequestThread } from "@/app/admin/clients/actions";
 
@@ -22,6 +23,7 @@ import { replyToRequestThread } from "@/app/admin/clients/actions";
 // jamais eu lieu.
 export function RequestReplyForm({ threadId }: { threadId: string }) {
   const formRef = useRef<HTMLFormElement>(null);
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
   const action = useKovAction({ success: "Réponse envoyée.", fallbackError: "L'envoi a échoué." });
 
   return (
@@ -43,6 +45,7 @@ export function RequestReplyForm({ threadId }: { threadId: string }) {
           Répondre au client
         </label>
         <textarea
+          ref={bodyRef}
           id="reply-body"
           name="body"
           rows={5}
@@ -51,10 +54,11 @@ export function RequestReplyForm({ threadId }: { threadId: string }) {
           className={`${FIELD_CLASS} mt-1`}
           style={FIELD_STYLE}
         />
-        <div className="mt-4 flex flex-wrap items-center gap-4">
+        <div className="mt-4 flex flex-wrap items-center gap-3">
           <KovActionButton state={action.state} onStateSettled={action.reset}>
             Envoyer
           </KovActionButton>
+          <EmojiPicker targetRef={bodyRef} />
           {action.error ? (
             <p role="alert" className="text-sm" style={{ color: "var(--kov-red)" }}>
               {action.error}

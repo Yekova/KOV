@@ -122,6 +122,76 @@
   background: var(--kov-red);
 }
 
+/* ── Le motif de marque, derrière la conversation ────────────────────── */
+
+/* La tuile est posée sur le PARENT du fil, pas sur la zone qui défile.
+ *
+ * Deux raisons. D'abord l'en-tête et le champ de réponse portent leur
+ * propre fond (--kov-carbon) : le motif n'apparaît donc que dans
+ * l'intervalle, c'est-à-dire derrière les messages et nulle part ailleurs.
+ * Ensuite un pseudo-élément posé dans un conteneur à défilement se
+ * positionne sur sa boîte visible mais défile avec le contenu — le motif
+ * quitterait l'écran au premier défilement et le bas du fil serait nu.
+ *
+ * z-index -1 avec isolation : le motif passe derrière le contenu du fil
+ * sans pouvoir descendre derrière le fond de la page.
+ *
+ * La tuile (public/kov/brand/kov-pattern-tile.webp) est reconstruite à
+ * partir de kov-wordmark-bone.png : une période horizontale de large, deux
+ * périodes verticales de haut, le mot de la seconde ligne dessiné de part
+ * et d'autre du bord. Elle se raccorde donc sans couture, ce que l'aplat
+ * fourni ne faisait pas. */
+
+.kov-thread-canvas {
+  position: relative;
+  isolation: isolate;
+}
+
+.kov-thread-canvas::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: url("/kov/brand/kov-pattern-tile.webp");
+  background-repeat: repeat;
+  background-size: 250px 224px;
+  /* Faible : le motif doit se deviner, pas se lire. Au-delà, il entre en
+     concurrence avec le texte des messages, qui est la seule chose que
+     cet écran a à faire lire. */
+  opacity: 0.045;
+}
+
+/* ── Les bulles : qui parle se voit à la teinte ──────────────────────── */
+
+/* Le fil distinguait déjà l'auteur par le nom, le portrait et le côté —
+ * mais les deux bulles ne différaient que d'un cran de gris (graphite
+ * contre carbone), invisible en pratique.
+ *
+ * L'écart est maintenant franc : les miennes sont une surface claire,
+ * celles d'en face restent sombres. C'est le sens naturel — ce que
+ * j'écris est « en avant », ce que je lis est posé sur le fond.
+ *
+ * Et l'angle près de l'auteur est droit : la bulle pointe vers celui qui
+ * l'a écrite. C'est un indice de plus, gratuit, qui survit au daltonisme
+ * comme au mode à contraste élevé. */
+
+.kov-bubble {
+  border: 1px solid var(--kov-border);
+  border-radius: var(--radius-md);
+}
+
+.kov-bubble--mine {
+  background: rgba(231, 231, 229, 0.1);
+  border-color: rgba(231, 231, 229, 0.18);
+  border-top-right-radius: 4px;
+}
+
+.kov-bubble--theirs {
+  background: var(--kov-carbon);
+  border-top-left-radius: 4px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .kov-skeleton {
     animation: none;
