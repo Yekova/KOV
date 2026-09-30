@@ -1,0 +1,172 @@
+/* L'espace de validation : nœuds, épingles, fils.
+ *
+ * Tout est en tokens. Les valeurs du cahier des charges (§8) sont
+ * reprises telles quelles là où elles décrivent une géométrie — rayon,
+ * ombre, épaisseur — et remplacées par les tokens du thème clair là où
+ * elles décrivaient une couleur, parce que le rouge de KOV a été mesuré
+ * pour son contraste sur blanc et ne se redéfinit pas ici. */
+
+.kov-flow-node {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+}
+
+.kov-flow-node[data-selected] {
+  border-color: color-mix(in srgb, var(--kov-red) 55%, transparent);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--kov-red) 8%, transparent),
+    0 12px 35px rgba(0, 0, 0, 0.06);
+}
+
+/* Le nœud de validation finale, quand il devient actionnable. Il ne
+   clignote pas : il prend un liseré vert, une fois. */
+.kov-flow-node[data-ready] {
+  border-color: color-mix(in srgb, var(--kov-status-green) 45%, transparent);
+}
+
+/* ── LES ÉPINGLES ───────────────────────────────────────────────────── */
+
+.kov-pin {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-pill);
+  background: var(--kov-red);
+  color: var(--kov-white);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  border: 2px solid var(--kov-white);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+  /* La contre-échelle du zoom est écrite en style en ligne ; la
+     transition ne porte donc QUE sur l'ombre et le fond, sinon chaque
+     cran de zoom s'animerait au lieu de s'appliquer. */
+  transition:
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+/* Un retour réglé n'a plus besoin d'attirer l'œil, mais reste visible :
+   le faire disparaître ferait croire qu'il n'a jamais existé. */
+.kov-pin[data-resolved] {
+  background: var(--kov-status-green);
+}
+
+.kov-pin[data-active] {
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--kov-red) 22%, transparent),
+    0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+/* §54 : l'épingle bat une fois quand on sélectionne son commentaire.
+   Une seule fois, et brièvement — un battement qui boucle devient un
+   parasite au bout de dix secondes. */
+.kov-pin[data-active]:not([data-static]) {
+  animation: kov-pin-pulse 600ms ease-out 1;
+}
+
+@keyframes kov-pin-pulse {
+  0% {
+    box-shadow:
+      0 0 0 0 color-mix(in srgb, var(--kov-red) 45%, transparent),
+      0 2px 8px rgba(0, 0, 0, 0.18);
+  }
+  100% {
+    box-shadow:
+      0 0 0 14px transparent,
+      0 2px 8px rgba(0, 0, 0, 0.18);
+  }
+}
+
+/* La pastille numérotée rappelée dans la liste : même forme, mais elle
+   ne se clique pas pour elle-même et ne bat jamais. */
+.kov-pin--inline {
+  width: 20px;
+  height: 20px;
+  font-size: 10px;
+  cursor: inherit;
+  box-shadow: none;
+}
+
+/* ── LES FILS ────────────────────────────────────────────────────────── */
+
+.kov-thread {
+  transition: background-color 160ms ease;
+}
+
+.kov-thread:hover {
+  background: color-mix(in srgb, var(--kov-red) 3%, transparent);
+}
+
+.kov-thread[data-selected] {
+  background: color-mix(in srgb, var(--kov-red) 6%, transparent);
+}
+
+/* ── REACT FLOW, EN THÈME CLAIR ─────────────────────────────────────── */
+/*
+ * La feuille de la bibliothèque suppose un fond blanc et des commandes
+ * grises. On ne la remplace pas : on repeint les quatre surfaces qu'elle
+ * expose, pour qu'elles empruntent les tokens comme le reste du portail.
+ */
+
+.kov-flow .react-flow__controls {
+  box-shadow: 0 1px 2px rgba(16, 18, 24, 0.04), 0 8px 24px rgba(16, 18, 24, 0.06);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.kov-flow .react-flow__controls-button {
+  background: var(--kov-surface-1);
+  border-bottom: 1px solid var(--kov-border);
+  fill: var(--kov-concrete);
+}
+
+.kov-flow .react-flow__controls-button:hover {
+  background: var(--kov-surface-2);
+  fill: var(--kov-red);
+}
+
+.kov-flow .react-flow__minimap {
+  background: var(--kov-surface-1);
+  border: 1px solid var(--kov-border);
+  border-radius: var(--radius-md);
+}
+
+.kov-flow .react-flow__attribution {
+  background: transparent;
+  font-size: 9px;
+}
+
+.kov-flow .react-flow__attribution a {
+  color: var(--kov-steel);
+}
+
+/* Le nœud sélectionné de React Flow porte son propre contour ; le nôtre
+   est déjà dessiné par .kov-flow-node[data-selected]. */
+.kov-flow .react-flow__node.selected,
+.kov-flow .react-flow__node:focus,
+.kov-flow .react-flow__node:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Le focus clavier reste visible — il est simplement porté par la carte
+   intérieure plutôt que par le conteneur de la bibliothèque. */
+.kov-flow .react-flow__node:focus-visible .kov-flow-node {
+  outline: 2px solid var(--kov-red);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kov-pin[data-active]:not([data-static]) {
+    animation: none;
+  }
+  .kov-thread,
+  .kov-pin {
+    transition: none;
+  }
+}

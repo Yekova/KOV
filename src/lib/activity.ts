@@ -8,7 +8,18 @@ import {
   adminReplyNotificationHtml,
 } from "@/lib/email/reminderEmail";
 
-export type ActivityLogType = "document" | "message" | "invoice" | "milestone" | "quote" | "task";
+export type ActivityLogType =
+  | "document"
+  | "message"
+  | "invoice"
+  | "milestone"
+  | "quote"
+  | "task"
+  // Validation collaborative des maquettes. Seuls les trois
+  // évènements qui méritent d'interrompre quelqu'un écrivent ici —
+  // le reste va dans design_activity, qui alimente le fil de la page
+  // sans faire sonner la cloche.
+  | "validation";
 
 // The single write path into activity_log, for both the client-facing feed
 // (title) and the agency-wide admin feed (admin_title) — these are two

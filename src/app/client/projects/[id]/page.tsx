@@ -91,6 +91,16 @@ export default async function ClientProjectDetailPage(props: PageProps<"/client/
   const progress = deriveProgress(phases, project.progress_percent);
   const currentPhase = deriveCurrentPhase(phases, project.deadline_phase_label);
 
+  // L'espace de validation n'est annoncé que s'il contient quelque chose :
+  // un lien vers un écran vide est une promesse que la page ne tient pas.
+  const { data: validationPages } = await supabaseAdmin
+    .from("design_pages")
+    .select("status")
+    .eq("project_id", projectId)
+    .eq("visible_to_client", true);
+  const validationTotal = validationPages?.length ?? 0;
+  const validationWaiting = (validationPages ?? []).filter((p) => p.status === "client_review").length;
+
   const breadcrumb = await getBreadcrumb(currentFolderId, projectId);
 
   const folderFilter = currentFolderId
@@ -193,6 +203,24 @@ export default async function ClientProjectDetailPage(props: PageProps<"/client/
           </span>
         </div>
         <p className="text-kov-steel text-sm mt-1">{project.category}</p>
+
+        {validationTotal > 0 && (
+          <Link
+            href={`/client/projects/${projectId}/validation`}
+            className="text-kov-bone hover:border-kov-red hover:text-kov-red mt-5 inline-flex h-10 items-center gap-2 border px-4 text-[11px] tracking-widest uppercase transition-colors"
+            style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-pill)" }}
+          >
+            Validation des maquettes
+            {validationWaiting > 0 && (
+              <span
+                className="inline-flex h-5 min-w-5 items-center justify-center px-1.5 text-[10px] tabular-nums"
+                style={{ background: "var(--kov-red)", color: "var(--kov-white)", borderRadius: "var(--radius-pill)" }}
+              >
+                {validationWaiting}
+              </span>
+            )}
+          </Link>
+        )}
       </div>
 
       <GlassCard className="p-6">

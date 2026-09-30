@@ -16,6 +16,8 @@ import {
 } from "./actions";
 import { FolderCard } from "./FolderCard";
 import { ProjectPhasesPanel } from "@/components/admin/projects/ProjectPhasesPanel";
+import { AdminValidationPanel } from "@/components/design/AdminValidationPanel";
+import { getDesignActivity, getValidationBoard } from "@/lib/design/queries";
 import { ProjectTasksPanel } from "@/components/admin/projects/ProjectTasksPanel";
 import type { PickerOption, TaskRow } from "@/components/admin/tasks/types";
 
@@ -23,6 +25,7 @@ const TABS = [
   { id: "documents", label: "Documents" },
   { id: "tasks", label: "Tâches" },
   { id: "phases", label: "Phases" },
+  { id: "validation", label: "Validation" },
 ] as const;
 
 export const metadata: Metadata = {
@@ -55,7 +58,14 @@ export default async function AdminProjectDetailPage(props: PageProps<"/admin/pr
   const folderParam = searchParams.folder;
   const currentFolderId = typeof folderParam === "string" && folderParam ? folderParam : null;
   const tabParam = searchParams.tab;
-  const tab = tabParam === "tasks" ? "tasks" : tabParam === "phases" ? "phases" : "documents";
+  const tab =
+    tabParam === "tasks"
+      ? "tasks"
+      : tabParam === "phases"
+        ? "phases"
+        : tabParam === "validation"
+          ? "validation"
+          : "documents";
 
   const { data: project } = await supabaseAdmin
     .from("projects")
@@ -203,6 +213,8 @@ export default async function AdminProjectDetailPage(props: PageProps<"/admin/pr
         ))}
       </div>
 
+      {tab === "validation" && <ValidationTab projectId={projectId} />}
+
       {tab === "tasks" && (
         <section>
           <ProjectTasksPanel projectId={projectId} tasks={taskRows} admins={adminOptions} phases={phaseOptions} />
@@ -276,5 +288,21 @@ export default async function AdminProjectDetailPage(props: PageProps<"/admin/pr
       </section>
       )}
     </main>
+  );
+}
+
+// L'onglet Validation charge son propre tableau plutôt que de le faire
+// remonter dans la page : il signe des URL de stockage et lit quatre
+// tables, ce qui n'a aucune raison de se produire quand on consulte les
+// documents.
+async function ValidationTab({ projectId }: { projectId: string }) {
+  const admin = await requireAdmin();
+  const board = await getValidationBoard(projectId, { kind: "admin", id: admin.id });
+  if (!board) return null;
+  const activity = await getDesignActivity(projectId);
+  return (
+    <section>
+      <AdminValidationPanel board={board} activity={activity} />
+    </section>
   );
 }
