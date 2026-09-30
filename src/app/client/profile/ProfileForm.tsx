@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import { AvatarField } from "@/components/ui/AvatarField";
+import { AVATAR_PRESETS } from "@/lib/portal/avatarPresets";
 import { KovActionButton } from "@/components/ui/KovActionButton";
 import { useKovAction } from "@/lib/useKovAction";
 import { updateMyProfile } from "./actions";
@@ -89,7 +90,12 @@ export function ProfileForm({ values, avatarUrl }: { values: ClientProfileValues
       className="space-y-8"
     >
       <div className="space-y-5">
-        <AvatarField currentUrl={avatarUrl} name={values.fullName} label="Votre photo" />
+        <AvatarField
+          currentUrl={avatarUrl}
+          name={values.fullName}
+          label="Votre photo"
+          presets={AVATAR_PRESETS}
+        />
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Nom" name="full_name" defaultValue={values.fullName} required autoComplete="name" />

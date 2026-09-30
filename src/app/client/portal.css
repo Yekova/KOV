@@ -153,3 +153,55 @@
 .kov-divide > * + * {
   border-top: 1px solid var(--kov-lift-2);
 }
+
+/* ── LES AVATARS PROPOSÉS ─────────────────────────────────────────────
+ *
+ * Une galerie de boutons radio. Le focus est visible sur l'étiquette et
+ * non sur l'entrée, qui est en sr-only : sans cette règle, naviguer au
+ * clavier dans la galerie ne montrerait rien du tout.
+ */
+
+.kov-avatar-choice {
+  display: block;
+  width: 56px;
+  height: 56px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  border: 2px solid transparent;
+  box-shadow: 0 0 0 1px var(--kov-border);
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.kov-avatar-choice img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.kov-avatar-choice:hover {
+  transform: translateY(-2px);
+}
+
+.kov-avatar-choice[data-selected] {
+  border-color: var(--kov-red);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--kov-red) 18%, transparent);
+}
+
+.kov-avatar-choice:has(input:focus-visible) {
+  outline: 2px solid var(--kov-red);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kov-avatar-choice {
+    transition: none;
+  }
+  .kov-avatar-choice:hover {
+    transform: none;
+  }
+}

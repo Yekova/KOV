@@ -1,5 +1,6 @@
 import "server-only";
 import { deletePortalAsset, uploadAvatar } from "@/lib/portal/storage";
+import { resolvePresetPath } from "@/lib/portal/avatarPresets";
 
 // Ce qu'un formulaire de profil doit écrire dans profiles.avatar_path.
 //
@@ -22,7 +23,23 @@ export async function resolveAvatarPath(
     if (previousPath) await deletePortalAsset(previousPath);
     return null;
   }
+  // Un fichier déposé l'emporte sur un avatar choisi : si les deux
+  // arrivent, c'est que la personne a cliqué une vignette puis changé
+  // d'avis en téléversant sa propre photo.
   const file = formData.get("avatar");
-  if (!(file instanceof File) || file.size === 0) return undefined;
-  return uploadAvatar(userId, file, previousPath);
+  if (file instanceof File && file.size > 0) {
+    return uploadAvatar(userId, file, previousPath);
+  }
+
+  // Le choix vient du navigateur : il est confronté à la liste fermée,
+  // jamais écrit tel quel. Une valeur inconnue est traitée comme une
+  // absence de choix, pas comme une erreur — le reste du formulaire
+  // (le nom, l'adresse) doit s'enregistrer quand même.
+  const preset = resolvePresetPath(formData.get("avatar_preset"));
+  if (preset) {
+    if (previousPath && previousPath !== preset) await deletePortalAsset(previousPath);
+    return preset;
+  }
+
+  return undefined;
 }

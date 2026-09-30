@@ -17,6 +17,12 @@ function assertUploadable(file: File) {
 
 export function getPublicAssetUrl(path: string | null | undefined): string | null {
   if (!path) return null;
+  // Un chemin qui commence par une barre est déjà une URL du site : c'est
+  // un avatar proposé, servi depuis /public et versionné avec le code
+  // (voir lib/portal/avatarPresets.ts). Le passer au bucket produirait
+  // une URL vers un objet qui n'existe pas. Aucune clé d'objet ne
+  // commence par une barre — la convention est donc sans ambiguïté.
+  if (path.startsWith("/")) return path;
   const { data } = supabaseAdmin.storage.from(PORTAL_ASSETS_BUCKET).getPublicUrl(path);
   return data.publicUrl;
 }
@@ -105,6 +111,12 @@ export async function uploadAvatar(userId: string, file: File, previousPath: str
 }
 
 export async function deletePortalAsset(path: string) {
+  // Un avatar proposé est un fichier du dépôt, partagé par tous ceux qui
+  // l'ont choisi. Le supprimer parce que QUELQU'UN change de photo le
+  // ferait disparaître chez tous les autres — et il n'est de toute façon
+  // pas dans le bucket. Ce garde-fou est ici, au point de suppression,
+  // plutôt que chez chaque appelant : il ne s'oublie pas.
+  if (path.startsWith("/")) return;
   await supabaseAdmin.storage.from(PORTAL_ASSETS_BUCKET).remove([path]);
 }
 
