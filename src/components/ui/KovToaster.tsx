@@ -111,7 +111,17 @@ export function KovToaster() {
         // sonner autrement.
         style: { "--kov-toast-duration": `${DURATION_MS}ms`, width: "100%" } as CSSProperties,
       }}
-      style={{ width: "min(420px, calc(100vw - 24px))" }}
+      style={
+        {
+          width: "min(420px, calc(100vw - 24px))",
+          // sonner pose 999999999 sur son conteneur. Le site masque le
+          // pointeur natif et dessine un point à --z-cursor (70) : à
+          // 999999999, le toast passait par-dessus ce point, et le
+          // curseur disparaissait dès qu'on le survolait. On ne peut pas
+          // cliquer sur ce qu'on ne se voit plus viser.
+          zIndex: "var(--z-toast)",
+        } as CSSProperties
+      }
     />
   );
 }

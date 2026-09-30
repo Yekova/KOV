@@ -139,6 +139,15 @@
   --z-glass: 40;
   --z-nav: 50;
   --z-modal: 60;
+  /* La notification, au-dessus des modales et SOUS le curseur.
+     sonner pose 999999999 sur son conteneur, ce qui l'envoyait très
+     au-dessus du point de curseur (--z-cursor). Comme le site masque le
+     pointeur natif, survoler un toast faisait disparaître le curseur
+     derrière la carte : exactement le symptôme déjà rencontré sur les
+     <dialog>, et déjà décrit dans globals.css — « not a hit-testing
+     problem at all, the clicks were landing the whole time, on a pointer
+     nobody could see ». Le toast rentre donc dans l'échelle. */
+  --z-toast: 65;
   --z-cursor: 70;
   /* Above the cursor, which is the top of everything else here.
      The consent banner was reported as visible but completely inert, clicks
