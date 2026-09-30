@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
+import { getOnboarding, needsOnboarding } from "@/lib/clients/onboarding";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getPublicAssetUrl } from "@/lib/portal/storage";
 import { deriveCurrentPhase, deriveProgress, type ProjectPhase } from "@/lib/portal/progress";
@@ -26,6 +28,16 @@ function toIsoDay(value: string): string {
 
 export default async function ClientDashboardPage() {
   const user = await requireUser();
+
+  // La première connexion passe par le parcours d'accueil. Le test est
+  // ici et non dans le layout : celui-ci ne connaît pas le chemin courant
+  // et renverrait donc la page du parcours vers elle-même.
+  //
+  // Les clients déjà entrés avant l'existence du parcours ont été marqués
+  // terminés par la migration, à la date de leur dernière connexion : ils
+  // ne sont pas dérangés.
+  const onboarding = await getOnboarding(user.id);
+  if (needsOnboarding(onboarding)) redirect("/client/onboarding");
 
   const [{ data: profile }, { data: projects }, { data: documents }, { data: invoices }, { data: quotes }, { data: activity }] =
     await Promise.all([

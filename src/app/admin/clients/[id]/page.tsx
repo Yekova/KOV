@@ -19,6 +19,9 @@ import { InvoiceStatusSelect } from "@/components/admin/invoices/InvoiceStatusSe
 import { DeleteDocumentButton } from "./DeleteDocumentButton";
 import { ArchiveClientButton } from "./ArchiveClientButton";
 import { InvitationPanel } from "./InvitationPanel";
+import { ClientSpacePanel } from "@/components/admin/clients/ClientSpacePanel";
+import { getClientAccess } from "@/lib/clients/access";
+import { getOnboarding } from "@/lib/clients/onboarding";
 import { InlineThreadReply } from "./InlineThreadReply";
 import { deriveCurrentPhase, deriveProgress, type ProjectPhase } from "@/lib/portal/progress";
 
@@ -42,6 +45,13 @@ export default async function AdminClientDetailPage(props: PageProps<"/admin/cli
   if (!client || client.role !== "client") {
     notFound();
   }
+
+  // L'état de l'espace est DÉDUIT : getClientAccess lit auth.users et le
+  // journal d'envoi, rien n'est recopié dans une table à tenir à jour.
+  const [clientAccess, clientOnboarding] = await Promise.all([
+    getClientAccess(client.id),
+    getOnboarding(client.id),
+  ]);
 
   const [{ data: admins }, { data: projects }, { data: documents }, { data: invoices }, { data: threads }] =
     await Promise.all([
@@ -113,8 +123,9 @@ export default async function AdminClientDetailPage(props: PageProps<"/admin/cli
         </div>
       </div>
 
-      <section>
-        <h2 className="text-xs uppercase tracking-widest text-kov-steel mb-4">Accès à l&apos;espace client</h2>
+      <section className="space-y-4">
+        <h2 className="text-xs uppercase tracking-widest text-kov-steel">Accès à l&apos;espace client</h2>
+        <ClientSpacePanel access={clientAccess} onboarding={clientOnboarding} />
         <InvitationPanel clientId={client.id} email={client.email ?? null} />
       </section>
 

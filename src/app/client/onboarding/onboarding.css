@@ -1,0 +1,323 @@
+/* La première connexion.
+ *
+ * Un seul panneau à la fois, centré, sans rien autour qui appelle
+ * ailleurs : c'est le seul écran du portail où l'on demande à quelqu'un
+ * de faire une chose, et une seule.
+ */
+
+.kov-onb {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* ── LA FRISE ─────────────────────────────────────────────────────────── */
+
+.kov-onb__steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.kov-onb__step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--kov-steel);
+}
+
+.kov-onb__step[data-current],
+.kov-onb__step[data-passed] {
+  color: var(--kov-bone);
+}
+
+.kov-onb__bullet {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--kov-border);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.kov-onb__step[data-current] .kov-onb__bullet {
+  background: var(--kov-red);
+  border-color: transparent;
+  color: var(--kov-white);
+}
+
+.kov-onb__step[data-passed] .kov-onb__bullet {
+  border-color: var(--kov-status-green);
+  color: var(--kov-status-green);
+}
+
+/* Sous 640 px, seule l'étape en cours reste lisible : cinq libellés en
+   capitales sur un téléphone font trois lignes et poussent le contenu
+   hors de l'écran. Les pastilles, elles, restent toutes. */
+@media (max-width: 639px) {
+  .kov-onb__step:not([data-current]) .kov-onb__step-label {
+    display: none;
+  }
+}
+
+/* ── LE PANNEAU ───────────────────────────────────────────────────────── */
+
+.kov-onb__panel {
+  background: var(--kov-surface-1);
+  border: 1px solid var(--kov-border);
+  border-radius: var(--radius-glass);
+  padding: 28px;
+  box-shadow:
+    0 1px 2px rgba(16, 18, 24, 0.03),
+    0 12px 32px rgba(16, 18, 24, 0.05);
+}
+
+@media (min-width: 768px) {
+  .kov-onb__panel {
+    padding: 36px;
+  }
+}
+
+.kov-onb__title {
+  font-family: var(--font-display, inherit);
+  font-size: clamp(22px, 3vw, 30px);
+  line-height: 1.15;
+  text-transform: uppercase;
+  color: var(--kov-bone);
+}
+
+.kov-onb__lede {
+  margin-top: 12px;
+  max-width: 52ch;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--kov-concrete);
+}
+
+.kov-onb__project-name {
+  margin-top: 14px;
+  font-size: 18px;
+  color: var(--kov-bone);
+}
+
+.kov-onb__facts {
+  margin-top: 24px;
+  display: grid;
+  gap: 14px;
+}
+
+.kov-onb__facts dt {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--kov-steel);
+}
+
+.kov-onb__facts dd {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--kov-bone);
+}
+
+.kov-onb__person {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.kov-onb__grid {
+  margin-top: 20px;
+  display: grid;
+  gap: 14px;
+}
+
+@media (min-width: 640px) {
+  .kov-onb__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.kov-onb__note {
+  margin-top: 14px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--kov-steel);
+}
+
+/* ── LA CARTE DE VALIDATION ───────────────────────────────────────────── */
+
+.kov-onb__card {
+  margin-top: 22px;
+  padding: 18px;
+  border: 1px solid var(--kov-border);
+  border-radius: var(--radius-md);
+  background: var(--kov-surface-2);
+}
+
+.kov-onb__card-title {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--kov-steel);
+}
+
+.kov-onb__card-text {
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--kov-concrete);
+}
+
+.kov-onb__link {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--kov-red);
+}
+
+.kov-onb__link:hover {
+  text-decoration: underline;
+}
+
+/* ── LA JAUGE ET LES RÈGLES ───────────────────────────────────────────── */
+
+.kov-onb__meter {
+  margin-top: 16px;
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--kov-surface-3);
+  overflow: hidden;
+}
+
+.kov-onb__meter span {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--kov-status-orange);
+  transition: width 240ms ease, background-color 240ms ease;
+}
+
+.kov-onb__meter span[data-full] {
+  background: var(--kov-status-green);
+}
+
+.kov-onb__rules {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+}
+
+.kov-onb__rules li {
+  font-size: 11px;
+  color: var(--kov-steel);
+}
+
+/* La coche ne remplace pas le texte, elle s'y ajoute : une règle qui
+   disparaît une fois satisfaite laisse l'utilisateur sans la liste
+   complète au moment où il en a encore besoin. */
+.kov-onb__rules li::before {
+  content: "○ ";
+}
+
+.kov-onb__rules li[data-met] {
+  color: var(--kov-status-green);
+}
+
+.kov-onb__rules li[data-met]::before {
+  content: "✓ ";
+}
+
+/* ── LA LISTE DE FIN ──────────────────────────────────────────────────── */
+
+.kov-onb__checklist {
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.kov-onb__checklist li {
+  font-size: 14px;
+  color: var(--kov-steel);
+}
+
+.kov-onb__checklist li::before {
+  content: "○ ";
+}
+
+.kov-onb__checklist li[data-done] {
+  color: var(--kov-bone);
+}
+
+.kov-onb__checklist li[data-done]::before {
+  content: "✓ ";
+  color: var(--kov-status-green);
+}
+
+/* ── LES BOUTONS ──────────────────────────────────────────────────────── */
+
+.kov-onb__actions {
+  margin-top: 28px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.kov-onb__cta,
+.kov-onb__ghost {
+  height: 44px;
+  padding: 0 20px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease;
+}
+
+.kov-onb__cta {
+  background: var(--kov-red);
+  color: var(--kov-white);
+}
+
+.kov-onb__cta:hover:not(:disabled) {
+  background: var(--kov-red-signal);
+}
+
+.kov-onb__cta:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.kov-onb__ghost {
+  border: 1px solid var(--kov-border);
+  color: var(--kov-bone);
+}
+
+.kov-onb__ghost:hover {
+  border-color: var(--kov-red);
+  color: var(--kov-red);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kov-onb__meter span,
+  .kov-onb__cta,
+  .kov-onb__ghost {
+    transition: none;
+  }
+}
