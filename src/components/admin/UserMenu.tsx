@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useTransition } from "react";
 import { createPortal } from "react-dom";
+import Link from "next/link";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { setOwnOnlineStatus } from "@/app/admin/actions";
 
@@ -31,15 +32,27 @@ export function UserMenu({
     setOpen((v) => !v);
   }
 
+  // ── CE GESTIONNAIRE RENDAIT LE MENU INUTILISABLE ───────────────────
+  //
+  // Il écoutait `mousedown` sur tout le document et fermait dès que la
+  // cible n'était pas DANS `ref` — or `ref` est le bouton déclencheur, et
+  // le menu est porté dans <body>, donc jamais « dedans ».
+  //
+  // Conséquence : appuyer sur « Mon profil » ou « Se déconnecter »
+  // déclenchait d'abord mousedown, qui fermait le menu et démontait
+  // l'élément ; le `click` qui suit n'avait plus de cible. Les deux
+  // entrées étaient donc strictement inatteignables à la souris, des deux
+  // côtés, depuis toujours.
+  //
+  // Le voile plein écran rendu juste en dessous ferme déjà au clic
+  // extérieur — il n'y avait rien à remplacer. Reste Échap, qui manquait.
   useEffect(() => {
     if (!open) return;
-    function handleClickOutside(event: MouseEvent) {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
-        setOpen(false);
-      }
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
     }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
   }, [open]);
 
   const initials = (fullName || "K").trim().charAt(0).toUpperCase();
@@ -85,6 +98,18 @@ export function UserMenu({
                 boxShadow: "var(--glass-shadow-full)",
               }}
             >
+              {/* « Mon profil » manquait purement et simplement côté studio :
+                  le menu du compte ne proposait que la disponibilité et la
+                  déconnexion, alors que c'est l'endroit où l'on cherche ses
+                  réglages. Ils n'étaient atteignables que par « Plus ». */}
+              <Link
+                href="/admin/settings"
+                onClick={() => setOpen(false)}
+                className="block px-4 py-2 text-xs uppercase tracking-widest text-kov-bone hover:text-kov-red transition-colors"
+              >
+                Mon profil
+              </Link>
+              <div className="border-t my-1" style={{ borderColor: "var(--glass-border)" }} />
               <button
                 type="button"
                 disabled={isPending}
