@@ -1,0 +1,221 @@
+/* L'assistant de création d'espace client. */
+
+.kov-wiz__steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 0 0 22px;
+  padding: 0;
+  list-style: none;
+}
+
+.kov-wiz__step {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--kov-steel);
+}
+
+.kov-wiz__step[data-current],
+.kov-wiz__step[data-passed] {
+  color: var(--kov-bone);
+}
+
+.kov-wiz__bullet {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--kov-border);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.kov-wiz__step[data-current] .kov-wiz__bullet {
+  background: var(--kov-red);
+  border-color: transparent;
+  color: var(--kov-white);
+}
+
+.kov-wiz__step[data-passed] .kov-wiz__bullet {
+  border-color: var(--kov-status-green);
+  color: var(--kov-status-green);
+}
+
+.kov-wiz__body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.kov-wiz__grid {
+  display: grid;
+  gap: 14px;
+}
+
+@media (min-width: 640px) {
+  .kov-wiz__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.kov-wiz__select {
+  width: 100%;
+  height: 42px;
+  padding: 0 10px;
+  border: 1px solid var(--kov-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--kov-bone);
+  font-size: 14px;
+}
+
+/* ── LES CASES ────────────────────────────────────────────────────────
+ *
+ * Chacune porte sa conséquence sous le libellé. « Créer les phases KOV »
+ * ne dit rien à quelqu'un qui ne sait pas que ce sont elles qui font
+ * l'avancement affiché au client.
+ */
+
+.kov-wiz__check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.kov-wiz__check input {
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+.kov-wiz__check > span {
+  font-size: 13px;
+  color: var(--kov-bone);
+}
+
+.kov-wiz__hint {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--kov-steel);
+}
+
+/* ── LE RÉCAPITULATIF ─────────────────────────────────────────────────── */
+
+.kov-wiz__review {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 16px;
+  border: 1px solid var(--kov-border);
+  border-radius: var(--radius-md);
+  background: var(--kov-surface-2);
+}
+
+.kov-wiz__review dt {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--kov-steel);
+}
+
+.kov-wiz__review dd {
+  margin: 3px 0 0;
+  font-size: 13px;
+  color: var(--kov-bone);
+}
+
+.kov-wiz__note {
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--kov-steel);
+}
+
+.kov-wiz__done {
+  font-size: 15px;
+  color: var(--kov-status-green);
+}
+
+/* ── LE LIEN D'ACTIVATION ─────────────────────────────────────────────── */
+
+.kov-wiz__link {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--kov-border);
+  border-radius: var(--radius-md);
+}
+
+.kov-wiz__link code {
+  display: block;
+  width: 100%;
+  max-height: 84px;
+  overflow: auto;
+  /* Une URL d'activation ne se coupe pas aux espaces : elle n'en a pas. */
+  word-break: break-all;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--kov-concrete);
+}
+
+/* ── LES BOUTONS ──────────────────────────────────────────────────────── */
+
+.kov-wiz__footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.kov-wiz__cta,
+.kov-wiz__ghost {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 18px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease;
+}
+
+.kov-wiz__cta {
+  background: var(--kov-red);
+  color: var(--kov-white);
+}
+
+.kov-wiz__cta:hover:not(:disabled) {
+  background: var(--kov-red-signal);
+}
+
+.kov-wiz__cta:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.kov-wiz__ghost {
+  border: 1px solid var(--kov-border);
+  color: var(--kov-bone);
+}
+
+.kov-wiz__ghost:hover {
+  border-color: var(--kov-red);
+  color: var(--kov-red);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kov-wiz__cta,
+  .kov-wiz__ghost {
+    transition: none;
+  }
+}

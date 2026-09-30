@@ -7,6 +7,7 @@ import { Donut, type DonutSegment } from "@/components/admin/Donut";
 import { ActivityFeed, type AdminActivityItem } from "@/components/admin/dashboard/ActivityFeed";
 import { ClientAvatar } from "@/components/admin/clients/ClientAvatar";
 import { ClientsWorkspace } from "@/components/admin/clients/ClientsWorkspace";
+import { CreateSpaceButton } from "@/components/admin/clients/CreateSpaceButton";
 import { getClientSummaries, clientDisplayName } from "@/lib/admin/clients";
 import { PROJECT_STATUS_LABELS, isProjectStatus } from "@/lib/portal/status";
 
@@ -73,6 +74,19 @@ export default async function AdminClientsPage() {
 
   const sansSociete = active.filter((client) => !client.company?.trim()).length;
 
+  // Les responsables proposés par l'assistant : les admins en activité,
+  // pas ceux qui ont été archivés.
+  const { data: adminRows } = await supabaseAdmin
+    .from("profiles")
+    .select("id, full_name, email")
+    .eq("role", "admin")
+    .is("archived_at", null)
+    .order("full_name");
+  const adminOptions = (adminRows ?? []).map((row) => ({
+    id: row.id as string,
+    name: (row.full_name as string | null) || (row.email as string),
+  }));
+
   return (
     <main className="px-6 py-10 max-w-[1600px] mx-auto w-full">
       <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
@@ -82,13 +96,18 @@ export default async function AdminClientsPage() {
             Où en est chacun, et ce qui tombe ensuite.
           </p>
         </div>
-        <Link
-          href="/admin/leads"
-          className="px-5 py-2.5 border text-xs uppercase tracking-widest text-kov-bone hover:border-kov-red hover:text-kov-red transition-colors"
-          style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
-        >
-          Convertir un lead
-        </Link>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href="/admin/leads"
+            className="px-5 py-2.5 border text-xs uppercase tracking-widest text-kov-bone hover:border-kov-red hover:text-kov-red transition-colors"
+            style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
+          >
+            Convertir un lead
+          </Link>
+          {/* Les deux chemins côte à côte : un client vient d'un lead, ou
+              de nulle part. Ils passent tous deux par provisionClient. */}
+          <CreateSpaceButton admins={adminOptions} />
+        </div>
       </div>
 
       <div className="xl:grid xl:grid-cols-[1fr_340px] xl:gap-6 xl:items-start">

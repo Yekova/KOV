@@ -40,6 +40,11 @@
 -- jamais fini. C'est aussi ce que le cahier des charges demande
 -- explicitement pour profile_verified_at (§11).
 
+-- Appliquée en production le 30 septembre 2026, et vérifiée : 9 colonnes,
+-- RLS active avec 1 politique. Le rattrapage a marqué 1 client (celui qui
+-- s'était déjà connecté) et laissé l'autre — invité, jamais entré — hors
+-- du rattrapage, avec profile_verified_at nul des deux côtés.
+
 begin;
 
 create table client_onboarding (
