@@ -5,7 +5,7 @@
 // existent, puisque c'est du code qui les rend. La base ne retient que
 // l'arrangement choisi par chacun.
 
-export const DASHBOARD_SURFACES = ["admin", "client"] as const;
+export const DASHBOARD_SURFACES = ["admin"] as const;
 export type DashboardSurface = (typeof DASHBOARD_SURFACES)[number];
 
 /** Douze colonnes : le seul nombre sous 16 divisible par 2, 3, 4 et 6,
@@ -33,9 +33,6 @@ export interface DashboardBlockDefinition {
   /** Largeur minimale sous laquelle la carte devient illisible. */
   minW?: number;
   minH?: number;
-  /** Un bloc obligatoire ne peut pas être masqué. Réservé à ce dont
-   *  l'absence rendrait l'écran inutilisable. */
-  required?: boolean;
 }
 
 // ── LE STUDIO ────────────────────────────────────────────────────────
@@ -66,19 +63,12 @@ export const ADMIN_BLOCKS: DashboardBlockDefinition[] = [
   { id: "project-pipeline", label: "Pipeline projet", defaultW: 4, defaultH: 7, minW: 3, minH: 4 },
 ];
 
-// ── LE PORTAIL ───────────────────────────────────────────────────────
-
-export const CLIENT_BLOCKS: DashboardBlockDefinition[] = [
-  // Ce qui attend une action du client ne se masque pas : c'est la seule
-  // chose que le tableau de bord doit à son lecteur.
-  { id: "action-required", label: "Ce qui vous attend", defaultW: 8, defaultH: 5, minW: 4, minH: 3, required: true },
-  { id: "relation", label: "Votre interlocuteur", defaultW: 4, defaultH: 10, minW: 3, minH: 4 },
-  { id: "project-story", label: "Projet principal", defaultW: 8, defaultH: 7, minW: 4, minH: 4 },
-  { id: "project-showcase", label: "Autres projets", defaultW: 8, defaultH: 5, minW: 4, minH: 3 },
-  { id: "deadlines", label: "Prochaines échéances", defaultW: 4, defaultH: 5, minW: 3, minH: 3 },
-  { id: "documents", label: "Documents récents", defaultW: 4, defaultH: 5, minW: 3, minH: 3 },
-];
-
-export function blocksFor(surface: DashboardSurface): DashboardBlockDefinition[] {
-  return surface === "admin" ? ADMIN_BLOCKS : CLIENT_BLOCKS;
+// Une seule surface aujourd'hui, donc pas de paramètre : une signature qui
+// en demanderait un laisserait croire qu'il change quelque chose.
+//
+// La clé (utilisateur, surface) reste en base et la contrainte SQL accepte
+// toujours 'client' : rouvrir la personnalisation au portail demanderait
+// une liste de blocs et le branchement de la page, pas une migration.
+export function blocksFor(): DashboardBlockDefinition[] {
+  return ADMIN_BLOCKS;
 }

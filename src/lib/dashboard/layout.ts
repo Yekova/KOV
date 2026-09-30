@@ -30,7 +30,6 @@ export interface BlockPlacement {
 
 export interface ResolvedBlock extends BlockPlacement {
   label: string;
-  required: boolean;
   minW: number;
   minH: number;
 }
@@ -138,8 +137,8 @@ export function parseStoredLayout(raw: unknown): Partial<BlockPlacement>[] {
   return out;
 }
 
-export function resolveLayout(surface: DashboardSurface, stored: Partial<BlockPlacement>[]): ResolvedBlock[] {
-  const definitions = blocksFor(surface);
+export function resolveLayout(_surface: DashboardSurface, stored: Partial<BlockPlacement>[]): ResolvedBlock[] {
+  const definitions = blocksFor();
   const byId = new Map(definitions.map((definition) => [definition.id, definition]));
   const placedById = new Map(stored.map((entry) => [entry.id as string, entry]));
 
@@ -171,14 +170,13 @@ export function resolveLayout(surface: DashboardSurface, stored: Partial<BlockPl
     result.push({
       id,
       label: definition.label,
-      required: definition.required === true,
       minW,
       minH,
       w,
       h,
       x: spot.x,
       y: spot.y,
-      hidden: definition.required === true ? false : (entry?.hidden ?? false),
+      hidden: entry?.hidden ?? false,
     });
   }
 

@@ -320,16 +320,14 @@ export function DashboardGrid({
                     {block.w}&times;{block.h}
                   </span>
 
-                  {!block.required && (
-                    <button
-                      type="button"
-                      onPointerDown={(event) => event.stopPropagation()}
-                      onClick={() => patch(block.id, { hidden: !block.hidden })}
-                      className="kov-dash__toggle"
-                    >
-                      {block.hidden ? "Afficher" : "Masquer"}
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onPointerDown={(event) => event.stopPropagation()}
+                    onClick={() => patch(block.id, { hidden: !block.hidden })}
+                    className="kov-dash__toggle"
+                  >
+                    {block.hidden ? "Afficher" : "Masquer"}
+                  </button>
                 </div>
 
                 <span

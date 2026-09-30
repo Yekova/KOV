@@ -101,13 +101,11 @@ describe("La lecture de ce qui est enregistré", () => {
 
 describe("La fusion avec les défauts", () => {
   test("l'agencement par défaut ne contient aucun chevauchement", () => {
-    for (const surface of ["admin", "client"] as const) {
-      const layout = defaultLayout(surface);
-      assert.ok(layout.length > 0, surface);
-      assert.equal(anyOverlap(layout), null, surface);
-      for (const block of layout) {
-        assert.ok(block.x >= 0 && block.x + block.w <= GRID_COLUMNS, `${surface} ${block.id}`);
-      }
+    const layout = defaultLayout("admin");
+    assert.ok(layout.length > 0);
+    assert.equal(anyOverlap(layout), null);
+    for (const block of layout) {
+      assert.ok(block.x >= 0 && block.x + block.w <= GRID_COLUMNS, block.id);
     }
   });
 
@@ -131,16 +129,11 @@ describe("La fusion avec les défauts", () => {
     assert.ok(table.w >= table.minW);
     assert.ok(table.h >= table.minH);
   });
-
-  test("un bloc obligatoire ne peut pas rester masqué", () => {
-    const layout = resolveLayout("client", parseStoredLayout([{ id: "action-required", hidden: true }]));
-    assert.equal(layout.find((b) => b.id === "action-required")!.hidden, false);
-  });
 });
 
 describe("Ce qui repart en base", () => {
   test("seules les six coordonnées sont écrites", () => {
-    const stored = toStorable(defaultLayout("client"));
+    const stored = toStorable(defaultLayout("admin"));
     for (const entry of stored) {
       assert.deepEqual(Object.keys(entry).sort(), ["h", "hidden", "id", "w", "x", "y"]);
     }
@@ -148,7 +141,6 @@ describe("Ce qui repart en base", () => {
 
   test("l'arrangement par défaut est reconnu comme tel", () => {
     assert.equal(matchesDefault("admin", defaultLayout("admin")), true);
-    assert.equal(matchesDefault("client", defaultLayout("client")), true);
   });
 
   test("un seul bloc déplacé suffit à ne plus être le défaut", () => {
@@ -158,8 +150,8 @@ describe("Ce qui repart en base", () => {
   });
 
   test("un aller-retour base → écran → base ne perd rien", () => {
-    const original = defaultLayout("client");
-    const round = resolveLayout("client", parseStoredLayout(toStorable(original)));
+    const original = defaultLayout("admin");
+    const round = resolveLayout("admin", parseStoredLayout(toStorable(original)));
     assert.deepEqual(toStorable(round), toStorable(original));
   });
 });
