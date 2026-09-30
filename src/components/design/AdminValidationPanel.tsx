@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { toastUpload } from "@/components/ui/kovToast";
 import { Modal } from "@/components/ui/Modal";
 import { Field, Input, Textarea } from "@/components/ui/Field";
 import { KovActionButton, type ActionState } from "@/components/ui/KovActionButton";
@@ -283,10 +284,22 @@ function NewVersionModal({
       }
 
       // Les fichiers partent un par un : un téléversement qui échoue ne
-      // doit pas emporter ceux qui ont réussi, et l'étape affichée dit
-      // lequel est en cours.
+      // doit pas emporter ceux qui ont réussi, et la carte de progression
+      // dit lequel est en cours.
+      //
+      // Le pourcentage compte les FICHIERS, pas les octets : une action
+      // serveur ne rapporte pas l'avancée d'un flux, et afficher une
+      // progression en octets serait l'inventer. Le libellé le dit.
+      let uploadToastId: string | number | undefined;
+      let done = 0;
       for (const device of chosen) {
         setStep(`Envoi de la maquette ${DEVICE_LABELS[device].toLowerCase()}…`);
+        uploadToastId = toastUpload({
+          id: uploadToastId,
+          filename: files[device]!.name,
+          percent: (done / chosen.length) * 100,
+          label: `Maquette ${done + 1} sur ${chosen.length}`,
+        });
         const form = new FormData();
         form.set("projectId", projectId);
         form.set("pageId", pageId);
@@ -298,10 +311,16 @@ function NewVersionModal({
         if (uploaded.error) {
           setState("error");
           setStep(null);
+          if (uploadToastId !== undefined) toast.dismiss(uploadToastId);
           toast.error(`${DEVICE_LABELS[device]} : ${uploaded.error}`);
           return;
         }
+        done += 1;
       }
+      // La carte de progression ne se ferme pas d'elle-même : elle est
+      // remplacée par le message de succès, sinon elle resterait à 100 %
+      // pour toujours.
+      if (uploadToastId !== undefined) toast.dismiss(uploadToastId);
 
       setState("success");
       setStep(null);

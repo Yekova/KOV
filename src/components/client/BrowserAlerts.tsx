@@ -3,7 +3,8 @@
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { getMyNotificationPulse } from "@/app/client/actions";
+import { toastMessage } from "@/components/ui/kovToast";
+import { getMyNotificationPulse, type NotificationPulse } from "@/app/client/actions";
 
 // L'alerte qui va chercher le client.
 //
@@ -48,7 +49,7 @@ export function BrowserAlerts() {
     let alive = true;
 
     async function check() {
-      let pulse: { count: number; latest: string | null };
+      let pulse: NotificationPulse;
       try {
         pulse = await getMyNotificationPulse();
       } catch {
@@ -79,8 +80,22 @@ export function BrowserAlerts() {
           notification.close();
           router.push("/client");
         };
+      } else if (pulse.latestType === "message" && pulse.latestActor) {
+        // Un message reçu s'affiche avec le visage de son auteur — mais
+        // seulement quand on connaît vraiment ce nom. Sans lui, la carte
+        // dirait « Nouveau message de » suivi d'un vide.
+        toastMessage({
+          author: pulse.latestActor,
+          excerpt: pulse.latestDescription ?? title,
+          avatarUrl: pulse.latestAvatarUrl,
+          onOpen: () => router.push("/client/requests"),
+        });
+        router.refresh();
       } else {
-        toast(title, { description: "Nouveau dans votre espace." });
+        toast.info(title, {
+          description: pulse.latestDescription ?? "Nouveau dans votre espace.",
+          action: { label: "Voir", onClick: () => router.push("/client") },
+        });
         // La page est sous les yeux : on la rafraîchit pour que la
         // pastille et le fil suivent, sans qu'on ait à recharger.
         router.refresh();

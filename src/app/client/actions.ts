@@ -2,6 +2,7 @@
 
 import { requireUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { getPublicAssetUrl } from "@/lib/portal/storage";
 
 // Marquer ses notifications comme lues, et c'est maintenant un geste.
 //
@@ -66,7 +67,22 @@ export async function setMyPresence(online: boolean) {
  * dernier titre. Rien d'autre — surtout pas la liste complète, qui est
  * déjà rendue par la barre du haut.
  */
-export async function getMyNotificationPulse(): Promise<{ count: number; latest: string | null }> {
+export interface NotificationPulse {
+  count: number;
+  latest: string | null;
+  /** Le type de la dernière entrée, qui décide de l'habillage : un
+   *  message reçu s'affiche avec le visage de son auteur, le reste avec
+   *  une icône d'information. */
+  latestType: string | null;
+  /** Le nom de l'auteur, et sa photo. Nuls quand la ligne n'a pas
+   *  d'acteur — une entrée automatique, par exemple. Rien n'est
+   *  substitué à un nom manquant. */
+  latestActor: string | null;
+  latestAvatarUrl: string | null;
+  latestDescription: string | null;
+}
+
+export async function getMyNotificationPulse(): Promise<NotificationPulse> {
   const user = await requireUser();
 
   const [{ count }, { data: latest }] = await Promise.all([
@@ -77,7 +93,7 @@ export async function getMyNotificationPulse(): Promise<{ count: number; latest:
       .is("read_at", null),
     supabaseAdmin
       .from("activity_log")
-      .select("title")
+      .select("title, type, description, actor_id")
       .eq("client_id", user.id)
       .is("read_at", null)
       .order("created_at", { ascending: false })
@@ -85,5 +101,24 @@ export async function getMyNotificationPulse(): Promise<{ count: number; latest:
       .maybeSingle(),
   ]);
 
-  return { count: count ?? 0, latest: (latest?.title as string | undefined) ?? null };
+  let actorName: string | null = null;
+  let avatarUrl: string | null = null;
+  if (latest?.actor_id) {
+    const { data: actor } = await supabaseAdmin
+      .from("profiles")
+      .select("full_name, avatar_path")
+      .eq("id", latest.actor_id as string)
+      .maybeSingle();
+    actorName = (actor?.full_name as string | null) ?? null;
+    avatarUrl = getPublicAssetUrl(actor?.avatar_path as string | null);
+  }
+
+  return {
+    count: count ?? 0,
+    latest: (latest?.title as string | undefined) ?? null,
+    latestType: (latest?.type as string | undefined) ?? null,
+    latestActor: actorName,
+    latestAvatarUrl: avatarUrl,
+    latestDescription: (latest?.description as string | null) ?? null,
+  };
 }

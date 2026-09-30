@@ -1,0 +1,468 @@
+/* La notification KOV.
+ *
+ * ── POURQUOI DES VALEURS LITTÉRALES, ET PAS DES TOKENS ───────────────
+ *
+ * Le toast est porté dans <body> par sonner. Or `.kov-admin` est posée
+ * sur <body> côté studio, tandis que `.kov-portal` vit sur un <div> côté
+ * client. Les mêmes tokens --kov-status-* y rendraient donc deux couleurs
+ * différentes — kov-light.css les redéfinit — et la notification ne
+ * serait pas la même des deux côtés. Elle est donc écrite en clair.
+ *
+ * ── LES COULEURS SONT MESURÉES ───────────────────────────────────────
+ *
+ * Chaque famille porte DEUX valeurs, parce que la couleur remplit deux
+ * rôles qui n'ont pas le même seuil :
+ *
+ *   --kov-toast-accent : le disque de l'icône. Un glyphe blanc dessus est
+ *     un objet graphique, seuil 3:1. Mesures : vert 3,30 · bleu 3,68 ·
+ *     orange 3,19 · rouge 4,69.
+ *
+ *   --kov-toast-ink : le texte du bouton d'action, posé sur une puce de
+ *     la même teinte à 12 %. C'est du texte, seuil 4,5:1. Les teintes
+ *     vives y échouaient toutes — l'orange de la maquette tombait à
+ *     1,96:1 — d'où cette seconde valeur, plus profonde. Mesures :
+ *     vert 4,70 · bleu 4,62 · orange 4,66 · rouge 4,58.
+ *
+ * Le titre (#111317) tient au-dessus de 16:1 sur chaque carte, la
+ * description (#585d66) au-dessus de 5,9:1.
+ */
+
+[data-sonner-toast].kov-toast {
+  /* Neutre par défaut : c'est l'habillage du chargement, qui n'a pas de
+     couleur d'état — rien n'a encore réussi ni échoué. */
+  --kov-toast-accent: #6b7280;
+  --kov-toast-ink: #3f4651;
+  --kov-toast-card: #ffffff;
+  --kov-toast-chip: #f2f3f5;
+  --kov-toast-edge: #e6e8ec;
+
+  /* Les deux composantes que nous pilotons, en plus du --y de sonner qui
+     porte l'empilement vertical. Les garder séparées permet d'animer
+     l'entrée et la sortie sans toucher à la position dans la pile. */
+  --kov-toast-slide: translateX(115%);
+  --kov-toast-stretch: scaleX(1);
+
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 14px 15px;
+  background: var(--kov-toast-card);
+  border: 1px solid var(--kov-toast-edge);
+  border-radius: 16px;
+  box-shadow:
+    0 1px 2px rgba(16, 18, 24, 0.04),
+    0 14px 34px rgba(16, 18, 24, 0.1);
+  color: #111317;
+  overflow: hidden;
+
+  transform: var(--y) var(--kov-toast-slide) var(--kov-toast-stretch);
+  /* L'étirement part de la droite : le toast s'allonge vers le bord par
+     lequel il sort, au lieu de gonfler sur place. */
+  transform-origin: right center;
+  transition:
+    transform 460ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 320ms ease,
+    height 400ms;
+}
+
+/* ── ENTRÉE ET SORTIE ─────────────────────────────────────────────────
+ *
+ * sonner pose `transform: var(--y)` et fait varier --y selon l'état. On
+ * ne remplace pas --y (il porte l'empilement) : on compose avec.
+ *
+ * La sortie, elle, doit annuler la composante verticale de sonner, qui
+ * fait remonter le toast de sa propre hauteur. --y est donc redéfini à la
+ * position de repos du toast dans la pile, pour qu'il parte à
+ * l'horizontale sans sauter. Chaque sélecteur porte un attribut de plus
+ * que la règle de la bibliothèque qu'il doit battre — c'est pourquoi les
+ * trois cas sont écrits séparément plutôt qu'en un seul.
+ */
+
+[data-sonner-toast].kov-toast[data-mounted="true"] {
+  --kov-toast-slide: translateX(0);
+}
+
+[data-sonner-toast].kov-toast[data-removed="true"][data-swipe-out="false"][data-front="true"],
+[data-sonner-toast].kov-toast[data-removed="true"][data-swipe-out="false"][data-front="false"][data-expanded="true"],
+[data-sonner-toast].kov-toast[data-removed="true"][data-swipe-out="false"][data-front="false"][data-expanded="false"] {
+  --y: translateY(calc(var(--lift) * var(--offset)));
+  --kov-toast-slide: translateX(118%);
+  --kov-toast-stretch: scaleX(1.34);
+  opacity: 0;
+  transition:
+    transform 420ms cubic-bezier(0.4, 0, 0.9, 0.35),
+    opacity 300ms ease-in;
+}
+
+/* ── LES FAMILLES ─────────────────────────────────────────────────────── */
+
+[data-sonner-toast].kov-toast[data-type="success"] {
+  --kov-toast-accent: #16a34a;
+  --kov-toast-ink: #117b38;
+  --kov-toast-card: #eff9f2;
+  --kov-toast-chip: #e3f4e9;
+  --kov-toast-edge: #d0eddb;
+}
+
+[data-sonner-toast].kov-toast[data-type="info"] {
+  --kov-toast-accent: #3b82f6;
+  --kov-toast-ink: #0b61ee;
+  --kov-toast-card: #f1f6fe;
+  --kov-toast-chip: #e7f0fe;
+  --kov-toast-edge: #d8e6fd;
+}
+
+[data-sonner-toast].kov-toast[data-type="warning"] {
+  --kov-toast-accent: #d97706;
+  --kov-toast-ink: #a25904;
+  --kov-toast-card: #fcf5ee;
+  --kov-toast-chip: #faefe1;
+  --kov-toast-edge: #f7e4cd;
+}
+
+[data-sonner-toast].kov-toast[data-type="error"] {
+  --kov-toast-accent: #e31e24;
+  --kov-toast-ink: #ce1a1f;
+  --kov-toast-card: #fdeff0;
+  --kov-toast-chip: #fce4e5;
+  --kov-toast-edge: #f9d2d3;
+}
+
+/* ── L'ICÔNE ──────────────────────────────────────────────────────────── */
+
+[data-sonner-toast].kov-toast[data-styled] [data-icon] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  margin: 0;
+}
+
+.kov-toast__glyph {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-pill);
+  background: var(--kov-toast-accent);
+  color: #ffffff;
+  /* Le halo reprend la teinte de l'accent : il décolle la pastille de la
+     carte sans introduire une cinquième couleur. */
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--kov-toast-accent) 38%, transparent);
+}
+
+/* L'avertissement est un triangle dans la maquette, pas un disque : la
+   forme distingue déjà le type avant que la couleur soit perçue. */
+[data-sonner-toast].kov-toast[data-type="warning"] .kov-toast__glyph {
+  border-radius: 12px;
+}
+
+/* ── LE TEXTE ─────────────────────────────────────────────────────────── */
+
+[data-sonner-toast].kov-toast[data-styled] [data-content] {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+  padding-top: 2px;
+}
+
+[data-sonner-toast].kov-toast[data-styled] [data-title] {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #111317;
+}
+
+[data-sonner-toast].kov-toast[data-styled] [data-description] {
+  font-size: 13px;
+  line-height: 1.45;
+  color: #585d66;
+}
+
+/* ── LE BOUTON D'ACTION ───────────────────────────────────────────────── */
+
+[data-sonner-toast].kov-toast[data-styled] [data-button] {
+  flex-shrink: 0;
+  align-self: center;
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid color-mix(in srgb, var(--kov-toast-accent) 24%, transparent);
+  border-radius: 10px;
+  background: var(--kov-toast-chip);
+  color: var(--kov-toast-ink);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+[data-sonner-toast].kov-toast[data-styled] [data-button]:hover {
+  background: color-mix(in srgb, var(--kov-toast-accent) 20%, #ffffff);
+  border-color: color-mix(in srgb, var(--kov-toast-accent) 40%, transparent);
+}
+
+/* ── LA FERMETURE ─────────────────────────────────────────────────────── */
+/*
+ * sonner place son bouton de fermeture en absolu dans le coin haut
+ * gauche, par-dessus l'icône. La maquette le veut à droite, dans le flux.
+ */
+[data-sonner-toast].kov-toast[data-styled] [data-close-button] {
+  position: static;
+  align-self: center;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  margin-left: 2px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: #8b909a;
+  transform: none;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+[data-sonner-toast].kov-toast[data-styled] [data-close-button]:hover {
+  background: color-mix(in srgb, var(--kov-toast-accent) 12%, transparent);
+  color: var(--kov-toast-ink);
+}
+
+[data-sonner-toast].kov-toast[data-styled] [data-close-button] svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* ── LA JAUGE DE TEMPS ────────────────────────────────────────────────── */
+/*
+ * Elle se vide vers la droite, du côté par lequel le toast s'en va : ce
+ * qui reste de couleur est ce qui reste de temps. Sans elle, une
+ * disparition au bout de cinq secondes est une surprise.
+ */
+
+@keyframes kov-toast-timer {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+
+[data-sonner-toast].kov-toast::after {
+  content: "";
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 0;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: var(--kov-toast-accent);
+  transform-origin: right center;
+  animation: kov-toast-timer var(--kov-toast-duration, 5000ms) linear forwards;
+}
+
+/* Survoler, c'est lire : sonner suspend déjà sa minuterie, la jauge suit. */
+[data-sonner-toaster]:hover [data-sonner-toast].kov-toast::after {
+  animation-play-state: paused;
+}
+
+/* Un toast sans minuterie — un chargement, une erreur qu'on doit voir —
+   n'affiche pas de jauge : une barre figée à plein promettrait un compte
+   à rebours qui n'arrive jamais. */
+[data-sonner-toast].kov-toast--persistent::after {
+  content: none;
+}
+
+/* ── LES DEUX VARIANTES SUR MESURE ────────────────────────────────────── */
+/*
+ * Le téléversement et le message avec avatar ne rentrent pas dans la
+ * forme de sonner (progression déterminée, photo, badge). Ils sont rendus
+ * par toast.custom, donc leur habillage est écrit ici plutôt qu'hérité.
+ */
+
+.kov-toast__file {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 11px;
+  background: #f2f3f5;
+  color: #6b7280;
+}
+
+.kov-toast__avatar {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: var(--radius-pill);
+  overflow: visible;
+}
+
+.kov-toast__avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  object-fit: cover;
+}
+
+/* La pastille de non-lu. Bordée de blanc pour se détacher de la photo,
+   quelle qu'elle soit. */
+.kov-toast__unread {
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  width: 11px;
+  height: 11px;
+  border-radius: var(--radius-pill);
+  background: #e31e24;
+  border: 2px solid #ffffff;
+}
+
+.kov-toast__track {
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: #e6e8ec;
+  overflow: hidden;
+}
+
+.kov-toast__fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: #e31e24;
+  transition: width 240ms ease;
+}
+
+.kov-toast__percent {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111317;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Les éléments propres aux deux variantes sur mesure. Elles n'héritent
+   pas des règles [data-title]/[data-description] de sonner, puisqu'elles
+   remplacent son contenu — d'où ces classes, aux mêmes valeurs. */
+
+.kov-toast__body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+  padding-top: 2px;
+}
+
+.kov-toast__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.kov-toast__title {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #111317;
+}
+
+.kov-toast__desc {
+  font-size: 13px;
+  line-height: 1.45;
+  color: #585d66;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kov-toast__action {
+  flex-shrink: 0;
+  align-self: center;
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid color-mix(in srgb, var(--kov-toast-accent) 24%, transparent);
+  border-radius: 10px;
+  background: var(--kov-toast-chip);
+  color: var(--kov-toast-ink);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+.kov-toast__action:hover {
+  background: color-mix(in srgb, var(--kov-toast-accent) 20%, #ffffff);
+  border-color: color-mix(in srgb, var(--kov-toast-accent) 40%, transparent);
+}
+
+.kov-toast__close {
+  align-self: center;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  margin-left: 2px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: #8b909a;
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.kov-toast__close:hover {
+  background: color-mix(in srgb, var(--kov-toast-accent) 12%, transparent);
+  color: var(--kov-toast-ink);
+}
+
+/* L'initiale, quand le profil n'a pas de photo. Même parti pris que
+   partout ailleurs dans le portail : jamais de silhouette générique. */
+.kov-toast__initial {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: #e6e8ec;
+  color: #585d66;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* Un message reçu prend l'accent de la marque : c'est KOV ou le client
+   qui parle, pas un état du système. */
+[data-sonner-toast].kov-toast--message {
+  --kov-toast-accent: #e31e24;
+  --kov-toast-ink: #ce1a1f;
+  --kov-toast-card: #fdeff0;
+  --kov-toast-chip: #fce4e5;
+  --kov-toast-edge: #f9d2d3;
+}
+
+/* ── MOUVEMENT RÉDUIT ─────────────────────────────────────────────────── */
+/*
+ * Le glissement et l'étirement disparaissent ; le toast se contente
+ * d'apparaître et de s'effacer. La jauge, elle, RESTE : ce n'est pas une
+ * décoration, c'est la seule indication du temps qu'il reste.
+ */
+@media (prefers-reduced-motion: reduce) {
+  [data-sonner-toast].kov-toast,
+  [data-sonner-toast].kov-toast[data-removed="true"][data-swipe-out="false"][data-front="true"],
+  [data-sonner-toast].kov-toast[data-removed="true"][data-swipe-out="false"][data-front="false"][data-expanded="true"],
+  [data-sonner-toast].kov-toast[data-removed="true"][data-swipe-out="false"][data-front="false"][data-expanded="false"] {
+    --kov-toast-slide: translateX(0);
+    --kov-toast-stretch: scaleX(1);
+    transition: opacity 200ms ease;
+  }
+}

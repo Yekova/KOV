@@ -1,52 +1,60 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import { Toaster } from "sonner";
-import "./kovMotion.css";
+import "./kovToast.css";
 
-// La notification KOV, définie une seule fois.
+// La notification KOV, définie une seule fois pour les deux espaces.
 //
 // L'admin et le portail montaient chacun leur <Toaster/> avec leurs
-// propres réglages recopiés — et les deux avaient déjà divergé d'un
-// centième d'opacité sur la bordure. Un seul composant, deux montages :
-// sonner rend une liste par Toaster, et /admin et /client sont deux
-// arbres de routes qui ne coexistent jamais.
+// réglages recopiés — et les deux avaient déjà divergé. Un seul
+// composant, deux montages : sonner rend une liste par Toaster, et
+// /admin et /client sont deux arbres de routes qui ne coexistent jamais.
 //
 // ── EN HAUT À DROITE, MAIS SOUS LA BARRE ─────────────────────────────
 //
-// Les toasts étaient en bas à droite pour une raison écrite noir sur
-// blanc dans les deux fichiers : la barre du haut porte la recherche, les
-// notifications et le compte, et un toast posé dessus recouvre exactement
-// ce qu'on vient de vouloir consulter.
+// Les deux barres de navigation mesurent 68 px — valeur écrite en dur
+// dans AdminTopNavigation et PortalTopNavigation. Le toast commence 12 px
+// en dessous : il se lit en haut à droite sans jamais masquer la
+// recherche, les notifications ni le compte.
 //
-// Le décalage règle ce problème plutôt que de le réintroduire : les deux
-// barres mesurent 68 px (valeur écrite en dur dans AdminTopNavigation et
-// PortalTopNavigation), et le toast commence 12 px en dessous. Il se lit
-// donc en haut à droite, sans jamais masquer la barre.
-//
-// 68 est repris ici tel quel plutôt que par --kov-topbar-h : ce token vaut
-// 68 px en thème clair et 76 px à la racine, et le conteneur de sonner est
-// porté dans <body>, hors de la portée claire côté client. Il lirait donc
-// 76 et décalerait de 8 px de trop.
+// 68 est repris tel quel plutôt que via --kov-topbar-h : ce token vaut
+// 68 px en thème clair et 76 px à la racine, et le conteneur de sonner
+// est porté dans <body>, hors de la portée claire côté client. Il lirait
+// donc 76 et décalerait de 8 px de trop.
 const TOPBAR_HEIGHT = 68;
 const GAP = 12;
 
-/** 3,5 s : assez pour lire une phrase, trop court pour gêner. */
-const DURATION_MS = 3500;
+/**
+ * Cinq secondes.
+ *
+ * Les toasts portent désormais un titre ET une description, parfois un
+ * bouton. 3,5 s suffisaient pour une phrase seule ; il en faut davantage
+ * pour lire deux lignes et décider d'agir. La jauge en bas dit le temps
+ * qui reste, et le survol la suspend.
+ */
+const DURATION_MS = 5000;
 
-// ── POURQUOI DES ICÔNES, ET PAS SEULEMENT LA COULEUR ─────────────────
+// ── LES ICÔNES ───────────────────────────────────────────────────────
 //
-// Le fond est désormais le rouge de la marque pour TOUS les messages. La
-// couleur ne distingue donc plus un succès d'un échec — alors qu'il y a
-// 113 appels à toast.error et 74 à toast.success dans l'application.
-//
-// La forme prend le relais : une coche, une croix, un point
-// d'exclamation. C'est lisible sans percevoir les couleurs, ce qui vaut
-// mieux que ce qu'il y avait avant.
+// La couleur dit le type, mais elle ne le dit pas à tout le monde : la
+// forme la double. Une coche, une croix, un point d'exclamation, un « i »
+// restent lisibles sans percevoir le vert du rouge.
 
 function Glyph({ children, label }: { children: React.ReactNode; label: string }) {
   return (
     <span className="kov-toast__glyph" role="img" aria-label={label}>
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        width="19"
+        height="19"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
         {children}
       </svg>
     </span>
@@ -66,7 +74,7 @@ const ICONS = {
   ),
   warning: (
     <Glyph label="Avertissement">
-      <path d="M12 8v5M12 17h.01" />
+      <path d="M12 7.5v6M12 17.5h.01" />
     </Glyph>
   ),
   info: (
@@ -79,31 +87,31 @@ const ICONS = {
 export function KovToaster() {
   return (
     <Toaster
-      theme="dark"
+      theme="light"
       position="top-right"
       offset={{ top: `${TOPBAR_HEIGHT + GAP}px`, right: "16px" }}
-      // Sur téléphone la barre reste haute de 68 px, mais le toast
-      // occupe toute la largeur : seule la marge latérale change.
+      // Sur téléphone la barre fait toujours 68 px ; seule la marge
+      // latérale change, le toast prenant alors toute la largeur.
       mobileOffset={{ top: `${TOPBAR_HEIGHT + GAP}px`, left: "12px", right: "12px" }}
       duration={DURATION_MS}
+      closeButton
+      // Les cartes sont dépliées en permanence. Empilées en accordéon,
+      // elles cacheraient description et bouton — or c'est précisément ce
+      // que la maquette demande de montrer. Cela rend aussi la sortie
+      // exacte : la position de repos d'un toast déplié est connue, donc
+      // il glisse à droite sans sauter (voir kovToast.css).
+      expand
+      visibleToasts={4}
+      gap={12}
       icons={ICONS}
       toastOptions={{
         className: "kov-toast",
-        style: {
-          // Le fond est dans la feuille de style, pas ici : il varie selon
-          // le type du message, ce qu'un style en ligne ne sait pas faire.
-          border: "1px solid rgba(255,255,255,0.1)",
-          backdropFilter: "blur(12px)",
-          WebkitBackdropFilter: "blur(12px)",
-          // Blanc pur et non --kov-bone : mesuré sur le rouge de marque
-          // (#e31e24), le bone tombe à 3,79:1 et le blanc tient 4,69:1.
-          // Le dégradé ne s'éclaircissant jamais vers la droite, 4,69 est
-          // le pire cas de tout le toast.
-          color: "var(--kov-white)",
-          borderRadius: "var(--radius-md)",
-          fontSize: "13px",
-        },
+        // La durée est recopiée en propriété CSS : la jauge du bas est une
+        // animation, et une animation ne peut pas lire la minuterie de
+        // sonner autrement.
+        style: { "--kov-toast-duration": `${DURATION_MS}ms`, width: "100%" } as CSSProperties,
       }}
+      style={{ width: "min(420px, calc(100vw - 24px))" }}
     />
   );
 }
