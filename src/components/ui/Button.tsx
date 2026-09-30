@@ -8,9 +8,15 @@ type Variant = "primary" | "secondary" | "ghost" | "pill";
 
 const BASE = "relative inline-flex items-center gap-2 text-xs uppercase tracking-widest transition-colors";
 
+// `kov-rise` est posée sans condition : le sélecteur de kov-surfaces.css
+// ne l'active qu'à l'intérieur de .kov-admin et .kov-portal, donc le site
+// public garde son reflet spéculaire et ces variants leur survol actuel.
+// `ghost` en est exclu pour la même raison qui l'exclut du spéculaire :
+// sans bord ni fond, il n'a pas de surface où faire monter quoi que ce
+// soit.
 const VARIANT_CLASSES: Record<Variant, string> = {
-  primary: "px-6 py-4 bg-kov-red text-kov-white hover:bg-kov-red-signal",
-  secondary: "px-6 py-4 border text-kov-bone hover:text-kov-red hover:border-kov-red",
+  primary: "kov-rise kov-rise--solid px-6 py-4 bg-kov-red text-kov-white hover:bg-kov-red-signal",
+  secondary: "kov-rise px-6 py-4 border text-kov-bone hover:text-kov-red hover:border-kov-red",
   // La zone cliquable, pas la boîte visible : py-3.5/px-2 donnent 44px de
   // haut, le minimum tactile, et les marges négatives égales les reprennent
   // pour que rien ne bouge dans les 26 endroits qui utilisent déjà ce

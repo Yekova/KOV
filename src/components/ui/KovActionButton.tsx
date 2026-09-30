@@ -105,7 +105,9 @@ export function KovActionButton({
       aria-live="polite"
       aria-busy={busy}
       data-state={state}
-      className={`kov-action kov-action--${variant} ${className}`}
+      className={`kov-action kov-action--${variant} kov-rise${
+        variant === "primary" ? " kov-rise--solid" : ""
+      } ${className}`}
     >
       <span className="kov-action__label">{label}</span>
 
