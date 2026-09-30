@@ -1,64 +1,225 @@
 /* Le tableau de bord arrangeable.
  *
- * Hors mode édition, ces règles ne font rien : un bloc est un simple
- * conteneur de grille, et la carte à l'intérieur garde exactement
- * l'apparence qu'elle avait avant. Le mode édition n'ajoute qu'un cadre
- * et une barre — il ne redessine pas le contenu, sinon on arrangerait un
- * écran qui n'est pas celui qu'on obtiendra.
+ * ── DEUX RÉGIMES, UNE SEULE SOURCE ───────────────────────────────────
+ *
+ * Au-dessus de 1280 px, la grille est une vraie grille : chaque carte
+ * occupe exactement les colonnes et les rangées qu'on lui a données.
+ *
+ * En dessous, elle se replie sur une colonne et chaque carte reprend la
+ * hauteur de son contenu. C'est ce qui rend le placement libre viable :
+ * sans ce repli, une carte posée en colonne 9 sortirait de l'écran d'un
+ * portable, et une carte de trois rangées y couperait son propre texte.
+ *
+ * Les quatre coordonnées voyagent en propriétés CSS (--bx, --by, --bw,
+ * --bh) plutôt qu'en styles de grille écrits en ligne : un style en ligne
+ * ne se laisse pas remplacer par une requête de média sans !important,
+ * alors qu'une propriété personnalisée s'utilise ou s'ignore selon le
+ * régime.
  */
 
-.kov-dash__block {
+.kov-dash__grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--kov-dash-gap);
+}
+
+.kov-dash__item {
   position: relative;
   min-width: 0;
+  /* Repliée, la carte fait la hauteur de ce qu'elle contient. */
+  height: auto;
 }
 
-.kov-dash__block[data-editing] {
-  border-radius: var(--radius-lg);
+@media (min-width: 1280px) {
+  .kov-dash__grid {
+    display: grid;
+    grid-template-columns: repeat(var(--kov-dash-cols), minmax(0, 1fr));
+    grid-auto-rows: var(--kov-dash-row);
+    gap: var(--kov-dash-gap);
+    align-items: stretch;
+  }
+
+  .kov-dash__item {
+    grid-column: var(--bx) / span var(--bw);
+    grid-row: var(--by) / span var(--bh);
+    height: auto;
+  }
+}
+
+/* ── LE CONTENU ────────────────────────────────────────────────────────
+ *
+ * La carte occupe toute la case, et ce qui dépasse défile à l'intérieur
+ * plutôt que de sortir sur la voisine. C'est le prix du placement libre :
+ * on ne peut pas à la fois choisir une hauteur et laisser le contenu en
+ * décider. Le bouton « Ajuster les hauteurs » existe précisément pour
+ * rendre ce défilement inutile.
+ */
+
+.kov-dash__content {
+  height: 100%;
+  min-height: 0;
+}
+
+@media (min-width: 1280px) {
+  .kov-dash__content {
+    overflow: auto;
+  }
+
+  /* La carte à l'intérieur remplit la case, sinon une case haute laisse
+     une bande vide sous une carte qui ne s'étire pas. */
+  .kov-dash__content > * {
+    min-height: 100%;
+  }
+}
+
+/* ── LA BARRE D'OUTILS ─────────────────────────────────────────────────── */
+
+.kov-dash__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.kov-dash__hint {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--kov-concrete);
+  max-width: 46ch;
+}
+
+.kov-dash__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.kov-dash__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 16px;
+  margin-left: auto;
+  border: 1px solid var(--kov-border);
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--kov-concrete);
+  transition:
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+.kov-dash__cta:hover {
+  border-color: var(--kov-red);
+  color: var(--kov-red);
+}
+
+.kov-dash__cta--solid {
+  margin-left: 0;
+  border-color: transparent;
+  background: var(--kov-red);
+  color: var(--kov-white);
+}
+
+.kov-dash__cta--solid:hover {
+  background: var(--kov-red-signal);
+  border-color: transparent;
+  color: var(--kov-white);
+}
+
+.kov-dash__ghost,
+.kov-dash__outline {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--kov-concrete);
+  transition:
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+.kov-dash__outline {
+  border: 1px solid var(--kov-border);
+  color: var(--kov-bone);
+}
+
+.kov-dash__ghost:hover,
+.kov-dash__outline:hover {
+  border-color: var(--kov-red);
+  color: var(--kov-red);
+}
+
+.kov-dash__toolbar button:disabled {
+  opacity: 0.5;
+}
+
+/* ── LE MODE ÉDITION ───────────────────────────────────────────────────── */
+
+.kov-dash[data-editing] .kov-dash__item {
   outline: 1px dashed var(--kov-border);
-  outline-offset: 6px;
-  cursor: grab;
+  outline-offset: 5px;
+  border-radius: var(--radius-lg);
 }
 
-.kov-dash__block[data-editing]:hover {
+.kov-dash[data-editing] .kov-dash__item:hover {
   outline-color: color-mix(in srgb, var(--kov-red) 45%, transparent);
 }
 
-.kov-dash__block[data-dragging] {
-  opacity: 0.45;
-  cursor: grabbing;
-}
-
-/* Un bloc masqué reste visible PENDANT l'édition, en retrait : on ne peut
-   pas rétablir ce qu'on ne voit plus. Il disparaît à l'enregistrement. */
-.kov-dash__block[data-hidden] .kov-dash__content {
-  opacity: 0.32;
-  filter: saturate(0.35);
-  pointer-events: none;
-}
-
 /* Pendant l'édition, le contenu ne se clique pas : on déplace une carte,
-   on ne navigue pas dedans. */
-.kov-dash__block[data-editing] .kov-dash__content {
+   on ne navigue pas dedans. Le défilement est coupé aussi, sinon tirer
+   une carte ferait défiler ce qu'elle contient. */
+.kov-dash[data-editing] .kov-dash__content {
   pointer-events: none;
   user-select: none;
+  overflow: hidden;
+}
+
+/* Une carte masquée reste visible PENDANT l'édition, en retrait : on ne
+   peut pas rétablir ce qu'on ne voit plus. Elle disparaît à
+   l'enregistrement. */
+.kov-dash__item[data-hidden] .kov-dash__content {
+  opacity: 0.3;
+  filter: saturate(0.3);
+}
+
+/* La carte qu'on tient passe au-dessus des autres et perd sa transition :
+   une carte qui rattrape le curseur avec 160 ms de retard donne
+   l'impression de coller. */
+.kov-dash__item[data-active] {
+  z-index: 2;
+  outline-color: var(--kov-red);
 }
 
 .kov-dash__bar {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 8px;
-  padding: 5px 8px;
+  margin-bottom: 6px;
+  padding: 4px 6px 4px 8px;
   background: var(--kov-surface-2);
   border: 1px solid var(--kov-border);
   border-radius: var(--radius-pill);
+  cursor: grab;
+  touch-action: none;
+}
+
+.kov-dash__item[data-active] .kov-dash__bar {
+  cursor: grabbing;
 }
 
 .kov-dash__grip {
   display: grid;
   place-items: center;
-  color: var(--kov-steel);
   flex-shrink: 0;
+  color: var(--kov-steel);
 }
 
 .kov-dash__name {
@@ -67,53 +228,31 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-align: left;
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--kov-concrete);
+  cursor: inherit;
 }
 
-.kov-dash__icon {
-  display: grid;
-  place-items: center;
-  width: 24px;
-  height: 24px;
+.kov-dash__dims {
   flex-shrink: 0;
-  border-radius: var(--radius-pill);
-  color: var(--kov-concrete);
-  transition:
-    background-color 160ms ease,
-    color 160ms ease;
-}
-
-.kov-dash__icon:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--kov-red) 10%, transparent);
-  color: var(--kov-red);
-}
-
-.kov-dash__icon:disabled {
-  opacity: 0.3;
-}
-
-.kov-dash__size select {
-  height: 24px;
-  padding: 0 4px;
-  border: 1px solid var(--kov-border);
-  border-radius: var(--radius-sm);
-  background: var(--kov-surface-1);
-  color: var(--kov-concrete);
-  font-size: 11px;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  color: var(--kov-steel);
 }
 
 .kov-dash__toggle {
   flex-shrink: 0;
+  height: 22px;
   padding: 0 8px;
-  height: 24px;
   border-radius: var(--radius-pill);
   font-size: 10px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--kov-concrete);
+  cursor: pointer;
   transition:
     background-color 160ms ease,
     color 160ms ease;
@@ -124,9 +263,52 @@
   color: var(--kov-red);
 }
 
+/* ── LA POIGNÉE DE REDIMENSIONNEMENT ───────────────────────────────────
+ *
+ * Au coin bas-droit, hors du contenu. Sa zone tactile fait 22 px, bien
+ * au-delà du losange dessiné : une poignée grande comme son icône se
+ * rate une fois sur deux.
+ */
+.kov-dash__resize {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-sm);
+  background: var(--kov-surface-2);
+  border: 1px solid var(--kov-border);
+  color: var(--kov-steel);
+  cursor: nwse-resize;
+  touch-action: none;
+}
+
+.kov-dash__resize:hover {
+  border-color: var(--kov-red);
+  color: var(--kov-red);
+}
+
+/* Sous 1280 px, ni déplacement ni redimensionnement : la grille est
+   repliée sur une colonne, donc x, y et w n'y veulent plus rien dire. */
+@media (max-width: 1279px) {
+  .kov-dash__resize,
+  .kov-dash__dims {
+    display: none;
+  }
+  .kov-dash__bar {
+    cursor: default;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .kov-dash__icon,
-  .kov-dash__toggle {
+  .kov-dash__cta,
+  .kov-dash__ghost,
+  .kov-dash__outline,
+  .kov-dash__toggle,
+  .kov-dash__resize {
     transition: none;
   }
 }
