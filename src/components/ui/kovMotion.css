@@ -219,24 +219,63 @@
    même pour tous : trois fonds différents feraient trois composants au
    lieu d'un, et le succès n'a pas besoin d'être vert sur toute sa
    surface pour être lu comme un succès. */
-.kov-toast {
+[data-sonner-toast].kov-toast {
   position: relative;
   overflow: hidden;
+
+  /* Jusqu'où le rouge porte vers la droite. C'est la seule chose que le
+     type du message change dans le fond : une erreur garde le rouge plus
+     longtemps qu'un succès. La distinction qui compte est portée par
+     l'icône — celle-ci n'est qu'un renfort. */
+  --kov-toast-reach: 72%;
+
+  /* Le dégradé de marque : rouge plein au bord gauche, éteint vers la
+     droite. La couche sombre en dessous est ce qui reste une fois le
+     rouge éteint — sans elle, la droite du toast serait transparente et
+     laisserait voir la page au travers. */
+  background:
+    linear-gradient(
+      90deg,
+      var(--kov-red) 0%,
+      color-mix(in srgb, var(--kov-red) 60%, transparent) calc(var(--kov-toast-reach) * 0.45),
+      transparent var(--kov-toast-reach)
+    ),
+    rgba(18, 18, 18, 0.94);
 }
 
-.kov-toast::before {
+[data-sonner-toast].kov-toast[data-type="success"] { --kov-toast-reach: 56%; }
+[data-sonner-toast].kov-toast[data-type="error"] { --kov-toast-reach: 88%; }
+
+/* Le bord gauche, d'un rouge plus vif que le dégradé : il donne au toast
+   une arête nette là où le fond est le plus saturé, sinon la carte se
+   termine en flou sur un fond déjà rouge. */
+[data-sonner-toast].kov-toast::before {
   content: "";
   position: absolute;
   left: 0;
   top: 0;
   bottom: 0;
-  width: 2px;
-  background: var(--kov-steel);
+  width: 3px;
+  background: var(--kov-red-signal);
 }
 
-.kov-toast[data-type="success"]::before { background: #3fb27f; }
-.kov-toast[data-type="error"]::before { background: var(--kov-red); }
-.kov-toast[data-type="warning"]::before { background: #f5a524; }
+/* L'icône : un disque translucide sur le rouge, pour que la coche ou la
+   croix se détache du dégradé sans lui emprunter sa couleur. */
+.kov-toast__glyph {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.16);
+  color: var(--kov-white);
+}
+
+/* Le texte secondaire de sonner hérite d'un gris qui disparaît sur le
+   rouge. Il reste blanc, simplement moins appuyé. */
+[data-sonner-toast].kov-toast [data-description] {
+  color: rgba(255, 255, 255, 0.82);
+}
 
 /* ── Signature 3 : le trait qui se remplit ───────────────────────────── */
 

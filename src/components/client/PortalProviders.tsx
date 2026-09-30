@@ -1,7 +1,6 @@
 "use client";
 
-import { Toaster } from "sonner";
-import "@/components/ui/kovMotion.css";
+import { KovToaster } from "@/components/ui/KovToaster";
 
 // Le portail n'avait aucun <Toaster/>.
 //
@@ -14,38 +13,14 @@ import "@/components/ui/kovMotion.css";
 // coexistent jamais — ce serait faux à l'intérieur d'un même arbre, ce
 // qu'AdminProviders écrit déjà noir sur blanc.
 //
-// En bas à droite plutôt qu'en haut : la barre du haut du portail porte la
-// recherche, les notifications et le compte. Un toast qui tombe dessus
-// recouvre exactement ce qu'on vient peut-être de vouloir consulter.
+// L'habillage et la position vivent dans KovToaster, partagé avec
+// l'admin : c'est la même notification des deux côtés, et elle n'a aucune
+// raison d'être décrite deux fois.
 export function PortalProviders({ children }: { children: React.ReactNode }) {
   return (
     <>
       {children}
-      <Toaster
-        position="bottom-right"
-        // 3,5 s : assez pour lire une phrase, trop court pour gêner.
-        duration={3500}
-        // Les icônes de sonner sont colorées par défaut et ne connaissent
-        // pas la palette KOV ; le liseré vertical de toastOptions dit la
-        // même chose dans la bonne langue.
-        toastOptions={{
-          className: "kov-toast",
-          style: {
-            // Le toast garde un fond sombre même en interface claire : un
-            // message éphémère doit trancher avec la page, et il est rendu
-            // hors de la coquille (sonner porte dans <body>), donc son
-            // filet est écrit en clair — un token le ferait basculer en
-            // noir sur noir.
-            background: "rgba(18,18,18,0.92)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            backdropFilter: "blur(12px)",
-            WebkitBackdropFilter: "blur(12px)",
-            color: "var(--kov-bone)",
-            borderRadius: "var(--radius-md)",
-            fontSize: "13px",
-          },
-        }}
-      />
+      <KovToaster />
     </>
   );
 }
