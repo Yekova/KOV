@@ -1,0 +1,132 @@
+/* Le tableau de bord arrangeable.
+ *
+ * Hors mode édition, ces règles ne font rien : un bloc est un simple
+ * conteneur de grille, et la carte à l'intérieur garde exactement
+ * l'apparence qu'elle avait avant. Le mode édition n'ajoute qu'un cadre
+ * et une barre — il ne redessine pas le contenu, sinon on arrangerait un
+ * écran qui n'est pas celui qu'on obtiendra.
+ */
+
+.kov-dash__block {
+  position: relative;
+  min-width: 0;
+}
+
+.kov-dash__block[data-editing] {
+  border-radius: var(--radius-lg);
+  outline: 1px dashed var(--kov-border);
+  outline-offset: 6px;
+  cursor: grab;
+}
+
+.kov-dash__block[data-editing]:hover {
+  outline-color: color-mix(in srgb, var(--kov-red) 45%, transparent);
+}
+
+.kov-dash__block[data-dragging] {
+  opacity: 0.45;
+  cursor: grabbing;
+}
+
+/* Un bloc masqué reste visible PENDANT l'édition, en retrait : on ne peut
+   pas rétablir ce qu'on ne voit plus. Il disparaît à l'enregistrement. */
+.kov-dash__block[data-hidden] .kov-dash__content {
+  opacity: 0.32;
+  filter: saturate(0.35);
+  pointer-events: none;
+}
+
+/* Pendant l'édition, le contenu ne se clique pas : on déplace une carte,
+   on ne navigue pas dedans. */
+.kov-dash__block[data-editing] .kov-dash__content {
+  pointer-events: none;
+  user-select: none;
+}
+
+.kov-dash__bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding: 5px 8px;
+  background: var(--kov-surface-2);
+  border: 1px solid var(--kov-border);
+  border-radius: var(--radius-pill);
+}
+
+.kov-dash__grip {
+  display: grid;
+  place-items: center;
+  color: var(--kov-steel);
+  flex-shrink: 0;
+}
+
+.kov-dash__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--kov-concrete);
+}
+
+.kov-dash__icon {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: var(--radius-pill);
+  color: var(--kov-concrete);
+  transition:
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.kov-dash__icon:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--kov-red) 10%, transparent);
+  color: var(--kov-red);
+}
+
+.kov-dash__icon:disabled {
+  opacity: 0.3;
+}
+
+.kov-dash__size select {
+  height: 24px;
+  padding: 0 4px;
+  border: 1px solid var(--kov-border);
+  border-radius: var(--radius-sm);
+  background: var(--kov-surface-1);
+  color: var(--kov-concrete);
+  font-size: 11px;
+}
+
+.kov-dash__toggle {
+  flex-shrink: 0;
+  padding: 0 8px;
+  height: 24px;
+  border-radius: var(--radius-pill);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--kov-concrete);
+  transition:
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.kov-dash__toggle:hover {
+  background: color-mix(in srgb, var(--kov-red) 10%, transparent);
+  color: var(--kov-red);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kov-dash__icon,
+  .kov-dash__toggle {
+    transition: none;
+  }
+}

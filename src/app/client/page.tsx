@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { requireUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getPublicAssetUrl } from "@/lib/portal/storage";
+import { DashboardGrid } from "@/components/dashboard/DashboardGrid";
+import { getDashboardLayout } from "@/lib/dashboard/actions";
 import { deriveCurrentPhase, deriveProgress, type ProjectPhase } from "@/lib/portal/progress";
 import { isInvoiceOverdue } from "@/lib/portal/status";
 import { ActionRequiredCard, type ActionItem } from "@/components/client/dashboard/ActionRequiredCard";
@@ -221,6 +223,8 @@ export default async function ClientDashboardPage() {
     createdAt: document.created_at,
   }));
 
+  const dashboardLayout = await getDashboardLayout("client");
+
   return (
     <main className="mx-auto w-full max-w-[1700px] px-6 py-8 md:px-10">
       {/* La composition répond aux cinq questions du client, dans l'ordre
@@ -236,44 +240,43 @@ export default async function ClientDashboardPage() {
           parmi d'autres. */}
       <DashboardHero fullName={profile?.full_name ?? null} statusLine={statusLine} />
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="space-y-6">
-          <ActionRequiredCard items={actionItems} />
-
-          {featured && <ProjectStoryCard project={featured} />}
-
-          {/* Les autres projets, volontairement plus petits : un seul est
-              mis en scène. */}
-          {showcase.length > 0 && <ProjectShowcase projects={showcase} />}
-
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <UpcomingDeadlines deadlines={deadlines.slice(0, SHORTLIST)} />
-            <RecentDocuments documents={recentDocuments} />
-          </div>
-        </div>
-
-        <div className="xl:sticky xl:top-[92px] xl:self-start">
-          <RelationPanel
-            manager={
-              manager
-                ? {
-                    fullName: manager.full_name,
-                    displayTitle: manager.display_title,
-                    avatarUrl: getPublicAssetUrl(manager.avatar_path),
-                    isOnline: manager.is_online,
-                  }
-                : null
-            }
-            outstandingCents={outstandingCents}
-            currency={invoiceRows[0]?.currency ?? "EUR"}
-            activity={(activity ?? []).map((row) => ({
-              id: row.id,
-              title: row.title,
-              createdAt: row.created_at,
-            }))}
-          />
-        </div>
-      </div>
+      {/* La composition d'origine devient l'arrangement PAR DÉFAUT : le
+          client la retrouve telle quelle tant qu'il n'y touche pas, et
+          peut ensuite déplacer, redimensionner ou masquer chaque carte.
+          Les blocs sont rendus ici, côté serveur ; seul leur agencement
+          vit dans le navigateur. */}
+      <DashboardGrid
+        surface="client"
+        initialLayout={dashboardLayout}
+        blocks={{
+          "action-required": <ActionRequiredCard items={actionItems} />,
+          relation: (
+            <RelationPanel
+              manager={
+                manager
+                  ? {
+                      fullName: manager.full_name,
+                      displayTitle: manager.display_title,
+                      avatarUrl: getPublicAssetUrl(manager.avatar_path),
+                      isOnline: manager.is_online,
+                    }
+                  : null
+              }
+              outstandingCents={outstandingCents}
+              currency={invoiceRows[0]?.currency ?? "EUR"}
+              activity={(activity ?? []).map((row) => ({
+                id: row.id,
+                title: row.title,
+                createdAt: row.created_at,
+              }))}
+            />
+          ),
+          "project-story": featured ? <ProjectStoryCard project={featured} /> : undefined,
+          "project-showcase": showcase.length > 0 ? <ProjectShowcase projects={showcase} /> : undefined,
+          deadlines: <UpcomingDeadlines deadlines={deadlines.slice(0, SHORTLIST)} />,
+          documents: <RecentDocuments documents={recentDocuments} />,
+        }}
+      />
     </main>
   );
 }

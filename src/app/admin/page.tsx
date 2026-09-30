@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { DashboardGrid } from "@/components/dashboard/DashboardGrid";
+import { getDashboardLayout } from "@/lib/dashboard/actions";
 import { getActiveProjectsKpi, getConversionSnapshot, getMoneySnapshot } from "@/lib/admin/kpis";
 import { getAgenda } from "@/lib/admin/agenda";
 import { CommercialPipeline, type PipelineLead } from "@/components/admin/dashboard/CommercialPipeline";
@@ -266,105 +268,103 @@ export default async function AdminDashboardPage() {
   // qu'une fois par page. L'enveloppe qui isolait le contexte
   // d'empilement part avec la photo : elle n'existait que pour contenir
   // son z-index négatif.
+  const dashboardLayout = await getDashboardLayout("admin");
+
   return (
     <main className="relative px-6 py-10 max-w-[1800px] mx-auto w-full space-y-6">
       <DashboardHeader fullName={currentAdminName} />
 
-      {/* ── La ligne d'argent ──────────────────────────────────────────
-          Signé et encaissé se lisent ensemble : c'est leur écart qui est
-          l'information. Le dashboard n'affichait que l'encaissé du mois,
-          donc un studio qui avait vendu sans être payé ne voyait qu'un
-          zéro sans cause. */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        <StatCard
-          label="CA signé"
-          value={formatEuros(money.signedCents)}
-          caption={`${money.signedCount} devis accepté${money.signedCount > 1 ? "s" : ""}`}
-        />
-        <StatCard
-          label="CA encaissé"
-          value={formatEuros(money.collectedCents)}
-          caption={
-            money.collectedCount > 0
-              ? `${money.collectedCount} facture${money.collectedCount > 1 ? "s" : ""} payée${money.collectedCount > 1 ? "s" : ""}`
-              : "Aucune facture réglée"
-          }
-        />
-        <StatCard
-          label="Reste à encaisser"
-          value={formatEuros(pendingInvoiceCents)}
-          caption={`${(pendingInvoiceRows ?? []).length} facture${(pendingInvoiceRows ?? []).length > 1 ? "s" : ""} en attente`}
-        />
-        <KpiCard
-          label="Projets en cours"
-          value={String(activeProjectsKpi.value)}
-          evolutionPercent={activeProjectsKpi.evolutionPercent}
-          isNew={activeProjectsKpi.isNew}
-          evolutionCaption="nouveaux ce mois"
-          sparkline={activeProjectsKpi.sparkline}
-        />
-        <StatCard label="Leads actifs" value={String(activeLeads.length)} caption={`+${newLeadsThisMonth} ce mois`} />
-        {/* Le taux ne s'affiche jamais seul : « 100 % » sur deux dossiers
-            clos dit surtout qu'on n'a encore rien perdu. Le dénominateur
-            est ce qui permet de savoir si le chiffre veut dire quelque
-            chose, donc il reste visible. */}
-        <StatCard
-          label="Taux de conversion"
-          value={conversion.percent === null ? "—" : `${conversion.percent}%`}
-          caption={
-            conversion.resolved === 0
-              ? "Aucun lead encore clos"
-              : `${conversion.won} gagné${conversion.won > 1 ? "s" : ""} sur ${conversion.resolved} clos`
-          }
-        />
-      </div>
-
-      {/* ── Le haut du tunnel ──────────────────────────────────────────
-          Le pipeline commercial passe devant le pipeline projet : ce qui
-          n'est pas encore vendu se regarde avant ce qui l'est déjà. */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-2">
-          <CommercialPipeline leads={pipelineLeads} statuses={leadStatuses} />
-        </div>
-        <AgendaCard events={agenda} windowDays={AGENDA_WINDOW_DAYS} />
-      </div>
-
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-2 space-y-6">
-          <ProjectTable projects={recentProjectsForTable} title="Projets en cours" viewAllHref="/admin/projects" />
-          <TaskFeed tasks={taskFeedItems} />
-        </div>
-        <div className="space-y-6">
-          <LeadFeed leads={leadFeedItems} statuses={leadStatuses} />
-          <TeamWorkload members={teamMembers} />
-          {/* Les heures du jour quittent la ligne d'indicateurs : c'est
-              une mesure de charge, pas un indicateur d'activité
-              commerciale. Elle se lit à côté de la charge d'équipe. */}
-          <StatCard
-            label="Heures aujourd'hui"
-            value={`${Math.floor(todayHours)}h${String(todayMinutes % 60).padStart(2, "0")}`}
-            caption={`${inProgressTaskCount ?? 0} tâche${(inProgressTaskCount ?? 0) > 1 ? "s" : ""} en cours sur ${totalTaskCount ?? 0}`}
-            progress={tasksInProgressPercent}
-            progressColor="var(--kov-status-orange)"
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-2">
-          <RevenueChart points={revenuePoints} />
-        </div>
-        <Donut title="Répartition des revenus" segments={categorySegments} centerLabel="Payé (12 mois)" formatValue={formatEuros} />
-      </div>
-
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-2">
-          <ActivityFeed items={activity ?? []} />
-        </div>
-        {/* Le pipeline projet reste, mais en second plan : il dit où en
-            est ce qui est vendu, pas ce qu'il reste à vendre. */}
-        <ProjectPipeline initialProjects={pipelineProjects} />
-      </div>
+      {/* La composition d'origine devient l'arrangement PAR DÉFAUT : le
+          studio la retrouve telle quelle tant qu'il n'y touche pas, et
+          peut ensuite déplacer, redimensionner ou masquer chaque carte.
+          Les blocs sont rendus ici, côté serveur ; seul leur agencement
+          vit dans le navigateur. */}
+      <DashboardGrid
+        surface="admin"
+        initialLayout={dashboardLayout}
+        blocks={{
+          /* Signé et encaissé se lisent ensemble : c'est leur écart qui
+             est l'information. */
+          "kpi-revenue": (
+            <StatCard
+              label="CA signé"
+              value={formatEuros(money.signedCents)}
+              caption={`${money.signedCount} devis accepté${money.signedCount > 1 ? "s" : ""}`}
+            />
+          ),
+          "kpi-outstanding": (
+            <StatCard
+              label="CA encaissé"
+              value={formatEuros(money.collectedCents)}
+              caption={
+                money.collectedCount > 0
+                  ? `${money.collectedCount} facture${money.collectedCount > 1 ? "s" : ""} payée${money.collectedCount > 1 ? "s" : ""}`
+                  : "Aucune facture réglée"
+              }
+            />
+          ),
+          "kpi-overdue": (
+            <StatCard
+              label="Reste à encaisser"
+              value={formatEuros(pendingInvoiceCents)}
+              caption={`${(pendingInvoiceRows ?? []).length} facture${(pendingInvoiceRows ?? []).length > 1 ? "s" : ""} en attente`}
+            />
+          ),
+          "kpi-margin": (
+            <KpiCard
+              label="Projets en cours"
+              value={String(activeProjectsKpi.value)}
+              evolutionPercent={activeProjectsKpi.evolutionPercent}
+              isNew={activeProjectsKpi.isNew}
+              evolutionCaption="nouveaux ce mois"
+              sparkline={activeProjectsKpi.sparkline}
+            />
+          ),
+          "kpi-leads": (
+            <StatCard label="Leads actifs" value={String(activeLeads.length)} caption={`+${newLeadsThisMonth} ce mois`} />
+          ),
+          /* Le taux ne s'affiche jamais seul : « 100 % » sur deux dossiers
+             clos dit surtout qu'on n'a encore rien perdu. */
+          "kpi-conversion": (
+            <StatCard
+              label="Taux de conversion"
+              value={conversion.percent === null ? "—" : `${conversion.percent}%`}
+              caption={
+                conversion.resolved === 0
+                  ? "Aucun lead encore clos"
+                  : `${conversion.won} gagné${conversion.won > 1 ? "s" : ""} sur ${conversion.resolved} clos`
+              }
+            />
+          ),
+          /* Le pipeline commercial passe devant le pipeline projet : ce
+             qui n'est pas encore vendu se regarde avant ce qui l'est. */
+          "commercial-pipeline": <CommercialPipeline leads={pipelineLeads} statuses={leadStatuses} />,
+          agenda: <AgendaCard events={agenda} windowDays={AGENDA_WINDOW_DAYS} />,
+          "project-table": (
+            <ProjectTable projects={recentProjectsForTable} title="Projets en cours" viewAllHref="/admin/projects" />
+          ),
+          "lead-feed": <LeadFeed leads={leadFeedItems} statuses={leadStatuses} />,
+          "task-feed": <TaskFeed tasks={taskFeedItems} />,
+          "team-workload": <TeamWorkload members={teamMembers} />,
+          /* Une mesure de charge, pas un indicateur commercial : elle se
+             lit à côté de la charge d'équipe. */
+          "kpi-hours": (
+            <StatCard
+              label="Heures aujourd'hui"
+              value={`${Math.floor(todayHours)}h${String(todayMinutes % 60).padStart(2, "0")}`}
+              caption={`${inProgressTaskCount ?? 0} tâche${(inProgressTaskCount ?? 0) > 1 ? "s" : ""} en cours sur ${totalTaskCount ?? 0}`}
+              progress={tasksInProgressPercent}
+              progressColor="var(--kov-status-orange)"
+            />
+          ),
+          "revenue-chart": <RevenueChart points={revenuePoints} />,
+          "revenue-donut": (
+            <Donut title="Répartition des revenus" segments={categorySegments} centerLabel="Payé (12 mois)" formatValue={formatEuros} />
+          ),
+          "activity-feed": <ActivityFeed items={activity ?? []} />,
+          "project-pipeline": <ProjectPipeline initialProjects={pipelineProjects} />,
+        }}
+      />
     </main>
   );
 }
