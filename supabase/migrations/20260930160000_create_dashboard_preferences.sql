@@ -20,6 +20,10 @@
 -- deux, c'est-à-dire deux sujets dans une seule valeur. La clé
 -- (utilisateur, surface) dit exactement ce qui est arrangé.
 
+-- Appliquée en production le 30 septembre 2026, et vérifiée : 5 colonnes,
+-- RLS active avec 1 politique, 4 contraintes (clé primaire, contrainte de
+-- surface, clé étrangère, unicité (utilisateur, surface)), 0 ligne.
+
 begin;
 
 create table dashboard_preferences (
