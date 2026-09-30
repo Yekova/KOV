@@ -45,8 +45,11 @@ export default async function ClientRequestThreadPage(props: PageProps<"/client/
 
   return (
     <ThreadInteractionProvider>
-      <div className="flex h-full min-h-0 flex-col xl:flex-row">
-      {/* Le fil. Il défile seul, et seulement lui : l'en-tête reste visible
+      {/* Deux frères et non deux imbriqués : la grille de .kov-messaging
+          place la conversation en colonne 2 et l'encadré de contexte au
+          bas de la colonne 1, sous la liste.
+
+          Le fil défile seul, et seulement lui : l'en-tête reste visible
           au-dessus, le champ de réponse reste posé en dessous. Une
           conversation dont l'en-tête part au premier défilement oblige à
           remonter pour savoir de quoi on parle. */}
@@ -112,17 +115,13 @@ export default async function ClientRequestThreadPage(props: PageProps<"/client/
         </div>
       </div>
 
-      <aside
-        className="shrink-0 border-t p-5 xl:h-full xl:w-[320px] xl:overflow-y-auto xl:border-l xl:border-t-0"
-        style={{ borderColor: "var(--kov-border)" }}
-      >
+      <aside className="kov-messaging__context">
         <ThreadRail
           context={context}
           projectHref={(projectId) => `/client/projects/${projectId}`}
           documentsHref="/client/documents"
         />
-        </aside>
-      </div>
+      </aside>
     </ThreadInteractionProvider>
   );
 }

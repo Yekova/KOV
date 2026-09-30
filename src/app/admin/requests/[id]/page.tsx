@@ -53,7 +53,9 @@ export default async function AdminRequestThreadPage(props: PageProps<"/admin/re
 
   return (
     <ThreadInteractionProvider>
-      <div className="flex h-full min-h-0 flex-col xl:flex-row">
+      {/* Deux frères et non deux imbriqués : la grille de .kov-messaging
+          place la conversation en colonne 2 et l'encadré de contexte au
+          bas de la colonne 1, sous la liste. */}
       <div className="flex min-h-0 flex-1 flex-col">
         <header
           className="shrink-0 border-b px-6 py-4 md:px-8"
@@ -126,17 +128,13 @@ export default async function AdminRequestThreadPage(props: PageProps<"/admin/re
         </div>
       </div>
 
-      <aside
-        className="shrink-0 border-t p-5 xl:h-full xl:w-[320px] xl:overflow-y-auto xl:border-l xl:border-t-0"
-        style={{ borderColor: "var(--kov-border)" }}
-      >
+      <aside className="kov-messaging__context">
         <ThreadRail
           context={context}
           projectHref={(projectId) => `/admin/projects/${projectId}`}
           documentsHref={`/admin/clients/${thread.clientId}`}
         />
-        </aside>
-      </div>
+      </aside>
     </ThreadInteractionProvider>
   );
 }

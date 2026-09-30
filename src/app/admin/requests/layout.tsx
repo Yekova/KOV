@@ -43,9 +43,9 @@ export default async function AdminRequestsLayout({ children }: { children: Reac
   }));
 
   return (
-    <div className="kov-messaging flex flex-col lg:flex-row lg:overflow-hidden">
+    <div className="kov-messaging">
       <aside
-        className="shrink-0 border-b lg:h-full lg:w-[340px] lg:border-b-0 lg:border-r"
+        className="kov-messaging__list shrink-0 border-b lg:border-b-0 lg:border-r"
         style={{ borderColor: "var(--kov-border)", background: "var(--kov-carbon)" }}
       >
         <ConversationList
@@ -55,7 +55,7 @@ export default async function AdminRequestsLayout({ children }: { children: Reac
         />
       </aside>
 
-      <div className="min-w-0 flex-1 lg:h-full lg:overflow-hidden">{children}</div>
+      {children}
     </div>
   );
 }
