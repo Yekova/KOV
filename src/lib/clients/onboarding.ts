@@ -66,7 +66,14 @@ export async function markStep(clientId: string, step: Exclude<OnboardingStep, "
     .upsert({ client_id: clientId, [column]: now, updated_at: now }, { onConflict: "client_id" });
 }
 
+/** Idempotent, comme markStep : l'étape dit « a consulté l'espace de
+ *  validation », donc c'est la date du PREMIER regard qui a un sens. Un
+ *  upsert sans garde la repousserait à chaque visite, et la colonne
+ *  finirait par ne dire que « est passé récemment ». */
 export async function markValidationSeen(clientId: string): Promise<void> {
+  const existing = await getOnboarding(clientId);
+  if (existing.validationSeenAt) return;
+
   const now = new Date().toISOString();
   await supabaseAdmin
     .from("client_onboarding")

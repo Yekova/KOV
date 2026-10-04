@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { getDesignActivity, getValidationBoard } from "@/lib/design/queries";
+import { markValidationSeen } from "@/lib/clients/onboarding";
 import { ValidationWorkspace } from "@/components/design/ValidationWorkspace";
 
 export async function generateMetadata(
@@ -25,6 +26,17 @@ export default async function ClientValidationPage(props: PageProps<"/client/pro
   if (!board) notFound();
 
   const activity = await getDesignActivity(id);
+
+  // Le studio saura que le client a ouvert l'espace de validation (§43).
+  // Écrit ici et non dans un effet du navigateur : une page serveur sait
+  // qu'elle est rendue, un effet peut ne jamais partir — onglet fermé
+  // avant l'hydratation, script bloqué, lecteur d'écran en mode document.
+  //
+  // Attendue, et non lâchée : une promesse abandonnée dans un composant
+  // serveur peut ne jamais aboutir, la requête se terminant avant elle.
+  // Le `catch` garde la propriété qui comptait — une écriture de confort
+  // n'a aucune raison de faire tomber la page qu'elle accompagne.
+  await markValidationSeen(user.id).catch(() => {});
 
   return (
     <main className="mx-auto w-full max-w-[1600px] px-6 py-8 md:px-10">

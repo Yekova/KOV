@@ -1,5 +1,6 @@
 import "server-only";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { deriveAccessStatus, type AccessStatus, type AuthFacts } from "./accessStatus";
 
 // L'état de l'espace d'un client : déduit, jamais recopié.
 //
@@ -24,24 +25,13 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 // C'est un appel réseau, donc les fonctions ci-dessous existent en deux
 // versions : une pour un client, une pour une liste.
 
-export const ACCESS_STATUSES = ["pending", "invited", "active", "suspended", "revoked"] as const;
-export type AccessStatus = (typeof ACCESS_STATUSES)[number];
-
-export const ACCESS_LABELS: Record<AccessStatus, string> = {
-  pending: "Non créé",
-  invited: "Invitation envoyée",
-  active: "Compte activé",
-  suspended: "Suspendu",
-  revoked: "Accès retiré",
-};
-
-export const ACCESS_COLORS: Record<AccessStatus, string> = {
-  pending: "var(--kov-steel)",
-  invited: "var(--kov-status-orange)",
-  active: "var(--kov-status-green)",
-  suspended: "var(--kov-status-purple)",
-  revoked: "var(--kov-red)",
-};
+export {
+  ACCESS_STATUSES,
+  ACCESS_LABELS,
+  ACCESS_COLORS,
+  deriveAccessStatus,
+} from "./accessStatus";
+export type { AccessStatus, AuthFacts } from "./accessStatus";
 
 export interface ClientAccess {
   status: AccessStatus;
@@ -53,24 +43,6 @@ export interface ClientAccess {
    *  messageries bloquent le pixel de suivi. L'interface doit le dire
    *  ainsi, jamais en déduire un désintérêt. */
   inviteOpenedAt: string | null;
-}
-
-interface AuthFacts {
-  invitedAt: string | null;
-  confirmedAt: string | null;
-  lastSignInAt: string | null;
-  bannedUntil: string | null;
-}
-
-function deriveStatus(facts: AuthFacts | null, archivedAt: string | null): AccessStatus {
-  // L'archivage est une décision du studio : elle prime sur tout état du
-  // compte, y compris « activé ».
-  if (archivedAt) return "revoked";
-  if (!facts) return "pending";
-  if (facts.bannedUntil && new Date(facts.bannedUntil) > new Date()) return "suspended";
-  if (facts.confirmedAt || facts.lastSignInAt) return "active";
-  if (facts.invitedAt) return "invited";
-  return "pending";
 }
 
 async function readAuthFacts(userId: string): Promise<AuthFacts | null> {
@@ -108,7 +80,7 @@ export async function getClientAccess(clientId: string): Promise<ClientAccess> {
   ]);
 
   return {
-    status: deriveStatus(facts, (profile?.archived_at as string | null) ?? null),
+    status: deriveAccessStatus(facts, (profile?.archived_at as string | null) ?? null),
     invitedAt: facts?.invitedAt ?? null,
     activatedAt: facts?.confirmedAt ?? null,
     lastSignInAt: facts?.lastSignInAt ?? null,
@@ -149,7 +121,7 @@ export async function getClientAccessMap(clientIds: string[]): Promise<Map<strin
   }
 
   for (const id of clientIds) {
-    result.set(id, deriveStatus(factsById.get(id) ?? null, archivedById.get(id) ?? null));
+    result.set(id, deriveAccessStatus(factsById.get(id) ?? null, archivedById.get(id) ?? null));
   }
   return result;
 }

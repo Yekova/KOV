@@ -6,6 +6,7 @@ import { MoreVertical, CalendarDays, Activity } from "lucide-react";
 import { ClientAvatar } from "@/components/admin/clients/ClientAvatar";
 import { formatRelativeTime } from "@/lib/formatRelativeTime";
 import type { ClientSummary, ClientTeamMember } from "@/lib/admin/clients";
+import { ACCESS_COLORS, ACCESS_LABELS } from "@/lib/clients/accessStatus";
 
 // La carte d'un client.
 //
@@ -123,6 +124,26 @@ export function ClientCard({
           >
             {client.archivedAt ? "Archivé" : (project?.statusLabel ?? "Sans projet")}
           </span>
+
+          {/* L'état de l'espace ne s'affiche QUE quand il n'est pas
+              « activé ». Une pastille verte sur chaque carte serait du
+              bruit ; « Invitation envoyée » sur une seule est un signal —
+              c'est la personne qu'il faut relancer.
+
+              « Accès retiré » est tu aussi : la pastille « Archivé »
+              juste à gauche dit déjà la même chose. */}
+          {client.accessStatus !== "active" && client.accessStatus !== "revoked" && (
+            <span
+              className="px-2.5 py-1 text-[10px] uppercase tracking-widest whitespace-nowrap"
+              style={{
+                borderRadius: "var(--radius-pill)",
+                border: `1px solid ${ACCESS_COLORS[client.accessStatus]}`,
+                color: ACCESS_COLORS[client.accessStatus],
+              }}
+            >
+              {ACCESS_LABELS[client.accessStatus]}
+            </span>
+          )}
 
           <div className="relative">
             <button

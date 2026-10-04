@@ -1,6 +1,8 @@
 import "server-only";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getPublicAssetUrl } from "@/lib/portal/storage";
+import { getClientAccessMap } from "@/lib/clients/access";
+import type { AccessStatus } from "@/lib/clients/accessStatus";
 import { deriveProgress, deriveCurrentPhase, type ProjectPhase } from "@/lib/portal/progress";
 import { PROJECT_STATUS_LABELS, isProjectStatus, type ProjectStatus } from "@/lib/portal/status";
 
@@ -63,6 +65,9 @@ export interface ClientSummary {
   leadProject: ClientProjectSummary | null;
   /** Le statut du client, dérivé de ses projets. Null quand il n'en a pas. */
   status: ProjectStatus | null;
+  /** L'état de son espace, déduit de auth.users. Ce qui permet de repérer
+   *  d'un coup d'œil celui qui n'a jamais activé son compte. */
+  accessStatus: AccessStatus;
   lastActivity: { title: string; createdAt: string } | null;
 }
 
@@ -90,6 +95,11 @@ export async function getClientSummaries(): Promise<ClientSummary[]> {
   const clients = clientRows ?? [];
   if (clients.length === 0) return [];
   const clientIds = clients.map((row) => row.id as string);
+
+  // Un seul appel pour toute la liste : getClientAccessMap lit auth.users
+  // en une page de mille, là où une lecture par ligne ferait quarante
+  // allers-retours sur une page qui en affiche quarante.
+  const accessByClient = await getClientAccessMap(clientIds);
 
   const { data: projectRows } = await supabaseAdmin
     .from("projects")
@@ -249,6 +259,7 @@ export async function getClientSummaries(): Promise<ClientSummary[]> {
       projects: clientProjects,
       leadProject,
       status,
+      accessStatus: accessByClient.get(id) ?? "pending",
       lastActivity: lastActivityByClient.get(id) ?? null,
     };
   });
