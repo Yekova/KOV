@@ -1,20 +1,38 @@
-/* Neumorphic card surface for the "Un site qui vous ressemble" section.
+/* La carte d'approche.
  *
- * Everything in here obeys one rule: the light comes from the upper left.
- * Highlights sit top-left, shadows bottom-right, on the shell, on the
- * recessed panel, on the pill and on the six SVG visuals alike. Neumorphism
- * falls apart the moment two elements disagree about where the lamp is.
+ * ── CE QU'ELLE ÉTAIT ────────────────────────────────────────────────
  *
- * Hover states live in CSS rather than inline styles because that is the
- * only place :hover exists, and because the card is rendered up to six
- * times at once — one stylesheet beats six sets of handlers.
+ * Neumorphique : surface bombée de rayon 30, ombres douces en haut à
+ * gauche et en bas à droite, panneau creusé, pastille en relief, et un
+ * halo rouge de 40 px quand elle devenait active. Tout obéissait à une
+ * règle — la lumière vient d'en haut à gauche.
+ *
+ * Elle est plate désormais, sur décision du propriétaire : le halo ne
+ * plaisait pas, et le reste du relief partait avec lui. Un filet d'un
+ * pixel, des coins à 11 px, aucune ombre portée. La lampe n'existe plus,
+ * donc aucune règle ne la suppose.
+ *
+ * ── DEUX CONTRASTES RÉPARÉS AU PASSAGE ──────────────────────────────
+ *
+ * Mesurés sur la surface #f4f4f2 avant d'être réécrits :
+ *
+ *   --fc-muted #7a808a ....... 3,61:1   sous le seuil AA
+ *   --fc-muted #686e78 ....... 4,66:1   retenu
+ *   --fc-red   #e31e24 ....... 4,26:1   sous le seuil, en TEXTE
+ *
+ * Le gris portait le corps de la carte et ses mots-clés, c'est-à-dire
+ * l'essentiel du texte. Le relief neumorphique l'adoucissait ; à plat, il
+ * n'y a plus rien pour le rattraper. Le rouge reste réservé aux fonds
+ * pleins (la pastille du numéro, en blanc dessus : 4,69:1) et aux
+ * ornements, jamais à du texte à lire.
  */
 
 .kov-fcard {
   --fc-surface: #f4f4f2;
   --fc-well: #f1f1ef;
   --fc-ink: #111217;
-  --fc-muted: #7a808a;
+  /* 4,66:1 sur la surface. #7a808a, qui tenait ici, tombait à 3,61. */
+  --fc-muted: #686e78;
   --fc-line: rgba(17, 18, 23, 0.08);
   --fc-red: #e31e24;
 
@@ -24,26 +42,18 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
-  border-radius: 30px;
+  border-radius: 11px;
   background: var(--fc-surface);
-  border: 1px solid rgba(255, 255, 255, 0.85);
-  box-shadow:
-    0 20px 45px rgba(0, 0, 0, 0.16),
-    -10px -10px 25px rgba(255, 255, 255, 0.9),
-    inset 1px 1px 2px rgba(255, 255, 255, 0.95),
-    inset -1px -2px 3px rgba(17, 18, 23, 0.05);
-  transition: box-shadow 560ms cubic-bezier(0.22, 1, 0.36, 1);
+  border: 1px solid rgba(17, 18, 23, 0.14);
+  transition: border-color 260ms ease;
 }
 
-/* Level 1 of the three: the shell gains a soft red halo when it is the one
-   being read. Colour of the card never changes - only its light does. */
+/* L'active ne brille plus. Ce qui la désigne est son agrandissement et sa
+   place au-dessus des voisines — et ces deux-là vivent sur l'emplacement
+   qui la porte, pas sur la carte : c'est l'emplacement qui connaît l'arc.
+   Ici, le filet se resserre simplement d'un cran. */
 .kov-fcard--active {
-  box-shadow:
-    0 20px 45px rgba(0, 0, 0, 0.16),
-    -10px -10px 25px rgba(255, 255, 255, 0.9),
-    0 0 40px rgba(255, 40, 45, 0.18),
-    inset 1px 1px 2px rgba(255, 255, 255, 0.95),
-    inset -1px -2px 3px rgba(17, 18, 23, 0.05);
+  border-color: rgba(17, 18, 23, 0.26);
 }
 
 /* Level 2: the visual sits *in* the card rather than on it. */
@@ -59,11 +69,9 @@
      Do not take the desktop value below ~190px: RadarChart is ~176px tall
      with its wrapping legend and is the binding constraint. */
   height: var(--fc-well-h, 200px);
-  border-radius: 24px;
+  border-radius: 8px;
   background: var(--fc-well);
-  box-shadow:
-    inset 8px 8px 18px rgba(0, 0, 0, 0.06),
-    inset -8px -8px 18px rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--fc-line);
   transition: transform 460ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -74,13 +82,12 @@
   transform: translateY(-3px);
 }
 
-/* Volume for all six visuals from one rule, which is also what guarantees
-   they agree about the light. Two drop-shadows: the dark one down-right,
-   the light one up-left. */
+/* Les six graphiques, d'une seule règle.
+   Elle donnait du volume par deux ombres portées — la sombre en bas à
+   droite, la claire en haut à gauche — ce qui supposait une lampe. La
+   carte étant plate, plus rien ne la suppose : il ne reste que la mise à
+   l'échelle, qu'un écran étroit abaisse. */
 .kov-fcard__visual {
-  filter:
-    drop-shadow(3px 4px 5px rgba(17, 18, 23, 0.13))
-    drop-shadow(-2px -2px 4px rgba(255, 255, 255, 0.95));
   transform: scale(var(--fc-visual-scale, 1));
   transition: transform 460ms cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -93,33 +100,30 @@
 
 /* Level 3: the pill. Raised at rest, pressed in on hover - the standard
    neumorphic affordance, and the only one here that inverts. */
+/* Un bouton de logiciel : un filet, un fond, rien qui dépasse. Le
+   relief/enfoncement neumorphique est parti avec le reste. */
 .kov-fcard__cta {
   display: inline-flex;
   align-items: center;
   gap: 10px;
   align-self: flex-start;
-  padding: 11px 18px;
-  border-radius: 999px;
+  padding: 10px 16px;
+  border-radius: 8px;
   background: var(--fc-surface);
-  border: 1px solid rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--fc-line);
   color: var(--fc-ink);
   font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  box-shadow:
-    6px 6px 14px rgba(0, 0, 0, 0.08),
-    -6px -6px 14px rgba(255, 255, 255, 0.95);
   transition:
-    box-shadow 260ms ease,
-    transform 260ms ease;
+    background-color 220ms ease,
+    border-color 220ms ease;
 }
 
 .kov-fcard__cta:hover,
 .kov-fcard__cta:focus-visible {
-  transform: translateY(1px);
-  box-shadow:
-    inset 4px 4px 10px rgba(0, 0, 0, 0.06),
-    inset -4px -4px 10px rgba(255, 255, 255, 0.85);
+  background: var(--fc-well);
+  border-color: rgba(17, 18, 23, 0.26);
 }
 
 .kov-fcard__cta svg {
@@ -137,41 +141,46 @@
   outline-offset: 3px;
 }
 
-/* The micro-proofs arrive with the card, not before it. Only opacity and
-   transform — never height: a state-dependent height would make the card
-   reflow while a scroll-driven transform owns it, and would reopen the
-   clipping question on every frame. The space is reserved permanently. */
-.kov-fcard__proof {
-  opacity: 0;
-  transform: translateY(6px);
-  transition:
-    opacity 420ms cubic-bezier(0.22, 1, 0.36, 1),
-    transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+/* ── LES MOTS-CLÉS, EN LIGNES ──────────────────────────────────────────
+ *
+ * Ils étaient sur une seule ligne, séparés par des points médians, et ne
+ * devenaient visibles que sur la carte active. Deux raisons de changer :
+ * le format demandé est une suite de lignes, et une donnée qui n'apparaît
+ * que sur une carte sur six n'est pas une donnée, c'est un effet.
+ *
+ * L'argument qui les avait mis en ligne — 93 px au lieu de 39 dans une
+ * carte déjà au-dessus de son budget — ne tient plus : ce budget venait
+ * de la hauteur fixe d'ActivationWindow, qui est supprimé. La carte se
+ * dimensionne sur son contenu.
+ */
+.kov-fcard__proof li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 0;
 }
 
-.kov-fcard--active .kov-fcard__proof {
-  opacity: 1;
-  transform: none;
+.kov-fcard__proof li + li {
+  border-top: 1px solid var(--fc-line);
 }
 
-/* A middot before every term but the first — CSS, not a DOM node, so a
-   screen reader reads a list of three terms and not "STRATÉGIE middot". */
-.kov-fcard__proof li + li::before {
-  content: "·";
-  color: var(--fc-red);
-  margin-right: 8px;
+/* Le point rouge en bout de ligne : un ornement, jamais du texte — le
+   rouge ne passe pas le seuil de lecture sur cette surface (4,26:1). */
+.kov-fcard__proof li::after {
+  content: "";
+  width: 5px;
+  height: 5px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--fc-red);
+  opacity: 0.55;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  /* Load-bearing. ActivationWindow's reduced-motion branch renders all six
-     cards WITHOUT an `active` prop, so .kov-fcard--active never appears and
-     the proofs would be invisible forever for these users. */
-  .kov-fcard__proof {
-    opacity: 1;
-    transform: none;
-    transition: none;
-  }
-
+  /* La règle qui forçait l'apparition des mots-clés a disparu avec leur
+     masquage : ils sont désormais visibles sur les six cartes, en
+     permanence, pour tout le monde. */
   .kov-fcard,
   .kov-fcard__well,
   .kov-fcard__visual,

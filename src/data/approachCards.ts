@@ -103,6 +103,23 @@ export const WHEEL_RADIUS = 1180;
  *  carte (320), donc elles se chevauchent légèrement comme sur un éventail. */
 export const WHEEL_STEP_DEG = 14;
 
+/**
+ * Le pas de l'ARC, plus serré que celui de la roue.
+ *
+ * Le rayon reste commun — c'est lui qui fait la courbe, et elle doit être
+ * la même des deux côtés. Seul l'espacement diffère : sous la hero les
+ * cartes se chevauchent en éventail, dans la roue elles s'écartent pour
+ * être lues une à une.
+ *
+ * Mesuré à ce rayon, largeur de carte 320 :
+ *
+ *   14°  centres à 288px   elles se touchent à peine   (la roue)
+ *   12°  centres à 247px   23 % de chevauchement
+ *   10°  centres à 206px   36 %                        (retenu)
+ *    8°  centres à 165px   49 % — la carte du milieu disparaît presque
+ */
+export const ARC_STEP_DEG = 10;
+
 /** De combien le haut des cartes dépasse sous la hero, en pixels. Un tiers
  *  de la hauteur d'une carte : assez pour qu'on devine un objet, trop peu
  *  pour qu'on le lise. C'est le « suspens ». */

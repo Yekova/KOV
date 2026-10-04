@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { ActivationCard } from "@/components/home/ActivationCard";
-import { APPROACH_CARDS, ARC_CARDS, ARC_PEEK, WHEEL_RADIUS, WHEEL_STEP_DEG } from "@/data/approachCards";
+import { APPROACH_CARDS, ARC_CARDS, ARC_PEEK, ARC_STEP_DEG, WHEEL_RADIUS } from "@/data/approachCards";
 import "./heroArc.css";
 
 // Les trois cartes qui dépassent sous la hero.
@@ -84,7 +84,10 @@ export function HeroArc() {
     >
       {ARC_CARDS.map((card, index) => {
         // L'index 1 est au sommet de l'arc ; -1 et +1 de part et d'autre.
-        const angle = (index - 1) * WHEEL_STEP_DEG;
+        // ARC_STEP_DEG et non le pas de la roue : ici les cartes se
+        // chevauchent en éventail, et elles ne forment un bloc que parce
+        // qu'elles se mordent.
+        const angle = (index - 1) * ARC_STEP_DEG;
         return (
           <div
             key={card.title}
@@ -95,6 +98,11 @@ export function HeroArc() {
               // l'inclinaison de l'arc — c'est elle qui fait lire un
               // cercle plutôt qu'une rangée.
               transform: `rotate(${angle}deg) translateY(${-WHEEL_RADIUS}px)`,
+              // Celle du milieu passe devant, et les voisines derrière,
+              // dans l'ordre : sans cet empilement explicite, l'ordre du
+              // DOM mettrait la troisième au-dessus des deux autres et
+              // l'éventail se lirait à l'envers.
+              zIndex: index === 1 ? 2 : 1,
             }}
           >
             <ActivationCard

@@ -33,6 +33,7 @@
 
 .kov-arc__slot {
   position: absolute;
+  transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
   /* Le centre du cercle est l'origine : chaque carte est positionnée par
      sa rotation, puis remontée du rayon. */
   top: 0;

@@ -92,7 +92,9 @@ export function ActivationCard({
             letterSpacing: "0.06em",
             fontVariantNumeric: "tabular-nums",
             background: "var(--fc-red)",
-            boxShadow: "0 5px 12px -4px rgba(227,30,36,0.45), inset 0 1px 0 rgba(255,255,255,0.25)",
+            // Plus d'ombre ni de rehaut : la carte est plate. Le rouge reste
+            // ici parce que c'est un FOND — le blanc dessus tient 4,69:1,
+            // là où du texte rouge sur la surface tomberait à 4,26.
           }}
         >
           {number}
@@ -137,17 +139,19 @@ export function ActivationCard({
         </p>
 
         {/* One metadata line, not a bulleted list. Three bullets stacked
-            vertically cost ~93px in a card that is already over budget, and
-            they read as an offer checklist — the opposite of the "discreet
-            micro-proof" this is meant to be. Inline, the same three terms
-            cost ~39px and read as a specification. */}
+            vertically cost ~93px in a card that was over budget.
+
+            Ce budget venait de la hauteur fixe d'ActivationWindow, qui est
+            supprimé : la carte se dimensionne sur son contenu désormais.
+            Les trois termes reviennent donc en lignes séparées par des
+            filets — c'est ce qui donne à la carte son air de tableau. */}
         {features && features.length > 0 && (
           <ul
-            className="kov-fcard__proof shrink-0 flex flex-wrap"
-            style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--fc-line)", columnGap: 8, rowGap: 2 }}
+            className="kov-fcard__proof shrink-0"
+            style={{ marginTop: 14, paddingTop: 2, borderTop: "1px solid var(--fc-line)" }}
           >
             {features.map((feature) => (
-              <li key={feature} style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fc-muted)" }}>
+              <li key={feature} style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--fc-muted)" }}>
                 {feature}
               </li>
             ))}
