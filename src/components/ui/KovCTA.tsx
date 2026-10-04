@@ -34,7 +34,7 @@ interface KovCTAProps {
   blockOnMobile?: boolean;
 }
 
-// The homepage's premium CTA — extracted from HeroScene's original inline
+// The homepage's premium CTA — extracted from HeroStage's original inline
 // version (same halo, same glass pill) so section rebuilds reuse one
 // component instead of each hand-rolling the ShapeBlur+group-hover wiring.
 // Distinct from the sitewide `Button` component (nav, footer, every other

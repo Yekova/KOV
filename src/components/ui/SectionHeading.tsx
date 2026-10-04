@@ -37,7 +37,7 @@ const TITLE_SIZE = {
 //     GSAP behind every section header on the site.
 //
 // <h2> is hardcoded with no `as` escape hatch: these are all section-level,
-// and the page has exactly one <h1> (HeroScene) that must stay that way.
+// and the page has exactly one <h1> (HeroStage) that must stay that way.
 export function SectionHeading({
   eyebrow,
   title,

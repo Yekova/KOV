@@ -1,0 +1,161 @@
+/* La scène : le premier écran ET la roue, dans un seul cadre épinglé.
+ *
+ * Tout ce qui bouge ici — le texte de la hero, le titre, la roue, chaque
+ * emplacement de carte — est piloté en JavaScript à chaque image. Cette
+ * feuille ne pose que les positions de repos et ce qui ne dépend pas du
+ * défilement.
+ */
+
+.kov-stage {
+  position: relative;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.kov-stage__frame {
+  position: relative;
+  height: 100%;
+  z-index: var(--z-content);
+}
+
+/* ── LE TEXTE DE LA HERO ───────────────────────────────────────────────
+ *
+ * Centré, et il s'efface en montant quand la roue arrive. En absolu et non
+ * dans le flux : il doit occuper la même place que le titre qui le
+ * remplace, sinon l'un pousserait l'autre au lieu de le relayer.
+ */
+
+.kov-stage__hero {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 96px 24px 64px;
+  will-change: transform, opacity;
+}
+
+@media (min-width: 768px) {
+  .kov-stage__hero {
+    padding: 112px 64px 64px;
+  }
+}
+
+/* ── LE TITRE DE LA ROUE ───────────────────────────────────────────────
+ *
+ * À 12vh du haut, au-dessus des cartes. Invisible au repos : c'est
+ * l'arrivée de la roue qui le fait apparaître.
+ */
+
+.kov-stage__head {
+  position: absolute;
+  top: 12vh;
+  left: 0;
+  right: 0;
+  text-align: center;
+  padding: 0 24px;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+.kov-stage__title {
+  font-family: var(--font-display, inherit);
+  /* Exactement l'échelle du h1 : c'est elle qui fait croire à un seul
+     titre qui se réécrit, plutôt qu'à deux titres qui se croisent. */
+  font-size: clamp(30px, 6vw, 80px);
+  line-height: var(--line-height-display);
+  text-transform: uppercase;
+  color: var(--kov-bone);
+}
+
+/* ── LA ROUE ───────────────────────────────────────────────────────────
+ *
+ * Ce point EST le centre du cercle. Chaque carte tourne autour de lui puis
+ * remonte de tout le rayon — c'est pourquoi le centre doit être posé très
+ * bas : à 30vh + rayon du haut de l'écran, le sommet des cartes retombe à
+ * 30vh, sous le titre.
+ *
+ * Au repos, le JavaScript décale l'ensemble vers le bas pour ne laisser
+ * dépasser que le haut des cartes au bas de l'écran. Ce décalage mélange
+ * une hauteur d'écran et des pixels, et doit suivre un redimensionnement :
+ * il ne peut pas vivre ici.
+ */
+
+.kov-stage__wheel {
+  position: absolute;
+  left: 50%;
+  top: calc(30vh + var(--kov-wheel-radius));
+  width: 0;
+  height: 0;
+  transform: translate(-50%, 0);
+  will-change: transform, opacity;
+}
+
+.kov-stage__slot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 320px;
+  margin-left: -160px;
+  /* Haut-centre : le point du slot qui se pose sur le cercle est son bord
+     supérieur, donc la carte pend du cercle et reste tangente. */
+  transform-origin: 50% 0;
+  opacity: 0.5;
+  filter: saturate(0.55);
+  transition:
+    opacity 320ms ease,
+    filter 320ms ease;
+}
+
+.kov-stage__slot[data-active] {
+  opacity: 1;
+  filter: none;
+}
+
+/* L'active grossit de 8 %. Posé sur la CARTE et non sur l'emplacement :
+   celui-ci porte déjà la rotation et la translation du cercle, qu'une mise
+   à l'échelle écrite au même endroit écraserait à chaque image. */
+.kov-stage__slot .kov-fcard {
+  transform: scale(1);
+  transform-origin: 50% 0;
+  transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.kov-stage__slot[data-active] .kov-fcard {
+  transform: scale(1.08);
+}
+
+/* ── L'ÉCRAN ÉTROIT ET LE MOUVEMENT RÉDUIT ───────────────────────────── */
+
+.kov-stage__plain {
+  padding: 80px 24px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.kov-stage__plain .kov-stage__title {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.kov-stage__list {
+  display: grid;
+  gap: 24px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  justify-items: center;
+}
+
+@media (min-width: 640px) {
+  .kov-stage__list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kov-stage__slot,
+  .kov-stage__slot .kov-fcard {
+    transition: none;
+  }
+}

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import { HeroScene } from "@/scenes/HeroScene";
+import { HeroStage } from "@/scenes/HeroStage";
 import { ScreenShowcase } from "@/components/home/ScreenShowcase";
-import { ImmersiveShowcase } from "@/components/home/ImmersiveShowcase";
 import { ExpertiseSection } from "@/components/home/expertise/ExpertiseSection";
 import { StudioShowcase } from "@/components/home/StudioShowcase";
 import { WorkGallery } from "@/components/home/WorkGallery";
@@ -15,7 +14,10 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://kov-agency.site" },
 };
 
-// HeroScene reads the most recent published article straight from Supabase.
+// La hero ne lit plus rien : son widget journal est parti avec la grille.
+// Cette revalidation sert maintenant le reste de la page, qui lit toujours
+// la base — la galerie de projets et les réalisations.
+// (Historique : HeroScene lisait le dernier article publié.)
 // Without this the homepage was a pure build-time prerender: the hero's
 // journal widget froze at whatever was published on the day of the last
 // deploy, forever. The admin's publish actions now call revalidatePath("/")
@@ -36,7 +38,7 @@ export default function Home() {
   return (
     <main id="kov-main" tabIndex={-1} className="relative">
       {/* One fixed background for the whole homepage scroll, not just the
-          Hero — previously local to HeroScene, moved here so it persists
+          Hero — previously local to the hero scene, moved here so it persists
           behind every section as you scroll past Hero. `fixed`, not
           `absolute`: needs to stay put relative to the viewport regardless
           of page height/scroll position. */}
@@ -72,15 +74,17 @@ export default function Home() {
           these sections with no need to explicitly elevate them. (An
           earlier version wrapped everything in one `position:relative +
           z-content` div instead — that also fixed the canvas-vs-text
-          problem, but it had a side effect: Nav lives inside HeroScene,
+          problem, but it had a side effect: Nav lives inside HeroStage,
           nested inside that wrapper, and once trapped inside an ancestor's
           own stacking context a descendant's z-index can never "escape" to
           compete against something *outside* that ancestor — so Nav's own
           z-nav no longer counted against GradualBlur below, which sits
           outside the wrapper. GradualBlur painted over Nav. Fixing the
           canvas itself avoids needing this kind of wrapper at all.) */}
-      <HeroScene />
-      <ImmersiveShowcase />
+      {/* Le premier écran et la roue ne sont plus deux sections : les
+          cartes y étaient rendues deux fois, ce qui faisait deux objets à
+          l'écran. Une seule scène épinglée, un seul jeu de six cartes. */}
+      <HeroStage />
       <ScreenShowcase />
       <ExpertiseSection />
       <StudioShowcase />

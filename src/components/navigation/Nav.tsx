@@ -22,7 +22,7 @@ const LINKS: NavLinkItem[] = [
 
 interface NavProps {
   /** "contained": positioned absolute within a positioned ancestor (used by
-   * HeroScene, which nests Nav inside its own frame) instead of fixed to the
+   * HeroStage, which nests Nav inside its own frame) instead of fixed to the
    * viewport. Same pill, same offsets from its container's edge either way. */
   variant?: "fixed" | "contained";
   /** true: skip GlassSurface's real SVG feDisplacementMap refraction (a
@@ -74,7 +74,7 @@ export function Nav({ variant = "fixed", flat = false }: NavProps) {
   }, [pathname]);
 
   const padding = scrolled || !isHome ? "py-2" : "py-2.5";
-  // "contained" starts absolute (nested inside HeroScene's own frame) but
+  // "contained" starts absolute (nested inside HeroStage's own frame) but
   // switches to fixed as soon as the page scrolls — otherwise it would
   // scroll away with the Hero section like any other absolutely-positioned
   // content, leaving the rest of the (very long) homepage without a nav at

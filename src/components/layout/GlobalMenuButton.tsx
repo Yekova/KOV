@@ -13,7 +13,7 @@ interface GlobalMenuButtonProps {
   open: boolean;
   onToggle: () => void;
   /** "contained": positioned absolute within a positioned ancestor (used by
-   * HeroScene, nested inside its own frame) instead of fixed to the
+   * HeroStage, nested inside its own frame) instead of fixed to the
    * viewport — same offsets from its container's edge either way. */
   variant?: "fixed" | "contained";
 }
@@ -26,7 +26,7 @@ interface GlobalMenuButtonProps {
 export function GlobalMenuButton({ open, onToggle, variant = "fixed" }: GlobalMenuButtonProps) {
   const [hovered, setHovered] = useState(false);
   // Same reasoning as Nav.tsx: "contained" would otherwise scroll away with
-  // HeroScene after the first ~40px of scroll, since absolute positioning
+  // HeroStage after the first ~40px of scroll, since absolute positioning
   // ties it to the section's own box, not the viewport.
   const scrolled = useScrolled();
   const isFixed = variant === "fixed" || scrolled;

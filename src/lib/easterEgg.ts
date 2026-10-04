@@ -2,7 +2,7 @@
 // lead, and where the unlock is remembered.
 //
 // The streak has to survive a component unmount. Nav is rendered by
-// SiteChrome on every page except the homepage, where HeroScene renders its
+// SiteChrome on every page except the homepage, where HeroStage renders its
 // own contained copy instead — so clicking the logo from /journal swaps one
 // Nav for another mid-streak, and React state would reset to zero exactly
 // when the visitor is doing the right thing. sessionStorage does not.

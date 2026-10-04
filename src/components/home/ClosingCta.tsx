@@ -55,7 +55,7 @@ export function ClosingCta() {
                 WebGL context — unlike Button variant="primary", which mounts
                 one per instance via SpecularButtonEffect. `flat` already
                 renders the arrow after the label, so it isn't typed here.
-                This is the exact gesture HeroScene opens the page with: the
+                This is the exact gesture HeroStage opens the page with: the
                 first and last actions being the same object is the symmetry
                 the ending wants. */}
             <KovCTA href="/contact" flat emphasis>

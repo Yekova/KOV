@@ -12,7 +12,7 @@ type GlobalMenuContextValue = {
 const GlobalMenuContext = createContext<GlobalMenuContextValue | null>(null);
 
 // The global-menu trigger button renders in two different places depending
-// on the route — inside HeroScene's own frame on "/" (so it's a genuine DOM
+// on the route — inside HeroStage's own frame on "/" (so it's a genuine DOM
 // descendant of the Hero's bordered container, not just visually overlapping
 // it), and from SiteChrome everywhere else — while the full-screen overview
 // modal itself always renders from SiteChrome (it's a portal, so where it's

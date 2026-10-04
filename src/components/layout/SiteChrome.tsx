@@ -43,8 +43,8 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
 function SiteChromeInner({ pathname, children }: { pathname: string | null; children: React.ReactNode }) {
   const { open, toggle, close } = useGlobalMenu();
 
-  // On the homepage, HeroScene renders its own contained Nav + GlobalMenuButton
-  // nested inside its frame (see src/scenes/HeroScene.tsx) instead of the
+  // On the homepage, HeroStage renders its own contained Nav + GlobalMenuButton
+  // nested inside its frame (see src/scenes/HeroStage.tsx) instead of the
   // usual viewport-fixed ones, so the frame can visually enclose them both.
   // Skip the default fixed instances there to avoid rendering two.
   const isHome = pathname === "/";
