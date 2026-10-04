@@ -1,0 +1,115 @@
+/* Les deux boutons de la hero, qui échangent leurs couleurs au survol.
+ *
+ * Même technique que le bouton de connexion : un ::before qui remonte
+ * depuis le bas, plutôt qu'une transition de background-color. Une
+ * couleur qui change ne va nulle part ; une couleur qui monte vient de
+ * quelque part. Mêmes valeurs — 520 ms, cubic-bezier(.65,0,.35,1).
+ *
+ * ── POURQUOI LE SECOND MONTE DU BLANC PUR ET NON DE L'OS ─────────────
+ *
+ * Les quatre états ont été mesurés avant d'être écrits :
+ *
+ *   blanc au repos  : noir #0a0a0a sur os #e7e7e5 ....... 15,99:1
+ *   blanc au survol : blanc sur rouge #e31e24 ...........  4,69:1
+ *   rouge au repos  : blanc sur rouge ....................  4,69:1
+ *   rouge au survol : rouge sur os #e7e7e5 ..............  3,79:1  ✗
+ *                     rouge sur BLANC PUR ................  4,69:1  ✓
+ *
+ * Le dernier cas est la raison de cette asymétrie : l'os, qui sert
+ * partout ailleurs de surface claire, fait tomber le texte rouge sous le
+ * seuil AA. Le panneau qui monte sur le bouton rouge est donc du blanc
+ * pur. L'écart est invisible à l'œil et obligatoire à la lecture.
+ */
+
+.kov-hero-cta {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 52px;
+  padding: 0 28px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition:
+    color 300ms ease,
+    box-shadow 320ms ease;
+}
+
+.kov-hero-cta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  /* z-index 0 : au-dessus du fond du bouton, sous le libellé qui monte à 1. */
+  z-index: 0;
+  transform: translateY(100%);
+  transition: transform 520ms cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.kov-hero-cta > span {
+  position: relative;
+  z-index: 1;
+}
+
+.kov-hero-cta:hover::before,
+.kov-hero-cta:focus-visible::before {
+  transform: translateY(0);
+}
+
+/* ── LE PREMIER : CLAIR, PUIS ROUGE ──────────────────────────────────── */
+
+.kov-hero-cta--light {
+  background: var(--kov-bone);
+  color: var(--kov-black);
+}
+
+.kov-hero-cta--light::before {
+  background: var(--kov-red);
+}
+
+.kov-hero-cta--light:hover,
+.kov-hero-cta--light:focus-visible {
+  color: var(--kov-white);
+  box-shadow: 0 16px 44px -22px rgba(227, 30, 36, 0.85);
+}
+
+/* ── LE SECOND : ROUGE, PUIS CLAIR ───────────────────────────────────── */
+
+.kov-hero-cta--red {
+  background: var(--kov-red);
+  color: var(--kov-white);
+}
+
+/* Blanc pur, pas --kov-bone : voir la mesure en tête de fichier. */
+.kov-hero-cta--red::before {
+  background: #ffffff;
+}
+
+.kov-hero-cta--red:hover,
+.kov-hero-cta--red:focus-visible {
+  color: var(--kov-red);
+  box-shadow: 0 16px 44px -22px rgba(231, 231, 229, 0.5);
+}
+
+.kov-hero-cta:active {
+  transform: scale(0.99);
+}
+
+@media (max-width: 639px) {
+  .kov-hero-cta {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kov-hero-cta::before {
+    transition: none;
+  }
+  .kov-hero-cta:active {
+    transform: none;
+  }
+}

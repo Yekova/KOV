@@ -1,0 +1,53 @@
+/* L'arc de trois cartes sous la hero.
+ *
+ * Le conteneur est ancré au BAS de la hero et son origine de rotation est
+ * placée très en dessous, au centre du cercle. Chaque carte tourne autour
+ * de ce centre puis remonte du rayon : c'est ce qui produit un arc, et
+ * non trois cartes inclinées à la main.
+ *
+ * Rien n'est cliquable ici : ces cartes sont un avant-goût, pas une
+ * navigation. Elles sont aria-hidden dans le composant, et
+ * pointer-events: none ici — leurs vraies versions, lisibles et
+ * atteignables, sont dans la roue juste en dessous.
+ */
+
+.kov-arc {
+  position: absolute;
+  left: 50%;
+  /* Le bas du conteneur coïncide avec le bas de la hero. ARC_PEEK pixels
+     de carte dépassent au-dessus de cette ligne ; le reste est hors du
+     cadre, masqué par l'overflow de la section. */
+  bottom: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  /* Posé par le composant à chaque image de défilement. */
+  transform: translate(-50%, var(--arc-rise, 0px));
+  z-index: var(--z-layer-secondary);
+}
+
+.kov-arc__slot {
+  position: absolute;
+  /* Le centre du cercle est l'origine : chaque carte est positionnée par
+     sa rotation, puis remontée du rayon. */
+  top: 0;
+  left: 0;
+  width: 320px;
+  margin-left: -160px;
+  transform-origin: 50% 0;
+}
+
+/* Sous 768 px, l'arc n'existe pas : la hero mobile reste du texte seul.
+   `display: none` et non une simple opacité — les six graphiques des
+   cartes ne doivent pas s'animer hors de l'écran sur un téléphone. */
+@media (max-width: 767px) {
+  .kov-arc {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kov-arc {
+    transform: translate(-50%, 0);
+  }
+}

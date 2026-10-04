@@ -1,0 +1,121 @@
+/* La roue des six cartes d'approche.
+ *
+ * Le centre du cercle est très au-dessous de l'écran : chaque carte
+ * tourne autour de lui puis remonte du rayon. Faire tourner le conteneur
+ * fait donc défiler les cartes le long d'un arc, celle du sommet étant
+ * l'active — et c'est le même cercle que l'arc de la hero.
+ */
+
+.kov-wheel {
+  position: relative;
+}
+
+.kov-wheel__viewport {
+  position: relative;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── LE TITRE ──────────────────────────────────────────────────────────
+ *
+ * Il prend la suite de celui de la hero, à la même place à l'écran et
+ * dans la même cadence : deux lignes, un point rouge. Ce qui fait lire une
+ * transformation plutôt qu'un remplacement.
+ */
+
+.kov-wheel__head {
+  position: absolute;
+  top: 12vh;
+  left: 0;
+  right: 0;
+  z-index: var(--z-content);
+  text-align: center;
+  padding: 0 24px;
+  will-change: transform, opacity;
+}
+
+.kov-wheel__title {
+  font-family: var(--font-display, inherit);
+  /* Exactement la même échelle que le h1 de la hero : c'est elle qui fait
+     croire à un seul titre qui se réécrit. */
+  font-size: clamp(30px, 6vw, 80px);
+  line-height: var(--line-height-display);
+  text-transform: uppercase;
+  color: var(--kov-bone);
+}
+
+/* ── LA ROUE ─────────────────────────────────────────────────────────── */
+
+.kov-wheel__wheel {
+  position: absolute;
+  left: 50%;
+  /* Le bas du conteneur est posé bas dans l'écran ; le centre du cercle
+     est ce point, et les cartes remontent du rayon depuis lui. */
+  bottom: -6vh;
+  width: 0;
+  height: 0;
+  transform: translate(-50%, 0);
+  transform-origin: 50% 0;
+  will-change: transform, opacity;
+}
+
+.kov-wheel__slot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 320px;
+  margin-left: -160px;
+  transform-origin: 50% 100%;
+  /* Les cartes voisines s'effacent un peu : sans ça, six cartes de même
+     présence sur un arc se lisent comme une frise, pas comme une roue
+     dont une seule est devant. */
+  opacity: 0.45;
+  filter: saturate(0.6);
+  transition:
+    opacity 320ms ease,
+    filter 320ms ease;
+}
+
+.kov-wheel__slot[data-active] {
+  opacity: 1;
+  filter: none;
+  z-index: 2;
+}
+
+/* ── L'ÉCRAN ÉTROIT ET LE MOUVEMENT RÉDUIT ─────────────────────────────
+ *
+ * Aucune roue, aucun épinglage : les cartes se suivent. Le titre reste,
+ * parce que c'est le nom de la section, pas un effet.
+ */
+
+.kov-wheel--plain {
+  padding: 80px 24px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.kov-wheel--plain .kov-wheel__title {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.kov-wheel__stack {
+  display: grid;
+  gap: 24px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  justify-items: center;
+}
+
+@media (min-width: 640px) {
+  .kov-wheel__stack {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kov-wheel__slot {
+    transition: none;
+  }
+}

@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { KovCTA } from "@/components/ui/KovCTA";
 import { Nav } from "@/components/navigation/Nav";
 import { HeroGlobalMenuButton } from "@/components/layout/HeroGlobalMenuButton";
 import { Reveal } from "@/components/ui/Reveal";
+import { HeroArc } from "@/components/home/HeroArc";
+import "@/components/home/heroCta.css";
 
 // Le premier écran : une affiche.
 //
@@ -83,8 +84,8 @@ export function HeroScene() {
               fois en 2446 mots. */}
           <Reveal delay={110}>
             <p className="text-kov-concrete mx-auto mt-6 max-w-xl text-sm leading-relaxed md:mt-8 md:text-base">
-              Création de site internet sur mesure : stratégie, design, développement et motion, tenus par un seul
-              studio.
+              Création de site internet sur mesure, à Bordeaux : stratégie, design, développement et motion, tenus
+              par un seul studio.
             </p>
           </Reveal>
 
@@ -93,23 +94,34 @@ export function HeroScene() {
               alors qu'une seule action compte ici. Elle reste un vrai lien,
               à hauteur de doigt, simplement sans la promesse visuelle d'un
               bouton. */}
-          <Reveal delay={220}>
-            <div className="mt-9 flex flex-col items-center gap-4 sm:flex-row sm:justify-center sm:gap-7 md:mt-12">
-              <KovCTA href="/contact" flat emphasis blockOnMobile>
-                Démarrer un projet
-              </KovCTA>
+          {/* Les projets d'abord, le rendez-vous ensuite : on regarde avant
+              de s'engager. Les deux sont de vrais boutons et ils échangent
+              leurs couleurs au survol — le libellé est enveloppé dans un
+              <span> parce que le panneau qui monte passerait devant un
+              simple nœud de texte (voir heroCta.css).
 
-              <Link
-                href="/#work-gallery"
-                className="text-kov-concrete hover:text-kov-bone inline-flex items-center gap-2 text-xs tracking-widest uppercase underline-offset-8 transition-colors hover:underline"
-              >
-                Voir nos projets
-                <span aria-hidden="true">→</span>
+              « Prendre rendez-vous » mène à /contact, comme partout
+              ailleurs sur le site : aucun calendrier n'existe, et le
+              formulaire est déjà un cadrage en cinq étapes. */}
+          <Reveal delay={220}>
+            <div className="mt-9 flex flex-col items-center gap-3 sm:flex-row sm:justify-center sm:gap-4 md:mt-12">
+              <Link href="/#work-gallery" className="kov-hero-cta kov-hero-cta--light">
+                <span>Voir les projets</span>
+              </Link>
+              <Link href="/contact" className="kov-hero-cta kov-hero-cta--red">
+                <span>Prendre rendez-vous</span>
               </Link>
             </div>
           </Reveal>
         </div>
       </div>
+
+      {/* Les trois cartes qui dépassent. Elles décrivent le même cercle
+          que la roue de la section suivante — même rayon, même pas
+          angulaire — pour que le passage de l'une à l'autre ne se lise pas
+          comme une cassure. Rien à régler ici : la géométrie est dans
+          data/approachCards.ts, partagée. */}
+      <HeroArc />
 
       {/* Hors du flux centré : le bouton de menu global est posé sur
           l'écran, pas dans la composition. */}
