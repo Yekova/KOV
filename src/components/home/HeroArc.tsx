@@ -67,7 +67,21 @@ export function HeroArc() {
   }, []);
 
   return (
-    <div ref={hostRef} className="kov-arc" aria-hidden="true">
+    <div
+      ref={hostRef}
+      className="kov-arc"
+      aria-hidden="true"
+      // Posées ici plutôt qu'écrites dans la feuille de style : la
+      // géométrie a UNE source, data/approachCards.ts, et la roue lit les
+      // mêmes constantes. Deux nombres recopiés dans un CSS se
+      // désaccorderaient au premier réglage.
+      style={
+        {
+          "--kov-wheel-radius": `${WHEEL_RADIUS}px`,
+          "--kov-arc-peek": `${ARC_PEEK}px`,
+        } as React.CSSProperties
+      }
+    >
       {ARC_CARDS.map((card, index) => {
         // L'index 1 est au sommet de l'arc ; -1 et +1 de part et d'autre.
         const angle = (index - 1) * WHEEL_STEP_DEG;

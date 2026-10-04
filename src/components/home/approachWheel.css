@@ -49,9 +49,12 @@
 .kov-wheel__wheel {
   position: absolute;
   left: 50%;
-  /* Le bas du conteneur est posé bas dans l'écran ; le centre du cercle
-     est ce point, et les cartes remontent du rayon depuis lui. */
-  bottom: -6vh;
+  /* Même raisonnement que l'arc : ce point est le centre du cercle, et les
+     cartes remontent de tout le rayon depuis lui. Pour que la carte du
+     sommet se pose à 30vh du haut — sous le titre — le centre doit être à
+     30vh + rayon du haut de l'écran. */
+  top: calc(30vh + var(--kov-wheel-radius));
+  bottom: auto;
   width: 0;
   height: 0;
   transform: translate(-50%, 0);
@@ -65,7 +68,11 @@
   left: 0;
   width: 320px;
   margin-left: -160px;
-  transform-origin: 50% 100%;
+  /* Haut-centre, comme l'arc. Avec cette origine, le point du slot qui se
+     pose sur le cercle est son bord supérieur : la carte pend du cercle et
+     reste tangente. Avec 50% 100% — ce qui était écrit ici — elle pivotait
+     autour de son pied et les deux géométries divergeaient. */
+  transform-origin: 50% 0;
   /* Les cartes voisines s'effacent un peu : sans ça, six cartes de même
      présence sur un arc se lisent comme une frise, pas comme une roue
      dont une seule est devant. */

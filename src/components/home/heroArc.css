@@ -14,10 +14,15 @@
 .kov-arc {
   position: absolute;
   left: 50%;
-  /* Le bas du conteneur coïncide avec le bas de la hero. ARC_PEEK pixels
-     de carte dépassent au-dessus de cette ligne ; le reste est hors du
-     cadre, masqué par l'overflow de la section. */
-  bottom: 0;
+  /* ── L'ERREUR QUI A FAIT MONTER LES CARTES EN HAUT DE L'ÉCRAN ──────
+     Ce conteneur EST le centre du cercle, et chaque carte remonte de tout
+     le rayon depuis lui (translateY(-R)). Placé au bas de la hero, il
+     envoyait donc les cartes 1180 px plus haut : sur un écran de 1080,
+     430 px de carte s'affichaient par-dessus le titre.
+     Le centre doit être enfoncé de (rayon − dépassement) SOUS le bord
+     bas. Le haut des cartes retombe alors exactement à `peek` pixels
+     au-dessus de ce bord, quelle que soit la hauteur de la hero. */
+  bottom: calc(-1 * (var(--kov-wheel-radius) - var(--kov-arc-peek)));
   width: 0;
   height: 0;
   pointer-events: none;

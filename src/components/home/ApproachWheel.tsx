@@ -51,6 +51,21 @@ const EXIT_AT = 0.8;
 const EXIT_SCALE = 1.55;
 const EXIT_RISE_VH = 42;
 
+/**
+ * L'entrée : la roue arrive d'en bas plutôt que d'apparaître à sa place.
+ *
+ * Sans ça, on voit DEUX objets : l'arc qui dépasse sous la hero, puis une
+ * roue qui se pose ailleurs un écran plus bas. En la faisant monter depuis
+ * la position où l'arc s'est arrêté, c'est le même objet qui continue sa
+ * course — ce qui est ce qu'on attend d'une roue.
+ *
+ * 26vh est l'écart mesuré entre les deux centres de cercle sur un écran de
+ * 1080, converti en hauteur d'écran pour tenir sur les autres. Comme tout
+ * ce qui est géométrique ici, il n'a pas été vu et demandera une passe.
+ */
+const ENTER_DROP_VH = 26;
+const ENTER_OVER = 0.15;
+
 export function ApproachWheel() {
   const sectionRef = useRef<HTMLElement>(null);
   const wheelRef = useRef<HTMLDivElement>(null);
@@ -86,7 +101,13 @@ export function ApproachWheel() {
         const scale = 1 + leaving * (EXIT_SCALE - 1);
         const rise = leaving * EXIT_RISE_VH;
 
-        wheel.style.transform = `translate(-50%, ${-rise}vh) scale(${scale}) rotate(${-turn}deg)`;
+        // L'entrée et la sortie se composent sur le même axe : au début la
+        // roue est encore basse (elle finit la montée de l'arc), à la fin
+        // elle s'en va par le haut.
+        const entering = Math.min(1, progress / ENTER_OVER);
+        const drop = (1 - entering) * ENTER_DROP_VH;
+
+        wheel.style.transform = `translate(-50%, ${drop - rise}vh) scale(${scale}) rotate(${-turn}deg)`;
         wheel.style.opacity = String(1 - leaving);
 
         // Le titre part avec la roue, un peu plus vite : il est plus haut
@@ -155,7 +176,11 @@ export function ApproachWheel() {
           </h2>
         </div>
 
-        <div ref={wheelRef} className="kov-wheel__wheel">
+        <div
+          ref={wheelRef}
+          className="kov-wheel__wheel"
+          style={{ "--kov-wheel-radius": `${WHEEL_RADIUS}px` } as React.CSSProperties}
+        >
           {APPROACH_CARDS.map((card, index) => (
             <div
               key={card.title}
