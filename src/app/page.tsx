@@ -41,15 +41,23 @@ export default function Home() {
           `absolute`: needs to stay put relative to the viewport regardless
           of page height/scroll position. */}
       <div className="fixed inset-0" style={{ zIndex: "var(--z-canvas)" }}>
+        {/* Ramenées au seuil du perceptible plutôt que supprimées.
+            Les retirer était l'option choisie d'abord, puis écartée pour
+            une raison mesurée : ce fond n'appartient pas à la hero, il est
+            `fixed` derrière les huit sections de la page, qui ont toutes
+            été composées au-dessus. Le supprimer aurait demandé de les
+            reprendre une par une.
+            Luminosité 0,16 → 0,07 et vitesse 0,3 → 0,12 : présent, sans
+            disputer l'attention au titre du premier écran. */}
         <LineWaves
-          speed={0.3}
+          speed={0.12}
           innerLineCount={32}
           outerLineCount={36}
           warpIntensity={1.0}
           rotation={-45}
           edgeFadeWidth={0.0}
           colorCycleSpeed={1.0}
-          brightness={0.16}
+          brightness={0.07}
           color1={WAVE_COLOR_1}
           color2={WAVE_COLOR_2}
           color3={WAVE_COLOR_3}

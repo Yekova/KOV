@@ -1,157 +1,119 @@
+import Link from "next/link";
 import { KovCTA } from "@/components/ui/KovCTA";
 import { Nav } from "@/components/navigation/Nav";
 import { HeroGlobalMenuButton } from "@/components/layout/HeroGlobalMenuButton";
-import { HeroWidgetGrid } from "@/components/home/HeroWidgetGrid";
-import { fetchShowcaseProjects } from "@/lib/showcase/projects";
-import type { HeroJournalPost } from "@/components/home/hero-widgets/JournalContent";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { resolvePostImageUrl } from "@/lib/portal/storage";
+import { Reveal } from "@/components/ui/Reveal";
 
-async function getLatestJournalPost(): Promise<HeroJournalPost | null> {
-  const { data, error } = await supabaseAdmin
-    .from("posts")
-    .select("slug, title, tag, excerpt, cover_image_path, published_at, reading_time")
-    .eq("status", "published")
-    .order("published_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  // Destructuring only `data` made a failed query indistinguishable from "no
-  // articles yet" — the hero widget just quietly disappeared, and nothing
-  // anywhere said why. The page still renders without it; it just says so now.
-  if (error) {
-    console.error("[home] latest-post query failed, hero journal widget omitted:", error.message);
-    return null;
-  }
-
-  if (!data) return null;
-  return {
-    slug: data.slug,
-    title: data.title,
-    tag: data.tag,
-    excerpt: data.excerpt,
-    coverUrl: resolvePostImageUrl(data.cover_image_path),
-    publishedAt: data.published_at,
-    readingTime: data.reading_time,
-  };
-}
-
-export async function HeroScene() {
-  const latestPost = await getLatestJournalPost();
-
-  // Which project the hero puts in its window. `featured` first, then the
-  // first delivered one — never "whatever is at index zero", which is what
-  // it used to be and what made reordering the list swap a name onto
-  // somebody else's screenshot.
-  const projects = await fetchShowcaseProjects();
-  const spotlight =
-    projects.find((project) => project.featured) ??
-    projects.find((project) => project.status === "live") ??
-    null;
+// Le premier écran : une affiche.
+//
+// ── CE QU'IL Y AVAIT, ET POURQUOI IL N'Y EST PLUS ────────────────────
+//
+// Une composition en deux colonnes, avec à droite une grille bento de
+// sept widgets déplaçables — glisser-déposer natif, persistance locale,
+// un millier de lignes. Elle est supprimée, par décision du propriétaire,
+// et la mesure qui a emporté la décision tient en une ligne :
+//
+//   TOUT ce que cette grille montrait a déjà sa propre section plus bas.
+//   Projets, studio, expertise, contact : quatre sections entières, dont
+//   la grille n'était qu'un avant-goût plus petit et moins lisible.
+//
+// Seule la vidéo de maquette responsive lui était propre. Elle a déménagé
+// dans ScreenShowcase, où la section affirme déjà « Responsive pensé dès
+// le départ » — une démonstration à la place d'une affirmation.
+//
+// ── CE QUE ÇA CHANGE POUR CE FICHIER ─────────────────────────────────
+//
+// Il n'interroge plus la base. Les deux lectures qu'il faisait — le
+// dernier article du journal, le projet mis en avant — ne servaient qu'aux
+// widgets. Le premier écran de la page d'accueil ne dépend donc plus
+// d'aucune requête, ce qui est la meilleure chose qui puisse lui arriver.
+//
+// ── CE QUI PORTE L'ÉCRAN, MAINTENANT QU'IL EST VIDE ──────────────────
+//
+// Trois choses, et c'est tout : le titre, une phrase, deux actions. Pas
+// d'œil-de-bœuf au-dessus — dans une composition centrée, un quatrième
+// élément dilue les trois autres, et le point rouge du titre devient le
+// seul accent de couleur de l'écran.
+//
+// Le mouvement se joue une fois, au chargement, ligne par ligne. Reveal
+// est un composant de défilement, mais la hero est déjà visible à
+// l'arrivée : son observateur se déclenche immédiatement, ce qui en fait
+// exactement l'apparition voulue sans écrire une seconde animation. Il
+// respecte prefers-reduced-motion, donc ce choix-là est déjà fait.
+export function HeroScene() {
   return (
     <section id="hero" className="relative min-h-[88vh] md:min-h-screen overflow-hidden">
-      {/* No background color here on purpose — the animated LineWaves
-          background now lives at the page level (src/app/page.tsx) so
-          it's visible behind every homepage section, not just this one.
-          An opaque background on this section would hide it completely
-          for this section's entire height (the whole first viewport). */}
+      {/* Aucun fond ici, volontairement : les ondes animées vivent au
+          niveau de la page (src/app/page.tsx) pour passer derrière chaque
+          section. Un fond opaque les masquerait sur toute la hauteur du
+          premier écran. Elles ont été ramenées au seuil du perceptible
+          plutôt que supprimées — voir le commentaire de page.tsx. */}
 
       <Nav variant="contained" />
 
       <div
-        className="relative min-h-[88vh] md:min-h-screen flex items-center px-6 md:px-16 pt-24 md:pt-28 pb-16"
+        className="relative flex min-h-[88vh] items-center justify-center px-6 pt-24 pb-16 md:min-h-screen md:px-16 md:pt-28"
         style={{ zIndex: "var(--z-content)" }}
       >
-        <div className="grid md:grid-cols-[0.8fr_1.2fr] gap-6 md:gap-8 items-center w-full max-w-[1600px] mx-auto">
-          <div>
-            <p className="flex items-center gap-2 text-kov-steel text-xs uppercase tracking-widest">
-              <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-kov-red" />
-              Digital × Design × Motion
-            </p>
-
-            {/* The headline carries the term now, by the owner's decision.
-                "UNE VISION. UNE EXÉCUTION." was a strong brand line and a
-                nil search signal: the homepage's own h1 contained nothing
-                anyone types. This keeps the cadence exactly, two lines, same
-                rhythm, same red full stop, and swaps the second half for
-                what the page is actually selling.
-
-                30px floor rather than the 34 the previous line used, and
-                that is a deliberate margin rather than a taste. The line is
-                one character longer than the old one and contains a W, the
-                widest uppercase glyph in Archivo Black, against roughly
-                327px of usable width on a 375px screen. No browser runs on
-                this project, so the width cannot be measured here: at 34px
-                my own estimate put it within a few pixels of wrapping, and a
-                headline with an explicit <br/> that wraps anyway breaks onto
-                three lines and looks like a bug. 30px buys about a tenth of
-                the line back and is still twice the body text.
-
-                Above 857px the fluid term takes over and the desktop
-                composition is unchanged. */}
+        <div className="w-full max-w-[920px] text-center">
+          {/* Le plancher de 30 px est repris tel quel de la version
+              précédente, et ce n'est pas de la prudence : « VOTRE SITE
+              WEB. » contient un W, le glyphe le plus large d'Archivo
+              Black, contre environ 327 px utiles sur un écran de 375 px.
+              À 34 px la ligne passait à deux doigts du retour, et un titre
+              avec un <br/> explicite qui revient quand même à la ligne se
+              lit comme un bug.
+              6vw ne dépasse 30 px qu'à partir de 500 px de large : en
+              dessous, la mesure d'origine est intacte. Au-dessus, le
+              plafond passe de 56 à 80 px — le titre devient l'objet qui
+              remplace l'image retirée. */}
+          <Reveal delay={0}>
             <h1
-              className="mt-4 font-display text-kov-bone uppercase"
-              style={{ fontSize: "clamp(30px, 3.5vw, 56px)", lineHeight: "var(--line-height-display)" }}
+              className="font-display text-kov-bone uppercase"
+              style={{ fontSize: "clamp(30px, 6vw, 80px)", lineHeight: "var(--line-height-display)" }}
             >
               VOTRE VISION.
               <br />
               VOTRE SITE WEB<span className="text-kov-red">.</span>
             </h1>
+          </Reveal>
 
-            {/* The line under the headline is the only place on this page
-                where the words a buyer actually types can go without
-                touching the brand statement above it, which is a decision
-                the owner has not made yet. Measured before rewriting: the
-                homepage said "création de site" zero times in 2446 words.
-                The claim itself is unchanged, it is simply said in the
-                visitor's vocabulary rather than only in the studio's. */}
-            <p className="mt-5 md:mt-8 max-w-md text-kov-concrete text-sm leading-relaxed">
+          {/* Les mots qu'un acheteur tape réellement. Mesuré avant d'être
+              écrit : la page d'accueil disait « création de site » zéro
+              fois en 2446 mots. */}
+          <Reveal delay={110}>
+            <p className="text-kov-concrete mx-auto mt-6 max-w-xl text-sm leading-relaxed md:mt-8 md:text-base">
               Création de site internet sur mesure : stratégie, design, développement et motion, tenus par un seul
               studio.
             </p>
+          </Reveal>
 
-            {/* Stacked and full-width on a phone, side by side from `sm`.
-                Wrapped inline pills put the primary action at thumb-width and
-                left the second one orphaned on its own row anyway, so the
-                column was already happening, just by accident. */}
-            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 sm:gap-4 mt-7 md:mt-10">
+          {/* Deux actions, hiérarchisées. La seconde n'est plus une
+              pastille : deux pastilles côte à côte se partagent l'attention
+              alors qu'une seule action compte ici. Elle reste un vrai lien,
+              à hauteur de doigt, simplement sans la promesse visuelle d'un
+              bouton. */}
+          <Reveal delay={220}>
+            <div className="mt-9 flex flex-col items-center gap-4 sm:flex-row sm:justify-center sm:gap-7 md:mt-12">
               <KovCTA href="/contact" flat emphasis blockOnMobile>
                 Démarrer un projet
               </KovCTA>
-              <KovCTA href="/#work-gallery" flat blockOnMobile>
-                Voir nos projets
-              </KovCTA>
-            </div>
-          </div>
 
-          {/* The old video + stacked-photos composition is gone entirely —
-              replaced by a 7-widget modular, draggable bento grid (see
-              HeroWidgetGrid.tsx and its own §-referenced comments for the
-              full reasoning: fixed sizes, native HTML5 drag-and-drop off a
-              dedicated handle, framer-motion `layout` for the reflow,
-              localStorage persistence). The responsive-mockup footage
-              lives inside the grid now too, as the "Responsive Preview"
-              widget's own content. */}
-          {/* Out of the flow entirely below md, not merely hidden inside
-              itself: an empty second grid child would still take the column
-              gap, and the hero would open on a 24px hole. */}
-          <div className="hidden md:block">
-            <HeroWidgetGrid latestPost={latestPost} spotlight={spotlight} projectCount={projects.length} />
-          </div>
+              <Link
+                href="/#work-gallery"
+                className="text-kov-concrete hover:text-kov-bone inline-flex items-center gap-2 text-xs tracking-widest uppercase underline-offset-8 transition-colors hover:underline"
+              >
+                Voir nos projets
+                <span aria-hidden="true">→</span>
+              </Link>
+            </div>
+          </Reveal>
         </div>
       </div>
 
-      {/* Wrapped in its own h-screen box, pinned to the section's top,
-          rather than a bare <HeroGlobalMenuButton /> as a direct child —
-          the button's own `bottom-*` resolves against its nearest
-          positioned ancestor, and this section is at least 88vh and often
-          a full screen: if the content above ever pushes the section
-          taller than one real viewport, `bottom-*` against the section
-          itself would land below the visible fold, not at the bottom of
-          what's actually on screen. `position:absolute` (not sticky/fixed)
-          on this wrapper doesn't create its own stacking context, so it
-          doesn't trap the button's z-index either. */}
-      <div className="absolute inset-x-0 top-0 h-screen pointer-events-none">
+      {/* Hors du flux centré : le bouton de menu global est posé sur
+          l'écran, pas dans la composition. */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-screen">
         <div className="pointer-events-auto">
           <HeroGlobalMenuButton />
         </div>
