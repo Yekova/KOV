@@ -50,6 +50,28 @@ export function Modal({
   const panelRef = useRef<HTMLDivElement>(null);
   const restoreFocusTo = useRef<HTMLElement | null>(null);
 
+  // ── CE REF N'EST PAS UNE OPTIMISATION ────────────────────────────────
+  //
+  // L'effet ci-dessous donne le focus au premier champ en entrant, et le
+  // rend à l'élément d'origine en sortant. Il ne doit donc se jouer QU'à
+  // l'ouverture et à la fermeture.
+  //
+  // Tant qu'il dépendait de `onClose`, il se rejouait à chaque rendu du
+  // parent — et presque tous les appelants passent une flèche en ligne,
+  // donc une identité neuve à chaque fois. Dans une modale à champs
+  // contrôlés, taper une lettre suffisait : la frappe met à jour l'état
+  // du parent, le parent rerend, `onClose` change, le nettoyage rend le
+  // focus à l'extérieur et l'effet le replace sur le PREMIER champ. Le
+  // curseur quittait le champ à chaque lettre, et il fallait recliquer.
+  //
+  // Le rappel est donc gardé dans un ref, et l'effet ne dépend plus que
+  // de `open`. Ne pas remettre `onClose` dans les dépendances pour faire
+  // taire react-hooks/exhaustive-deps : c'est précisément ce qui cassait.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
+
   const focusables = useCallback(() => {
     const panel = panelRef.current;
     if (!panel) return [] as HTMLElement[];
@@ -74,7 +96,7 @@ export function Modal({
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         event.preventDefault();
-        onClose();
+        onCloseRef.current();
         return;
       }
       if (event.key !== "Tab") return;
@@ -102,7 +124,7 @@ export function Modal({
       unlockScroll();
       restoreFocusTo.current?.focus?.();
     };
-  }, [open, onClose, focusables]);
+  }, [open, focusables]);
 
   if (!open) return null;
 
