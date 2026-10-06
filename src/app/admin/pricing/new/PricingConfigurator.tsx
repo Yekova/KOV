@@ -804,10 +804,15 @@ export function PricingConfigurator({
           >
             {saving ? "Enregistrement…" : "Enregistrer le chiffrage"}
           </button>
+          {/* Dire ce qui bloque sans dire comment passer laisse croire que
+              le devis est impossible. Il ne l'est pas : il est conditionné
+              à une dérogation écrite. C'est une différence de nature, et
+              elle doit se lire ici, pas se découvrir après un refus. */}
           {blocking && (
-            <p className="text-kov-steel text-xs">
+            <p className="text-kov-steel text-xs max-w-md">
               Le brouillon s&apos;enregistre malgré les alertes bloquantes. C&apos;est la génération du devis
-              qu&apos;elles empêchent.
+              qu&apos;elles conditionnent : elle sera possible, mais demandera une dérogation écrite,
+              enregistrée avec votre nom et la date.
             </p>
           )}
         </div>

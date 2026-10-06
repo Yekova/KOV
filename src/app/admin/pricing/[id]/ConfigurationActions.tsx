@@ -16,11 +16,17 @@ export function ConfigurationActions({
   title,
   status,
   hasQuote,
+  blockingCount,
 }: {
   configurationId: string;
   title: string;
   status: string;
   hasQuote: boolean;
+  /** Nombre d'alertes bloquantes au recalcul du jour. Sert UNIQUEMENT à
+   *  annoncer la dérogation avant le clic ; c'est le serveur qui tranche,
+   *  et lui seul. Un écran qui se tromperait ici ferait au pire une
+   *  promesse de trop, jamais un devis de trop. */
+  blockingCount: number;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -68,48 +74,66 @@ export function ConfigurationActions({
     router.refresh();
   }
 
+  const canGenerate = !hasQuote && status === "draft";
+
   return (
-    <div className="flex flex-wrap gap-2">
-      {!hasQuote && status === "draft" && (
+    <div className="flex flex-col items-start gap-2 lg:items-end">
+      <div className="flex flex-wrap gap-2">
+        {canGenerate && (
+          <button
+            type="button"
+            onClick={() => generate()}
+            disabled={generating}
+            className="px-5 py-2.5 bg-kov-red text-kov-white text-xs uppercase tracking-widest hover:bg-kov-red-signal transition-colors disabled:opacity-50"
+            style={{ borderRadius: "var(--radius-sm)" }}
+          >
+            {generating ? "Génération…" : "Générer le devis"}
+          </button>
+        )}
+
         <button
           type="button"
-          onClick={() => generate()}
-          disabled={generating}
-          className="px-5 py-2.5 bg-kov-red text-kov-white text-xs uppercase tracking-widest hover:bg-kov-red-signal transition-colors disabled:opacity-50"
-          style={{ borderRadius: "var(--radius-sm)" }}
-        >
-          {generating ? "Génération…" : "Générer le devis"}
-        </button>
-      )}
-
-      <button
-        type="button"
-        onClick={handleDuplicate}
-        disabled={pending}
-        className="px-4 py-2 border text-xs uppercase tracking-widest text-kov-bone hover:border-kov-red hover:text-kov-red transition-colors disabled:opacity-50"
-        style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
-      >
-        {pending ? "…" : "Dupliquer en v+1"}
-      </button>
-
-      {status !== "lost" && !hasQuote && (
-        <button
-          type="button"
-          onClick={() => setLostOpen(true)}
-          className="px-4 py-2 border text-xs uppercase tracking-widest text-kov-steel hover:text-kov-bone transition-colors"
+          onClick={handleDuplicate}
+          disabled={pending}
+          className="px-4 py-2 border text-xs uppercase tracking-widest text-kov-bone hover:border-kov-red hover:text-kov-red transition-colors disabled:opacity-50"
           style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
         >
-          Marquer perdu
+          {pending ? "…" : "Dupliquer en v+1"}
         </button>
-      )}
 
-      {!hasQuote && (
-        <DeleteConfigurationButton
-          configurationId={configurationId}
-          title={title}
-          redirectTo="/admin/pricing"
-          label="Supprimer"
-        />
+        {status !== "lost" && !hasQuote && (
+          <button
+            type="button"
+            onClick={() => setLostOpen(true)}
+            className="px-4 py-2 border text-xs uppercase tracking-widest text-kov-steel hover:text-kov-bone transition-colors"
+            style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
+          >
+            Marquer perdu
+          </button>
+        )}
+
+        {!hasQuote && (
+          <DeleteConfigurationButton
+            configurationId={configurationId}
+            title={title}
+            redirectTo="/admin/pricing"
+            label="Supprimer"
+          />
+        )}
+      </div>
+
+      {/* La dérogation existait, mais on ne pouvait l'apprendre qu'en
+          cliquant sur un bouton qui vous refusait ensuite. Qui lisait
+          « Bloquant » dans le récapitulatif en concluait qu'il n'y avait
+          pas de devis possible, et n'essayait pas.
+          On annonce donc l'issue AVANT le clic. Le garde-fou ne bouge
+          pas : il faut toujours ouvrir la fenêtre et écrire un motif. */}
+      {canGenerate && blockingCount > 0 && (
+        <p className="text-kov-steel text-[11px] lg:text-right max-w-xs">
+          {blockingCount === 1 ? "1 alerte bloquante" : `${blockingCount} alertes bloquantes`}. Le devis
+          reste possible : la génération demandera une dérogation écrite, enregistrée avec votre nom et la
+          date.
+        </p>
       )}
 
       {/* ── La dérogation ──────────────────────────────────────────────── */}

@@ -56,6 +56,22 @@ export default async function PricingConfigurationPage({ params }: { params: Pro
     today: new Date(),
   });
 
+  // Les alertes AFFICHÉES portent sur l'instantané : c'est le prix que le
+  // client a reçu, et c'est lui qu'il faut pouvoir relire.
+  //
+  // Le bouton « Générer le devis », lui, doit annoncer ce que fera le
+  // SERVEUR — qui recalcule tout avec les paramètres du jour. Sur un
+  // chiffrage qui a dérivé, les deux ne disent pas la même chose, et
+  // c'est le second qui décide si une dérogation sera demandée.
+  const blockingNow = (
+    snapshot === null
+      ? alerts
+      : collectAlerts(current, catalog, selection, conditions, {
+          oldestBenchmarkConsultedAt: oldestBenchmark,
+          today: new Date(),
+        })
+  ).filter((alert) => alert.level === "blocking").length;
+
   const draft = buildQuoteDraft(shown, conditions.displayMode ?? "round", []);
 
   const [{ data: client }, { data: lead }, { data: quote }] = await Promise.all([
@@ -112,6 +128,7 @@ export default async function PricingConfigurationPage({ params }: { params: Pro
           title={row.title as string}
           status={row.status as string}
           hasQuote={Boolean(row.quote_id)}
+          blockingCount={blockingNow}
         />
       </div>
 
