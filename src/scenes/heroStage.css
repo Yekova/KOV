@@ -100,16 +100,10 @@
   /* Haut-centre : le point du slot qui se pose sur le cercle est son bord
      supérieur, donc la carte pend du cercle et reste tangente. */
   transform-origin: 50% 0;
-  opacity: 0.5;
-  filter: saturate(0.55);
-  transition:
-    opacity 320ms ease,
-    filter 320ms ease;
-}
-
-.kov-stage__slot[data-active] {
-  opacity: 1;
-  filter: none;
+  /* Ni opacité ni filtre ici : le JavaScript les écrit à chaque image en
+     fonction de l'écart au sommet, et une transition CSS se battrait avec
+     lui à soixante images par seconde. L'état de départ est posé en ligne
+     par le composant. */
 }
 
 /* L'active grossit de 8 %. Posé sur la CARTE et non sur l'emplacement :

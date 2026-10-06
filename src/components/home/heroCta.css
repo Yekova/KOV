@@ -43,10 +43,14 @@
 .kov-hero-cta::before {
   content: "";
   position: absolute;
-  inset: 0;
+  /* -1px et non 0 : à inset:0, un bouton dont la hauteur ne tombe pas sur
+     un pixel entier laisse l'arrondi afficher une bande de la couleur de
+     survol en bas, au repos. Un pixel de débord l'enterre sous le cadre,
+     et `overflow: hidden` le masque. */
+  inset: -1px;
   /* z-index 0 : au-dessus du fond du bouton, sous le libellé qui monte à 1. */
   z-index: 0;
-  transform: translateY(100%);
+  transform: translateY(101%);
   transition: transform 520ms cubic-bezier(0.65, 0, 0.35, 1);
 }
 

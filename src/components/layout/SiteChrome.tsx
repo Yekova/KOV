@@ -43,10 +43,19 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
 function SiteChromeInner({ pathname, children }: { pathname: string | null; children: React.ReactNode }) {
   const { open, toggle, close } = useGlobalMenu();
 
-  // On the homepage, HeroStage renders its own contained Nav + GlobalMenuButton
-  // nested inside its frame (see src/scenes/HeroStage.tsx) instead of the
-  // usual viewport-fixed ones, so the frame can visually enclose them both.
-  // Skip the default fixed instances there to avoid rendering two.
+  // La page d'accueil rendait sa propre barre « contained », imbriquée dans
+  // le cadre de la hero, pour que celui-ci les enveloppe visuellement.
+  //
+  // Ce n'est plus possible : la hero est devenue une scène ÉPINGLÉE, et le
+  // pin de GSAP lui pose `position: fixed` plus une transformation — donc
+  // un contexte d'empilement. Un descendant ne peut pas en sortir : le
+  // z-nav de la barre ne comptait plus face au flou de haut de page
+  // (--z-glass), qui la recouvrait. La barre apparaissait floutée.
+  //
+  // page.tsx décrit ce piège depuis longtemps à propos d'une enveloppe
+  // précédente ; c'est le même, par une autre porte. La barre et le bouton
+  // de menu reviennent donc au niveau du site, fixés à la fenêtre comme
+  // sur toutes les autres pages.
   const isHome = pathname === "/";
 
   // /login is a portal entry point, not marketing content — "browse the
@@ -65,12 +74,12 @@ function SiteChromeInner({ pathname, children }: { pathname: string | null; chil
         Aller au contenu
       </a>
       <SmoothScroll />
-      {!isHome && <Nav />}
+      <Nav />
       {children}
       <Footer isHome={isHome} />
       {showGlobalMenu && (
         <>
-          {!isHome && <GlobalMenuButton open={open} onToggle={toggle} />}
+          <GlobalMenuButton open={open} onToggle={toggle} />
           <GlobalOverviewMenu open={open} onClose={close} />
         </>
       )}

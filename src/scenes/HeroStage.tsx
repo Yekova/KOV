@@ -3,8 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { pinAndTrack } from "@/lib/motion";
-import { Nav } from "@/components/navigation/Nav";
-import { HeroGlobalMenuButton } from "@/components/layout/HeroGlobalMenuButton";
 import { ActivationCard } from "@/components/home/ActivationCard";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { APPROACH_CARDS, ARC_PEEK, ARC_STEP_DEG, WHEEL_RADIUS, WHEEL_STEP_DEG } from "@/data/approachCards";
@@ -27,9 +25,14 @@ import "./heroStage.css";
 // grossit et s'en va par le haut.
 //
 // La scène entière est l'élément épinglé : c'est la seule façon pour que
-// la hero et la roue partagent les mêmes nœuds. La navigation n'en
-// souffre pas — Nav en variante « contained » repasse en `fixed` dès le
-// premier pixel de défilement, elle ne reste pas prisonnière du cadre.
+// la hero et la roue partagent les mêmes nœuds.
+//
+// Conséquence qu'il a fallu payer : le pin de GSAP pose `position: fixed`
+// et une transformation sur cette section, donc un contexte d'empilement
+// dont aucun descendant ne sort. La barre de navigation, qui vivait ici en
+// variante « contained », passait de ce fait SOUS le flou de haut de page
+// et s'affichait floutée. Elle est rendue par SiteChrome, fixée à la
+// fenêtre, comme sur toutes les autres pages du site.
 //
 // ── CE QUI EST ÉCRIT DANS LE DOM, ET CE QUI NE L'EST PAS ─────────────
 //
@@ -50,6 +53,26 @@ const WHEEL_TOP_VH = 30;
  *  l'écran — aucun navigateur ne tourne sur ce projet. */
 const EXIT_SCALE = 1.55;
 const EXIT_RISE_VH = 42;
+
+// ── LA PROFONDEUR DE L'ARC ───────────────────────────────────────────
+//
+// Une carte s'efface et s'assombrit à mesure qu'elle s'éloigne du sommet.
+// C'est ce qui détache celle qu'on doit lire, et c'est aussi ce qui ne
+// laisse voir que trois cartes au repos.
+
+/** Au-delà de cet écart au sommet, la carte a totalement disparu. */
+const VANISH_DEG = 30;
+/** Sur combien de degrés s'étale la disparition, juste avant VANISH_DEG. */
+const FADE_DEG = 8;
+/** Combien de luminosité une carte perd au maximum — 0,78 la laisse très
+ *  sombre, ce qui est le contraste demandé avec celle qu'on lit. */
+const DIM_DEPTH = 0.78;
+/** L'écart auquel cet assombrissement est complet. */
+const DIM_OVER_DEG = 20;
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
 
 export function HeroStage() {
   const stageRef = useRef<HTMLElement>(null);
@@ -123,9 +146,30 @@ export function HeroStage() {
           const slot = slotRefs.current[i];
           if (!slot) continue;
           const angle = i * step - turn;
+          const dist = Math.abs(angle);
+
           slot.style.transform = `rotate(${angle}deg) translateY(${-WHEEL_RADIUS}px)`;
           // La carte la plus proche du sommet passe devant ses voisines.
-          slot.style.zIndex = String(100 - Math.round(Math.abs(angle)));
+          slot.style.zIndex = String(100 - Math.round(dist));
+
+          // ── CE QUI FAIT QU'ON N'EN VOIT QUE TROIS ──────────────────
+          //
+          // L'opacité et l'obscurcissement sont fonction de l'ÉCART au
+          // sommet, pas d'un index actif. Deux conséquences voulues :
+          //
+          //   — au repos, avec un pas de 10°, les cartes sont à 0, 10, 20,
+          //     30, 40 et 50 degrés. Les trois premières sont visibles, les
+          //     trois suivantes au-delà de VANISH_DEG ne le sont pas du
+          //     tout. C'est la règle qui produit « trois cartes », pas un
+          //     découpage de la liste ;
+          //
+          //   — l'écart se lit en continu, donc une carte qui approche du
+          //     sommet s'éclaircit progressivement au lieu de s'allumer
+          //     d'un coup quand l'index change.
+          slot.style.opacity = String(clamp((VANISH_DEG - dist) / FADE_DEG, 0, 1));
+          slot.style.filter = `brightness(${1 - DIM_DEPTH * clamp(dist / DIM_OVER_DEG, 0, 1)}) saturate(${
+            1 - 0.6 * clamp(dist / DIM_OVER_DEG, 0, 1)
+          })`;
         }
 
         const index = Math.round(turn / WHEEL_STEP_DEG);
@@ -180,7 +224,6 @@ export function HeroStage() {
     return (
       <>
         <section id="hero" className="relative min-h-[88vh] overflow-hidden">
-          <Nav variant="contained" />
           <div className="relative flex min-h-[88vh] items-center justify-center px-6 pt-24 pb-16">
             <div className="w-full max-w-[920px] text-center">{heroCopy}</div>
           </div>
@@ -215,9 +258,8 @@ export function HeroStage() {
 
   return (
     <section ref={stageRef} id="hero" className="kov-stage">
-      {/* Aucun fond ici : les ondes animées vivent au niveau de la page,
-          pour passer derrière chaque section. */}
-      <Nav variant="contained" />
+      {/* Aucun fond ici : les ondes animées vivent au niveau de la page.
+          Et aucune barre de navigation : voir l'en-tête du fichier. */}
 
       <div className="kov-stage__frame">
         <div ref={heroRef} className="kov-stage__hero">
@@ -249,7 +291,18 @@ export function HeroStage() {
               }}
               className="kov-stage__slot"
               data-active={index === activeIndex || undefined}
-              style={{ transform: `rotate(${index * ARC_STEP_DEG}deg) translateY(${-WHEEL_RADIUS}px)` }}
+              // L'état de repos, posé en ligne. Sans lui, les six cartes
+              // s'afficheraient pleines au premier rendu, le temps que GSAP
+              // s'initialise et pose les vraies valeurs — on verrait donc
+              // six cartes avant d'en voir trois.
+              style={{
+                transform: `rotate(${index * ARC_STEP_DEG}deg) translateY(${-WHEEL_RADIUS}px)`,
+                opacity: clamp((VANISH_DEG - index * ARC_STEP_DEG) / FADE_DEG, 0, 1),
+                filter: `brightness(${
+                  1 - DIM_DEPTH * clamp((index * ARC_STEP_DEG) / DIM_OVER_DEG, 0, 1)
+                }) saturate(${1 - 0.6 * clamp((index * ARC_STEP_DEG) / DIM_OVER_DEG, 0, 1)})`,
+                zIndex: 100 - index * ARC_STEP_DEG,
+              }}
             >
               <ActivationCard
                 number={String(index + 1).padStart(2, "0")}
@@ -263,12 +316,6 @@ export function HeroStage() {
               />
             </div>
           ))}
-        </div>
-      </div>
-
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-screen">
-        <div className="pointer-events-auto">
-          <HeroGlobalMenuButton />
         </div>
       </div>
     </section>
