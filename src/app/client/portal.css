@@ -80,43 +80,29 @@
   }
 }
 
-/* ── La profondeur du fond ───────────────────────────────────────────── */
+/* ── Le fond ─────────────────────────────────────────────────────────── */
 
-/* Le portail était posé sur un noir plat, et chaque carte flottait dessus
- * au même niveau. Trois couches y remédient, toutes très faibles :
+/* Le fond du portail, c'est l'image et rien d'autre : `.kov-portal__
+ * backdrop` dans kov-light.css, la même que l'espace admin.
  *
- *  - une lueur rouge haute à gauche, à 6 % : elle donne une direction à la
- *    lumière, donc un haut et un bas à l'écran ;
- *  - un vignettage, qui ramène l'œil vers le centre ;
- *  - des lignes verticales à 1,5 %, qui donnent une échelle — sans elles,
- *    un aplat sombre n'a pas de taille.
+ * Il y avait ici une seconde couche en pseudo-élément — lueur rouge,
+ * vignettage, et une trame de lignes verticales tous les 120 px. Elle est
+ * retirée à la demande du propriétaire : la trame se voyait, et elle était
+ * la seule chose qui distinguait le fond du portail de celui de l'admin,
+ * alors que les deux coquilles sont censées se ressembler.
  *
- * Statique, pas animé : un fond qui bouge derrière du texte se paie en
- * lisibilité et en batterie, et le brief demande de la profondeur, pas du
- * mouvement. */
+ * Ne pas la remettre « pour donner de la profondeur » : la profondeur
+ * vient de l'image et des tons de surface (.kov-panel / .kov-surface
+ * plus bas), pas d'une grille par-dessus le texte.
+ *
+ * `isolation: isolate` reste : le fond (z-index 0) et le contenu
+ * (z-index 1) sont deux enfants de cette boîte, et sans contexte
+ * d'empilement ici leurs z-index iraient se mesurer à tout le document. */
 
 .kov-portal {
   position: relative;
   background: var(--kov-void);
   isolation: isolate;
-}
-
-.kov-portal::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    radial-gradient(70% 55% at 22% 0%, rgba(160, 12, 18, 0.09), transparent 58%),
-    radial-gradient(90% 70% at 50% 120%, rgba(0, 0, 0, 0.75), transparent 60%),
-    repeating-linear-gradient(
-      90deg,
-      var(--kov-sheen) 0px,
-      var(--kov-sheen) 1px,
-      transparent 1px,
-      transparent 120px
-    );
 }
 
 /* ── Les familles de surface ─────────────────────────────────────────── */
