@@ -8,9 +8,48 @@ export const INK = "#0A0A0A";
 export const STEEL = "#6B6B68";
 export const BORDER = "#DDDBD6";
 
+// ── LA PLACE RÉSERVÉE AU PIED DE PAGE ────────────────────────────────────
+//
+// Le pied est `position: absolute` et `fixed` : il se répète sur chaque
+// page, et il est HORS DU FLUX. Le contenu ne le voit donc pas, et
+// descendait jusqu'à `paddingBottom`, c'est-à-dire par-dessus lui — d'où
+// le bloc « Inclus » imprimé sur les mentions légales.
+//
+// La correction n'est pas de déplacer le pied : c'est de réserver sa
+// hauteur dans la marge basse de la page. Et on la CALCULE, pour qu'elle
+// ne puisse pas se désynchroniser du style qu'elle doit couvrir.
+//
+// Mesuré sur les métriques Helvetica livrées avec react-pdf, à 7 pt sur
+// une largeur utile de 515 pt : les trois lignes actuelles occupent
+// 72,5 pt depuis le bas, pour 40 pt réservés.
+//
+// On réserve CINQ lignes et non trois, parce que la mention de retard de
+// paiement vient de business_settings et s'édite depuis /admin/settings :
+// elle remplit aujourd'hui 99 % de sa ligne, soit deux caractères avant
+// d'en prendre une seconde. Une réserve ajustée au contenu du jour se
+// rouvrirait au premier mot ajouté, dans un PDF déjà parti chez un client.
+const FOOTER_BOTTOM = 30;
+const FOOTER_FONT_SIZE = 7;
+const FOOTER_LINE_HEIGHT = 1.5;
+const FOOTER_PADDING_TOP = 10;
+const FOOTER_BORDER = 1;
+const FOOTER_MAX_LINES = 5;
+
+const FOOTER_RESERVE = Math.ceil(
+  FOOTER_BOTTOM +
+    FOOTER_MAX_LINES * FOOTER_FONT_SIZE * FOOTER_LINE_HEIGHT +
+    FOOTER_PADDING_TOP +
+    FOOTER_BORDER
+);
+
 export const pdfStyles = StyleSheet.create({
   page: {
-    padding: 40,
+    paddingTop: 40,
+    paddingLeft: 40,
+    paddingRight: 40,
+    // Pas `padding: 40` suivi d'un remplacement : l'ordre de résolution
+    // d'un raccourci n'a pas à être une chose dont ce fichier dépend.
+    paddingBottom: FOOTER_RESERVE,
     fontSize: 10,
     fontFamily: "Helvetica",
     color: INK,
@@ -137,19 +176,21 @@ export const pdfStyles = StyleSheet.create({
     fontSize: 9,
     marginBottom: 2,
   },
+  // Les valeurs viennent des constantes du haut : c'est ce qui garantit que
+  // la place réservée dans `page` couvre bien ce qui est dessiné ici.
   footer: {
     position: "absolute",
-    bottom: 30,
+    bottom: FOOTER_BOTTOM,
     left: 40,
     right: 40,
-    borderTopWidth: 1,
+    borderTopWidth: FOOTER_BORDER,
     borderTopColor: BORDER,
-    paddingTop: 10,
+    paddingTop: FOOTER_PADDING_TOP,
   },
   footerText: {
-    fontSize: 7,
+    fontSize: FOOTER_FONT_SIZE,
     color: STEEL,
-    lineHeight: 1.5,
+    lineHeight: FOOTER_LINE_HEIGHT,
   },
 });
 
