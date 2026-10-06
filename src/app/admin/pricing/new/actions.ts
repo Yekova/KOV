@@ -88,11 +88,40 @@ export async function saveConfiguration(
   };
 
   if (input.configurationId) {
-    const { error } = await supabaseAdmin
+    // ── CE QUI SE MODIFIE, ET CE QUI NE SE MODIFIE PLUS ──────────────────
+    //
+    // Tant qu'aucun devis n'est sorti, un chiffrage est un brouillon : le
+    // corriger est normal, et devoir le refaire de zéro pour une case
+    // cochée de travers est absurde.
+    //
+    // Dès qu'un devis est généré, non. Ce devis porte un numéro attribué
+    // par la séquence, il est peut-être déjà parti, et le chiffrage est la
+    // SEULE chose qui explique son prix. Le réécrire laisserait un
+    // document chiffré que plus personne ne saurait justifier — le même
+    // raisonnement que deleteConfiguration, pour la même raison.
+    //
+    // Le garde est posé dans la clause WHERE, pas dans un `if` après une
+    // lecture : entre la lecture et l'écriture, la génération du devis
+    // peut passer. Zéro ligne touchée = quelqu'un est passé devant.
+    //
+    // `status = 'draft'` ferme en plus la fenêtre de réservation : pendant
+    // la génération, le statut passe à « quoted » avant que quote_id ne
+    // soit écrit.
+    const { data: updated, error } = await supabaseAdmin
       .from("pricing_configurations")
       .update(row)
-      .eq("id", input.configurationId);
+      .eq("id", input.configurationId)
+      .is("quote_id", null)
+      .eq("status", "draft")
+      .select("id");
+
     if (error) return { error: "L'enregistrement du chiffrage a échoué." };
+    if (!updated || updated.length === 0) {
+      return {
+        error:
+          "Ce chiffrage n'est plus modifiable : son devis a été généré, ou il est marqué perdu. Dupliquez-le en v+1 pour repartir de lui.",
+      };
+    }
 
     revalidatePath("/admin/pricing");
     revalidatePath(`/admin/pricing/${input.configurationId}`);

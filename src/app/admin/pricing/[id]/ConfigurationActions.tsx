@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Modal } from "@/components/ui/Modal";
@@ -89,6 +90,19 @@ export function ConfigurationActions({
           >
             {generating ? "Génération…" : "Générer le devis"}
           </button>
+        )}
+
+        {/* Tant qu'aucun devis n'est sorti, un chiffrage est un brouillon :
+            on le corrige. Après, il explique un document numéroté et parti,
+            et c'est « Dupliquer en v+1 » qui prend le relais. */}
+        {canGenerate && (
+          <Link
+            href={`/admin/pricing/${configurationId}/edit`}
+            className="px-4 py-2 border text-xs uppercase tracking-widest text-kov-bone hover:border-kov-red hover:text-kov-red transition-colors"
+            style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
+          >
+            Modifier
+          </Link>
         )}
 
         <button

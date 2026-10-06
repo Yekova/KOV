@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, type ReactNode } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { GlassCard } from "@/components/ui/GlassCard";
@@ -46,6 +47,29 @@ export interface ConfiguratorPerson {
   id: string;
   name: string;
   company: string | null;
+}
+
+/**
+ * L'état d'un chiffrage existant, pour le rouvrir et le corriger.
+ *
+ * Absent, le configurateur crée ; présent, il modifie. C'est le même
+ * écran dans les deux cas, et c'est voulu : deux formulaires pour les
+ * mêmes quarante champs divergeraient au premier module ajouté, et on ne
+ * le verrait que sur le chiffrage qu'on vient de rouvrir.
+ *
+ * On reçoit la sélection et les conditions TELLES QU'ELLES SONT STOCKÉES,
+ * et c'est ce composant qui les retraduit en état d'écran — la traduction
+ * vit à côté de l'état qu'elle remplit, pas dans une page serveur qui ne
+ * connaît pas sa forme.
+ */
+export interface ConfiguratorInitial {
+  configurationId: string;
+  title: string;
+  /** « client:<id> », « lead:<id> », ou vide. */
+  recipient: string;
+  segment: string;
+  selection: PricingSelection;
+  conditions: PricingConditions;
 }
 
 const COMPLEXITY_LABELS: Record<ComplexityKey, string> = {
@@ -117,6 +141,7 @@ export function PricingConfigurator({
   leads,
   oldestBenchmarkConsultedAt,
   todayIso,
+  initial,
 }: {
   catalog: PricingCatalog;
   settingsVersionId: string;
@@ -124,30 +149,68 @@ export function PricingConfigurator({
   leads: ConfiguratorPerson[];
   oldestBenchmarkConsultedAt: string | null;
   todayIso: string;
+  /** Présent = on modifie ce chiffrage. Absent = on en crée un. */
+  initial?: ConfiguratorInitial;
 }) {
   const router = useRouter();
 
-  const [title, setTitle] = useState("");
-  const [recipient, setRecipient] = useState<string>("");
-  const [segment, setSegment] = useState<string>("");
-  const [clientVatRegime, setClientVatRegime] = useState<ClientVatRegime>("liable");
-  const [complexity, setComplexity] = useState<ComplexityKey>("standard");
-  const [urgency, setUrgency] = useState<UrgencyKey>("normal");
+  const editing = initial !== undefined;
 
-  const [offerKey, setOfferKey] = useState<string | null>(null);
-  const [modules, setModules] = useState<Record<string, ModuleState>>({});
-  const [options, setOptions] = useState<Record<string, number>>({});
-  const [subscriptionKey, setSubscriptionKey] = useState<string | null>(null);
+  const [title, setTitle] = useState(initial?.title ?? "");
+  const [recipient, setRecipient] = useState<string>(initial?.recipient ?? "");
+  const [segment, setSegment] = useState<string>(initial?.segment ?? "");
+  const [clientVatRegime, setClientVatRegime] = useState<ClientVatRegime>(
+    initial?.selection.clientVatRegime ?? "liable"
+  );
+  const [complexity, setComplexity] = useState<ComplexityKey>(initial?.selection.complexity ?? "standard");
+  const [urgency, setUrgency] = useState<UrgencyKey>(initial?.selection.urgency ?? "normal");
 
-  const [discountPercent, setDiscountPercent] = useState("0");
-  const [discountReason, setDiscountReason] = useState("");
-  const [validityDays, setValidityDays] = useState(String(catalog.settings.quoteValidityDays));
-  const [leadTimeLabel, setLeadTimeLabel] = useState("");
-  const [displayMode, setDisplayMode] = useState<"round" | "module">("round");
-  const [schedule, setSchedule] = useState<ScheduleTemplateEntry[] | null>(null);
+  const [offerKey, setOfferKey] = useState<string | null>(initial?.selection.offerKey ?? null);
+  // Initialisation paresseuse : ces trois tableaux se retraduisent une
+  // fois, au montage. Les recalculer à chaque rendu serait du travail jeté.
+  const [modules, setModules] = useState<Record<string, ModuleState>>(() =>
+    Object.fromEntries(
+      (initial?.selection.modules ?? []).map((entry) => [
+        entry.moduleKey,
+        { quantity: entry.quantity, subcontractedRoles: entry.subcontractedRoles ?? [] },
+      ])
+    )
+  );
+  const [options, setOptions] = useState<Record<string, number>>(() =>
+    Object.fromEntries((initial?.selection.options ?? []).map((entry) => [entry.moduleKey, entry.quantity]))
+  );
+  const [subscriptionKey, setSubscriptionKey] = useState<string | null>(
+    initial?.selection.subscriptionKey ?? null
+  );
+
+  // Les points de base redeviennent des pourcentages : 750 → « 7.5 ».
+  // C'est l'inverse exact du Math.round(parsed * 100) de `conditions`.
+  const [discountPercent, setDiscountPercent] = useState(
+    initial ? String(initial.conditions.discountBp / 100) : "0"
+  );
+  const [discountReason, setDiscountReason] = useState(initial?.conditions.discountReason ?? "");
+  const [validityDays, setValidityDays] = useState(
+    String(initial?.conditions.validityDays ?? catalog.settings.quoteValidityDays)
+  );
+  const [leadTimeLabel, setLeadTimeLabel] = useState(initial?.conditions.leadTimeLabel ?? "");
+  const [displayMode, setDisplayMode] = useState<"round" | "module">(
+    initial?.conditions.displayMode ?? "round"
+  );
+  const [schedule, setSchedule] = useState<ScheduleTemplateEntry[] | null>(
+    initial?.conditions.schedule ?? null
+  );
 
   const [saving, setSaving] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(false);
+
+  // Même piège que le destinataire : un <select> dont la valeur n'est dans
+  // aucune option s'affiche vide et vaut «  ». Si la liste SEGMENTS a
+  // changé depuis le chiffrage, rouvrir puis enregistrer effacerait son
+  // segment sans rien dire. On garde donc l'ancienne valeur dans la liste.
+  const segmentOptions = useMemo(
+    () => (segment && !SEGMENTS.includes(segment) ? [segment, ...SEGMENTS] : SEGMENTS),
+    [segment]
+  );
 
   const selection: PricingSelection = useMemo(
     () => ({
@@ -277,6 +340,7 @@ export function PricingConfigurator({
     setSaving(true);
     const [kind, id] = recipient ? recipient.split(":") : [null, null];
     const response = await saveConfiguration({
+      configurationId: initial?.configurationId,
       settingsVersionId,
       title,
       clientId: kind === "client" ? id : null,
@@ -292,7 +356,10 @@ export function PricingConfigurator({
       toast.error(response.error);
       return;
     }
-    toast.success("Chiffrage enregistré.");
+    toast.success(editing ? "Chiffrage modifié." : "Chiffrage enregistré.");
+    // Pas de router.refresh() ici : saveConfiguration a déjà appelé
+    // revalidatePath sur cette fiche, ce qui vide aussi le cache du routeur
+    // côté client. En ajouter un rechargerait la page une seconde fois.
     router.push(`/admin/pricing/${response.configurationId}`);
   }
 
@@ -370,7 +437,7 @@ export function PricingConfigurator({
                   style={FIELD_STYLE}
                 >
                   <option value="">Non renseigné</option>
-                  {SEGMENTS.map((entry) => (
+                  {segmentOptions.map((entry) => (
                     <option key={entry} value={entry}>
                       {entry}
                     </option>
@@ -802,17 +869,31 @@ export function PricingConfigurator({
             className="px-6 py-3 bg-kov-red text-kov-white text-xs uppercase tracking-widest hover:bg-kov-red-signal transition-colors disabled:opacity-50"
             style={{ borderRadius: "var(--radius-sm)" }}
           >
-            {saving ? "Enregistrement…" : "Enregistrer le chiffrage"}
+            {saving
+              ? "Enregistrement…"
+              : editing
+                ? "Enregistrer les modifications"
+                : "Enregistrer le chiffrage"}
           </button>
+
+          {editing && (
+            <Link
+              href={`/admin/pricing/${initial.configurationId}`}
+              className="px-5 py-3 border text-xs uppercase tracking-widest text-kov-steel hover:text-kov-bone transition-colors"
+              style={{ borderColor: "var(--kov-border)", borderRadius: "var(--radius-sm)" }}
+            >
+              Annuler
+            </Link>
+          )}
           {/* Dire ce qui bloque sans dire comment passer laisse croire que
               le devis est impossible. Il ne l'est pas : il est conditionné
               à une dérogation écrite. C'est une différence de nature, et
               elle doit se lire ici, pas se découvrir après un refus. */}
           {blocking && (
             <p className="text-kov-steel text-xs max-w-md">
-              Le brouillon s&apos;enregistre malgré les alertes bloquantes. C&apos;est la génération du devis
-              qu&apos;elles conditionnent : elle sera possible, mais demandera une dérogation écrite,
-              enregistrée avec votre nom et la date.
+              {editing ? "Les modifications s'enregistrent" : "Le brouillon s'enregistre"} malgré les alertes
+              bloquantes. C&apos;est la génération du devis qu&apos;elles conditionnent : elle sera possible,
+              mais demandera une dérogation écrite, enregistrée avec votre nom et la date.
             </p>
           )}
         </div>
