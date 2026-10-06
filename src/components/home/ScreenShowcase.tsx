@@ -234,39 +234,6 @@ export function ScreenShowcase() {
           </div>
         </div>
       </div>
-
-      {/* ── LA DÉMONSTRATION ────────────────────────────────────────────
-          La colonne de droite affirme « Responsive pensé dès le départ ».
-          Cette vidéo le montre, ce qui vaut mieux que de le dire.
-
-          Elle vient de la grille de widgets de la hero, supprimée. Elle
-          était la SEULE chose que cette grille portait et qui n'existait
-          nulle part ailleurs sur le site — tout le reste avait déjà sa
-          propre section. Ici elle a la place d'être vue : elle faisait
-          300 px de large dans le widget.
-
-          muted + playsInline + loop : sans le son, une vidéo de fond se
-          lit comme une image qui bouge. Avec, c'est une agression. preload
-          metadata plutôt qu'auto — elle est en bas de page, la charger
-          entièrement au premier écran retarderait ce que le visiteur
-          regarde vraiment. */}
-      <figure className="mx-auto mt-20 max-w-[1100px] md:mt-28">
-        <video
-          src="/home/responsive-mockup.mp4"
-          poster="/home/responsive-mockup-poster.jpg"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="metadata"
-          aria-label="Un site KOV affiché sur ordinateur, tablette et téléphone"
-          className="w-full"
-          style={{ borderRadius: "var(--radius-glass)" }}
-        />
-        <figcaption className="text-kov-steel mt-5 text-center text-xs tracking-widest uppercase">
-          Un seul système, trois écrans
-        </figcaption>
-      </figure>
     </section>
   );
 }
